@@ -43,7 +43,7 @@ export async function initApiFromStorage() {
     }
 }
 
-async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false, timeoutMs } = {}) {
+async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false, timeoutMs, suppressAuthHandling = false } = {}) {
     if (!loggedBaseUrlOnce) {
         console.log(`[API] Using BASE_URL: ${BASE_URL}`);
         loggedBaseUrlOnce = true;
@@ -76,29 +76,50 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
     let controller;
     let timeoutId;
     try {
+        // If AbortController exists, attach a signal pre-fetch so aborts can cancel the request
         if (typeof AbortController !== 'undefined' && timeoutMs && timeoutMs > 0) {
             controller = new AbortController();
             init.signal = controller.signal;
-            timeoutId = setTimeout(() => {
-                try { controller.abort(); } catch {}
-            }, timeoutMs);
         }
-        res = await fetch(url, init);
+
+        const fetchPromise = fetch(url, init);
+
+        let racePromise = fetchPromise;
+        if (timeoutMs && timeoutMs > 0) {
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => {
+                    const err = new Error('Délai dépassé');
+                    err.code = 'TIMEOUT';
+                    err.status = 0;
+                    // Try to abort underlying fetch if supported
+                    try { controller && controller.abort && controller.abort(); } catch {}
+                    reject(err);
+                }, timeoutMs);
+            });
+            racePromise = Promise.race([fetchPromise, timeoutPromise]);
+        }
+
+        res = await racePromise;
         if (timeoutId) { try { clearTimeout(timeoutId); } catch {} }
     } catch (networkErr) {
         if (timeoutId) { try { clearTimeout(timeoutId); } catch {} }
-        if (networkErr && (networkErr.name === 'AbortError' || networkErr.message?.toLowerCase().includes('aborted'))) {
-            const err = new Error('Délai dépassé');
-            err.code = 'TIMEOUT';
-            err.status = 0;
-            throw err;
+        // Forward TIMEOUT error as-is
+        if (networkErr && (networkErr.code === 'TIMEOUT' || networkErr.name === 'AbortError' || networkErr.message?.toLowerCase().includes('aborted'))) {
+            if (networkErr.code !== 'TIMEOUT') {
+                const err = new Error('Délai dépassé');
+                err.code = 'TIMEOUT';
+                err.status = 0;
+                throw err;
+            }
+            throw networkErr;
         }
         console.error('[API] Network error', { url, method, error: networkErr?.message || networkErr });
         throw networkErr;
     }
 
-    // Attempt refresh on 401 once
-    if (res.status === 401 && retry && accessToken) {
+    // Attempt refresh on 401 once (only for non-auth endpoints)
+    const isAuthPath = typeof path === 'string' && path.startsWith('/auth/');
+    if (res.status === 401 && retry && accessToken && !isAuthPath) {
         try {
             const refreshed = await refreshAccessToken();
             if (refreshed?.accessToken) {
@@ -131,7 +152,8 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         const isAuthStatus = res.status === 401 || res.status === 403;
         const isAuthCode = code === 'AUTH_MISSING' || code === 'AUTH_INVALID' || code === 'REFRESH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
         const isUserNotFound404 = res.status === 404 && (code === 'NOT_FOUND' || msg.includes('user not found')) && path.startsWith('/users');
-        if (isAuthStatus || isAuthCode || isUserNotFound404) {
+        const shouldGlobalLogout = (isAuthStatus || isAuthCode || isUserNotFound404) && !suppressAuthHandling && !isAuthPath;
+        if (shouldGlobalLogout) {
             try {
                 await logout();
             } finally {
@@ -165,6 +187,8 @@ export async function login({ email, password }) {
         method: 'POST',
         body: { email, password },
         timeoutMs: 5000,
+        retry: false,
+        suppressAuthHandling: true,
     });
     if (data?.accessToken) setAccessToken(data.accessToken);
     return data;
@@ -178,7 +202,7 @@ export async function refreshAccessToken() {
 
 export async function logout() {
     try {
-        await request('/auth/logout', { method: 'POST', includeCredentials: true });
+        await request('/auth/logout', { method: 'POST', includeCredentials: true, retry: false, suppressAuthHandling: true });
     } catch (e) {
         console.error('[API] Logout error', e);
     } finally {

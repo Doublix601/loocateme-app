@@ -8,6 +8,8 @@ import {
   Dimensions,
   PanResponder,
   SafeAreaView,
+  Linking,
+  Alert,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -46,6 +48,50 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const baseBioFont = Math.min(width * 0.04, 18) * scale;
   const bioFont = Math.max(14, Math.min(baseBioFont, 22));
   const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
+
+  const INSTAGRAM_USERNAME_REGEX = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+
+  const extractInstagramUsername = (input = '') => {
+    let v = String(input).trim();
+    try {
+      if (/^https?:\/\//i.test(v)) {
+        const u = new URL(v);
+        const path = (u.pathname || '').replace(/^\/+|\/+$/g, '');
+        v = path.split('/')[0] || '';
+      }
+    } catch (_e) {}
+    if (v.startsWith('@')) v = v.slice(1);
+    return v;
+  };
+
+  const openSocial = async (platform, rawHandle) => {
+    const handle = String(rawHandle || '').trim();
+    if (!platform || !handle) return;
+    try {
+      if (platform === 'instagram') {
+        const username = extractInstagramUsername(handle);
+        if (!INSTAGRAM_USERNAME_REGEX.test(username)) {
+          Alert.alert('Lien invalide', "Nom d'utilisateur Instagram invalide");
+          return;
+        }
+        const appUrl = `instagram://user?username=${encodeURIComponent(username)}`;
+        const webUrl = `https://www.instagram.com/${encodeURIComponent(username)}/`;
+        const canOpen = await Linking.canOpenURL(appUrl);
+        if (canOpen) {
+          await Linking.openURL(appUrl);
+        } else {
+          await Linking.openURL(webUrl);
+        }
+        return;
+      }
+      // Fallback for other platforms: try a generic https link if provided as URL
+      if (/^https?:\/\//i.test(handle)) {
+        await Linking.openURL(handle);
+      }
+    } catch (_e) {
+      try { await Linking.openURL(handle); } catch {}
+    }
+  };
 
   if (!user) {
     return (
@@ -127,7 +173,10 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                     <TouchableOpacity
                       key={index}
                       style={styles.socialMediaTile}
-                      onPress={() => { }}
+                      onPress={() => {
+                        const handle = social.username || social.link || social.identifier || '';
+                        openSocial(platform, handle);
+                      }}
                     >
                       <Image
                         source={iconSrc}

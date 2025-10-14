@@ -110,6 +110,29 @@ const MyAccountScreen = ({
   // Allowed social platforms (must match backend validation)
   const ALLOWED_PLATFORMS = ['instagram', 'facebook', 'x', 'snapchat', 'tiktok', 'linkedin'];
 
+  // Instagram username regex (provided)
+  const INSTAGRAM_USERNAME_REGEX = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+
+  // Sanitize a possibly pasted Instagram URL to just the username
+  const extractInstagramUsername = (input = '') => {
+    let v = String(input).trim();
+    // If user pasted a full URL like https://www.instagram.com/username/
+    try {
+      if (/^https?:\/\//i.test(v)) {
+        const u = new URL(v);
+        // path like "/username/" or "/username"
+        const path = (u.pathname || '').replace(/^\/+|\/+$/g, '');
+        // username is first segment
+        v = path.split('/')[0] || '';
+      }
+    } catch (_e) {
+      // Not a valid URL, keep raw value
+    }
+    // Remove leading @ if present
+    if (v.startsWith('@')) v = v.slice(1);
+    return v;
+  };
+
   // Map backend socialNetworks -> frontend socialMedia shape (normalize and filter)
   const mapNetworksToSocialMedia = (networks = []) =>
     networks
@@ -159,14 +182,22 @@ const MyAccountScreen = ({
   const handleAddSocial = async () => {
     try {
       const platform = String(selectedSocialPlatform || '').toLowerCase();
-      const handle = String(newValue || '').trim();
+      let handle = String(newValue || '').trim();
       if (!ALLOWED_PLATFORMS.includes(platform)) {
-        Alert.alert('Erreur', "Plateforme non supportée");
+        Alert.alert('Erreur', 'Plateforme non supportée');
         return;
       }
       if (!handle) {
         Alert.alert('Erreur', "Veuillez saisir un identifiant");
         return;
+      }
+      // Specific validation for Instagram
+      if (platform === 'instagram') {
+        handle = extractInstagramUsername(handle);
+        if (!INSTAGRAM_USERNAME_REGEX.test(handle)) {
+          Alert.alert('Erreur', "Nom d'utilisateur Instagram invalide. Exemple: https://www.instagram.com/username/");
+          return;
+        }
       }
       const res = await apiUpsertSocial({ type: platform, handle });
       const networks = res?.user?.socialNetworks || [];
@@ -191,14 +222,21 @@ const MyAccountScreen = ({
   const handleSocialEdit = async () => {
     try {
       const platform = selectedSocialLink?.platform;
-      const handle = String(newValue || '').trim();
+      let handle = String(newValue || '').trim();
       if (!platform || !ALLOWED_PLATFORMS.includes(platform)) {
-        Alert.alert('Erreur', "Plateforme non supportée");
+        Alert.alert('Erreur', 'Plateforme non supportée');
         return;
       }
       if (!handle) {
         Alert.alert('Erreur', "Veuillez saisir un identifiant");
         return;
+      }
+      if (platform === 'instagram') {
+        handle = extractInstagramUsername(handle);
+        if (!INSTAGRAM_USERNAME_REGEX.test(handle)) {
+          Alert.alert('Erreur', "Nom d'utilisateur Instagram invalide. Exemple: https://www.instagram.com/username/");
+          return;
+        }
       }
       const res = await apiUpsertSocial({ type: platform, handle });
       const networks = res?.user?.socialNetworks || [];
@@ -861,6 +899,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedTile: {
+    borderWidth: 2,
     borderColor: '#00c2cb',
   },
   actionRow: {
