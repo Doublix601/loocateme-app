@@ -1,148 +1,241 @@
 // Simple API client for loocateme backend
 // Base URL of the backend API
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api';
+import { getServerAddress } from './ServerUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// In-memory access token holder. In a real app, you can persist it with SecureStore/AsyncStorage if needed.
+const resolvedBase = process.env.EXPO_PUBLIC_API_URL
+  ? String(process.env.EXPO_PUBLIC_API_URL)
+  : `${getServerAddress()}/api`;
+
+export const BASE_URL = resolvedBase.replace(/\/$/, '');
+
+const ACCESS_TOKEN_KEY = 'loocateme_access_token';
+
+// In-memory access token holder. Persisted via AsyncStorage for auto-login.
 let accessToken = null;
+let loggedBaseUrlOnce = false;
 
 export function setAccessToken(token) {
-  accessToken = token || null;
+    accessToken = token || null;
+    // Fire-and-forget persistence
+    if (token) {
+        AsyncStorage.setItem(ACCESS_TOKEN_KEY, token).catch(() => {});
+    } else {
+        AsyncStorage.removeItem(ACCESS_TOKEN_KEY).catch(() => {});
+    }
 }
 
 export function getAccessToken() {
-  return accessToken;
+    return accessToken;
 }
 
-async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true } = {}) {
-  const url = `${BASE_URL}${path}`;
-
-  const init = {
-    method,
-    headers: { ...headers },
-    credentials: 'include', // needed for refresh cookie
-  };
-
-  if (accessToken) {
-    init.headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-
-  if (formData) {
-    // Let the browser set multipart/form-data boundary
-    init.body = formData;
-  } else if (body !== undefined) {
-    init.headers['Content-Type'] = 'application/json';
-    init.body = JSON.stringify(body);
-  }
-
-  const res = await fetch(url, init);
-
-  // Attempt refresh on 401 once
-  if (res.status === 401 && retry && accessToken) {
-    const refreshed = await refreshAccessToken().catch(() => null);
-    if (refreshed?.accessToken) {
-      accessToken = refreshed.accessToken;
-      return request(path, { method, body, headers, formData, retry: false });
+export async function initApiFromStorage() {
+    try {
+        const stored = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+        if (stored) {
+            accessToken = stored;
+            return stored;
+        }
+        return null;
+    } catch {
+        return null;
     }
-  }
+}
 
-  // Parse JSON or throw error
-  let data = null;
-  const text = await res.text();
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch (_e) {
-    // ignore, keep raw text
-    data = text;
-  }
+async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false } = {}) {
+    if (!loggedBaseUrlOnce) {
+        console.log(`[API] Using BASE_URL: ${BASE_URL}`);
+        loggedBaseUrlOnce = true;
+    }
+    const url = `${BASE_URL}${path}`;
 
-  if (!res.ok) {
-    const err = new Error(data?.message || `Request failed with ${res.status}`);
-    err.status = res.status;
-    err.details = data?.details;
-    throw err;
-  }
+    const init = {
+        method,
+        headers: { ...headers },
+    };
 
-  return data;
+    // Only include credentials when explicitly required (e.g., refresh/logout)
+    if (includeCredentials) {
+        init.credentials = 'include';
+    }
+
+    if (accessToken) {
+        init.headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
+    if (formData) {
+        // Let the browser set multipart/form-data boundary
+        init.body = formData;
+    } else if (body !== undefined) {
+        init.headers['Content-Type'] = 'application/json';
+        init.body = JSON.stringify(body);
+    }
+
+    let res;
+    try {
+        res = await fetch(url, init);
+    } catch (networkErr) {
+        console.error('[API] Network error', { url, method, error: networkErr?.message || networkErr });
+        throw networkErr;
+    }
+
+    // Attempt refresh on 401 once
+    if (res.status === 401 && retry && accessToken) {
+        try {
+            const refreshed = await refreshAccessToken();
+            if (refreshed?.accessToken) {
+                accessToken = refreshed.accessToken;
+                // Persist refreshed token
+                AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken).catch(() => {});
+                return request(path, { method, body, headers, formData, retry: false });
+            }
+        } catch (refreshErr) {
+            console.error('[API] Refresh token failed', { url: `${BASE_URL}/auth/refresh`, status: refreshErr?.status, error: refreshErr?.message || refreshErr });
+        }
+    }
+
+    // Parse JSON or throw error
+    let data = null;
+    const text = await res.text();
+    try {
+        data = text ? JSON.parse(text) : null;
+    } catch (_e) {
+        // ignore, keep raw text
+        data = text;
+    }
+
+    if (!res.ok) {
+        console.error('[API] Request failed', { url, method, status: res.status, code: data?.code, message: data?.message, response: data });
+        const err = new Error(data?.message || `Request failed with ${res.status}`);
+        err.status = res.status;
+        err.code = data?.code;
+        err.details = data?.details;
+        err.response = data;
+        throw err;
+    }
+
+    return data;
 }
 
 // AUTH
 export async function signup({ email, password, name }) {
-  const data = await request('/auth/signup', {
-    method: 'POST',
-    body: { email, password, name },
-  });
-  if (data?.accessToken) setAccessToken(data.accessToken);
-  return data;
+    const data = await request('/auth/signup', {
+        method: 'POST',
+        body: { email, password, name },
+    });
+    if (data?.accessToken) setAccessToken(data.accessToken);
+    return data;
 }
 
 export async function login({ email, password }) {
-  const data = await request('/auth/login', {
-    method: 'POST',
-    body: { email, password },
-  });
-  if (data?.accessToken) setAccessToken(data.accessToken);
-  return data;
+    const data = await request('/auth/login', {
+        method: 'POST',
+        body: { email, password },
+    });
+    if (data?.accessToken) setAccessToken(data.accessToken);
+    return data;
 }
 
 export async function refreshAccessToken() {
-  // Uses httpOnly cookie set by backend
-  const data = await request('/auth/refresh', { method: 'POST', retry: false });
-  return data;
+    // Uses httpOnly cookie set by backend (works on web; RN native may not include cookies)
+    const data = await request('/auth/refresh', { method: 'POST', retry: false, includeCredentials: true });
+    return data;
 }
 
 export async function logout() {
-  try {
-    await request('/auth/logout', { method: 'POST' });
-  } finally {
-    setAccessToken(null);
-  }
+    try {
+        await request('/auth/logout', { method: 'POST', includeCredentials: true });
+    } catch (e) {
+        console.error('[API] Logout error', e);
+    } finally {
+        setAccessToken(null);
+        try { await AsyncStorage.removeItem(ACCESS_TOKEN_KEY); } catch {}
+    }
 }
 
 export async function forgotPassword(email) {
-  return request('/auth/forgot-password', { method: 'POST', body: { email } });
+    return request('/auth/forgot-password', { method: 'POST', body: { email } });
 }
 
 // USERS
 export async function getMyUser() {
-  return request('/users/me', { method: 'GET' });
+    return request('/users/me', { method: 'GET' });
 }
 
 export async function updateMyLocation({ lat, lon }) {
-  return request('/users/location', { method: 'POST', body: { lat, lon } });
+    return request('/users/location', { method: 'POST', body: { lat, lon } });
 }
 
 export async function getUsersAroundMe({ lat, lon, radius = 300 }) {
-  const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
-  return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
+    const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
+    return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
 }
 
 // PROFILE
 export async function updateProfile({ name, bio }) {
-  return request('/profile', { method: 'PUT', body: { name, bio } });
+    return request('/profile', { method: 'PUT', body: { name, bio } });
+}
+
+function guessMimeFromName(name = '') {
+    const lower = String(name).toLowerCase();
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    return 'application/octet-stream';
+}
+
+function normalizeUploadFile(input) {
+    // Accepts:
+    // - { uri, name, type }
+    // - ImagePicker asset { uri, fileName/name, mimeType/type }
+    // - string uri
+    if (!input) return null;
+    if (typeof input === 'string') {
+        const uri = input;
+        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+        const type = guessMimeFromName(name);
+        return { uri, name, type };
+    }
+    const uri = input.uri || input.url;
+    const name = input.name || input.fileName || (uri ? uri.split('/').pop() : `photo_${Date.now()}.jpg`);
+    const type = input.type || input.mimeType || guessMimeFromName(name);
+    if (!uri) return null;
+    return { uri, name, type };
 }
 
 export async function uploadProfilePhoto(file) {
-  const form = new FormData();
-  form.append('photo', file);
-  return request('/profile/photo', { method: 'POST', formData: form });
+    const part = normalizeUploadFile(file);
+    if (!part) {
+        const err = new Error('Invalid file');
+        err.code = 'INVALID_FILE';
+        throw err;
+    }
+    const form = new FormData();
+    form.append('photo', part);
+    return request('/profile/photo', { method: 'POST', formData: form });
+}
+
+export async function deleteProfilePhoto() {
+    return request('/profile/photo', { method: 'DELETE' });
 }
 
 // SOCIAL
 export async function upsertSocial({ type, handle }) {
-  return request('/social', { method: 'PUT', body: { type, handle } });
+    return request('/social', { method: 'PUT', body: { type, handle } });
 }
 
 export async function removeSocial(type) {
-  return request(`/social/${encodeURIComponent(type)}`, { method: 'DELETE' });
+    return request(`/social/${encodeURIComponent(type)}`, { method: 'DELETE' });
 }
 
 // SETTINGS
 export async function setVisibility(isVisible) {
-  return request('/settings/visibility', { method: 'PUT', body: { isVisible } });
+    return request('/settings/visibility', { method: 'PUT', body: { isVisible } });
 }
 
-// Convenience: initialize from a persisted token if you have one
+// Convenience: initialize from a provided token (manual init)
 export function initApi({ token } = {}) {
-  if (token) setAccessToken(token);
-  return { setAccessToken, getAccessToken };
+    if (token) setAccessToken(token);
+    return { setAccessToken, getAccessToken };
 }

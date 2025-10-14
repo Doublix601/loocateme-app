@@ -13,6 +13,7 @@ const ForgotPasswordScreen = ({ onResetPassword }) => {
       Alert.alert('Email envoyé', 'Si un compte existe, un email a été envoyé.');
       onResetPassword && onResetPassword();
     } catch (e) {
+      console.error('[ForgotPasswordScreen] Forgot password error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
       Alert.alert('Erreur', e?.message || 'Veuillez réessayer');
     } finally {
       setLoading(false);

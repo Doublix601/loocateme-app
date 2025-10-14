@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import {
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
-import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto } from '../components/ApiRequest';
+import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser } from '../components/ApiRequest';
 
 const { width, height } = Dimensions.get('window');
 
@@ -26,19 +26,17 @@ const MyAccountScreen = ({
   socialMediaIcons,
   onReturnToSettings,
 }) => {
-  const edgeHitWidth = 25;
   const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: (evt, gestureState) => {
-      return evt.nativeEvent.pageX <= edgeHitWidth;
-    },
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_evt, gestureState) => {
       const { dx, dy } = gestureState;
       const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      return evt.nativeEvent.pageX <= edgeHitWidth && isHorizontal && dx > 10;
+      // Enable from anywhere on screen: start responding when a right swipe is detected
+      return isHorizontal && dx > 10;
     },
-    onPanResponderRelease: (evt, gestureState) => {
+    onPanResponderRelease: (_evt, gestureState) => {
       const { dx, vx } = gestureState;
-      if (dx > 60 && vx > 0.2) {
+      if (dx > 60 || vx > 0.3) {
         onReturnToList && onReturnToList();
       }
     },
@@ -48,13 +46,79 @@ const MyAccountScreen = ({
   const [editType, setEditType] = useState('');
   const [newValue, setNewValue] = useState('');
 
+  // Dynamically scale UI based on number of social networks to best fill the page without scrolling
+  const socialCountForScale = Array.isArray(user?.socialMedia) ? user.socialMedia.length : 0;
+  const computeScale = (count) => {
+    if (count <= 0) return 1.1; // slightly larger to fill
+    if (count === 1) return 1.05;
+    if (count <= 3) return 1.0;
+    if (count <= 6) return 0.9;
+    if (count <= 9) return 0.85;
+    return 0.8; // many socials -> reduce to fit
+  };
+  const scale = computeScale(socialCountForScale);
+  const imgSize = Math.min(width * 0.4, 160) * scale;
+  const iconSize = Math.min(width * 0.2, 72) * scale;
+  const usernameFont = Math.min(width * 0.075, 30) * scale;
+  const baseBioFont = Math.min(width * 0.04, 18) * scale;
+  const bioFont = Math.max(14, Math.min(baseBioFont, 22));
+  const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
+
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [selectedSocialPlatform, setSelectedSocialPlatform] = useState('');
   const [socialLinks, setSocialLinks] = useState(user.socialMedia || []);
   const [socialModalVisible, setSocialModalVisible] = useState(false);
+
+  // Keep local socialLinks in sync with context user updates
+  useEffect(() => {
+    setSocialLinks(user?.socialMedia || []);
+  }, [user?.socialMedia]);
+
+  // On mount, if socials are empty (e.g., after auto-login), fetch my user from backend and hydrate context
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const empty = !user?.socialMedia || user.socialMedia.length === 0;
+        if (!empty) return;
+        const res = await getMyUser();
+        const me = res?.user;
+        if (!me || !mounted) return;
+        const mappedSocial = mapNetworksToSocialMedia(me.socialNetworks || []);
+        setSocialLinks(mappedSocial);
+        if (updateUser) {
+          updateUser({
+            username: me.name || user?.username || '',
+            bio: typeof me.bio === 'string' ? me.bio : (user?.bio || ''),
+            photo: me.profileImageUrl || user?.photo || null,
+            socialMedia: mappedSocial,
+            isVisible: me.isVisible !== false,
+          });
+        }
+      } catch (e) {
+        console.error('[MyAccount] getMyUser error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details });
+      }
+    })();
+    return () => { mounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [selectedSocialLink, setSelectedSocialLink] = useState(null);
   const [photoOptionsModalVisible, setPhotoOptionsModalVisible] =
     useState(false);
+
+  // Allowed social platforms (must match backend validation)
+  const ALLOWED_PLATFORMS = ['instagram', 'facebook', 'x', 'snapchat', 'tiktok', 'linkedin'];
+
+  // Map backend socialNetworks -> frontend socialMedia shape (normalize and filter)
+  const mapNetworksToSocialMedia = (networks = []) =>
+    networks
+      .map((n) => {
+        const raw = String(n?.type || '').toLowerCase();
+        const platform = raw === 'twitter' ? 'x' : raw;
+        if (!ALLOWED_PLATFORMS.includes(platform)) return null;
+        return { platform, username: n?.handle || '' };
+      })
+      .filter(Boolean);
 
   const handleEdit = (type) => {
     setEditType(type);
@@ -91,15 +155,30 @@ const MyAccountScreen = ({
     setModalVisible(false);
   };
 
-  const handleAddSocial = () => {
-    const newSocial = { platform: selectedSocialPlatform, username: newValue };
-    const updatedSocialLinks = [...socialLinks, newSocial];
-
-    setSocialLinks(updatedSocialLinks);
-    updateUser({ ...user, socialMedia: updatedSocialLinks }); // Update user context
-    setShowSocialModal(false);
-    setSelectedSocialPlatform('');
-    setNewValue('');
+  const handleAddSocial = async () => {
+    try {
+      const platform = String(selectedSocialPlatform || '').toLowerCase();
+      const handle = String(newValue || '').trim();
+      if (!ALLOWED_PLATFORMS.includes(platform)) {
+        Alert.alert('Erreur', "Plateforme non supportée");
+        return;
+      }
+      if (!handle) {
+        Alert.alert('Erreur', "Veuillez saisir un identifiant");
+        return;
+      }
+      const res = await apiUpsertSocial({ type: platform, handle });
+      const networks = res?.user?.socialNetworks || [];
+      const mapped = mapNetworksToSocialMedia(networks);
+      setSocialLinks(mapped);
+      updateUser({ ...user, socialMedia: mapped });
+      setShowSocialModal(false);
+      setSelectedSocialPlatform('');
+      setNewValue('');
+    } catch (e) {
+      console.error('[MyAccount] Add social error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
+      Alert.alert('Erreur', e?.message || "Impossible d'ajouter le réseau social");
+    }
   };
 
   const handleSocialLongPress = (social) => {
@@ -108,24 +187,47 @@ const MyAccountScreen = ({
     setSocialModalVisible(true);
   };
 
-  const handleSocialEdit = () => {
-    const updatedLinks = socialLinks.map((link) =>
-      link.platform === selectedSocialLink.platform
-        ? { ...link, username: newValue }
-        : link
-    );
-    setSocialLinks(updatedLinks);
-    updateUser({ ...user, socialMedia: updatedLinks }); // Mise à jour du contexte utilisateur
-    setSocialModalVisible(false);
+  const handleSocialEdit = async () => {
+    try {
+      const platform = selectedSocialLink?.platform;
+      const handle = String(newValue || '').trim();
+      if (!platform || !ALLOWED_PLATFORMS.includes(platform)) {
+        Alert.alert('Erreur', "Plateforme non supportée");
+        return;
+      }
+      if (!handle) {
+        Alert.alert('Erreur', "Veuillez saisir un identifiant");
+        return;
+      }
+      const res = await apiUpsertSocial({ type: platform, handle });
+      const networks = res?.user?.socialNetworks || [];
+      const mapped = mapNetworksToSocialMedia(networks);
+      setSocialLinks(mapped);
+      updateUser({ ...user, socialMedia: mapped });
+      setSocialModalVisible(false);
+    } catch (e) {
+      console.error('[MyAccount] Edit social error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
+      Alert.alert('Erreur', e?.message || "Impossible de modifier le réseau social");
+    }
   };
 
-  const handleSocialDelete = () => {
-    const updatedLinks = socialLinks.filter(
-      (link) => link.platform !== selectedSocialLink.platform
-    );
-    setSocialLinks(updatedLinks);
-    updateUser({ ...user, socialMedia: updatedLinks }); // Mise à jour du contexte utilisateur
-    setSocialModalVisible(false);
+  const handleSocialDelete = async () => {
+    try {
+      const platform = selectedSocialLink?.platform;
+      if (!platform || !ALLOWED_PLATFORMS.includes(platform)) {
+        Alert.alert('Erreur', 'Plateforme non supportée');
+        return;
+      }
+      const res = await apiRemoveSocial(platform);
+      const networks = res?.user?.socialNetworks || [];
+      const mapped = mapNetworksToSocialMedia(networks);
+      setSocialLinks(mapped);
+      updateUser({ ...user, socialMedia: mapped });
+      setSocialModalVisible(false);
+    } catch (e) {
+      console.error('[MyAccount] Delete social error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
+      Alert.alert('Erreur', e?.message || "Impossible de supprimer le réseau social");
+    }
   };
 
   const handleProfileImageLongPress = () => {
@@ -183,11 +285,25 @@ const MyAccountScreen = ({
   const handleGallery = async () => {
     try {
       if (Platform.OS === 'web') {
-        // On web, launchImageLibraryAsync may work without permission, but guard anyway
+        // Web: pick and upload as well so backend profileImageUrl stays in sync
         const result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.8 });
         const canceled = result?.canceled ?? result?.cancelled;
         const uri = result?.assets?.[0]?.uri ?? result?.uri;
-        if (!canceled && uri) updateUser({ ...user, photo: uri });
+        if (!canceled && uri) {
+          try {
+            const res = await apiUploadProfilePhoto(uri);
+            const updated = res?.user || {};
+            updateUser({
+              ...user,
+              photo: updated.profileImageUrl || uri,
+              username: updated.name ?? user.username,
+              bio: updated.bio ?? user.bio,
+            });
+          } catch (e2) {
+            console.error('[MyAccount] Upload photo (web) error', { code: e2?.code, message: e2?.message, status: e2?.status });
+            Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+          }
+        }
         return;
       }
 
@@ -229,9 +345,23 @@ const MyAccountScreen = ({
     }
   };
 
-  const handleDeletePhoto = () => {
-    updateUser({ ...user, photo: null });
-    setPhotoOptionsModalVisible(false);
+  const handleDeletePhoto = async () => {
+    try {
+      const { deleteProfilePhoto: apiDelete } = await import('../components/ApiRequest');
+      const res = await apiDelete();
+      const updated = res?.user || {};
+      updateUser({
+        ...user,
+        photo: updated.profileImageUrl || null,
+        username: updated.name ?? user.username,
+        bio: updated.bio ?? user.bio,
+      });
+    } catch (e) {
+      console.error('[MyAccount] Delete photo error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
+      Alert.alert('Erreur', e?.message || "Impossible de supprimer la photo de profil");
+    } finally {
+      setPhotoOptionsModalVisible(false);
+    }
   };
 
   return (
@@ -247,7 +377,7 @@ const MyAccountScreen = ({
         />
       </TouchableOpacity>
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ padding: width * 0.05, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
         <Text style={styles.title}>Mon Compte</Text>
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
@@ -257,13 +387,13 @@ const MyAccountScreen = ({
                   {user.photo ? (
                     <Image
                       source={{ uri: user.photo }}
-                      style={styles.profileImage}
+                      style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
                     />
                   ) : (
-                    <View style={styles.placeholderImage}>
+                    <View style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}>
                       <Image
                         source={require('../assets/appIcons/userProfile.png')}
-                        style={styles.placeholderIcon}
+                        style={[styles.placeholderIcon, { width: placeholderIconSize, height: placeholderIconSize }]}
                       />
                     </View>
                   )}
@@ -275,7 +405,7 @@ const MyAccountScreen = ({
                   delayLongPress={300}
                   activeOpacity={1}
                 >
-                  <Text style={styles.usernameUnderPhoto}>{user.username}</Text>
+                  <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>{user.username}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -290,7 +420,7 @@ const MyAccountScreen = ({
                 <Text
                   style={[
                     styles.value,
-                    { fontSize: Math.min(width * 0.04, 18), textAlign: 'center' },
+                    { fontSize: bioFont, textAlign: 'center' },
                   ]}>
                   {user.bio}
                 </Text>
@@ -304,20 +434,24 @@ const MyAccountScreen = ({
               style={styles.socialMediaTile}>
               <Image
                 source={require('../assets/socialMediaIcons/addSocialNetwork_logo.png')}
-                style={styles.socialMediaIcon}
+                style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
               />
             </TouchableOpacity>
-            {socialLinks.map((social, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.socialMediaTile}
-                onLongPress={() => handleSocialLongPress(social)}>
-                <Image
-                  source={socialMediaIcons[social.platform]}
-                  style={styles.socialMediaIcon}
-                />
-              </TouchableOpacity>
-            ))}
+            {socialLinks.map((social, index) => {
+              const icon = social?.platform ? socialMediaIcons[social.platform] : undefined;
+              if (!icon) return null;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.socialMediaTile}
+                  onLongPress={() => handleSocialLongPress(social)}>
+                  <Image
+                    source={icon}
+                    style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
+                  />
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -602,27 +736,27 @@ const styles = StyleSheet.create({
   },
   usernameUnderPhoto: {
     marginTop: 8,
-    fontSize: Math.min(width * 0.065, 26),
+    fontSize: Math.min(width * 0.075, 30),
     color: '#00c2cb',
     fontWeight: 'bold',
     textAlign: 'center',
   },
   profileImage: {
-    width: Math.min(width * 0.3, 120),
-    height: Math.min(width * 0.3, 120),
-    borderRadius: Math.min(width * 0.15, 60),
+    width: Math.min(width * 0.4, 160),
+    height: Math.min(width * 0.4, 160),
+    borderRadius: Math.min(width * 0.2, 80),
   },
   placeholderImage: {
-    width: Math.min(width * 0.3, 120),
-    height: Math.min(width * 0.3, 120),
+    width: Math.min(width * 0.4, 160),
+    height: Math.min(width * 0.4, 160),
     backgroundColor: '#00c2cb',
-    borderRadius: Math.min(width * 0.15, 60),
+    borderRadius: Math.min(width * 0.2, 80),
     alignItems: 'center',
     justifyContent: 'center',
   },
   placeholderIcon: {
-    width: Math.min(width * 0.15, 56),
-    height: Math.min(width * 0.15, 56),
+    width: Math.min(width * 0.18, 72),
+    height: Math.min(width * 0.18, 72),
     tintColor: '#fff',
   },
   userInfoText: {
@@ -659,16 +793,16 @@ const styles = StyleSheet.create({
   socialMediaTile: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: height * 0.02,
-    marginHorizontal: width * 0.03,
-    padding: 6,
-    borderWidth: 2,
+    marginBottom: height * 0.025,
+    marginHorizontal: width * 0.04,
+    padding: 10,
+    borderWidth: 0,
     borderColor: 'transparent',
     borderRadius: 999,
   },
   socialMediaIcon: {
-    width: Math.min(width * 0.14, 56),
-    height: Math.min(width * 0.14, 56),
+    width: Math.min(width * 0.2, 72),
+    height: Math.min(width * 0.2, 72),
     resizeMode: 'contain',
   },
   socialMediaText: {

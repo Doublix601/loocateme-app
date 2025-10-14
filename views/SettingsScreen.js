@@ -21,7 +21,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
   const [isVisible, setIsVisible] = useState(user?.isVisible ?? true);
   const [saving, setSaving] = useState(false);
 
-  const edgeHitWidth = 30;
   const saveAndReturn = async () => {
     try {
       setSaving(true);
@@ -31,6 +30,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
       }
       onReturnToAccount && onReturnToAccount();
     } catch (e) {
+      console.error('[SettingsScreen] Save visibility error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
       Alert.alert('Erreur', e?.message || 'Impossible de sauvegarder le paramètre');
     } finally {
       setSaving(false);
@@ -38,15 +38,13 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
   };
 
   const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: (evt) => {
-      return evt.nativeEvent.pageX <= edgeHitWidth;
-    },
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_evt, gestureState) => {
       const { dx, dy } = gestureState;
       const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      return evt.nativeEvent.pageX <= edgeHitWidth && isHorizontal && dx > 10;
+      return isHorizontal && dx > 10;
     },
-    onPanResponderRelease: (evt, gestureState) => {
+    onPanResponderRelease: (_evt, gestureState) => {
       const { dx, vx } = gestureState;
       if (dx > 50 || vx > 0.3) {
         saveAndReturn();

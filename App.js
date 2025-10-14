@@ -9,12 +9,14 @@ import UserListScreen from './views/UserListScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
 import { UserProvider } from './components/contexts/UserContext';
+import { initApiFromStorage, getAccessToken } from './components/ApiRequest';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('Login');
   const [selectedUser, setSelectedUser] = useState(null);
   const [userListScrollOffset, setUserListScrollOffset] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   // Transition animation state
   const transitionX = useRef(new Animated.Value(0)).current;
@@ -60,6 +62,24 @@ export default function App() {
       }
     };
     preload();
+  }, []);
+
+  // Initialize auth from stored token for auto-login
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const token = await initApiFromStorage();
+        if (token) {
+          // Navigate to main screen if a token exists
+          setCurrentScreen('UserList');
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        setAuthReady(true);
+      }
+    };
+    initAuth();
   }, []);
 
   const users = [

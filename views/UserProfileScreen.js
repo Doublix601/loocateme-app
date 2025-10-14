@@ -12,23 +12,39 @@ import {
 const { width, height } = Dimensions.get('window');
 
 const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons }) => {
-  const edgeHitWidth = 25;
   const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: (evt, gestureState) => {
-      return evt.nativeEvent.pageX <= edgeHitWidth;
-    },
-    onMoveShouldSetPanResponder: (evt, gestureState) => {
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_evt, gestureState) => {
       const { dx, dy } = gestureState;
       const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      return evt.nativeEvent.pageX <= edgeHitWidth && isHorizontal && dx > 10;
+      return isHorizontal && dx > 10;
     },
-    onPanResponderRelease: (evt, gestureState) => {
+    onPanResponderRelease: (_evt, gestureState) => {
       const { dx, vx } = gestureState;
-      if (dx > 60 && vx > 0.2) {
+      if (dx > 60 || vx > 0.3) {
         onReturnToList && onReturnToList();
       }
     },
   });
+
+  // Dynamic scaling based on number of social networks to avoid scrolling and fill the page reasonably
+  const socialsArr = (user?.socialMedias ?? user?.socialMedia ?? []);
+  const socialCountForScale = Array.isArray(socialsArr) ? socialsArr.length : 0;
+  const computeScale = (count) => {
+    if (count <= 0) return 1.1;
+    if (count === 1) return 1.05;
+    if (count <= 3) return 1.0;
+    if (count <= 6) return 0.9;
+    if (count <= 9) return 0.85;
+    return 0.8;
+  };
+  const scale = computeScale(socialCountForScale);
+  const imgSize = Math.min(width * 0.4, 160) * scale;
+  const iconSize = Math.min(width * 0.2, 72) * scale;
+  const usernameFont = Math.min(width * 0.075, 30) * scale;
+  const baseBioFont = Math.min(width * 0.04, 18) * scale;
+  const bioFont = Math.max(14, Math.min(baseBioFont, 22));
+  const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
 
   if (!user) {
     return (
@@ -55,25 +71,25 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         />
       </TouchableOpacity>
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ padding: width * 0.05, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
 
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
             <View style={styles.imgUsernameSplitBox}>
               <View style={styles.userProfilePictureContainer}>
                 {user.photo ? (
-                  <Image source={{ uri: user.photo }} style={styles.profileImage} />
+                  <Image source={{ uri: user.photo }} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
                 ) : (
-                  <View style={styles.placeholderImage}>
+                  <View style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}>
                     <Image
                       source={require('../assets/appIcons/userProfile.png')}
-                      style={styles.placeholderIcon}
+                      style={[styles.placeholderIcon, { width: placeholderIconSize, height: placeholderIconSize }]}
                     />
                   </View>
                 )}
               </View>
               <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                <Text style={styles.usernameUnderPhoto}>{user.username}</Text>
+                <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>{user.username}</Text>
               </View>
             </View>
 
@@ -82,7 +98,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                 <Text
                   style={[
                     styles.value,
-                    { fontSize: Math.min(width * 0.04, 18), textAlign: 'center' },
+                    { fontSize: bioFont, textAlign: 'center' },
                   ]}
                 >
                   {user.bio || 'Pas de bio'}
@@ -114,7 +130,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                     >
                       <Image
                         source={iconSrc}
-                        style={styles.socialMediaIcon}
+                        style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
                       />
                     </TouchableOpacity>
                   );
@@ -204,27 +220,27 @@ const styles = StyleSheet.create({
   },
   usernameUnderPhoto: {
     marginTop: 8,
-    fontSize: Math.min(width * 0.065, 26),
+    fontSize: Math.min(width * 0.075, 30),
     color: '#00c2cb',
     fontWeight: 'bold',
     textAlign: 'center',
   },
   profileImage: {
-    width: Math.min(width * 0.3, 120),
-    height: Math.min(width * 0.3, 120),
-    borderRadius: Math.min(width * 0.15, 60),
+    width: Math.min(width * 0.4, 160),
+    height: Math.min(width * 0.4, 160),
+    borderRadius: Math.min(width * 0.2, 80),
   },
   placeholderImage: {
-    width: Math.min(width * 0.3, 120),
-    height: Math.min(width * 0.3, 120),
+    width: Math.min(width * 0.4, 160),
+    height: Math.min(width * 0.4, 160),
     backgroundColor: '#00c2cb',
-    borderRadius: Math.min(width * 0.15, 60),
+    borderRadius: Math.min(width * 0.2, 80),
     alignItems: 'center',
     justifyContent: 'center',
   },
   placeholderIcon: {
-    width: Math.min(width * 0.15, 56),
-    height: Math.min(width * 0.15, 56),
+    width: Math.min(width * 0.18, 72),
+    height: Math.min(width * 0.18, 72),
     tintColor: '#fff',
   },
   userInfoText: {
@@ -261,12 +277,14 @@ const styles = StyleSheet.create({
   socialMediaTile: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: height * 0.02,
-    marginHorizontal: width * 0.03,
+    marginBottom: height * 0.025,
+    marginHorizontal: width * 0.04,
+    padding: 10,
+    borderRadius: 999,
   },
   socialMediaIcon: {
-    width: Math.min(width * 0.14, 56),
-    height: Math.min(width * 0.14, 56),
+    width: Math.min(width * 0.2, 72),
+    height: Math.min(width * 0.2, 72),
     resizeMode: 'contain',
   },
   socialMediaText: {
