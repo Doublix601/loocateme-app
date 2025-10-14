@@ -43,7 +43,7 @@ export async function initApiFromStorage() {
     }
 }
 
-async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false } = {}) {
+async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false, timeoutMs } = {}) {
     if (!loggedBaseUrlOnce) {
         console.log(`[API] Using BASE_URL: ${BASE_URL}`);
         loggedBaseUrlOnce = true;
@@ -73,9 +73,26 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
     }
 
     let res;
+    let controller;
+    let timeoutId;
     try {
+        if (typeof AbortController !== 'undefined' && timeoutMs && timeoutMs > 0) {
+            controller = new AbortController();
+            init.signal = controller.signal;
+            timeoutId = setTimeout(() => {
+                try { controller.abort(); } catch {}
+            }, timeoutMs);
+        }
         res = await fetch(url, init);
+        if (timeoutId) { try { clearTimeout(timeoutId); } catch {} }
     } catch (networkErr) {
+        if (timeoutId) { try { clearTimeout(timeoutId); } catch {} }
+        if (networkErr && (networkErr.name === 'AbortError' || networkErr.message?.toLowerCase().includes('aborted'))) {
+            const err = new Error('Délai dépassé');
+            err.code = 'TIMEOUT';
+            err.status = 0;
+            throw err;
+        }
         console.error('[API] Network error', { url, method, error: networkErr?.message || networkErr });
         throw networkErr;
     }
@@ -147,6 +164,7 @@ export async function login({ email, password }) {
     const data = await request('/auth/login', {
         method: 'POST',
         body: { email, password },
+        timeoutMs: 5000,
     });
     if (data?.accessToken) setAccessToken(data.accessToken);
     return data;

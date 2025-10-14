@@ -36,7 +36,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
             onLogin && onLogin(res?.user);
         } catch (e) {
             console.error('[LoginScreen] Login error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
-            Alert.alert('Erreur de connexion', e?.message || 'Veuillez réessayer');
+            Alert.alert('Authentification échouée', 'Impossible de vous connecter. Vérifiez vos identifiants et réessayez.');
         } finally {
             setLoading(false);
         }
