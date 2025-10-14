@@ -1,6 +1,7 @@
 // Simple API client for loocateme backend
 // Base URL of the backend API
 import { getServerAddress } from './ServerUtils';
+import { publish } from './EventBus';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const resolvedBase = process.env.EXPO_PUBLIC_API_URL
@@ -106,6 +107,21 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 
     if (!res.ok) {
         console.error('[API] Request failed', { url, method, status: res.status, code: data?.code, message: data?.message, response: data });
+
+        // Detect authentication/user-not-found errors and auto-logout
+        const code = data?.code;
+        const msg = (data?.message || '').toString().toLowerCase();
+        const isAuthStatus = res.status === 401 || res.status === 403;
+        const isAuthCode = code === 'AUTH_MISSING' || code === 'AUTH_INVALID' || code === 'REFRESH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
+        const isUserNotFound404 = res.status === 404 && (code === 'NOT_FOUND' || msg.includes('user not found')) && path.startsWith('/users');
+        if (isAuthStatus || isAuthCode || isUserNotFound404) {
+            try {
+                await logout();
+            } finally {
+                publish('auth:logout', { reason: isUserNotFound404 ? 'USER_NOT_FOUND' : 'AUTH', status: res.status, code: code || null, path });
+            }
+        }
+
         const err = new Error(data?.message || `Request failed with ${res.status}`);
         err.status = res.status;
         err.code = data?.code;

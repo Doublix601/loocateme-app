@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { getAccessToken, getMyUser } from '../ApiRequest';
+import { subscribe } from '../EventBus';
 
 export const UserContext = createContext();
 
@@ -53,6 +54,20 @@ export const UserProvider = ({ children }) => {
     };
   // only run once on mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Reset user state on global auth logout
+  useEffect(() => {
+    const unsub = subscribe('auth:logout', () => {
+      setUser({
+        username: '',
+        bio: '',
+        photo: null,
+        socialMedia: [],
+        isVisible: false,
+      });
+    });
+    return () => unsub();
   }, []);
 
   return (

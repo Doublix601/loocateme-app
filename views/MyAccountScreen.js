@@ -13,6 +13,7 @@ import {
   Alert,
   Platform,
   Pressable,
+  SafeAreaView,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
@@ -365,7 +366,7 @@ const MyAccountScreen = ({
   };
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={onReturnToList}
@@ -377,7 +378,7 @@ const MyAccountScreen = ({
         />
       </TouchableOpacity>
 
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: width * 0.05, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
         <Text style={styles.title}>Mon Compte</Text>
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
@@ -660,14 +661,13 @@ const MyAccountScreen = ({
           style={styles.roundButtonImage}
         />
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: width * 0.05, // 5% padding based on screen width
     backgroundColor: '#fff',
   },
   title: {
@@ -678,8 +678,7 @@ const styles = StyleSheet.create({
     color: '#00c2cb',
   },
   userInfoContainer: {
-    marginBottom: height * 0.05,
-    paddingLeft: width * 0.05,
+    marginBottom: height * 0.04,
   },
   usernameTitleContainer: {
     alignItems: 'flex-start',
@@ -793,9 +792,9 @@ const styles = StyleSheet.create({
   socialMediaTile: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: height * 0.025,
-    marginHorizontal: width * 0.04,
-    padding: 10,
+    marginBottom: height * 0.02,
+    marginHorizontal: width * 0.03,
+    padding: Math.max(6, width * 0.02),
     borderWidth: 0,
     borderColor: 'transparent',
     borderRadius: 999,
@@ -906,14 +905,14 @@ const styles = StyleSheet.create({
   },
   returnToListButton: {
     backgroundColor: '#00c2cb',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: Math.min(width * 0.14, 56),
+    height: Math.min(width * 0.14, 56),
+    borderRadius: Math.min(width * 0.07, 28),
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 30,
-    right: 110,
+    bottom: Math.max(height * 0.02, 16),
+    right: Math.max(width * 0.05, 16) + Math.min(width * 0.14, 56) + Math.max(width * 0.03, 12),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -922,14 +921,14 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     backgroundColor: '#00c2cb',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: Math.min(width * 0.14, 56),
+    height: Math.min(width * 0.14, 56),
+    borderRadius: Math.min(width * 0.07, 28),
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 30,
-    right: 30,
+    bottom: Math.max(height * 0.02, 16),
+    right: Math.max(width * 0.05, 16),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -937,8 +936,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   roundButtonImage: {
-    width: 30,
-    height: 30,
+    width: Math.min(Math.min(width * 0.14, 56) * 0.55, 28),
+    height: Math.min(Math.min(width * 0.14, 56) * 0.55, 28),
     tintColor: '#fff',
   },
   backButton: {

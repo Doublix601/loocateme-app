@@ -7,6 +7,7 @@ import {
   ScrollView,
   Dimensions,
   PanResponder,
+  SafeAreaView,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -59,7 +60,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={onReturnToList}
@@ -71,7 +72,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         />
       </TouchableOpacity>
 
-      <ScrollView style={styles.container} contentContainerStyle={{ padding: width * 0.05, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
 
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
@@ -143,14 +144,13 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         </View>
       </ScrollView>
 
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: width * 0.05,
     backgroundColor: '#fff',
   },
   title: {
@@ -162,8 +162,7 @@ const styles = StyleSheet.create({
     color: '#00c2cb',
   },
   userInfoContainer: {
-    marginBottom: height * 0.05,
-    paddingLeft: width * 0.05,
+    marginBottom: height * 0.04,
   },
   usernameTitleContainer: {
     alignItems: 'flex-start',
@@ -277,9 +276,9 @@ const styles = StyleSheet.create({
   socialMediaTile: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: height * 0.025,
-    marginHorizontal: width * 0.04,
-    padding: 10,
+    marginBottom: height * 0.02,
+    marginHorizontal: width * 0.03,
+    padding: Math.max(6, width * 0.02),
     borderRadius: 999,
   },
   socialMediaIcon: {

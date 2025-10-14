@@ -10,6 +10,7 @@ import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
 import { UserProvider } from './components/contexts/UserContext';
 import { initApiFromStorage, getAccessToken } from './components/ApiRequest';
+import { subscribe } from './components/EventBus';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('Login');
@@ -80,6 +81,16 @@ export default function App() {
       }
     };
     initAuth();
+  }, []);
+
+  // Force logout and redirect to Login when auth errors occur
+  useEffect(() => {
+    const unsub = subscribe('auth:logout', () => {
+      setSelectedUser(null);
+      setUserListScrollOffset(0);
+      setCurrentScreen('Login');
+    });
+    return () => unsub();
   }, []);
 
   const users = [
