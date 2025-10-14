@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  PanResponder,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { updateMyLocation, getUsersAroundMe, getMyUser } from '../components/ApiRequest';
@@ -18,6 +19,25 @@ import { UserContext } from '../components/contexts/UserContext';
 const { width, height } = Dimensions.get('window');
 
 const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialScrollOffset = 0, onUpdateScrollOffset }) => {
+  // Swipe left anywhere on the list to open MyAccount
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_evt, gestureState) => {
+        const { dx, dy } = gestureState;
+        const isHorizontal = Math.abs(dx) > Math.abs(dy);
+        // left swipe
+        return isHorizontal && dx < -10;
+      },
+      onPanResponderRelease: (_evt, gestureState) => {
+        const { dx, vx } = gestureState;
+        // strong left swipe or sufficient velocity to the left
+        if (dx < -60 || vx < -0.3) {
+          onReturnToAccount && onReturnToAccount();
+        }
+      },
+    })
+  ).current;
   const [loading, setLoading] = useState(false);
   const [nearbyUsers, setNearbyUsers] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -127,7 +147,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
       const lon = loc.coords.longitude;
       setMyLocation({ lat, lon });
       await updateMyLocation({ lat, lon }).catch(() => {});
-      const res = await getUsersAroundMe({ lat, lon, radius: 300 });
+      const res = await getUsersAroundMe({ lat, lon, radius: 2000 });
       const apiUsers = res?.users || [];
       const mapped = apiUsers.map((u) => mapBackendUserToUi(u, { lat, lon }));
       setNearbyUsers(mapped);
@@ -212,7 +232,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
   const data = (users && users.length > 0) ? users : nearbyUsers;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       <FlatList
         ref={listRef}
         data={data}

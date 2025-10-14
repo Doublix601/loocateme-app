@@ -76,20 +76,27 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         }
         const appUrl = `instagram://user?username=${encodeURIComponent(username)}`;
         const webUrl = `https://www.instagram.com/${encodeURIComponent(username)}/`;
-        const canOpen = await Linking.canOpenURL(appUrl);
-        if (canOpen) {
+        // Try opening the app directly; if it fails, fall back to web
+        try {
           await Linking.openURL(appUrl);
-        } else {
-          await Linking.openURL(webUrl);
+          return;
+        } catch (e1) {
+          try {
+            await Linking.openURL(webUrl);
+            return;
+          } catch (e2) {
+            Alert.alert('Impossible d\'ouvrir Instagram', "Veuillez réessayer plus tard.");
+            return;
+          }
         }
-        return;
       }
       // Fallback for other platforms: try a generic https link if provided as URL
       if (/^https?:\/\//i.test(handle)) {
         await Linking.openURL(handle);
+        return;
       }
     } catch (_e) {
-      try { await Linking.openURL(handle); } catch {}
+      // Silent catch: nothing else to do
     }
   };
 
