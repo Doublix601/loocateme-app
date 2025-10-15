@@ -90,11 +90,14 @@ const MyAccountScreen = ({
         setSocialLinks(mappedSocial);
         if (updateUser) {
           updateUser({
+            ...user,
             username: me.name || user?.username || '',
             bio: typeof me.bio === 'string' ? me.bio : (user?.bio || ''),
             photo: me.profileImageUrl || user?.photo || null,
             socialMedia: mappedSocial,
             isVisible: me.isVisible !== false,
+            consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
+            privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
           });
         }
       } catch (e) {
@@ -155,11 +158,22 @@ const MyAccountScreen = ({
     if (editType && newValue.trim() !== '') {
       try {
         if (editType === 'username') {
-          const res = await apiUpdateProfile({ name: newValue });
+          // Normalize and validate username
+          let normalized = String(newValue || '').trim();
+          if (normalized) {
+            const lower = normalized.toLowerCase();
+            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
+          }
+          const USERNAME_RE = /^[A-Z][a-z]+$/;
+          if (!USERNAME_RE.test(normalized)) {
+            Alert.alert('Nom invalide', "Le nom d'utilisateur doit commencer par une majuscule et ne contenir que des lettres minuscules ensuite (ex: Arnaud).");
+            return;
+          }
+          const res = await apiUpdateProfile({ name: normalized });
           const updated = res?.user || {};
           updateUser({
             ...user,
-            username: updated.name ?? newValue,
+            username: updated.name ?? normalized,
             bio: updated.bio ?? user.bio,
             photo: updated.profileImageUrl ?? user.photo,
           });
@@ -506,6 +520,7 @@ const MyAccountScreen = ({
               <TextInput
                 value={newValue}
                 onChangeText={setNewValue}
+                placeholder={editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" : 'Votre texte'}
                 placeholderTextColor="#666"
                 style={[
                   styles.modalInput,
@@ -516,6 +531,9 @@ const MyAccountScreen = ({
                 blurOnSubmit={editType !== 'bio'}
                 returnKeyType={editType === 'bio' ? 'default' : 'done'}
               />
+              {editType === 'username' ? (
+                <Text style={styles.modalHint}>Format requis: ^[A-Z][a-z]+$ (exemple: Arnaud)</Text>
+              ) : null}
               <TouchableOpacity onPress={handleSave} style={styles.modalButton}>
                 <Text style={styles.modalButtonText}>Enregistrer</Text>
               </TouchableOpacity>
@@ -893,6 +911,12 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: '#fff',
     fontSize: width * 0.05,
+  },
+  modalHint: {
+    fontSize: 12,
+    color: '#666',
+    alignSelf: 'flex-start',
+    marginBottom: height * 0.01,
   },
   deleteButton: {
     backgroundColor: '#f44336',

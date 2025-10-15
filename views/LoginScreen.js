@@ -10,6 +10,8 @@ const mapBackendUser = (u = {}) => ({
     photo: u.profileImageUrl || null,
     socialMedia: Array.isArray(u.socialNetworks) ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : [],
     isVisible: u.isVisible !== false,
+    consent: u.consent || { accepted: false, version: '', consentAt: null },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
 });
 
 const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {

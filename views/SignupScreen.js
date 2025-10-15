@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, Image, useWindowDimensions } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, Image, useWindowDimensions, Switch, Modal, ScrollView } from 'react-native';
 import { signup as apiSignup, setAccessToken, updateConsent, getPrivacyPolicy } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 
@@ -10,6 +10,8 @@ const mapBackendUser = (u = {}) => ({
     photo: u.profileImageUrl || null,
     socialMedia: Array.isArray(u.socialNetworks) ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : [],
     isVisible: u.isVisible !== false,
+    consent: u.consent || { accepted: false, version: '', consentAt: null },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
 });
 
 const SignupScreen = ({ onSignup, onLogin }) => {
@@ -21,43 +23,96 @@ const SignupScreen = ({ onSignup, onLogin }) => {
     const [loading, setLoading] = useState(false);
     const [consentAccepted, setConsentAccepted] = useState(false);
 
+    // GDPR flow states
+    const [gdprModalVisible, setGdprModalVisible] = useState(false);
+    const [gdprStep, setGdprStep] = useState('policy'); // 'policy' | 'prefs'
+    const [policyLoading, setPolicyLoading] = useState(false);
+    const [policyText, setPolicyText] = useState('');
+    const [prefAnalytics, setPrefAnalytics] = useState(false);
+    const [prefMarketing, setPrefMarketing] = useState(false);
+    const [processing, setProcessing] = useState(false);
+
     const { updateUser } = useContext(UserContext);
     const { width, height } = useWindowDimensions();
 
     const handleSignup = async () => {
+        // Normalize and validate username per ^[A-Z][a-z]+$
+        let normalized = String(username || '').trim();
+        if (normalized) {
+            const lower = normalized.toLowerCase();
+            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
+        }
+        const USERNAME_RE = /^[A-Z][a-z]+$/;
+        if (!USERNAME_RE.test(normalized)) {
+            setErrorMessage("Le nom d'utilisateur doit commencer par une majuscule et ne contenir que des lettres minuscules ensuite (ex: Arnaud).");
+            return;
+        }
         if (password !== confirmPassword) {
             setErrorMessage('Les mots de passe ne correspondent pas.');
             return;
         }
-        if (!username || !email || !password) {
+        if (!normalized || !email || !password) {
             setErrorMessage('Tous les champs doivent être remplis.');
             return;
         }
-        if (!consentAccepted) {
-            setErrorMessage('Vous devez accepter la politique de confidentialité (RGPD) pour créer un compte.');
-            return;
-        }
+        // Start GDPR flow: show policy then preferences, then perform signup + consent update
         setErrorMessage('');
         try {
-            setLoading(true);
-            const res = await apiSignup({ email, password, name: username });
+            setGdprStep('policy');
+            setPrefAnalytics(false);
+            setPrefMarketing(false);
+            setGdprModalVisible(true);
+            setPolicyLoading(true);
+            const res = await getPrivacyPolicy();
+            const text = typeof res === 'string' ? res : (res?.policy || res?.text || JSON.stringify(res, null, 2));
+            setPolicyText(text);
+          } catch (e) {
+            setPolicyText("Impossible de charger la politique de confidentialité. Vous pourrez réessayer.");
+          } finally {
+            setPolicyLoading(false);
+          }
+    };
+
+    const doSignupWithConsent = async () => {
+        // Called from GDPR modal after user accepted policy and set preferences
+        // Re-run minimal validations to be safe
+        let normalized = String(username || '').trim();
+        if (normalized) {
+            const lower = normalized.toLowerCase();
+            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
+        }
+        const USERNAME_RE = /^[A-Z][a-z]+$/;
+        if (!USERNAME_RE.test(normalized) || !email || !password || password !== confirmPassword) {
+            Alert.alert("Erreur", "Vérifiez les informations saisies.");
+            return;
+        }
+        try {
+            setProcessing(true);
+            const res = await apiSignup({ email, password, name: normalized });
             if (res?.accessToken) setAccessToken(res.accessToken);
-            // Immediately record GDPR consent on backend
-            try { await updateConsent({ accepted: true, version: 'v1', analytics: false, marketing: false }); } catch (e) { console.warn('Consent update failed', e?.message || e); }
-            if (res?.user && updateUser) {
+            // Persist consent with chosen preferences
+            let updatedUser = res?.user;
+            try {
+                const consentRes = await updateConsent({ accepted: true, version: 'v1', analytics: prefAnalytics, marketing: prefMarketing });
+                if (consentRes?.user) updatedUser = consentRes.user;
+            } catch (e) {
+                console.warn('Consent update failed', e?.message || e);
+            }
+            if (updatedUser && updateUser) {
                 try {
-                    const mapped = mapBackendUser(res.user);
+                    const mapped = mapBackendUser(updatedUser);
                     updateUser(mapped);
                 } catch (mapErr) {
                     console.error('[SignupScreen] map user error', mapErr);
                 }
             }
-            onSignup && onSignup(res?.user);
+            setGdprModalVisible(false);
+            onSignup && onSignup(updatedUser);
         } catch (e) {
             console.error('[SignupScreen] Signup error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             Alert.alert("Erreur d'inscription", e?.message || 'Veuillez réessayer');
         } finally {
-            setLoading(false);
+            setProcessing(false);
         }
     };
 
@@ -125,6 +180,54 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                     <Text style={styles.linkText}>Déjà un compte ? Se connecter</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* GDPR Modal: Policy -> Preferences -> Signup */}
+            <Modal visible={gdprModalVisible} animationType="slide" onRequestClose={() => setGdprModalVisible(false)}>
+                <SafeAreaView style={styles.gdprContainer}>
+                    <View style={styles.gdprHeader}>
+                        <Text style={styles.gdprTitle}>Confidentialité & RGPD</Text>
+                    </View>
+                    {gdprStep === 'policy' ? (
+                        <View style={{ flex: 1 }}>
+                            {policyLoading ? (
+                                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                                    <ActivityIndicator size="large" color="#00c2cb" />
+                                </View>
+                            ) : (
+                                <ScrollView contentContainerStyle={styles.gdprContent}>
+                                    <Text style={styles.gdprPolicyText}>{policyText}</Text>
+                                </ScrollView>
+                            )}
+                            <View style={styles.gdprActions}>
+                                <TouchableOpacity style={[styles.gdprButton, styles.gdprDecline]} onPress={() => { setGdprModalVisible(false); }}>
+                                    <Text style={styles.gdprButtonText}>Refuser</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.gdprButton, styles.gdprAccept]} onPress={() => { setConsentAccepted(true); setGdprStep('prefs'); }}>
+                                    <Text style={styles.gdprButtonText}>Accepter</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    ) : (
+                        <View style={{ flex: 1 }}>
+                            <View style={styles.gdprContent}>
+                                <View style={styles.gdprToggleRow}>
+                                    <Text style={styles.gdprLabel}>Partage analytics</Text>
+                                    <Switch value={prefAnalytics} onValueChange={setPrefAnalytics} trackColor={{ false: '#ccc', true: '#00c2cb' }} thumbColor={prefAnalytics ? '#00c2cb' : '#f4f3f4'} />
+                                </View>
+                                <View style={styles.gdprToggleRow}>
+                                    <Text style={styles.gdprLabel}>Communication marketing</Text>
+                                    <Switch value={prefMarketing} onValueChange={setPrefMarketing} trackColor={{ false: '#ccc', true: '#00c2cb' }} thumbColor={prefMarketing ? '#00c2cb' : '#f4f3f4'} />
+                                </View>
+                            </View>
+                            <View style={styles.gdprActions}>
+                                <TouchableOpacity style={[styles.gdprButton, styles.gdprAccept]} onPress={doSignupWithConsent} disabled={processing}>
+                                    <Text style={styles.gdprButtonText}>{processing ? "Création..." : "Valider et créer mon compte"}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+                </SafeAreaView>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -222,6 +325,18 @@ const styles = StyleSheet.create({
         color: '#444',
         fontSize: 12,
     },
+  gdprContainer: { flex: 1, backgroundColor: '#fff' },
+  gdprHeader: { padding: 16, alignItems: 'center' },
+  gdprTitle: { fontSize: 20, fontWeight: '600', color: '#222' },
+  gdprContent: { padding: 16 },
+  gdprPolicyText: { fontSize: 14, color: '#333', lineHeight: 20 },
+  gdprActions: { flexDirection: 'row', justifyContent: 'space-between', padding: 16, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#eee' },
+  gdprButton: { flex: 1, padding: 14, borderRadius: 8, alignItems: 'center', marginHorizontal: 6 },
+  gdprAccept: { backgroundColor: '#00c2cb' },
+  gdprDecline: { backgroundColor: '#999' },
+  gdprButtonText: { color: '#fff', fontWeight: '600' },
+  gdprToggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
+  gdprLabel: { fontSize: 16, color: '#333' },
 });
 
 export default SignupScreen;

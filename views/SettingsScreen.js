@@ -135,8 +135,16 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
   };
 
   const handleToggleConsent = async (v) => {
-    setConsentAccepted(v);
-    await persistConsentQuietly({ accepted: v, analytics, marketing });
+    // If user tries to uncheck consent, trigger the revoke (account deletion) flow instead
+    if (v === false) {
+      // Immediately revert the UI toggle; actual deletion flow will log the user out if confirmed
+      setConsentAccepted(true);
+      handleRevokePress();
+      return;
+    }
+    // If checking consent on, just persist quietly
+    setConsentAccepted(true);
+    await persistConsentQuietly({ accepted: true, analytics, marketing });
   };
 
   const handleToggleAnalytics = async (v) => {
@@ -219,22 +227,16 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
 
   const handleDelete = async () => {
     try {
-      // Prompt for password simply using Alert prompt is iOS-only; do a minimal two-step confirm
       Alert.alert(
         'Supprimer le compte',
         'La suppression est définitive. Confirmez-vous la suppression de votre compte ?',
         [
           { text: 'Annuler', style: 'cancel' },
           {
-            text: 'Supprimer', style: 'destructive', onPress: async () => {
-              try {
-                // Minimal flow: try deletion with an empty password will fail server-side if required; better UX would show a modal with TextInput.
-                await deleteMyAccount({ password: 'password' });
-                try { await apiLogout(); } catch(_) {}
-                onLogout && onLogout();
-              } catch (e) {
-                Alert.alert('Erreur', e?.message || "Suppression impossible. Veuillez réessayer.");
-              }
+            text: 'Supprimer', style: 'destructive', onPress: () => {
+              // Open the revoke modal to let user enter their password, then perform delete
+              setRevokePassword('');
+              setRevokeVisible(true);
             }
           }
         ]
@@ -305,9 +307,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
           />
         </View>
 
-        <TouchableOpacity style={[styles.primaryButton, styles.secondaryButton]} onPress={handleRevokePress}>
-          <Text style={styles.secondaryButtonText}>Révoquer</Text>
-        </TouchableOpacity>
 
         <TouchableOpacity style={[styles.primaryButton, { marginTop: height * 0.02 }]} onPress={handleExport}>
           <Text style={styles.primaryButtonText}>Exporter mes données</Text>

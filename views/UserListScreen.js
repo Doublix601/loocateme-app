@@ -65,6 +65,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
       ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
       : [],
     isVisible: u.isVisible !== false,
+    consent: u.consent || { accepted: false, version: '', consentAt: null },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
   });
 
   // On mount, if we have a token (implicit) but context still default/empty socials, fetch my user
