@@ -15,6 +15,7 @@ const { width, height } = Dimensions.get('window');
 
 import { UserContext } from '../components/contexts/UserContext';
 import { setVisibility as apiSetVisibility, logout as apiLogout } from '../components/ApiRequest';
+import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 
 const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
   const { user, updateUser } = useContext(UserContext);
@@ -28,6 +29,11 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
       if (updateUser) {
         updateUser({ ...user, isVisible });
       }
+      // Start or stop background location according to new visibility
+      try {
+        if (isVisible) await startBackgroundLocationForOneHour();
+        else await stopBackgroundLocation();
+      } catch (_) {}
       onReturnToAccount && onReturnToAccount();
     } catch (e) {
       console.error('[SettingsScreen] Save visibility error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });

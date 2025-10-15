@@ -152,7 +152,9 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         const isAuthStatus = res.status === 401 || res.status === 403;
         const isAuthCode = code === 'AUTH_MISSING' || code === 'AUTH_INVALID' || code === 'REFRESH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
         const isUserNotFound404 = res.status === 404 && (code === 'NOT_FOUND' || msg.includes('user not found')) && path.startsWith('/users');
-        const shouldGlobalLogout = (isAuthStatus || isAuthCode || isUserNotFound404) && !suppressAuthHandling && !isAuthPath;
+        // Do NOT treat visibility restriction as an auth error
+        const isVisibilityForbidden = res.status === 403 && code === 'INVISIBLE';
+        const shouldGlobalLogout = ((isAuthStatus && !isVisibilityForbidden) || isAuthCode || isUserNotFound404) && !suppressAuthHandling && !isAuthPath;
         if (shouldGlobalLogout) {
             try {
                 await logout();

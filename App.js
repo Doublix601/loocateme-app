@@ -231,7 +231,7 @@ export default function App() {
       );
       break;
     case 'ForgotPassword':
-      screenToShow = <ForgotPasswordScreen onResetPassword={handleLogin} />;
+      screenToShow = <ForgotPasswordScreen onResetPassword={handleLogin} onBack={() => setCurrentScreen('Login')} />;
       break;
     case 'MyAccount':
       screenToShow = (

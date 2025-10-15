@@ -13,8 +13,10 @@ import {
   PanResponder,
 } from 'react-native';
 import * as Location from 'expo-location';
-import { updateMyLocation, getUsersAroundMe, getMyUser } from '../components/ApiRequest';
+import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
+import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -136,6 +138,10 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
 
   const fetchNearby = async () => {
     try {
+      if (!currentUser?.isVisible) {
+        setNearbyUsers([]);
+        return;
+      }
       setLoading(true);
       // Ask permission
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -165,6 +171,48 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
       fetchNearby();
     }
   }, []);
+
+  // On app reopen, if visibility was auto-disabled by background timeout, restore it
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const flag = await AsyncStorage.getItem(BGLocKeys.STORAGE_AUTO_INVISIBLE_KEY);
+        if (flag) {
+          await apiSetVisibility(true);
+          if (!mounted) return;
+          if (updateUser) updateUser({ ...currentUser, isVisible: true });
+          await AsyncStorage.removeItem(BGLocKeys.STORAGE_AUTO_INVISIBLE_KEY);
+          // restart background updates window
+          try { await startBackgroundLocationForOneHour(); } catch (_) {}
+          // refetch nearby now that we're visible
+          fetchNearby();
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Start/stop background location based on visibility
+  useEffect(() => {
+    if (currentUser?.isVisible) {
+      startBackgroundLocationForOneHour();
+    } else {
+      stopBackgroundLocation();
+    }
+  }, [currentUser?.isVisible]);
+
+  // Refetch when user becomes visible
+  useEffect(() => {
+    if (currentUser?.isVisible) {
+      fetchNearby();
+    } else {
+      setNearbyUsers([]);
+    }
+  }, [currentUser?.isVisible]);
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.userItem}
@@ -242,7 +290,14 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
         scrollEventThrottle={16}
         contentContainerStyle={[styles.listContainer, { flexGrow: 1 }]}
         ListHeaderComponent={(
-          <Text style={styles.title}>Autour de moi</Text>
+          <View>
+            <Text style={styles.title}>Autour de moi</Text>
+            {!currentUser?.isVisible && (
+              <Text style={styles.invisibleNotice}>
+                Vous êtes en mode invisible. Rendez-vous visible dans les Paramètres pour voir les autres utilisateurs.
+              </Text>
+            )}
+          </View>
         )}
         ListEmptyComponent={(
           <View style={[styles.noUsersContainer, { flex: 1 }]}>
@@ -250,7 +305,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
               <ActivityIndicator size="large" color="#00c2cb" />
             ) : (
               <Text style={styles.noUsersText}>
-                Personne autour de vous. Tirez pour actualiser.
+                {currentUser?.isVisible ? 'Personne autour de vous. Tirez pour actualiser.' : 'Vous êtes en mode invisible. Activez votre visibilité dans les Paramètres pour voir les autres utilisateurs.'}
               </Text>
             )}
           </View>
@@ -291,6 +346,12 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 20,
+  },
+  invisibleNotice: {
+    textAlign: 'center',
+    color: '#d35400',
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
   userItem: {
     padding: 20,
