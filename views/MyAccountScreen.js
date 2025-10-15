@@ -506,6 +506,7 @@ const MyAccountScreen = ({
               <TextInput
                 value={newValue}
                 onChangeText={setNewValue}
+                placeholderTextColor="#666"
                 style={[
                   styles.modalInput,
                   editType === 'bio' ? { height: Math.max(height * 0.18, 120), textAlignVertical: 'top', paddingTop: 10 } : null,
@@ -568,6 +569,7 @@ const MyAccountScreen = ({
                   value={newValue}
                   onChangeText={setNewValue}
                   placeholder="Nom d'utilisateur"
+                  placeholderTextColor="#666"
                   style={styles.modalInput}
                 />
               </ScrollView>
@@ -701,14 +703,6 @@ const MyAccountScreen = ({
         />
       </TouchableOpacity>
 
-      {onOpenDataManagement ? (
-        <TouchableOpacity
-          style={styles.dataButton}
-          onPress={onOpenDataManagement}
-          accessibilityLabel="Données et confidentialité">
-          <Text style={styles.dataButtonText}>RGPD</Text>
-        </TouchableOpacity>
-      ) : null}
     </SafeAreaView>
   );
 };

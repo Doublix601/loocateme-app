@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, Image, useWindowDimensions } from 'react-native';
-import { signup as apiSignup, setAccessToken } from '../components/ApiRequest';
+import { signup as apiSignup, setAccessToken, updateConsent, getPrivacyPolicy } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 
 // Map backend user to frontend context shape
@@ -19,6 +19,7 @@ const SignupScreen = ({ onSignup, onLogin }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [consentAccepted, setConsentAccepted] = useState(false);
 
     const { updateUser } = useContext(UserContext);
     const { width, height } = useWindowDimensions();
@@ -32,11 +33,17 @@ const SignupScreen = ({ onSignup, onLogin }) => {
             setErrorMessage('Tous les champs doivent être remplis.');
             return;
         }
+        if (!consentAccepted) {
+            setErrorMessage('Vous devez accepter la politique de confidentialité (RGPD) pour créer un compte.');
+            return;
+        }
         setErrorMessage('');
         try {
             setLoading(true);
             const res = await apiSignup({ email, password, name: username });
             if (res?.accessToken) setAccessToken(res.accessToken);
+            // Immediately record GDPR consent on backend
+            try { await updateConsent({ accepted: true, version: 'v1', analytics: false, marketing: false }); } catch (e) { console.warn('Consent update failed', e?.message || e); }
             if (res?.user && updateUser) {
                 try {
                     const mapped = mapBackendUser(res.user);
@@ -66,12 +73,14 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                 <TextInput
                     style={styles.input}
                     placeholder="Nom d'utilisateur"
+                    placeholderTextColor="#666"
                     value={username}
                     onChangeText={setUsername}
                 />
                 <TextInput
                     style={styles.input}
                     placeholder="Email"
+                    placeholderTextColor="#666"
                     keyboardType="email-address"
                     value={email}
                     onChangeText={setEmail}
@@ -79,6 +88,7 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                 <TextInput
                     style={styles.input}
                     placeholder="Mot de passe"
+                    placeholderTextColor="#666"
                     secureTextEntry={true}
                     value={password}
                     onChangeText={setPassword}
@@ -86,10 +96,20 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                 <TextInput
                     style={styles.input}
                     placeholder="Confirmer le mot de passe"
+                    placeholderTextColor="#666"
                     secureTextEntry={true}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                 />
+
+                <View style={styles.consentRow}>
+                    <TouchableOpacity onPress={() => setConsentAccepted(!consentAccepted)} style={[styles.checkbox, consentAccepted && styles.checkboxChecked]}>
+                        {consentAccepted ? <Text style={styles.checkboxTick}>✓</Text> : null}
+                    </TouchableOpacity>
+                    <Text style={styles.consentText}>
+                        J'accepte la politique de confidentialité et le traitement de mes données selon le RGPD.
+                    </Text>
+                </View>
 
                 {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
@@ -171,6 +191,36 @@ const styles = StyleSheet.create({
         color: 'red',
         textAlign: 'center',
         marginBottom: 10,
+    },
+    consentRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+        marginBottom: 8,
+    },
+    checkbox: {
+        width: 22,
+        height: 22,
+        borderWidth: 1,
+        borderColor: '#00c2cb',
+        borderRadius: 4,
+        marginRight: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+    },
+    checkboxChecked: {
+        backgroundColor: '#00c2cb',
+        borderColor: '#00a0a8',
+    },
+    checkboxTick: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    consentText: {
+        flex: 1,
+        color: '#444',
+        fontSize: 12,
     },
 });
 

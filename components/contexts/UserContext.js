@@ -13,6 +13,9 @@ function mapBackendUser(u = {}) {
       ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
       : [],
     isVisible: u.isVisible !== false,
+    // Include GDPR consent and privacy preferences if present
+    consent: u.consent || { accepted: false, version: '', consentAt: null },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
   };
 }
 
@@ -23,6 +26,8 @@ export const UserProvider = ({ children }) => {
     photo: null,
     socialMedia: [],
     isVisible: true,
+    consent: { accepted: false, version: '', consentAt: null },
+    privacyPreferences: { analytics: false, marketing: false },
   });
 
   const updateUser = (updatedUser) => {

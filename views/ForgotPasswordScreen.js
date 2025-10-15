@@ -44,6 +44,7 @@ const ForgotPasswordScreen = ({ onResetPassword, onBack }) => {
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor="#666"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}

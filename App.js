@@ -9,7 +9,6 @@ import UserListScreen from './views/UserListScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
 import ConsentScreen from './views/ConsentScreen';
-import DataManagementScreen from './views/DataManagementScreen';
 import { UserProvider } from './components/contexts/UserContext';
 import { initApiFromStorage, getAccessToken, getMyUser } from './components/ApiRequest';
 import { subscribe } from './components/EventBus';
@@ -250,7 +249,6 @@ export default function App() {
           onReturnToList={handleReturnToList}
           socialMediaIcons={socialMediaIcons}
           onReturnToSettings={onReturnToSettings}
-          onOpenDataManagement={() => setCurrentScreen('DataManagement')}
         />
       );
       break;
@@ -289,11 +287,6 @@ export default function App() {
           onAccepted={() => setCurrentScreen('UserList')}
           onDeclined={() => setCurrentScreen('Login')}
         />
-      );
-      break;
-    case 'DataManagement':
-      screenToShow = (
-        <DataManagementScreen onBackToAccount={() => setCurrentScreen('MyAccount')} />
       );
       break;
     default:

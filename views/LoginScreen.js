@@ -53,6 +53,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
             <TextInput
                 style={styles.input}
                 placeholder="Email"
+                placeholderTextColor="#666"
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
@@ -60,6 +61,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
             <TextInput
                 style={styles.input}
                 placeholder="Mot de passe"
+                placeholderTextColor="#666"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}

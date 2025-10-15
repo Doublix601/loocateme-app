@@ -60,7 +60,7 @@ export default function DataManagementScreen({ onBackToAccount }) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Supprimer mon compte</Text>
           <Text style={styles.cardDesc}>Supprime définitivement votre compte et toutes les données associées.</Text>
-          <TextInput secureTextEntry value={password} onChangeText={setPassword} placeholder="Mot de passe" style={styles.input} />
+          <TextInput secureTextEntry value={password} onChangeText={setPassword} placeholder="Mot de passe" placeholderTextColor="#666" style={styles.input} />
           <TouchableOpacity style={styles.danger} disabled={working} onPress={handleDelete}><Text style={styles.dangerText}>Supprimer mon compte</Text></TouchableOpacity>
         </View>
       </ScrollView>
