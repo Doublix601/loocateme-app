@@ -110,19 +110,37 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
           Alert.alert('Lien invalide', "Nom d'utilisateur TikTok invalide");
           return;
         }
-        const appUrl = `tiktok://user/@${encodeURIComponent(username)}`;
         const webUrl = `https://www.tiktok.com/@${encodeURIComponent(username)}`;
-        try {
-          await Linking.openURL(appUrl);
-          return;
-        } catch (e1) {
+        // Try multiple deep link patterns as TikTok differs across platforms/versions
+        const candidates = [
+          `tiktok://user/@${encodeURIComponent(username)}`,
+          `tiktok://user/profile/@${encodeURIComponent(username)}`,
+          `tiktok://user?uniqueId=${encodeURIComponent(username)}`,
+          `tiktok://@${encodeURIComponent(username)}`,
+        ];
+        for (let i = 0; i < candidates.length; i += 1) {
+          const url = candidates[i];
           try {
-            await Linking.openURL(webUrl);
-            return;
-          } catch (e2) {
-            Alert.alert('Impossible d\'ouvrir TikTok', "Veuillez réessayer plus tard.");
-            return;
+            const supported = await Linking.canOpenURL(url);
+            if (supported) {
+              try {
+                await Linking.openURL(url);
+                return;
+              } catch (_e) {
+                // continue to next candidate
+              }
+            }
+          } catch (_e) {
+            // continue
           }
+        }
+        // Fallback to web profile
+        try {
+          await Linking.openURL(webUrl);
+          return;
+        } catch (_e2) {
+          Alert.alert("Impossible d'ouvrir TikTok", 'Veuillez réessayer plus tard.');
+          return;
         }
       }
       // Fallback for other platforms: try a generic https link if provided as URL
