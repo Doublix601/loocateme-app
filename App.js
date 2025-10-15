@@ -9,6 +9,7 @@ import UserListScreen from './views/UserListScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
 import ConsentScreen from './views/ConsentScreen';
+import DebugScreen from './views/DebugScreen';
 import { UserProvider } from './components/contexts/UserContext';
 import { initApiFromStorage, getAccessToken, getMyUser } from './components/ApiRequest';
 import { subscribe } from './components/EventBus';
@@ -181,6 +182,7 @@ export default function App() {
   const handleReturnToList = () => setCurrentScreen('UserList');
   const handleReturnToAccount = () => setCurrentScreen('MyAccount');
   const onReturnToSettings = () => setCurrentScreen('Settings');
+  const handleOpenDebug = () => setCurrentScreen('Debug');
   const handleLogout = () => setCurrentScreen('Login');
 
   const handleSelectUser = (user) => {
@@ -283,11 +285,19 @@ export default function App() {
         />
       );
       break;
+    case 'Debug':
+      screenToShow = (
+        <DebugScreen
+          onBack={() => setCurrentScreen('Settings')}
+        />
+      );
+      break;
     case 'Settings':
       screenToShow = (
         <SettingsScreen
           onReturnToAccount={handleReturnToAccount}
           onLogout={handleLogout}
+          onOpenDebug={() => setCurrentScreen('Debug')}
         />
       );
       break;

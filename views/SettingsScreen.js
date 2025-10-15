@@ -28,7 +28,7 @@ import {
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 
-const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
+const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
   const { user, updateUser } = useContext(UserContext);
   const [isVisible, setIsVisible] = useState(user?.isVisible ?? true);
   const [saving, setSaving] = useState(false);
@@ -307,6 +307,10 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
           />
         </View>
 
+        <Text style={[styles.sectionTitle, { marginTop: height * 0.04 }]}>Développeur</Text>
+        <TouchableOpacity style={styles.linkRow} onPress={onOpenDebug}>
+          <Text style={styles.linkRowText}>Debug</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={[styles.primaryButton, { marginTop: height * 0.02 }]} onPress={handleExport}>
           <Text style={styles.primaryButtonText}>Exporter mes données</Text>

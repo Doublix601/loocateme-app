@@ -318,3 +318,9 @@ export async function exportMyData() {
 export async function deleteMyAccount({ password }) {
     return request('/gdpr/account', { method: 'DELETE', body: { password }, retry: false });
 }
+
+// ADMIN / DEBUG
+export async function getAllUsers({ page = 1, limit = 100 } = {}) {
+    const p = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
+    return request(`/admin/users?${p}`, { method: 'GET' });
+}
