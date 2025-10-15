@@ -14,6 +14,7 @@ import {
   Platform,
   Pressable,
   SafeAreaView,
+  Linking,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
@@ -255,6 +256,77 @@ const MyAccountScreen = ({
     setSelectedSocialLink(social);
     setNewValue(social.username);
     setSocialModalVisible(true);
+  };
+
+  // Open a social profile on simple tap (same behavior as in UserProfileScreen)
+  const openSocial = async (platform, rawHandle) => {
+    const handle = String(rawHandle || '').trim();
+    if (!platform || !handle) return;
+    try {
+      if (platform === 'instagram') {
+        const username = extractInstagramUsername(handle);
+        if (!INSTAGRAM_USERNAME_REGEX.test(username)) {
+          Alert.alert('Lien invalide', "Nom d'utilisateur Instagram invalide");
+          return;
+        }
+        const appUrl = `instagram://user?username=${encodeURIComponent(username)}`;
+        const webUrl = `https://www.instagram.com/${encodeURIComponent(username)}/`;
+        try {
+          await Linking.openURL(appUrl);
+          return;
+        } catch (_e1) {
+          try {
+            await Linking.openURL(webUrl);
+            return;
+          } catch (_e2) {
+            Alert.alert("Impossible d'ouvrir Instagram", 'Veuillez réessayer plus tard.');
+            return;
+          }
+        }
+      } else if (platform === 'tiktok') {
+        const username = extractTikTokUsername(handle);
+        if (!TIKTOK_USERNAME_REGEX.test(username)) {
+          Alert.alert('Lien invalide', "Nom d'utilisateur TikTok invalide");
+          return;
+        }
+        const webUrl = `https://www.tiktok.com/@${encodeURIComponent(username)}`;
+        const candidates = [
+          `tiktok://user/@${encodeURIComponent(username)}`,
+          `tiktok://user/profile/@${encodeURIComponent(username)}`,
+          `tiktok://user?uniqueId=${encodeURIComponent(username)}`,
+          `tiktok://@${encodeURIComponent(username)}`,
+        ];
+        for (let i = 0; i < candidates.length; i += 1) {
+          const url = candidates[i];
+          try {
+            const supported = await Linking.canOpenURL(url);
+            if (supported) {
+              try {
+                await Linking.openURL(url);
+                return;
+              } catch (_e) {
+                // continue
+              }
+            }
+          } catch (_e) {
+            // continue
+          }
+        }
+        try {
+          await Linking.openURL(webUrl);
+          return;
+        } catch (_e2) {
+          Alert.alert("Impossible d'ouvrir TikTok", 'Veuillez réessayer plus tard.');
+          return;
+        }
+      }
+      if (/^https?:\/\//i.test(handle)) {
+        await Linking.openURL(handle);
+        return;
+      }
+    } catch (_e) {
+      // noop
+    }
   };
 
   const handleSocialEdit = async () => {
@@ -527,7 +599,9 @@ const MyAccountScreen = ({
                 <TouchableOpacity
                   key={index}
                   style={styles.socialMediaTile}
-                  onLongPress={() => handleSocialLongPress(social)}>
+                  onPress={() => openSocial(social.platform, social.username || social.handle)}
+                  onLongPress={() => handleSocialLongPress(social)}
+                >
                   <Image
                     source={icon}
                     style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
