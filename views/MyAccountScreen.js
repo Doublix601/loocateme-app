@@ -26,6 +26,7 @@ const MyAccountScreen = ({
   onReturnToList,
   socialMediaIcons,
   onReturnToSettings,
+  onOpenDataManagement,
 }) => {
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
@@ -699,6 +700,15 @@ const MyAccountScreen = ({
           style={styles.roundButtonImage}
         />
       </TouchableOpacity>
+
+      {onOpenDataManagement ? (
+        <TouchableOpacity
+          style={styles.dataButton}
+          onPress={onOpenDataManagement}
+          accessibilityLabel="Données et confidentialité">
+          <Text style={styles.dataButtonText}>RGPD</Text>
+        </TouchableOpacity>
+      ) : null}
     </SafeAreaView>
   );
 };
@@ -973,6 +983,26 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
+  },
+  dataButton: {
+    backgroundColor: '#00c2cb',
+    height: Math.min(width * 0.14, 56),
+    borderRadius: Math.min(width * 0.07, 28),
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: Math.max(height * 0.02, 16),
+    left: Math.max(width * 0.05, 16),
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  dataButtonText: {
+    color: '#fff',
+    fontWeight: '700',
   },
   roundButtonImage: {
     width: Math.min(Math.min(width * 0.14, 56) * 0.55, 28),

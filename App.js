@@ -8,8 +8,10 @@ import MyAccountScreen from './views/MyAccountScreen';
 import UserListScreen from './views/UserListScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
+import ConsentScreen from './views/ConsentScreen';
+import DataManagementScreen from './views/DataManagementScreen';
 import { UserProvider } from './components/contexts/UserContext';
-import { initApiFromStorage, getAccessToken } from './components/ApiRequest';
+import { initApiFromStorage, getAccessToken, getMyUser } from './components/ApiRequest';
 import { subscribe } from './components/EventBus';
 
 export default function App() {
@@ -71,8 +73,15 @@ export default function App() {
       try {
         const token = await initApiFromStorage();
         if (token) {
-          // Navigate to main screen if a token exists
-          setCurrentScreen('UserList');
+          try {
+            const res = await getMyUser();
+            const me = res?.user;
+            const consentAccepted = !!(me?.consent?.accepted);
+            setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
+          } catch (_e) {
+            // If fetching me fails, fallback to UserList; global auth handler will handle errors
+            setCurrentScreen('UserList');
+          }
         }
       } catch (e) {
         // ignore
@@ -241,6 +250,7 @@ export default function App() {
           onReturnToList={handleReturnToList}
           socialMediaIcons={socialMediaIcons}
           onReturnToSettings={onReturnToSettings}
+          onOpenDataManagement={() => setCurrentScreen('DataManagement')}
         />
       );
       break;
@@ -271,6 +281,19 @@ export default function App() {
           onReturnToAccount={handleReturnToAccount}
           onLogout={handleLogout}
         />
+      );
+      break;
+    case 'Consent':
+      screenToShow = (
+        <ConsentScreen
+          onAccepted={() => setCurrentScreen('UserList')}
+          onDeclined={() => setCurrentScreen('Login')}
+        />
+      );
+      break;
+    case 'DataManagement':
+      screenToShow = (
+        <DataManagementScreen onBackToAccount={() => setCurrentScreen('MyAccount')} />
       );
       break;
     default:

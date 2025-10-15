@@ -299,3 +299,22 @@ export function initApi({ token } = {}) {
     if (token) setAccessToken(token);
     return { setAccessToken, getAccessToken };
 }
+
+
+// GDPR
+export async function getPrivacyPolicy() {
+    return request('/gdpr/policy', { method: 'GET' });
+}
+
+export async function updateConsent({ accepted, version = 'v1', analytics = false, marketing = false }) {
+    return request('/gdpr/consent', { method: 'PUT', body: { accepted, version, analytics, marketing } });
+}
+
+export async function exportMyData() {
+    // Returns JSON; in RN you can present it or save to file if needed
+    return request('/gdpr/export', { method: 'POST' });
+}
+
+export async function deleteMyAccount({ password }) {
+    return request('/gdpr/account', { method: 'DELETE', body: { password }, retry: false });
+}
