@@ -164,7 +164,17 @@ export default function App() {
   ];
 
   // Fonctions de navigation
-  const handleLogin = () => setCurrentScreen('UserList');
+  const handleLogin = async () => {
+    try {
+      const res = await getMyUser();
+      const me = res?.user;
+      const consentAccepted = !!(me?.consent?.accepted);
+      setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
+    } catch (_e) {
+      // If fetching me fails, default to UserList; auth guard will handle errors elsewhere
+      setCurrentScreen('UserList');
+    }
+  };
   const handleForgotPassword = () => setCurrentScreen('ForgotPassword');
   const handleSignup = () => setCurrentScreen('Signup');
   const handleSignupSuccess = () => setCurrentScreen('Login');

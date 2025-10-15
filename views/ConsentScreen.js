@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { SafeAreaView, View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { getPrivacyPolicy, updateConsent, logout } from '../components/ApiRequest';
+import { UserContext } from '../components/contexts/UserContext';
 
 export default function ConsentScreen({ onAccepted, onDeclined }) {
   const [loading, setLoading] = useState(true);
   const [policy, setPolicy] = useState('');
   const [accepting, setAccepting] = useState(false);
+  const { user, updateUser } = useContext(UserContext);
 
   useEffect(() => {
     let mounted = true;
@@ -26,6 +28,11 @@ export default function ConsentScreen({ onAccepted, onDeclined }) {
     try {
       setAccepting(true);
       await updateConsent({ accepted: true, version: 'v1' });
+      if (updateUser) {
+        try {
+          updateUser({ ...user, consent: { accepted: true, version: 'v1', consentAt: new Date().toISOString() } });
+        } catch (_) { /* ignore mapping issues */ }
+      }
       onAccepted && onAccepted();
     } catch (e) {
       Alert.alert('Erreur', "Impossible d'enregistrer votre consentement. Réessayez.");

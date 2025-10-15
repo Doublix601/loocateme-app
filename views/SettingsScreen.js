@@ -109,6 +109,46 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
     }
   };
 
+  const persistConsentQuietly = async ({ accepted, analytics: analyticsValue, marketing: marketingValue }) => {
+    try {
+      const res = await updateConsent({ accepted, version: consentVersion, analytics: analyticsValue, marketing: marketingValue });
+      const updatedUser = res?.user ? res.user : {
+        ...user,
+        consent: { accepted, version: consentVersion, consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null },
+        privacyPreferences: { analytics: analyticsValue, marketing: marketingValue },
+      };
+      if (updateUser) {
+        updateUser({
+          ...user,
+          username: user?.username || updatedUser.name || '',
+          bio: user?.bio ?? updatedUser.bio ?? '',
+          photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
+          socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
+          isVisible: user?.isVisible ?? (updatedUser.isVisible !== false),
+          consent: updatedUser.consent || { accepted, version: consentVersion },
+          privacyPreferences: updatedUser.privacyPreferences || { analytics: analyticsValue, marketing: marketingValue },
+        });
+      }
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || "Impossible d'enregistrer vos préférences de confidentialité");
+    }
+  };
+
+  const handleToggleConsent = async (v) => {
+    setConsentAccepted(v);
+    await persistConsentQuietly({ accepted: v, analytics, marketing });
+  };
+
+  const handleToggleAnalytics = async (v) => {
+    setAnalytics(v);
+    await persistConsentQuietly({ accepted: consentAccepted, analytics: v, marketing });
+  };
+
+  const handleToggleMarketing = async (v) => {
+    setMarketing(v);
+    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing: v });
+  };
+
   const saveConsent = async (accepted) => {
     try {
       const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing });
@@ -241,7 +281,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
           <Text style={styles.optionText}>Consentement donné</Text>
           <Switch
             value={consentAccepted}
-            onValueChange={(v) => setConsentAccepted(v)}
+            onValueChange={handleToggleConsent}
             trackColor={{ false: '#ccc', true: '#00c2cb' }}
             thumbColor={consentAccepted ? '#00c2cb' : '#f4f3f4'}
           />
@@ -250,7 +290,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
           <Text style={styles.optionText}>Partage analytics</Text>
           <Switch
             value={analytics}
-            onValueChange={(v) => setAnalytics(v)}
+            onValueChange={handleToggleAnalytics}
             trackColor={{ false: '#ccc', true: '#00c2cb' }}
             thumbColor={analytics ? '#00c2cb' : '#f4f3f4'}
           />
@@ -259,20 +299,15 @@ const SettingsScreen = ({ onReturnToAccount, onLogout }) => {
           <Text style={styles.optionText}>Communication marketing</Text>
           <Switch
             value={marketing}
-            onValueChange={(v) => setMarketing(v)}
+            onValueChange={handleToggleMarketing}
             trackColor={{ false: '#ccc', true: '#00c2cb' }}
             thumbColor={marketing ? '#00c2cb' : '#f4f3f4'}
           />
         </View>
 
-        <View style={styles.rowButtons}>
-          <TouchableOpacity style={styles.primaryButton} onPress={() => saveConsent(true)}>
-            <Text style={styles.primaryButtonText}>Enregistrer le consentement</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.primaryButton, styles.secondaryButton]} onPress={handleRevokePress}>
-            <Text style={styles.secondaryButtonText}>Révoquer</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={[styles.primaryButton, styles.secondaryButton]} onPress={handleRevokePress}>
+          <Text style={styles.secondaryButtonText}>Révoquer</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={[styles.primaryButton, { marginTop: height * 0.02 }]} onPress={handleExport}>
           <Text style={styles.primaryButtonText}>Exporter mes données</Text>
