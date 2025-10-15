@@ -20,6 +20,7 @@ import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
 import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser } from '../components/ApiRequest';
+import { buildSocialProfileUrl } from '../services/socialUrls';
 
 const { width, height } = Dimensions.get('window');
 
@@ -323,6 +324,15 @@ const MyAccountScreen = ({
       if (/^https?:\/\//i.test(handle)) {
         await Linking.openURL(handle);
         return;
+      }
+      const webUrlOther = buildSocialProfileUrl(platform, handle);
+      if (webUrlOther) {
+        try {
+          await Linking.openURL(webUrlOther);
+          return;
+        } catch (_e3) {
+          // ignore
+        }
       }
     } catch (_e) {
       // noop

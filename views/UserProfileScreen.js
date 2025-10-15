@@ -11,6 +11,7 @@ import {
   Linking,
   Alert,
 } from 'react-native';
+import { buildSocialProfileUrl } from '../services/socialUrls';
 
 const { width, height } = Dimensions.get('window');
 
@@ -143,10 +144,19 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
           return;
         }
       }
-      // Fallback for other platforms: try a generic https link if provided as URL
+      // Other platforms: build a web profile URL from handle and open
       if (/^https?:\/\//i.test(handle)) {
         await Linking.openURL(handle);
         return;
+      }
+      const webUrlOther = buildSocialProfileUrl(platform, handle);
+      if (webUrlOther) {
+        try {
+          await Linking.openURL(webUrlOther);
+          return;
+        } catch (_e3) {
+          // ignore
+        }
       }
     } catch (_e) {
       // Silent catch: nothing else to do
