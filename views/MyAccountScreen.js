@@ -116,6 +116,8 @@ const MyAccountScreen = ({
 
   // Instagram username regex (provided)
   const INSTAGRAM_USERNAME_REGEX = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+  // TikTok username regex (approximate: 2-24 chars, letters, numbers, dot, underscore)
+  const TIKTOK_USERNAME_REGEX = /^[A-Za-z0-9._]{2,24}$/;
 
   // Sanitize a possibly pasted Instagram URL to just the username
   const extractInstagramUsername = (input = '') => {
@@ -133,6 +135,21 @@ const MyAccountScreen = ({
       // Not a valid URL, keep raw value
     }
     // Remove leading @ if present
+    if (v.startsWith('@')) v = v.slice(1);
+    return v;
+  };
+
+  const extractTikTokUsername = (input = '') => {
+    let v = String(input).trim();
+    try {
+      if (/^https?:\/\//i.test(v)) {
+        const u = new URL(v);
+        // TikTok profile paths are like "/@username" or "/@username/video/..."
+        const path = (u.pathname || '').replace(/^\/+|\/+$/g, '');
+        const firstSeg = (path.split('/')[0] || '').trim();
+        v = firstSeg.startsWith('@') ? firstSeg.slice(1) : firstSeg;
+      }
+    } catch (_e) {}
     if (v.startsWith('@')) v = v.slice(1);
     return v;
   };
@@ -206,11 +223,17 @@ const MyAccountScreen = ({
         Alert.alert('Erreur', "Veuillez saisir un identifiant");
         return;
       }
-      // Specific validation for Instagram
+      // Specific validation for Instagram / TikTok
       if (platform === 'instagram') {
         handle = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(handle)) {
           Alert.alert('Erreur', "Nom d'utilisateur Instagram invalide. Exemple: https://www.instagram.com/username/");
+          return;
+        }
+      } else if (platform === 'tiktok') {
+        handle = extractTikTokUsername(handle);
+        if (!TIKTOK_USERNAME_REGEX.test(handle)) {
+          Alert.alert('Erreur', "Nom d'utilisateur TikTok invalide. Exemple: https://www.tiktok.com/@username");
           return;
         }
       }
@@ -250,6 +273,12 @@ const MyAccountScreen = ({
         handle = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(handle)) {
           Alert.alert('Erreur', "Nom d'utilisateur Instagram invalide. Exemple: https://www.instagram.com/username/");
+          return;
+        }
+      } else if (platform === 'tiktok') {
+        handle = extractTikTokUsername(handle);
+        if (!TIKTOK_USERNAME_REGEX.test(handle)) {
+          Alert.alert('Erreur', "Nom d'utilisateur TikTok invalide. Exemple: https://www.tiktok.com/@username");
           return;
         }
       }

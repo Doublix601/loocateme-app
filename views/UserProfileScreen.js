@@ -50,6 +50,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
 
   const INSTAGRAM_USERNAME_REGEX = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+  const TIKTOK_USERNAME_REGEX = /^[A-Za-z0-9._]{2,24}$/;
 
   const extractInstagramUsername = (input = '') => {
     let v = String(input).trim();
@@ -58,6 +59,20 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         const u = new URL(v);
         const path = (u.pathname || '').replace(/^\/+|\/+$/g, '');
         v = path.split('/')[0] || '';
+      }
+    } catch (_e) {}
+    if (v.startsWith('@')) v = v.slice(1);
+    return v;
+  };
+
+  const extractTikTokUsername = (input = '') => {
+    let v = String(input).trim();
+    try {
+      if (/^https?:\/\//i.test(v)) {
+        const u = new URL(v);
+        const path = (u.pathname || '').replace(/^\/+|\/+$/g, '');
+        const firstSeg = (path.split('/')[0] || '').trim();
+        v = firstSeg.startsWith('@') ? firstSeg.slice(1) : firstSeg;
       }
     } catch (_e) {}
     if (v.startsWith('@')) v = v.slice(1);
@@ -86,6 +101,26 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
             return;
           } catch (e2) {
             Alert.alert('Impossible d\'ouvrir Instagram', "Veuillez réessayer plus tard.");
+            return;
+          }
+        }
+      } else if (platform === 'tiktok') {
+        const username = extractTikTokUsername(handle);
+        if (!TIKTOK_USERNAME_REGEX.test(username)) {
+          Alert.alert('Lien invalide', "Nom d'utilisateur TikTok invalide");
+          return;
+        }
+        const appUrl = `tiktok://user/@${encodeURIComponent(username)}`;
+        const webUrl = `https://www.tiktok.com/@${encodeURIComponent(username)}`;
+        try {
+          await Linking.openURL(appUrl);
+          return;
+        } catch (e1) {
+          try {
+            await Linking.openURL(webUrl);
+            return;
+          } catch (e2) {
+            Alert.alert('Impossible d\'ouvrir TikTok', "Veuillez réessayer plus tard.");
             return;
           }
         }
