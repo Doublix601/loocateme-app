@@ -13,7 +13,7 @@ import {
   PanResponder,
 } from 'react-native';
 import * as Location from 'expo-location';
-import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility } from '../components/ApiRequest';
+import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility, getPopularUsers } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -44,6 +44,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
   const [nearbyUsers, setNearbyUsers] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [myLocation, setMyLocation] = useState(null);
+  const [popularUsers, setPopularUsers] = useState([]);
+  const [loadingPopular, setLoadingPopular] = useState(false);
   const { user: currentUser, updateUser } = useContext(UserContext);
 
   // Local social media icons map for quick badges in list
@@ -168,11 +170,34 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
     }
   };
 
+  const fetchPopular = async (limit = 10) => {
+    try {
+      setLoadingPopular(true);
+      const res = await getPopularUsers({ limit });
+      const apiUsers = res?.users || [];
+      const mapped = apiUsers.map((u) => mapBackendUserToUi(u));
+      setPopularUsers(mapped);
+    } catch (e) {
+      console.error('[UserListScreen] Popular fetch error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
+    } finally {
+      setLoadingPopular(false);
+    }
+  };
+
   useEffect(() => {
     if (!users || users.length === 0) {
       fetchNearby();
     }
   }, []);
+
+  // When nearby results are scarce, fetch popular profiles
+  useEffect(() => {
+    if (!currentUser?.isVisible) return;
+    const count = nearbyUsers?.length || 0;
+    if (count <= 2) {
+      fetchPopular(10);
+    }
+  }, [nearbyUsers, currentUser?.isVisible]);
 
   // On app reopen, if visibility was auto-disabled by background timeout, restore it
   useEffect(() => {
@@ -215,7 +240,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
       setNearbyUsers([]);
     }
   }, [currentUser?.isVisible]);
-  const renderItem = ({ item }) => (
+  const renderUserCard = (item) => (
     <TouchableOpacity
       style={styles.userItem}
       onPress={() => onSelectUser(item)}
@@ -265,6 +290,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
     </TouchableOpacity>
   );
 
+  const renderItem = ({ item }) => renderUserCard(item);
+
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -281,6 +308,32 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
 
   const data = (users && users.length > 0) ? users : nearbyUsers;
 
+  const nearbyIds = new Set((nearbyUsers || []).map((u) => u._id || u.id));
+  const filteredPopular = (popularUsers || []).filter((u) => !nearbyIds.has(u._id || u.id));
+
+  const PopularSection = ({ inline = false }) => {
+    if (loadingPopular && filteredPopular.length === 0) {
+      return (
+        <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color="#00c2cb" />
+        </View>
+      );
+    }
+    if (!filteredPopular || filteredPopular.length === 0) return null;
+    return (
+      <View style={{ marginTop: inline ? 12 : 24 }}>
+        <Text style={styles.popularTitle}>Profils populaires</Text>
+        <View>
+          {filteredPopular.map((u) => (
+            <View key={(u._id || u.id || Math.random()).toString()}>
+              {renderUserCard(u)}
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
       <FlatList
@@ -294,23 +347,26 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
         ListHeaderComponent={(
           <View>
             <Text style={styles.title}>Autour de moi</Text>
-            {!currentUser?.isVisible && (
-              <Text style={styles.invisibleNotice}>
-                Vous êtes en mode invisible. Rendez-vous visible dans les Paramètres pour voir les autres utilisateurs.
-              </Text>
-            )}
           </View>
         )}
         ListEmptyComponent={(
-          <View style={[styles.noUsersContainer, { flex: 1 }]}>
+          <View style={[styles.noUsersContainer, { flex: 1, alignSelf: 'stretch', width: '100%' }]}>
             {loading ? (
               <ActivityIndicator size="large" color="#00c2cb" />
             ) : (
-              <Text style={styles.noUsersText}>
-                {currentUser?.isVisible ? 'Personne autour de vous. Tirez pour actualiser.' : 'Vous êtes en mode invisible. Activez votre visibilité dans les Paramètres pour voir les autres utilisateurs.'}
-              </Text>
+              <>
+                <Text style={currentUser?.isVisible ? styles.noUsersText : styles.invisibleNotice}>
+                  {currentUser?.isVisible ? 'Aucun profil autour pour l\u2019instant 👀 — invite tes amis ou explore les profils populaires.' : 'Vous êtes en mode invisible. Activez votre visibilité dans les Paramètres pour voir les autres utilisateurs.'}
+                </Text>
+                {currentUser?.isVisible && <PopularSection inline />}
+              </>
             )}
           </View>
+        )}
+        ListFooterComponent={(
+          currentUser?.isVisible && data.length > 0 && (nearbyUsers?.length || 0) <= 2 ? (
+            <PopularSection />
+          ) : null
         )}
         refreshControl={
           <RefreshControl
@@ -318,6 +374,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
             onRefresh={() => {
               setRefreshing(true);
               fetchNearby();
+              // Refresh popular as well
+              fetchPopular(10);
             }}
           />
         }
@@ -334,133 +392,134 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: width * 0.05, // 5% padding based on screen width
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: width * 0.08, // Responsive font size based on screen width
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: height * 0.03, // Responsive margin
-    color: '#00c2cb',
-  },
-  listContainer: {
-    paddingBottom: 20,
-  },
-  invisibleNotice: {
-    textAlign: 'center',
-    color: '#d35400',
-    marginBottom: 8,
-    paddingHorizontal: 8,
-  },
-  userItem: {
-    padding: 20,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#00c2cb',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+    container: {
+        flex: 1,
+        padding: width * 0.05, // 5% padding based on screen width
+        backgroundColor: '#fff',
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  userRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    marginRight: 12,
-  },
-  avatarImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-  },
-  avatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#00c2cb',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userContent: {
-    flex: 1,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  distancePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: '#e6fbfc',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#00c2cb',
-  },
-  distanceText: {
-    color: '#00aab2',
-    fontWeight: '600',
-  },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  userBio: {
-    fontSize: 16,
-    color: '#666',
-  },
-  userDistance: {
-    fontSize: 19,
-    color: '#666',
-  },
-  roundButton: {
-    backgroundColor: '#00c2cb',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  roundButtonImage: {
-    width: 30,
-    height: 30,
-    tintColor: '#fff',
-  },
-  noUsersContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-  },
-
-  noUsersText: {
-    width: '100%',
-    color: 'gray',
-    textAlign: 'center',
-    marginHorizontal: 20,
-    flexWrap: 'wrap',
-    fontSize: width * 0.045,
-  },
+    title: {
+        fontSize: width * 0.08, // Responsive font size based on screen width
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginBottom: height * 0.03, // Responsive margin
+        color: '#00c2cb',
+    },
+    listContainer: {
+        paddingBottom: 20,
+    },
+    invisibleNotice: {
+        width: '100%',
+        color: '#d35400',
+        textAlign: 'center',
+        marginHorizontal: 20,
+        flexWrap: 'wrap',
+        fontSize: width * 0.045,
+    },
+    noUsersText: {
+        width: '100%',
+        color: 'grey',
+        textAlign: 'center',
+        marginHorizontal: 20,
+        flexWrap: 'wrap',
+        fontSize: width * 0.045,
+    },
+    userItem: {
+        padding: 20,
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#00c2cb',
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    userRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    avatar: {
+        marginRight: 12,
+    },
+    avatarImage: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+    },
+    avatarPlaceholder: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#00c2cb',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    userContent: {
+        flex: 1,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 6,
+    },
+    distancePill: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        backgroundColor: '#e6fbfc',
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: '#00c2cb',
+    },
+    distanceText: {
+        color: '#00aab2',
+        fontWeight: '600',
+    },
+    username: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    userBio: {
+        fontSize: 16,
+        color: '#666',
+    },
+    userDistance: {
+        fontSize: 19,
+        color: '#666',
+    },
+    roundButton: {
+        backgroundColor: '#00c2cb',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'absolute',
+        bottom: 30,
+        right: 30,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    roundButtonImage: {
+        width: 30,
+        height: 30,
+        tintColor: '#fff',
+    },
+    noUsersContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
+    },
 });
 
 export default UserListScreen;

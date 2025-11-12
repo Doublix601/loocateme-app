@@ -231,6 +231,11 @@ export async function getUsersAroundMe({ lat, lon, radius = 2000 }) {
     return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
 }
 
+export async function getPopularUsers({ limit = 10 } = {}) {
+    const qs = new URLSearchParams({ limit: String(limit) });
+    return request(`/users/popular?${qs.toString()}`, { method: 'GET' });
+}
+
 // PROFILE
 export async function updateProfile({ name, bio }) {
     return request('/profile', { method: 'PUT', body: { name, bio } });
