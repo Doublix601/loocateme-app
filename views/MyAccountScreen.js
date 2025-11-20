@@ -94,7 +94,7 @@ const MyAccountScreen = ({
           updateUser({
             ...user,
             username: me.name || user?.username || '',
-            bio: typeof me.bio === 'string' ? me.bio : (user?.bio || ''),
+            bio: typeof me.bio === 'string' ? me.bio : (user?.bio || 'Restez appuyé pour ajouter une bio'),
             photo: me.profileImageUrl || user?.photo || null,
             socialMedia: mappedSocial,
             isVisible: me.isVisible !== false,

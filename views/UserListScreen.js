@@ -11,16 +11,19 @@ import {
   RefreshControl,
   Alert,
   PanResponder,
+  TextInput,
 } from 'react-native';
 import * as Location from 'expo-location';
-import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility, getPopularUsers } from '../components/ApiRequest';
+import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility, getPopularUsers, searchUsers } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
-const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialScrollOffset = 0, onUpdateScrollOffset }) => {
+const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
+
+const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSearchView, initialScrollOffset = 0, onUpdateScrollOffset }) => {
   // Swipe left anywhere on the list to open MyAccount
   const panResponder = React.useRef(
     PanResponder.create({
@@ -28,14 +31,19 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
       onMoveShouldSetPanResponder: (_evt, gestureState) => {
         const { dx, dy } = gestureState;
         const isHorizontal = Math.abs(dx) > Math.abs(dy);
-        // left swipe
-        return isHorizontal && dx < -10;
+        // left or right swipe
+        return isHorizontal && (dx < -10 || dx > 10);
       },
       onPanResponderRelease: (_evt, gestureState) => {
         const { dx, vx } = gestureState;
-        // strong left swipe or sufficient velocity to the left
+        // strong left swipe → open account
         if (dx < -60 || vx < -0.3) {
           onReturnToAccount && onReturnToAccount();
+          return;
+        }
+        // strong right swipe → open search view
+        if (dx > 60 || vx > 0.3) {
+          onOpenSearchView && onOpenSearchView();
         }
       },
     })
@@ -47,6 +55,12 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
   const [popularUsers, setPopularUsers] = useState([]);
   const [loadingPopular, setLoadingPopular] = useState(false);
   const { user: currentUser, updateUser } = useContext(UserContext);
+  const [displayPref, setDisplayPref] = useState('full'); // 'full' or 'custom'
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const searchDebounceRef = useRef(null);
 
   // Local social media icons map for quick badges in list
   const socialMediaIcons = {
@@ -114,6 +128,9 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
   const mapBackendUserToUi = (u, baseLatLon = null) => {
     const photo = u?.profileImageUrl || null;
     const name = (u?.name || '').trim();
+    const firstName = (u?.firstName || '').trim();
+    const lastName = (u?.lastName || '').trim();
+    const customName = (u?.customName || '').trim();
     const email = (u?.email || '').trim();
     const username = name || (email ? email.split('@')[0] : 'Utilisateur');
     const bio = u?.bio || '';
@@ -133,12 +150,67 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
     return {
       _id: u?._id || u?.id,
       username,
+      firstName,
+      lastName,
+      customName,
       bio,
       photo,
       distance,
       socialMedias: socials,
     };
   };
+
+  // Charger préférence d'affichage du nom
+  useEffect(() => {
+    (async () => {
+      try {
+        const v = await AsyncStorage.getItem(DISPLAY_NAME_PREF_KEY);
+        if (v === 'custom' || v === 'full') setDisplayPref(v);
+      } catch {}
+    })();
+  }, []);
+
+  const getDisplayName = (item) => {
+    const full = [item.firstName, item.lastName].filter(Boolean).join(' ').trim();
+    const custom = (item.customName || '').trim();
+    if (displayPref === 'custom') return custom || full || item.username || 'Utilisateur';
+    return full || custom || item.username || 'Utilisateur';
+  };
+
+  // Recherche inline en temps réel avec debounce
+  useEffect(() => {
+    if (!searchMode) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    const q = (searchQuery || '').trim();
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    searchDebounceRef.current = setTimeout(async () => {
+      if (!q || q.length < 2) {
+        setSearchResults([]);
+        setSearching(false);
+        return;
+      }
+      try {
+        setSearching(true);
+        const res = await searchUsers({ q, limit: 10 });
+        const apiUsers = res?.users || [];
+        const mapped = apiUsers.map((u) => mapBackendUserToUi(u));
+        setSearchResults(mapped);
+      } catch (e) {
+        // ignore errors, just clear
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 250);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchMode, searchQuery]);
 
   const fetchNearby = async () => {
     try {
@@ -290,7 +362,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
     </TouchableOpacity>
   );
 
-  const renderItem = ({ item }) => renderUserCard(item);
+  const renderItem = ({ item }) => renderUserCard({ ...item, username: getDisplayName(item) });
 
   const listRef = useRef(null);
 
@@ -308,8 +380,42 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
 
   const data = (users && users.length > 0) ? users : nearbyUsers;
 
-  const nearbyIds = new Set((nearbyUsers || []).map((u) => u._id || u.id));
-  const filteredPopular = (popularUsers || []).filter((u) => !nearbyIds.has(u._id || u.id));
+  // Éviter les doublons: filtrer les populaires contre les éléments réellement affichés (data)
+  const displayedIds = new Set((data || []).map((u) => u._id || u.id));
+  const filteredPopular = (popularUsers || []).filter((u) => !displayedIds.has(u._id || u.id));
+
+  // Générateur de clé stable pour les items utilisateur
+  const getUserKey = (item, index = 0) => {
+    const k = item?._id || item?.id || item?.email || item?.username;
+    return (k != null && k !== '') ? String(k) : `idx-${index}`;
+  };
+
+  // Responsive rules for Popular section
+  const isSmallScreen = width < 420;
+  const POPULAR_COLS = isSmallScreen ? 2 : 3;
+  const POPULAR_ITEM_WIDTH_PERCENT = isSmallScreen ? '48%' : '32%';
+  const POP_AVATAR = isSmallScreen ? 88 : 72;
+  const POP_FONT = isSmallScreen ? 16 : 14;
+
+  const renderPopularUserCard = (item) => (
+    <TouchableOpacity
+      style={styles.popularUserItem}
+      onPress={() => onSelectUser(item)}
+      activeOpacity={0.8}
+   >
+      {item.photo ? (
+        <Image source={{ uri: item.photo }} style={[styles.popularAvatarImage, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]} />
+      ) : (
+        <View style={[styles.popularAvatarPlaceholder, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]}>
+          <Image
+            source={require('../assets/appIcons/userProfile.png')}
+            style={{ width: Math.min(40, POP_AVATAR * 0.5), height: Math.min(40, POP_AVATAR * 0.5), tintColor: '#fff' }}
+          />
+        </View>
+      )}
+      <Text style={[styles.popularUsername, { fontSize: POP_FONT }]} numberOfLines={1} ellipsizeMode="tail">{getDisplayName(item)}</Text>
+    </TouchableOpacity>
+  );
 
   const PopularSection = ({ inline = false }) => {
     if (loadingPopular && filteredPopular.length === 0) {
@@ -321,12 +427,16 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
     }
     if (!filteredPopular || filteredPopular.length === 0) return null;
     return (
-      <View style={{ marginTop: inline ? 12 : 24 }}>
+      <View style={{ marginTop: inline ? 24 : 24 }}>
         <Text style={styles.popularTitle}>Profils populaires</Text>
-        <View>
-          {filteredPopular.map((u) => (
-            <View key={(u._id || u.id || Math.random()).toString()}>
-              {renderUserCard(u)}
+        <View style={[
+          styles.popularGrid,
+          // Centrer lorsque qu'il n'y a qu'un seul profil populaire
+          filteredPopular.length === 1 && { justifyContent: 'center' }
+        ]}>
+          {filteredPopular.map((u, idx) => (
+            <View key={getUserKey(u, idx)} style={[styles.popularGridItem, { width: POPULAR_ITEM_WIDTH_PERCENT }]}>
+              {renderPopularUserCard(u)}
             </View>
           ))}
         </View>
@@ -338,15 +448,45 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
     <View style={styles.container} {...panResponder.panHandlers}>
       <FlatList
         ref={listRef}
-        data={data}
-        keyExtractor={(item) => (item._id || item.id || Math.random()).toString()}
+        data={searchMode ? searchResults : data}
+        keyExtractor={(item, index) => getUserKey(item, index)}
         renderItem={renderItem}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={[styles.listContainer, { flexGrow: 1 }]}
         ListHeaderComponent={(
           <View>
-            <Text style={styles.title}>Autour de moi</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={styles.title}>{searchMode ? 'Recherche' : 'Autour de moi'}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  if (searchMode) {
+                    setSearchMode(false);
+                    setSearchQuery('');
+                    setSearchResults([]);
+                  } else {
+                    setSearchMode(true);
+                  }
+                }}
+                accessibilityLabel={searchMode ? 'Fermer la recherche' : 'Ouvrir la recherche'}
+                style={{ padding: 8 }}
+              >
+                <Text style={{ fontSize: 22 }}>{searchMode ? '✖' : '🔍'}</Text>
+              </TouchableOpacity>
+            </View>
+            {searchMode && (
+              <View style={styles.searchBarContainer}>
+                <Text style={{ marginRight: 8 }}>🔎</Text>
+                <TextInput
+                  style={styles.searchInput}
+                  value={searchQuery}
+                  onChangeText={(t) => setSearchQuery(t)}
+                  placeholder="Rechercher un profil"
+                  placeholderTextColor="#999"
+                  autoFocus
+                />
+              </View>
+            )}
           </View>
         )}
         ListEmptyComponent={(
@@ -358,16 +498,19 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, initialSc
                 <Text style={currentUser?.isVisible ? styles.noUsersText : styles.invisibleNotice}>
                   {currentUser?.isVisible ? 'Aucun profil autour pour l\u2019instant 👀 — invite tes amis ou explore les profils populaires.' : 'Vous êtes en mode invisible. Activez votre visibilité dans les Paramètres pour voir les autres utilisateurs.'}
                 </Text>
-                {currentUser?.isVisible && <PopularSection inline />}
+                {(!searchMode) && currentUser?.isVisible && <PopularSection inline />}
               </>
             )}
           </View>
         )}
-        ListFooterComponent={(
-          currentUser?.isVisible && data.length > 0 && (nearbyUsers?.length || 0) <= 2 ? (
-            <PopularSection />
-          ) : null
-        )}
+        ListFooterComponent={(() => {
+          const aroundCount = nearbyUsers?.length || 0;
+          // Afficher en pied uniquement lorsqu'on affiche réellement les "Autour de moi"
+          const showingNearby = !users || users.length === 0;
+          return (!searchMode && currentUser?.isVisible && showingNearby && data.length > 0 && aroundCount <= 2)
+            ? <PopularSection />
+            : null;
+        })()}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -519,6 +662,64 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 20,
+    },
+    searchBarContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        marginBottom: 12,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        color: '#333',
+        paddingVertical: 4,
+    },
+    popularTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#00c2cb',
+        marginBottom: 8,
+        textAlign: 'left',
+    },
+    // --- Popular profiles simplified card styles ---
+    popularGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
+    popularGridItem: {
+        width: '32%',
+        marginBottom: 12,
+        alignItems: 'center',
+    },
+    popularUserItem: {
+        alignItems: 'center',
+    },
+    popularAvatarImage: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: '#eee',
+    },
+    popularAvatarPlaceholder: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: '#00c2cb',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    popularUsername: {
+        marginTop: 6,
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#3f4a4b',
+        textAlign: 'center',
     },
 });
 

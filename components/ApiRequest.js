@@ -236,6 +236,11 @@ export async function getPopularUsers({ limit = 10 } = {}) {
     return request(`/users/popular?${qs.toString()}`, { method: 'GET' });
 }
 
+export async function searchUsers({ q, limit = 10 }) {
+    const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) });
+    return request(`/users/search?${qs.toString()}`, { method: 'GET' });
+}
+
 // PROFILE
 export async function updateProfile({ name, bio }) {
     return request('/profile', { method: 'PUT', body: { name, bio } });

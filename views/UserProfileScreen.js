@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -12,8 +13,11 @@ import {
   Alert,
 } from 'react-native';
 import { buildSocialProfileUrl } from '../services/socialUrls';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
+
+const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons }) => {
   const panResponder = PanResponder.create({
@@ -163,6 +167,26 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     }
   };
 
+  const [displayPref, setDisplayPref] = React.useState('full');
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const v = await AsyncStorage.getItem(DISPLAY_NAME_PREF_KEY);
+        if (v === 'custom' || v === 'full') setDisplayPref(v);
+      } catch (_) {}
+    })();
+  }, []);
+
+  const displayName = React.useMemo(() => {
+    const first = (user?.firstName || '').trim();
+    const last = (user?.lastName || '').trim();
+    const custom = (user?.customName || '').trim();
+    const full = [first, last].filter(Boolean).join(' ').trim();
+    const fallback = user?.username || user?.name || (user?.email ? String(user.email).split('@')[0] : '') || 'Utilisateur';
+    if (displayPref === 'custom') return custom || full || fallback;
+    return full || custom || fallback;
+  }, [user, displayPref]);
+
   if (!user) {
     return (
       <View style={styles.container} {...panResponder.panHandlers}>
@@ -206,7 +230,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                 )}
               </View>
               <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>{user.username}</Text>
+                <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]} numberOfLines={2} ellipsizeMode="tail">{displayName}</Text>
               </View>
             </View>
 

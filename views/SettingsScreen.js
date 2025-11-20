@@ -27,11 +27,15 @@ import {
   deleteMyAccount,
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
   const { user, updateUser } = useContext(UserContext);
   const [isVisible, setIsVisible] = useState(user?.isVisible ?? true);
   const [saving, setSaving] = useState(false);
+  const [displayNameMode, setDisplayNameMode] = useState('full');
 
   // GDPR state
   const [policyModalVisible, setPolicyModalVisible] = useState(false);
@@ -56,6 +60,24 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
       setMarketing(!!user?.privacyPreferences?.marketing);
     } catch (_) {}
   }, [user]);
+
+  // Charger préférence d'affichage du nom
+  useEffect(() => {
+    (async () => {
+      try {
+        const v = await AsyncStorage.getItem(DISPLAY_NAME_PREF_KEY);
+        if (v === 'custom' || v === 'full') setDisplayNameMode(v);
+      } catch (_) {}
+    })();
+  }, []);
+
+  const toggleDisplayNameMode = async () => {
+    try {
+      const next = displayNameMode === 'full' ? 'custom' : 'full';
+      setDisplayNameMode(next);
+      await AsyncStorage.setItem(DISPLAY_NAME_PREF_KEY, next);
+    } catch (_) {}
+  };
 
   const saveAndReturn = async () => {
     try {
@@ -268,6 +290,13 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
             trackColor={{ false: '#ccc', true: '#00c2cb' }}
             thumbColor={isVisible ? '#00c2cb' : '#f4f3f4'}
           />
+        </View>
+
+        <View style={styles.optionContainer}>
+          <Text style={styles.optionText}>Nom affiché (tap pour changer): {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}</Text>
+          <TouchableOpacity onPress={toggleDisplayNameMode} style={styles.smallPill}>
+            <Text style={styles.smallPillText}>{displayNameMode === 'full' ? 'Prénom Nom' : 'Custom'}</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={async () => { try { await apiLogout(); } catch(_) {} finally { onLogout && onLogout(); } }}>

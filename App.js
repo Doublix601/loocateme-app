@@ -8,6 +8,7 @@ import MyAccountScreen from './views/MyAccountScreen';
 import UserListScreen from './views/UserListScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
+import UserSearchView from './views/UserSearchView';
 import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
 import { UserProvider } from './components/contexts/UserContext';
@@ -270,8 +271,17 @@ export default function App() {
           users={[]}
           onSelectUser={handleSelectUser}
           onReturnToAccount={handleReturnToAccount}
+          onOpenSearchView={() => setCurrentScreen('UserSearch')}
           initialScrollOffset={userListScrollOffset}
           onUpdateScrollOffset={setUserListScrollOffset}
+        />
+      );
+      break;
+    case 'UserSearch':
+      screenToShow = (
+        <UserSearchView
+          onClose={() => setCurrentScreen('UserList')}
+          onSelectUser={(u) => { setSelectedUser(u); setCurrentScreen('UserProfile'); }}
         />
       );
       break;
