@@ -16,6 +16,7 @@ import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,6 +24,7 @@ const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons }) => {
   const { user: currentUser } = React.useContext(UserContext);
+  const { colors } = useTheme();
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -235,7 +237,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
   if (!user) {
     return (
-      <View style={styles.container} {...panResponder.panHandlers}>
+      <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
         <Text style={styles.error}>Aucun utilisateur sélectionné.</Text>
         <TouchableOpacity style={styles.modalButton} onPress={onReturnToList}>
           <Text style={styles.modalButtonText}>Retour à la liste</Text>
@@ -246,7 +248,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
 
   return (
-    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={onReturnToList}
@@ -262,7 +264,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
-            <View style={styles.imgUsernameSplitBox}>
+            <View style={[styles.imgUsernameSplitBox, { backgroundColor: colors.surfaceAlt }]}>
               <View style={styles.userProfilePictureContainer}>
                 {user.photo ? (
                   <Image source={{ uri: user.photo }} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
@@ -286,7 +288,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                   <Text
                     style={[
                       styles.value,
-                      { fontSize: bioFont, textAlign: 'center' },
+                      { fontSize: bioFont, textAlign: 'center', color: colors.textPrimary },
                     ]}
                   >
                     {user.bio}
@@ -297,8 +299,8 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
             {currentUser?.isVisible !== false && (
               <View style={{ alignItems: 'center', marginTop: height * 0.015 }}>
-                <View style={styles.distancePill}>
-                  <Text style={styles.distanceText}>{user.distance ?? computedDistance ?? '—'}</Text>
+                <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
+                  <Text style={[styles.distanceText, { color: colors.accent }]}>{user.distance ?? computedDistance ?? '—'}</Text>
                 </View>
               </View>
             )}
@@ -330,7 +332,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                   );
                 })
               ) : (
-                <Text style={styles.value}>Aucun réseau social</Text>
+                <Text style={[styles.value, { color: colors.textSecondary }]}>Aucun réseau social</Text>
               );
             })()}
           </View>

@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, Image, View, useWindowDimensions, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, Image, View, useWindowDimensions, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { login as apiLogin, setAccessToken } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 
@@ -45,45 +45,61 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { paddingTop: height * 0.1 }]}>
-            <Image
-                source={require('../assets/appIcons/SquareBanner.png')}
-                style={[styles.logo, { width: width * 0.6, height: width * 0.6 }]}
-            />
-            <Text style={[styles.title, { fontSize: width * 0.08 }]}>Connexion</Text>
+        <SafeAreaView style={styles.container}>
+            <KeyboardAvoidingView
+                style={{ flex: 1, alignSelf: 'stretch' }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+            >
+                <ScrollView
+                    style={{ flex: 1, alignSelf: 'stretch' }}
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: Math.max(24, height * 0.2) }}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Image
+                        source={require('../assets/appIcons/SquareBanner.png')}
+                        style={[styles.logo, { width: width * 0.6, height: width * 0.6 }]}
+                    />
+                    <Text style={[styles.title, { fontSize: width * 0.08 }]}>Connexion</Text>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#666"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Mot de passe"
-                placeholderTextColor="#666"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email"
+                        placeholderTextColor="#666"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        value={email}
+                        onChangeText={setEmail}
+                        returnKeyType="next"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Mot de passe"
+                        placeholderTextColor="#666"
+                        secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
+                        returnKeyType="done"
+                    />
 
-            <TouchableOpacity onPress={handleLoginPress} style={styles.button} disabled={loading}>
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Se connecter</Text>
-                )}
-            </TouchableOpacity>
+                    <TouchableOpacity onPress={handleLoginPress} style={styles.button} disabled={loading}>
+                        {loading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={styles.buttonText}>Se connecter</Text>
+                        )}
+                    </TouchableOpacity>
 
-            <TouchableOpacity onPress={onForgotPassword}>
-                <Text style={[styles.linkText, { fontSize: width * 0.04 }]}>Mot de passe oublié ?</Text>
-            </TouchableOpacity>
+                    <TouchableOpacity onPress={onForgotPassword}>
+                        <Text style={[styles.linkText, { fontSize: width * 0.04 }]}>Mot de passe oublié ?</Text>
+                    </TouchableOpacity>
 
-            <TouchableOpacity onPress={onSignup}>
-                <Text style={[styles.linkText, { fontSize: width * 0.04 }]}>Créer un compte</Text>
-            </TouchableOpacity>
+                    <TouchableOpacity onPress={onSignup}>
+                        <Text style={[styles.linkText, { fontSize: width * 0.04 }]}>Créer un compte</Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };

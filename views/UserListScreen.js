@@ -321,7 +321,10 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
   }, [currentUser?.isVisible]);
   const renderUserCard = (item) => (
     <TouchableOpacity
-      style={styles.userItem}
+      style={[
+        styles.userItem,
+        { backgroundColor: colors.surface, borderColor: colors.border }
+      ]}
       onPress={() => onSelectUser(item)}
       activeOpacity={0.8}
     >
@@ -340,15 +343,15 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         </View>
         <View style={styles.userContent}>
           <View style={styles.headerRow}>
-            <Text style={styles.username} numberOfLines={1}>{item.username}</Text>
+            <Text style={[styles.username, { color: colors.textPrimary }]} numberOfLines={1}>{item.username}</Text>
             {currentUser?.isVisible !== false && (
-              <View style={styles.distancePill}>
-                <Text style={styles.distanceText}>{item.distance ?? '—'}</Text>
+              <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
+                <Text style={[styles.distanceText, { color: colors.accent }]}>{item.distance ?? '—'}</Text>
               </View>
             )}
           </View>
           {(item.bio && String(item.bio).trim().length > 0) ? (
-            <Text style={styles.userBio} numberOfLines={2}>{item.bio}</Text>
+            <Text style={[styles.userBio, { color: colors.textSecondary }]} numberOfLines={2}>{item.bio}</Text>
           ) : null}
           {Array.isArray(item.socialMedias) && item.socialMedias.length > 0 && (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
@@ -422,7 +425,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
           />
         </View>
       )}
-      <Text style={[styles.popularUsername, { fontSize: POP_FONT }]} numberOfLines={1} ellipsizeMode="tail">{getDisplayName(item)}</Text>
+      <Text style={[styles.popularUsername, { fontSize: POP_FONT, color: colors.textPrimary }]} numberOfLines={1} ellipsizeMode="tail">{getDisplayName(item)}</Text>
     </TouchableOpacity>
   );
 
