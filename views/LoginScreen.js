@@ -38,7 +38,14 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
             onLogin && onLogin(res?.user);
         } catch (e) {
             console.error('[LoginScreen] Login error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
-            Alert.alert('Authentification échouée', 'Impossible de vous connecter. Vérifiez vos identifiants et réessayez.');
+            if (e?.code === 'EMAIL_NOT_VERIFIED' || e?.status === 403 && (e?.response?.code === 'EMAIL_NOT_VERIFIED')) {
+                Alert.alert(
+                    'Email non vérifié',
+                    "Votre adresse email n'a pas encore été vérifiée. Nous venons de vous renvoyer un email de confirmation. Veuillez cliquer sur le lien pour activer votre compte, puis réessayez."
+                );
+            } else {
+                Alert.alert('Authentification échouée', 'Impossible de vous connecter. Vérifiez vos identifiants et réessayez.');
+            }
         } finally {
             setLoading(false);
         }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions, Alert } from 'react-native';
+import * as Linking from 'expo-linking';
 import { Asset } from 'expo-asset';
 import LoginScreen from './views/LoginScreen';
 import ForgotPasswordScreen from './views/ForgotPasswordScreen';
@@ -94,6 +95,38 @@ function AppInner() {
     initAuth();
   }, []);
 
+  // Handle email verification redirect: detect emailVerified=1 in URL
+  useEffect(() => {
+    const handleUrl = (url) => {
+      try {
+        if (!url) return;
+        const parsed = Linking.parse(url);
+        // Support both query param and fragment style
+        const params = { ...(parsed?.queryParams || {}) };
+        // Some redirects may append as fragment ?a=b#emailVerified=1
+        if (parsed?.fragment) {
+          const fragParams = Object.fromEntries(new URLSearchParams(parsed.fragment));
+          Object.assign(params, fragParams);
+        }
+        if (String(params.emailVerified) === '1') {
+          Alert.alert('Email vérifié', 'Votre adresse email a été confirmée. Vous pouvez vous connecter.');
+          // Retourner à l’écran de connexion si on n’est pas déjà authentifié
+          setCurrentScreen('Login');
+        }
+      } catch (_e) {
+        // ignore parsing errors
+      }
+    };
+
+    // Check initial URL when app starts (web or deep link)
+    Linking.getInitialURL().then(handleUrl).catch(() => {});
+    // Subscribe to future URL events while app is running
+    const sub = Linking.addEventListener('url', (evt) => handleUrl(evt?.url));
+    return () => {
+      try { sub && sub.remove && sub.remove(); } catch {}
+    };
+  }, []);
+
   // Force logout and redirect to Login when auth errors occur
   useEffect(() => {
     const unsub = subscribe('auth:logout', () => {
@@ -180,7 +213,12 @@ function AppInner() {
   };
   const handleForgotPassword = () => setCurrentScreen('ForgotPassword');
   const handleSignup = () => setCurrentScreen('Signup');
-  const handleSignupSuccess = () => setCurrentScreen('Login');
+  const handleSignupSuccess = () => {
+    try {
+      Alert.alert('Vérifiez vos emails', "Un email de vérification vient de vous être envoyé. Cliquez sur le lien pour confirmer votre adresse, puis connectez-vous.");
+    } catch {}
+    setCurrentScreen('Login');
+  };
   const handleReturnToList = () => setCurrentScreen('UserList');
   const handleReturnToAccount = () => setCurrentScreen('MyAccount');
   const onReturnToSettings = () => setCurrentScreen('Settings');
