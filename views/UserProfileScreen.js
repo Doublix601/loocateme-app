@@ -184,7 +184,8 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     const first = (user?.firstName || '').trim();
     const last = (user?.lastName || '').trim();
     const custom = (user?.customName || '').trim();
-    const full = [first, last].filter(Boolean).join(' ').trim();
+    const hasFull = first && last;
+    const full = hasFull ? `${first} ${last}`.trim() : '';
     const fallback = user?.username || user?.name || (user?.email ? String(user.email).split('@')[0] : '') || 'Utilisateur';
     if (displayPref === 'custom') return custom || full || fallback;
     return full || custom || fallback;
@@ -279,18 +280,20 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
               </View>
             </View>
 
-            <View style={styles.bioContainer}>
-              <View style={styles.bioTextContainer}>
-                <Text
-                  style={[
-                    styles.value,
-                    { fontSize: bioFont, textAlign: 'center' },
-                  ]}
-                >
-                  {user.bio || 'Pas de bio'}
-                </Text>
+            {(user?.bio ?? '').trim().length > 0 ? (
+              <View style={styles.bioContainer}>
+                <View style={styles.bioTextContainer}>
+                  <Text
+                    style={[
+                      styles.value,
+                      { fontSize: bioFont, textAlign: 'center' },
+                    ]}
+                  >
+                    {user.bio}
+                  </Text>
+                </View>
               </View>
-            </View>
+            ) : null}
 
             {currentUser?.isVisible !== false && (
               <View style={{ alignItems: 'center', marginTop: height * 0.015 }}>

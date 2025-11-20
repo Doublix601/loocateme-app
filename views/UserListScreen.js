@@ -176,7 +176,10 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
   }, []);
 
   const getDisplayName = (item) => {
-    const full = [item.firstName, item.lastName].filter(Boolean).join(' ').trim();
+    const first = (item.firstName || '').trim();
+    const last = (item.lastName || '').trim();
+    const hasFull = first && last;
+    const full = hasFull ? `${first} ${last}`.trim() : '';
     const custom = (item.customName || '').trim();
     if (displayPref === 'custom') return custom || full || item.username || 'Utilisateur';
     return full || custom || item.username || 'Utilisateur';
@@ -247,7 +250,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     }
   };
 
-  const fetchPopular = async (limit = 10) => {
+  const fetchPopular = async (limit = 20) => {
     try {
       setLoadingPopular(true);
       const res = await getPopularUsers({ limit });
@@ -267,14 +270,13 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     }
   }, []);
 
-  // When nearby results are scarce, fetch popular profiles
+  // When nearby results are scarce, fetch popular profiles (even if invisible)
   useEffect(() => {
-    if (!currentUser?.isVisible) return;
     const count = nearbyUsers?.length || 0;
-    if (count <= 2) {
-      fetchPopular(10);
+    if (count < 10) {
+      fetchPopular(20);
     }
-  }, [nearbyUsers, currentUser?.isVisible]);
+  }, [nearbyUsers]);
 
   // On app reopen, if visibility was auto-disabled by background timeout, restore it
   useEffect(() => {
@@ -345,9 +347,9 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
               </View>
             )}
           </View>
-          <Text style={styles.userBio} numberOfLines={2}>
-            {(item.bio && String(item.bio).trim().length > 0) ? item.bio : 'Pas de bio'}
-          </Text>
+          {(item.bio && String(item.bio).trim().length > 0) ? (
+            <Text style={styles.userBio} numberOfLines={2}>{item.bio}</Text>
+          ) : null}
           {Array.isArray(item.socialMedias) && item.socialMedias.length > 0 && (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
               {item.socialMedias.slice(0, 3).map((s, idx) => {
@@ -485,7 +487,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
                   <Text style={currentUser?.isVisible ? [styles.noUsersText, { color: colors.textMuted }] : [styles.invisibleNotice, { color: '#d35400' }]}>
                     {currentUser?.isVisible ? 'Aucun profil autour pour l\u2019instant 👀 — invite tes amis ou explore les profils populaires.' : 'Vous êtes en mode invisible. Activez votre visibilité dans les Paramètres pour voir les autres utilisateurs.'}
                   </Text>
-                  {currentUser?.isVisible && <PopularSection inline />}
+                  <PopularSection inline />
                 </>
               </>
             )}
@@ -495,7 +497,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
           const aroundCount = nearbyUsers?.length || 0;
           // Afficher en pied uniquement lorsqu'on affiche réellement les "Autour de moi"
           const showingNearby = !users || users.length === 0;
-          return (currentUser?.isVisible && showingNearby && data.length > 0 && aroundCount <= 2)
+          return (showingNearby && data.length > 0 && aroundCount < 10)
             ? <PopularSection />
             : null;
         })()}
@@ -506,7 +508,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
               setRefreshing(true);
               fetchNearby();
               // Refresh popular as well
-              fetchPopular(10);
+              fetchPopular(20);
             }}
           />
         }

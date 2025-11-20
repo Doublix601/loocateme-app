@@ -1,5 +1,5 @@
 import { useState, useContext } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, Image, useWindowDimensions, Switch, Modal, ScrollView } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, Image, useWindowDimensions, Switch, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { signup as apiSignup, setAccessToken, updateConsent, getPrivacyPolicy } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 
@@ -39,15 +39,15 @@ const SignupScreen = ({ onSignup, onLogin }) => {
     const { width, height } = useWindowDimensions();
 
     const handleSignup = async () => {
-        // Normalize and validate username per ^[A-Z][a-z]+$
-        let normalized = String(username || '').trim();
-        if (normalized) {
-            const lower = normalized.toLowerCase();
-            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
-        }
-        const USERNAME_RE = /^[A-Z][a-z]+$/;
-        if (!USERNAME_RE.test(normalized)) {
-            setErrorMessage("Le nom d'utilisateur doit commencer par une majuscule et ne contenir que des lettres minuscules ensuite (ex: Arnaud).");
+        // Normaliser et valider le username selon les règles Instagram
+        let normalized = String(username || '').trim().toLowerCase();
+        const INSTAGRAM_USERNAME_REGEX = /^(?!.*\..)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+        // Note: la 1ère conjonction (?!.*\..)
+        // doit vérifier « pas de deux points consécutifs » → utiliser (?!.*\.{2})
+        // Corrigeons la regex:
+        const IG_RE = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+        if (!IG_RE.test(normalized)) {
+            setErrorMessage("Nom d'utilisateur invalide. Utilise 1–30 caractères: lettres, chiffres, points et underscores. Pas de point au début/à la fin ni deux points consécutifs.");
             return;
         }
         if (password !== confirmPassword) {
@@ -79,13 +79,9 @@ const SignupScreen = ({ onSignup, onLogin }) => {
     const doSignupWithConsent = async () => {
         // Called from GDPR modal after user accepted policy and set preferences
         // Re-run minimal validations to be safe
-        let normalized = String(username || '').trim();
-        if (normalized) {
-            const lower = normalized.toLowerCase();
-            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
-        }
-        const USERNAME_RE = /^[A-Z][a-z]+$/;
-        if (!USERNAME_RE.test(normalized) || !email || !password || password !== confirmPassword) {
+        let normalized = String(username || '').trim().toLowerCase();
+        const IG_RE = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+        if (!IG_RE.test(normalized) || !email || !password || password !== confirmPassword) {
             Alert.alert("Erreur", "Vérifiez les informations saisies.");
             return;
         }
@@ -121,89 +117,111 @@ const SignupScreen = ({ onSignup, onLogin }) => {
 
     return (
         <SafeAreaView style={[styles.container, { paddingTop: height * 0.08 }]}>
-            <Image
-                source={require('../assets/appIcons/SquareBanner.png')}
-                style={[styles.logo, { width: width * 0.6, height: width * 0.6 }]}
-            />
-            <Text style={[styles.title, { fontSize: width * 0.08 }]}>Inscription</Text>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+            >
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ paddingBottom: Math.max(24, height * 0.2) }}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Image
+                        source={require('../assets/appIcons/SquareBanner.png')}
+                        style={[styles.logo, { width: width * 0.6, height: width * 0.6 }]}
+                    />
+                    <Text style={[styles.title, { fontSize: width * 0.08 }]}>Inscription</Text>
 
-            <View style={styles.formContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Prénom (optionnel)"
-                    placeholderTextColor="#666"
-                    value={firstName}
-                    onChangeText={setFirstName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nom (optionnel)"
-                    placeholderTextColor="#666"
-                    value={lastName}
-                    onChangeText={setLastName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nom d'utilisateur"
-                    placeholderTextColor="#666"
-                    value={username}
-                    onChangeText={setUsername}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nom personnalisé (optionnel)"
-                    placeholderTextColor="#666"
-                    value={customName}
-                    onChangeText={setCustomName}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor="#666"
-                    keyboardType="email-address"
-                    value={email}
-                    onChangeText={setEmail}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Mot de passe"
-                    placeholderTextColor="#666"
-                    secureTextEntry={true}
-                    value={password}
-                    onChangeText={setPassword}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Confirmer le mot de passe"
-                    placeholderTextColor="#666"
-                    secureTextEntry={true}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                />
+                    <View style={styles.formContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Prénom (optionnel)"
+                            placeholderTextColor="#666"
+                            value={firstName}
+                            onChangeText={setFirstName}
+                            returnKeyType="next"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nom (optionnel)"
+                            placeholderTextColor="#666"
+                            value={lastName}
+                            onChangeText={setLastName}
+                            returnKeyType="next"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nom d'utilisateur"
+                            placeholderTextColor="#666"
+                            value={username}
+                            onChangeText={setUsername}
+                            autoCapitalize="none"
+                            returnKeyType="next"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nom personnalisé (optionnel)"
+                            placeholderTextColor="#666"
+                            value={customName}
+                            onChangeText={setCustomName}
+                            returnKeyType="next"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            placeholderTextColor="#666"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            value={email}
+                            onChangeText={setEmail}
+                            returnKeyType="next"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Mot de passe"
+                            placeholderTextColor="#666"
+                            secureTextEntry={true}
+                            value={password}
+                            onChangeText={setPassword}
+                            returnKeyType="next"
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Confirmer le mot de passe"
+                            placeholderTextColor="#666"
+                            secureTextEntry={true}
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            returnKeyType="done"
+                        />
 
-                <View style={styles.consentRow}>
-                    <TouchableOpacity onPress={() => setConsentAccepted(!consentAccepted)} style={[styles.checkbox, consentAccepted && styles.checkboxChecked]}>
-                        {consentAccepted ? <Text style={styles.checkboxTick}>✓</Text> : null}
-                    </TouchableOpacity>
-                    <Text style={styles.consentText}>
-                        J'accepte la politique de confidentialité et le traitement de mes données selon le RGPD.
-                    </Text>
-                </View>
+                        <View style={styles.consentRow}>
+                            <TouchableOpacity onPress={() => setConsentAccepted(!consentAccepted)} style={[styles.checkbox, consentAccepted && styles.checkboxChecked]}>
+                                {consentAccepted ? <Text style={styles.checkboxTick}>✓</Text> : null}
+                            </TouchableOpacity>
+                            <Text style={styles.consentText}>
+                                J'accepte la politique de confidentialité et le traitement de mes données selon le RGPD.
+                            </Text>
+                        </View>
 
-                {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-                <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.buttonText}>S'inscrire</Text>
-                    )}
-                </TouchableOpacity>
+                        <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.buttonText}>S'inscrire</Text>
+                            )}
+                        </TouchableOpacity>
 
-                <TouchableOpacity style={styles.link} onPress={onLogin}>
-                    <Text style={styles.linkText}>Déjà un compte ? Se connecter</Text>
-                </TouchableOpacity>
-            </View>
+                        <TouchableOpacity style={styles.link} onPress={onLogin}>
+                            <Text style={styles.linkText}>Déjà un compte ? Se connecter</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
 
             {/* GDPR Modal: Policy -> Preferences -> Signup */}
             <Modal visible={gdprModalVisible} animationType="slide" onRequestClose={() => setGdprModalVisible(false)}>
@@ -276,12 +294,12 @@ const styles = StyleSheet.create({
         color: '#00c2cb',
     },
     formContainer: {
-        width: '80%',
-        maxWidth: 420,
+        width: '100%',
+        maxWidth: undefined,
         alignSelf: 'center',
     },
     input: {
-        height: 40,
+        height: 46,
         borderColor: '#00c2cb',
         borderWidth: 1,
         borderRadius: 5,
@@ -296,7 +314,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         alignItems: 'center',
         marginTop: 20,
-        width: '70%',
+        width: '100%',
         alignSelf: 'center',
     },
     buttonText: {

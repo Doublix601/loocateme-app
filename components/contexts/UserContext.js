@@ -6,7 +6,10 @@ export const UserContext = createContext();
 
 function mapBackendUser(u = {}) {
   return {
-    username: u.name || '',
+    username: u.username || u.name || '',
+    firstName: u.firstName || '',
+    lastName: u.lastName || '',
+    customName: u.customName || '',
     bio: u.bio || '',
     photo: u.profileImageUrl || null,
     socialMedia: Array.isArray(u.socialNetworks)
@@ -20,9 +23,13 @@ function mapBackendUser(u = {}) {
 }
 
 export const UserProvider = ({ children }) => {
+  // Start with an empty user so hydration always fetches fresh data
   const [user, setUser] = useState({
-    username: 'Arnaud',
-    bio: 'Bio de mon compte',
+    username: '',
+    firstName: '',
+    lastName: '',
+    customName: '',
+    bio: '',
     photo: null,
     socialMedia: [],
     isVisible: true,
@@ -41,7 +48,7 @@ export const UserProvider = ({ children }) => {
       try {
         const token = getAccessToken && getAccessToken();
         if (!token) return;
-        // If already hydrated with socials and photo, skip
+        // If already hydrated with socials and photo, skip initial fetch
         const looksHydrated = (user?.socialMedia?.length || 0) > 0 || !!user?.photo || (user?.bio && user.bio.length > 0);
         if (looksHydrated) return;
         const res = await getMyUser();
@@ -61,18 +68,32 @@ export const UserProvider = ({ children }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reset user state on global auth logout
+  // Reset user state on global auth logout and re-hydrate on login
   useEffect(() => {
-    const unsub = subscribe('auth:logout', () => {
+    const offLogout = subscribe('auth:logout', () => {
       setUser({
         username: '',
+        firstName: '',
+        lastName: '',
+        customName: '',
         bio: '',
         photo: null,
         socialMedia: [],
         isVisible: false,
+        consent: { accepted: false, version: '', consentAt: null },
+        privacyPreferences: { analytics: false, marketing: false },
       });
     });
-    return () => unsub();
+    const offLogin = subscribe('auth:login', async () => {
+      try {
+        const res = await getMyUser();
+        const me = res?.user;
+        if (me) setUser(mapBackendUser(me));
+      } catch (e) {
+        // silent
+      }
+    });
+    return () => { offLogout(); offLogin(); };
   }, []);
 
   return (

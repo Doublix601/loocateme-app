@@ -103,7 +103,8 @@ const MyAccountScreen = ({
             firstName: typeof me.firstName === 'string' ? me.firstName : (user?.firstName || ''),
             lastName: typeof me.lastName === 'string' ? me.lastName : (user?.lastName || ''),
             customName: typeof me.customName === 'string' ? me.customName : (user?.customName || ''),
-            bio: typeof me.bio === 'string' ? me.bio : (user?.bio || 'Restez appuyé pour ajouter une bio'),
+            // Ne pas injecter de placeholder en state: conserver vide si pas de bio côté API
+            bio: typeof me.bio === 'string' ? me.bio : (user?.bio || ''),
             photo: me.profileImageUrl || user?.photo || null,
             socialMedia: mappedSocial,
             isVisible: me.isVisible !== false,
@@ -237,96 +238,120 @@ const MyAccountScreen = ({
   };
 
   const handleSave = async () => {
-    if (editType && newValue.trim() !== '') {
-      try {
-        if (editType === 'username') {
-          // Normalize and validate username
-          let normalized = String(newValue || '').trim();
-          if (normalized) {
-            const lower = normalized.toLowerCase();
-            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
-          }
-          const USERNAME_RE = /^[A-Z][a-z]+$/;
-          if (!USERNAME_RE.test(normalized)) {
-            Alert.alert('Nom invalide', "Le nom d'utilisateur doit commencer par une majuscule et ne contenir que des lettres minuscules ensuite (ex: Arnaud).");
-            return;
-          }
-          const res = await apiUpdateProfile({ username: normalized });
-          const updated = res?.user || {};
-          updateUser({
-            ...user,
-            username: updated.username ?? updated.name ?? normalized,
-            bio: updated.bio ?? user.bio,
-            photo: updated.profileImageUrl ?? user.photo,
-          });
-        } else if (editType === 'bio') {
-          const res = await apiUpdateProfile({ bio: newValue });
-          const updated = res?.user || {};
-          updateUser({
-            ...user,
-            username: updated.username ?? updated.name ?? user.username,
-            bio: updated.bio ?? newValue,
-            photo: updated.profileImageUrl ?? user.photo,
-          });
-        } else if (editType === 'firstName') {
-          let normalized = String(newValue || '').trim();
-          if (normalized) {
-            const lower = normalized.toLowerCase();
-            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
-          }
-          const NAME_RE = /^[A-Z][a-z]*$/;
-          if (normalized && !NAME_RE.test(normalized)) {
-            Alert.alert('Prénom invalide', 'Format requis: ^[A-Z][a-z]*$');
-            return;
-          }
-          const res = await apiUpdateProfile({ firstName: normalized });
-          const updated = res?.user || {};
-          updateUser({
-            ...user,
-            firstName: updated.firstName ?? normalized,
-            lastName: updated.lastName ?? user.lastName,
-            customName: updated.customName ?? user.customName,
-            username: updated.username ?? updated.name ?? user.username,
-            bio: updated.bio ?? user.bio,
-            photo: updated.profileImageUrl ?? user.photo,
-          });
-        } else if (editType === 'lastName') {
-          let normalized = String(newValue || '').trim();
-          if (normalized) {
-            const lower = normalized.toLowerCase();
-            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
-          }
-          const NAME_RE = /^[A-Z][a-z]*$/;
-          if (normalized && !NAME_RE.test(normalized)) {
-            Alert.alert('Nom invalide', 'Format requis: ^[A-Z][a-z]*$');
-            return;
-          }
-          const res = await apiUpdateProfile({ lastName: normalized });
-          const updated = res?.user || {};
-          updateUser({
-            ...user,
-            firstName: updated.firstName ?? user.firstName,
-            lastName: updated.lastName ?? normalized,
-            customName: updated.customName ?? user.customName,
-            username: updated.username ?? updated.name ?? user.username,
-            bio: updated.bio ?? user.bio,
-            photo: updated.profileImageUrl ?? user.photo,
-          });
-        } else if (editType === 'customName') {
-          const normalized = String(newValue || '').trim();
-          const res = await apiUpdateProfile({ customName: normalized });
-          const updated = res?.user || {};
-          updateUser({
-            ...user,
-            customName: updated.customName ?? normalized,
-            username: updated.username ?? updated.name ?? user.username,
-            bio: updated.bio ?? user.bio,
-            photo: updated.profileImageUrl ?? user.photo,
-          });
+    try {
+      const raw = String(newValue ?? '');
+      if (editType === 'username') {
+        // Normaliser et valider selon la regex Instagram (vide interdit)
+        let normalized = raw.trim().toLowerCase();
+        const IG_RE = /^(?!.*\..)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
+        if (!normalized || !IG_RE.test(normalized)) {
+          Alert.alert('Nom invalide', "Nom d'utilisateur invalide. Utilise 1–30 caractères: lettres, chiffres, points et underscores. Pas de point au début/à la fin ni deux points consécutifs.");
+          return;
         }
-      } catch (e) {
-        Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
+        const res = await apiUpdateProfile({ username: normalized });
+        const updated = res?.user || {};
+        updateUser({
+          ...user,
+          username: updated.username ?? updated.name ?? normalized,
+          bio: updated.bio ?? user.bio,
+          photo: updated.profileImageUrl ?? user.photo,
+        });
+      } else if (editType === 'bio') {
+        // La bio peut être une chaîne vide: on envoie tel quel
+        const res = await apiUpdateProfile({ bio: raw });
+        const updated = res?.user || {};
+        updateUser({
+          ...user,
+          username: updated.username ?? updated.name ?? user.username,
+          bio: updated.bio ?? raw,
+          photo: updated.profileImageUrl ?? user.photo,
+        });
+      } else if (editType === 'firstName') {
+        let normalized = raw.trim();
+        if (normalized) {
+          const lower = normalized.toLocaleLowerCase('fr');
+          normalized = lower.charAt(0).toLocaleUpperCase('fr') + lower.slice(1);
+        }
+        const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
+        if (normalized && !NAME_RE.test(normalized)) {
+          Alert.alert('Prénom invalide', "Le prénom doit commencer par une majuscule et peut contenir des lettres (accents autorisés), espaces, apostrophes ou tirets.");
+          return;
+        }
+        // Vérifier règles de combinaison côté client
+        const candidateFirst = normalized;
+        const candidateLast = (user.lastName || '').trim();
+        const candidateCustom = (user.customName || '').trim();
+        const hasCustom = candidateCustom.length > 0;
+        const hasFirst = candidateFirst.length > 0;
+        const hasLast = candidateLast.length > 0;
+        if (!hasCustom && !(hasFirst && hasLast)) {
+          Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
+          return;
+        }
+        const res = await apiUpdateProfile({ firstName: candidateFirst });
+        const updated = res?.user || {};
+        updateUser({
+          ...user,
+          firstName: updated.firstName ?? candidateFirst,
+          lastName: updated.lastName ?? user.lastName,
+          customName: updated.customName ?? user.customName,
+          username: updated.username ?? updated.name ?? user.username,
+          bio: updated.bio ?? user.bio,
+          photo: updated.profileImageUrl ?? user.photo,
+        });
+      } else if (editType === 'lastName') {
+        let normalized = raw.trim();
+        if (normalized) {
+          const lower = normalized.toLocaleLowerCase('fr');
+          normalized = lower.charAt(0).toLocaleUpperCase('fr') + lower.slice(1);
+        }
+        const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
+        if (normalized && !NAME_RE.test(normalized)) {
+          Alert.alert('Nom invalide', "Le nom doit commencer par une majuscule et peut contenir des lettres (accents autorisés), espaces, apostrophes ou tirets.");
+          return;
+        }
+        const candidateFirst = (user.firstName || '').trim();
+        const candidateLast = normalized;
+        const candidateCustom = (user.customName || '').trim();
+        const hasCustom = candidateCustom.length > 0;
+        const hasFirst = candidateFirst.length > 0;
+        const hasLast = candidateLast.length > 0;
+        if (!hasCustom && !(hasFirst && hasLast)) {
+          Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
+          return;
+        }
+        const res = await apiUpdateProfile({ lastName: candidateLast });
+        const updated = res?.user || {};
+        updateUser({
+          ...user,
+          firstName: updated.firstName ?? user.firstName,
+          lastName: updated.lastName ?? candidateLast,
+          customName: updated.customName ?? user.customName,
+          username: updated.username ?? updated.name ?? user.username,
+          bio: updated.bio ?? user.bio,
+          photo: updated.profileImageUrl ?? user.photo,
+        });
+      } else if (editType === 'customName') {
+        const normalized = raw.trim();
+        // Interdire de vider le nom personnalisé si prénom ou nom sont vides
+        const hasFirst = (user.firstName || '').trim().length > 0;
+        const hasLast = (user.lastName || '').trim().length > 0;
+        if (!normalized && (!hasFirst || !hasLast)) {
+          Alert.alert('Nom personnalisé requis', 'Impossible de supprimer le nom personnalisé tant que le prénom ou le nom est vide.');
+          return;
+        }
+        const res = await apiUpdateProfile({ customName: normalized });
+        const updated = res?.user || {};
+        updateUser({
+          ...user,
+          customName: updated.customName ?? normalized,
+          username: updated.username ?? updated.name ?? user.username,
+          bio: updated.bio ?? user.bio,
+          photo: updated.profileImageUrl ?? user.photo,
+        });
       }
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
     }
     setModalVisible(false);
   };
@@ -700,13 +725,20 @@ const MyAccountScreen = ({
                 delayLongPress={300}
                 activeOpacity={1}
               >
-                <Text
-                  style={[
-                    styles.value,
-                    { fontSize: bioFont, textAlign: 'center', color: colors.textPrimary },
-                  ]}>
-                  {user.bio}
-                </Text>
+                {(() => {
+                  const bioText = String(user?.bio || '').trim();
+                  const isEmpty = bioText.length === 0;
+                  return (
+                    <Text
+                      style={[
+                        styles.value,
+                        { fontSize: bioFont, textAlign: 'center', color: isEmpty ? colors.textMuted : colors.textPrimary },
+                      ]}
+                    >
+                      {isEmpty ? 'Maintenir pour ajouter une bio' : bioText}
+                    </Text>
+                  );
+                })()}
               </TouchableOpacity>
             </View>
 

@@ -64,7 +64,10 @@ export default function UserSearchView({ onClose, onSelectUser }) {
   }, [query]);
 
   const getDisplayName = (item) => {
-    const full = [item.firstName, item.lastName].filter(Boolean).join(' ').trim();
+    const first = (item.firstName || '').trim();
+    const last = (item.lastName || '').trim();
+    const hasFull = first && last;
+    const full = hasFull ? `${first} ${last}`.trim() : '';
     const custom = (item.customName || '').trim();
     return full || custom || item.username || 'Utilisateur';
   };

@@ -181,6 +181,7 @@ export async function signup({ email, password, username, firstName = '', lastNa
         body: { email, password, username, firstName, lastName, customName },
     });
     if (data?.accessToken) setAccessToken(data.accessToken);
+    try { publish('auth:login', { user: data?.user || null }); } catch (_) {}
     return data;
 }
 
@@ -193,6 +194,7 @@ export async function login({ email, password }) {
         suppressAuthHandling: true,
     });
     if (data?.accessToken) setAccessToken(data.accessToken);
+    try { publish('auth:login', { user: data?.user || null }); } catch (_) {}
     return data;
 }
 
@@ -210,6 +212,7 @@ export async function logout() {
     } finally {
         setAccessToken(null);
         try { await AsyncStorage.removeItem(ACCESS_TOKEN_KEY); } catch {}
+        try { publish('auth:logout', { reason: 'USER_REQUEST' }); } catch (_) {}
     }
 }
 
