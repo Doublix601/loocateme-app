@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, PanResponder } from 'react-native';
 import { searchUsers } from '../components/ApiRequest';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -11,6 +12,7 @@ export default function UserSearchView({ onClose, onSelectUser }) {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const debRef = useRef(null);
+  const { colors, isDark } = useTheme();
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -41,8 +43,15 @@ export default function UserSearchView({ onClose, onSelectUser }) {
           firstName: (u.firstName || '').trim(),
           lastName: (u.lastName || '').trim(),
           customName: (u.customName || '').trim(),
-          username: (u.name || u.email?.split('@')[0] || 'Utilisateur'),
+          username: (u.username || u.name || u.email?.split('@')[0] || 'Utilisateur'),
           photo: u.profileImageUrl || null,
+          bio: u.bio || '',
+          // Pass raw backend social networks mapped to UI shape expected by UserProfileScreen
+          socialMedias: Array.isArray(u.socialNetworks)
+            ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+            : [],
+          // Keep raw coordinates to allow distance computation in the Profile screen
+          locationCoordinates: Array.isArray(u?.location?.coordinates) ? u.location.coordinates : null,
         }));
         setResults(mapped);
       } catch (_e) {
@@ -73,26 +82,39 @@ export default function UserSearchView({ onClose, onSelectUser }) {
     </TouchableOpacity>
   );
 
+  const minChars = 2;
+  const qTrim = query.trim();
+  const showInfoMsg = !loading && results.length === 0;
+
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onClose} style={{ padding: 8 }}>
-          <Text style={{ fontSize: 18 }}>✖</Text>
+          <Text style={{ fontSize: 18, color: colors.textPrimary }}>✖</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Recherche</Text>
+        <Text style={[styles.title, { color: colors.accent }]}>Recherche</Text>
         <View style={{ width: 28 }} />
       </View>
-      <View style={styles.searchBar}>
+      <View style={[styles.searchBar, { borderColor: colors.border, backgroundColor: colors.surface }]}>
         <Text style={{ marginRight: 8 }}>🔎</Text>
         <TextInput
           value={query}
           onChangeText={setQuery}
           placeholder="Rechercher par nom"
-          placeholderTextColor="#999"
-          style={styles.input}
+          placeholderTextColor={isDark ? '#999' : '#666'}
+          style={[styles.input, { color: colors.textPrimary }]}
           autoFocus
         />
       </View>
+      {showInfoMsg && (
+        <View style={{ paddingVertical: 8 }}>
+          <Text style={{ textAlign: 'center', color: colors.textMuted }}>
+            {qTrim.length < minChars
+              ? 'Tape au moins 2 lettres pour lancer la recherche'
+              : 'Aucun résultat. Affine ta recherche pour trouver la personne que tu recherches'}
+          </Text>
+        </View>
+      )}
       {loading ? (
         <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
       ) : (
@@ -101,11 +123,7 @@ export default function UserSearchView({ onClose, onSelectUser }) {
           keyExtractor={(it, i) => String(it._id || it.id || i)}
           renderItem={renderRow}
           contentContainerStyle={{ paddingBottom: 24 }}
-          ListEmptyComponent={(
-            <View style={{ padding: 20 }}>
-              <Text style={{ textAlign: 'center', color: '#666' }}>Tape au moins 2 lettres pour lancer la recherche</Text>
-            </View>
-          )}
+          ListEmptyComponent={null}
         />
       )}
     </View>

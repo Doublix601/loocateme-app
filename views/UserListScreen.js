@@ -18,12 +18,14 @@ import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetV
 import { UserContext } from '../components/contexts/UserContext';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSearchView, initialScrollOffset = 0, onUpdateScrollOffset }) => {
+  const { colors, isDark } = useTheme();
   // Swipe left anywhere on the list to open MyAccount
   const panResponder = React.useRef(
     PanResponder.create({
@@ -74,7 +76,10 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
 
   // Map backend user to context shape
   const mapBackendUserToContext = (u = {}) => ({
-    username: u.name || '',
+    username: u.username || u.name || '',
+    firstName: u.firstName || '',
+    lastName: u.lastName || '',
+    customName: u.customName || '',
     bio: u.bio || '',
     photo: u.profileImageUrl || null,
     socialMedia: Array.isArray(u.socialNetworks)
@@ -127,7 +132,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
 
   const mapBackendUserToUi = (u, baseLatLon = null) => {
     const photo = u?.profileImageUrl || null;
-    const name = (u?.name || '').trim();
+    const name = (u?.username || u?.name || '').trim();
     const firstName = (u?.firstName || '').trim();
     const lastName = (u?.lastName || '').trim();
     const customName = (u?.customName || '').trim();
@@ -334,9 +339,11 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         <View style={styles.userContent}>
           <View style={styles.headerRow}>
             <Text style={styles.username} numberOfLines={1}>{item.username}</Text>
-            <View style={styles.distancePill}>
-              <Text style={styles.distanceText}>{item.distance ?? '—'}</Text>
-            </View>
+            {currentUser?.isVisible !== false && (
+              <View style={styles.distancePill}>
+                <Text style={styles.distanceText}>{item.distance ?? '—'}</Text>
+              </View>
+            )}
           </View>
           <Text style={styles.userBio} numberOfLines={2}>
             {(item.bio && String(item.bio).trim().length > 0) ? item.bio : 'Pas de bio'}
@@ -445,10 +452,10 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
   };
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
       <FlatList
         ref={listRef}
-        data={searchMode ? searchResults : data}
+        data={data}
         keyExtractor={(item, index) => getUserKey(item, index)}
         renderItem={renderItem}
         onScroll={handleScroll}
@@ -457,36 +464,15 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         ListHeaderComponent={(
           <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={styles.title}>{searchMode ? 'Recherche' : 'Autour de moi'}</Text>
+              <Text style={[styles.title, { color: colors.accent }]}>Autour de moi</Text>
               <TouchableOpacity
-                onPress={() => {
-                  if (searchMode) {
-                    setSearchMode(false);
-                    setSearchQuery('');
-                    setSearchResults([]);
-                  } else {
-                    setSearchMode(true);
-                  }
-                }}
-                accessibilityLabel={searchMode ? 'Fermer la recherche' : 'Ouvrir la recherche'}
+                onPress={() => { onOpenSearchView && onOpenSearchView(); }}
+                accessibilityLabel={'Ouvrir la recherche'}
                 style={{ padding: 8 }}
               >
-                <Text style={{ fontSize: 22 }}>{searchMode ? '✖' : '🔍'}</Text>
+                <Text style={{ fontSize: 22, color: colors.textPrimary }}>🔍</Text>
               </TouchableOpacity>
             </View>
-            {searchMode && (
-              <View style={styles.searchBarContainer}>
-                <Text style={{ marginRight: 8 }}>🔎</Text>
-                <TextInput
-                  style={styles.searchInput}
-                  value={searchQuery}
-                  onChangeText={(t) => setSearchQuery(t)}
-                  placeholder="Rechercher un profil"
-                  placeholderTextColor="#999"
-                  autoFocus
-                />
-              </View>
-            )}
           </View>
         )}
         ListEmptyComponent={(
@@ -495,10 +481,12 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
               <ActivityIndicator size="large" color="#00c2cb" />
             ) : (
               <>
-                <Text style={currentUser?.isVisible ? styles.noUsersText : styles.invisibleNotice}>
-                  {currentUser?.isVisible ? 'Aucun profil autour pour l\u2019instant 👀 — invite tes amis ou explore les profils populaires.' : 'Vous êtes en mode invisible. Activez votre visibilité dans les Paramètres pour voir les autres utilisateurs.'}
-                </Text>
-                {(!searchMode) && currentUser?.isVisible && <PopularSection inline />}
+                <>
+                  <Text style={currentUser?.isVisible ? [styles.noUsersText, { color: colors.textMuted }] : [styles.invisibleNotice, { color: '#d35400' }]}>
+                    {currentUser?.isVisible ? 'Aucun profil autour pour l\u2019instant 👀 — invite tes amis ou explore les profils populaires.' : 'Vous êtes en mode invisible. Activez votre visibilité dans les Paramètres pour voir les autres utilisateurs.'}
+                  </Text>
+                  {currentUser?.isVisible && <PopularSection inline />}
+                </>
               </>
             )}
           </View>
@@ -507,7 +495,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
           const aroundCount = nearbyUsers?.length || 0;
           // Afficher en pied uniquement lorsqu'on affiche réellement les "Autour de moi"
           const showingNearby = !users || users.length === 0;
-          return (!searchMode && currentUser?.isVisible && showingNearby && data.length > 0 && aroundCount <= 2)
+          return (currentUser?.isVisible && showingNearby && data.length > 0 && aroundCount <= 2)
             ? <PopularSection />
             : null;
         })()}

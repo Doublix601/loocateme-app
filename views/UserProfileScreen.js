@@ -12,14 +12,17 @@ import {
   Linking,
   Alert,
 } from 'react-native';
+import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { UserContext } from '../components/contexts/UserContext';
 
 const { width, height } = Dimensions.get('window');
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons }) => {
+  const { user: currentUser } = React.useContext(UserContext);
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -187,6 +190,48 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     return full || custom || fallback;
   }, [user, displayPref]);
 
+  // Compute distance on the fly if not provided (e.g., when coming from search)
+  const [computedDistance, setComputedDistance] = React.useState(null);
+  const distanceBetweenMeters = React.useCallback((lat1, lon1, lat2, lon2) => {
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const R = 6371000; // meters
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, []);
+
+  const formatDistance = React.useCallback((meters) => {
+    if (meters == null || isNaN(meters)) return '—';
+    if (meters < 1000) return `${Math.round(meters)} m`;
+    const km = meters / 1000;
+    return `${km.toFixed(km < 10 ? 1 : 0)} km`;
+  }, []);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        if (user?.distance) return; // already provided by list
+        const coords = user?.locationCoordinates; // [lon, lat]
+        if (!Array.isArray(coords) || coords.length < 2) return;
+        const perm = await Location.requestForegroundPermissionsAsync();
+        if (perm.status !== 'granted') return;
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const lat1 = loc.coords.latitude;
+        const lon1 = loc.coords.longitude;
+        const [lon2, lat2] = coords;
+        const meters = distanceBetweenMeters(lat1, lon1, lat2, lon2);
+        setComputedDistance(formatDistance(meters));
+      } catch (_) {
+        // ignore errors silently
+      }
+    })();
+  }, [user, distanceBetweenMeters, formatDistance]);
+
   if (!user) {
     return (
       <View style={styles.container} {...panResponder.panHandlers}>
@@ -247,11 +292,13 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
               </View>
             </View>
 
-            <View style={{ alignItems: 'center', marginTop: height * 0.015 }}>
-              <View style={styles.distancePill}>
-                <Text style={styles.distanceText}>{user.distance ?? '—'}</Text>
+            {currentUser?.isVisible !== false && (
+              <View style={{ alignItems: 'center', marginTop: height * 0.015 }}>
+                <View style={styles.distancePill}>
+                  <Text style={styles.distanceText}>{user.distance ?? computedDistance ?? '—'}</Text>
+                </View>
               </View>
-            </View>
+            )}
 
           </View>
 

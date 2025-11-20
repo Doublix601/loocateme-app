@@ -12,10 +12,11 @@ import UserSearchView from './views/UserSearchView';
 import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
 import { UserProvider } from './components/contexts/UserContext';
+import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { initApiFromStorage, getAccessToken, getMyUser } from './components/ApiRequest';
 import { subscribe } from './components/EventBus';
 
-export default function App() {
+function AppInner() {
   const [currentScreen, setCurrentScreen] = useState('Login');
   const [selectedUser, setSelectedUser] = useState(null);
   const [userListScrollOffset, setUserListScrollOffset] = useState(0);
@@ -330,13 +331,22 @@ export default function App() {
       break;
   }
 
+  const { colors } = useTheme();
   return (
     <UserProvider>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }] }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+        <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.bg }}>
           {screenToShow}
         </Animated.View>
       </SafeAreaView>
     </UserProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
   );
 }

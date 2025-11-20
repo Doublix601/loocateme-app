@@ -175,10 +175,10 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 }
 
 // AUTH
-export async function signup({ email, password, name }) {
+export async function signup({ email, password, username, firstName = '', lastName = '', customName = '' }) {
     const data = await request('/auth/signup', {
         method: 'POST',
-        body: { email, password, name },
+        body: { email, password, username, firstName, lastName, customName },
     });
     if (data?.accessToken) setAccessToken(data.accessToken);
     return data;
@@ -242,8 +242,14 @@ export async function searchUsers({ q, limit = 10 }) {
 }
 
 // PROFILE
-export async function updateProfile({ name, bio }) {
-    return request('/profile', { method: 'PUT', body: { name, bio } });
+export async function updateProfile({ username, firstName, lastName, customName, bio }) {
+    const body = {};
+    if (username !== undefined) body.username = username;
+    if (firstName !== undefined) body.firstName = firstName;
+    if (lastName !== undefined) body.lastName = lastName;
+    if (customName !== undefined) body.customName = customName;
+    if (bio !== undefined) body.bio = bio;
+    return request('/profile', { method: 'PUT', body });
 }
 
 function guessMimeFromName(name = '') {

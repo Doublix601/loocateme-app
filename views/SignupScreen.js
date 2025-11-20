@@ -5,7 +5,7 @@ import { UserContext } from '../components/contexts/UserContext';
 
 // Map backend user to frontend context shape
 const mapBackendUser = (u = {}) => ({
-    username: u.name || '',
+    username: u.username || u.name || '',
     bio: u.bio || '',
     photo: u.profileImageUrl || null,
     socialMedia: Array.isArray(u.socialNetworks) ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : [],
@@ -16,6 +16,9 @@ const mapBackendUser = (u = {}) => ({
 
 const SignupScreen = ({ onSignup, onLogin }) => {
     const [username, setUsername] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [customName, setCustomName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -88,7 +91,7 @@ const SignupScreen = ({ onSignup, onLogin }) => {
         }
         try {
             setProcessing(true);
-            const res = await apiSignup({ email, password, name: normalized });
+            const res = await apiSignup({ email, password, username: normalized, firstName, lastName, customName });
             if (res?.accessToken) setAccessToken(res.accessToken);
             // Persist consent with chosen preferences
             let updatedUser = res?.user;
@@ -127,10 +130,31 @@ const SignupScreen = ({ onSignup, onLogin }) => {
             <View style={styles.formContainer}>
                 <TextInput
                     style={styles.input}
+                    placeholder="Prénom (optionnel)"
+                    placeholderTextColor="#666"
+                    value={firstName}
+                    onChangeText={setFirstName}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Nom (optionnel)"
+                    placeholderTextColor="#666"
+                    value={lastName}
+                    onChangeText={setLastName}
+                />
+                <TextInput
+                    style={styles.input}
                     placeholder="Nom d'utilisateur"
                     placeholderTextColor="#666"
                     value={username}
                     onChangeText={setUsername}
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Nom personnalisé (optionnel)"
+                    placeholderTextColor="#666"
+                    value={customName}
+                    onChangeText={setCustomName}
                 />
                 <TextInput
                     style={styles.input}

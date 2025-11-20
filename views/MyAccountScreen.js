@@ -15,12 +15,14 @@ import {
   Pressable,
   SafeAreaView,
   Linking,
+  Share,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
 import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser } from '../components/ApiRequest';
 import { buildSocialProfileUrl } from '../services/socialUrls';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -30,6 +32,7 @@ const MyAccountScreen = ({
   onReturnToSettings,
   onOpenDataManagement,
 }) => {
+  const { colors, isDark } = useTheme();
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -49,6 +52,9 @@ const MyAccountScreen = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [editType, setEditType] = useState('');
   const [newValue, setNewValue] = useState('');
+  // Partage / QR
+  const [qrVisible, setQrVisible] = useState(false);
+  const [myUserId, setMyUserId] = useState('');
 
   // Dynamically scale UI based on number of social networks to best fill the page without scrolling
   const socialCountForScale = Array.isArray(user?.socialMedia) ? user.socialMedia.length : 0;
@@ -93,7 +99,10 @@ const MyAccountScreen = ({
         if (updateUser) {
           updateUser({
             ...user,
-            username: me.name || user?.username || '',
+            username: me.username || me.name || user?.username || '',
+            firstName: typeof me.firstName === 'string' ? me.firstName : (user?.firstName || ''),
+            lastName: typeof me.lastName === 'string' ? me.lastName : (user?.lastName || ''),
+            customName: typeof me.customName === 'string' ? me.customName : (user?.customName || ''),
             bio: typeof me.bio === 'string' ? me.bio : (user?.bio || 'Restez appuyé pour ajouter une bio'),
             photo: me.profileImageUrl || user?.photo || null,
             socialMedia: mappedSocial,
@@ -102,6 +111,8 @@ const MyAccountScreen = ({
             privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
           });
         }
+        // Capture id utilisateur pour le partage
+        try { setMyUserId(String(me?._id || me?.id || '')); } catch (_) {}
       } catch (e) {
         console.error('[MyAccount] getMyUser error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details });
       }
@@ -109,6 +120,58 @@ const MyAccountScreen = ({
     return () => { mounted = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Au cas où l'effet précédent ne se déclenche pas, récupérer l'id
+  useEffect(() => {
+    (async () => {
+      try {
+        if (myUserId) return;
+        const res = await getMyUser();
+        const me = res?.user;
+        if (me) setMyUserId(String(me?._id || me?.id || ''));
+      } catch (_) {}
+    })();
+  }, [myUserId]);
+
+  // --- Partage profil: deep link + fallback store ---
+  const ANDROID_STORE_URL = 'https://play.google.com/store/apps/details?id=com.loocateme.app'; // placeholder
+  const IOS_STORE_URL = 'https://apps.apple.com/app/id0000000000'; // placeholder
+  const getStoreUrlForPlatform = () => (Platform.OS === 'ios' ? IOS_STORE_URL : ANDROID_STORE_URL);
+  const buildProfileDeepLink = (id) => `loocateme://profile/${encodeURIComponent(id || '')}`;
+
+  const openMyProfileDeepLink = async () => {
+    const deepLink = buildProfileDeepLink(myUserId);
+    try {
+      const can = await Linking.canOpenURL(deepLink);
+      if (can) {
+        await Linking.openURL(deepLink);
+        return;
+      }
+    } catch (_) {}
+    try {
+      await Linking.openURL(getStoreUrlForPlatform());
+    } catch (_) {
+      Alert.alert('Erreur', "Impossible d'ouvrir le store");
+    }
+  };
+
+  const handleShareProfile = async () => {
+    const deepLink = buildProfileDeepLink(myUserId);
+    const store = getStoreUrlForPlatform();
+    const message = `Découvre mon profil LoocateMe 👋\n\nLien direct: ${deepLink}\n\nTu n'as pas encore l'app ? Installe-la ici: ${store}`;
+    try {
+      await Share.share({ message, url: deepLink, title: 'Mon profil LoocateMe' });
+    } catch (e) {
+      Alert.alert('Partage', e?.message || 'Impossible de partager.');
+    }
+  };
+
+  const QR_SIZE = Math.floor(Math.min(width * 0.7, 320));
+  const qrUrl = (() => {
+    const data = buildProfileDeepLink(myUserId);
+    const size = `${QR_SIZE}x${QR_SIZE}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}&data=${encodeURIComponent(data)}`;
+  })();
   const [selectedSocialLink, setSelectedSocialLink] = useState(null);
   const [photoOptionsModalVisible, setPhotoOptionsModalVisible] =
     useState(false);
@@ -188,11 +251,11 @@ const MyAccountScreen = ({
             Alert.alert('Nom invalide', "Le nom d'utilisateur doit commencer par une majuscule et ne contenir que des lettres minuscules ensuite (ex: Arnaud).");
             return;
           }
-          const res = await apiUpdateProfile({ name: normalized });
+          const res = await apiUpdateProfile({ username: normalized });
           const updated = res?.user || {};
           updateUser({
             ...user,
-            username: updated.name ?? normalized,
+            username: updated.username ?? updated.name ?? normalized,
             bio: updated.bio ?? user.bio,
             photo: updated.profileImageUrl ?? user.photo,
           });
@@ -201,8 +264,63 @@ const MyAccountScreen = ({
           const updated = res?.user || {};
           updateUser({
             ...user,
-            username: updated.name ?? user.username,
+            username: updated.username ?? updated.name ?? user.username,
             bio: updated.bio ?? newValue,
+            photo: updated.profileImageUrl ?? user.photo,
+          });
+        } else if (editType === 'firstName') {
+          let normalized = String(newValue || '').trim();
+          if (normalized) {
+            const lower = normalized.toLowerCase();
+            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
+          }
+          const NAME_RE = /^[A-Z][a-z]*$/;
+          if (normalized && !NAME_RE.test(normalized)) {
+            Alert.alert('Prénom invalide', 'Format requis: ^[A-Z][a-z]*$');
+            return;
+          }
+          const res = await apiUpdateProfile({ firstName: normalized });
+          const updated = res?.user || {};
+          updateUser({
+            ...user,
+            firstName: updated.firstName ?? normalized,
+            lastName: updated.lastName ?? user.lastName,
+            customName: updated.customName ?? user.customName,
+            username: updated.username ?? updated.name ?? user.username,
+            bio: updated.bio ?? user.bio,
+            photo: updated.profileImageUrl ?? user.photo,
+          });
+        } else if (editType === 'lastName') {
+          let normalized = String(newValue || '').trim();
+          if (normalized) {
+            const lower = normalized.toLowerCase();
+            normalized = lower.charAt(0).toUpperCase() + lower.slice(1);
+          }
+          const NAME_RE = /^[A-Z][a-z]*$/;
+          if (normalized && !NAME_RE.test(normalized)) {
+            Alert.alert('Nom invalide', 'Format requis: ^[A-Z][a-z]*$');
+            return;
+          }
+          const res = await apiUpdateProfile({ lastName: normalized });
+          const updated = res?.user || {};
+          updateUser({
+            ...user,
+            firstName: updated.firstName ?? user.firstName,
+            lastName: updated.lastName ?? normalized,
+            customName: updated.customName ?? user.customName,
+            username: updated.username ?? updated.name ?? user.username,
+            bio: updated.bio ?? user.bio,
+            photo: updated.profileImageUrl ?? user.photo,
+          });
+        } else if (editType === 'customName') {
+          const normalized = String(newValue || '').trim();
+          const res = await apiUpdateProfile({ customName: normalized });
+          const updated = res?.user || {};
+          updateUser({
+            ...user,
+            customName: updated.customName ?? normalized,
+            username: updated.username ?? updated.name ?? user.username,
+            bio: updated.bio ?? user.bio,
             photo: updated.profileImageUrl ?? user.photo,
           });
         }
@@ -530,7 +648,7 @@ const MyAccountScreen = ({
   };
 
   return (
-    <SafeAreaView style={styles.container} {...panResponder.panHandlers}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={onReturnToList}
@@ -546,7 +664,7 @@ const MyAccountScreen = ({
         <Text style={styles.title}>Mon Compte</Text>
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
-            <View style={styles.imgUsernameSplitBox}>
+            <View style={[styles.imgUsernameSplitBox, { backgroundColor: colors.surfaceAlt }]}>
               <View style={styles.userProfilePictureContainer}>
                 <TouchableOpacity onLongPress={handleProfileImageLongPress}>
                   {user.photo ? (
@@ -585,10 +703,46 @@ const MyAccountScreen = ({
                 <Text
                   style={[
                     styles.value,
-                    { fontSize: bioFont, textAlign: 'center' },
+                    { fontSize: bioFont, textAlign: 'center', color: colors.textPrimary },
                   ]}>
                   {user.bio}
                 </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Section identité: prénom, nom, nom personnalisé */}
+            <View style={{ marginTop: height * 0.02 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                <TouchableOpacity onLongPress={() => handleEdit('firstName')} delayLongPress={300} activeOpacity={1} style={{ padding: 8 }}>
+                  <Text style={[styles.label]}>Prénom</Text>
+                  <Text style={[styles.value, { color: colors.textPrimary }]}>{user.firstName || '—'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onLongPress={() => handleEdit('lastName')} delayLongPress={300} activeOpacity={1} style={{ padding: 8 }}>
+                  <Text style={[styles.label]}>Nom</Text>
+                  <Text style={[styles.value, { color: colors.textPrimary }]}>{user.lastName || '—'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onLongPress={() => handleEdit('customName')} delayLongPress={300} activeOpacity={1} style={{ padding: 8 }}>
+                  <Text style={[styles.label]}>Nom personnalisé</Text>
+                  <Text style={[styles.value, { color: colors.textPrimary }]} numberOfLines={1} ellipsizeMode="tail">{user.customName || '—'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Boutons de partage entre la bio et les réseaux sociaux (icônes uniquement) */}
+            <View style={styles.shareIconsRow}>
+              <TouchableOpacity
+                style={styles.shareIconBtn}
+                onPress={handleShareProfile}
+                accessibilityLabel="Partager mon profil"
+              >
+                <Text style={styles.shareIconEmoji}>📤</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.shareIconBtn}
+                onPress={() => setQrVisible(true)}
+                accessibilityLabel="Afficher mon QR code"
+              >
+                <Text style={styles.shareIconEmoji}>🔳</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -599,7 +753,7 @@ const MyAccountScreen = ({
               style={styles.socialMediaTile}>
               <Image
                 source={require('../assets/socialMediaIcons/addSocialNetwork_logo.png')}
-                style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
+                style={[styles.socialMediaIcon, { width: iconSize, height: iconSize, tintColor: isDark ? '#fff' : undefined }]}
               />
             </TouchableOpacity>
             {socialLinks.map((social, index) => {
@@ -622,11 +776,13 @@ const MyAccountScreen = ({
           </View>
         </View>
 
+        {/* Ancienne section Partage supprimée conformément aux specs (pas de titre, icônes seulement) */}
+
         <Modal visible={modalVisible} transparent={true} animationType="fade">
           <View style={styles.modalContainer}>
             <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFillObject} />
             <Pressable style={StyleSheet.absoluteFill} onPress={() => setModalVisible(false)} />
-            <View style={styles.modalCard}>
+            <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
               <Text style={styles.modalTitle}>
                 Modifier {editType.charAt(0).toUpperCase() + editType.slice(1)}
               </Text>
@@ -634,9 +790,10 @@ const MyAccountScreen = ({
                 value={newValue}
                 onChangeText={setNewValue}
                 placeholder={editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" : 'Votre texte'}
-                placeholderTextColor="#666"
+                placeholderTextColor={isDark ? '#999' : '#666'}
                 style={[
                   styles.modalInput,
+                  { borderColor: colors.border, color: colors.textPrimary },
                   editType === 'bio' ? { height: Math.max(height * 0.18, 120), textAlignVertical: 'top', paddingTop: 10 } : null,
                 ]}
                 multiline={editType === 'bio'}
@@ -815,6 +972,24 @@ const MyAccountScreen = ({
           </View>
         </Modal>
       </ScrollView>
+
+      {/* QR Code Modal */}
+      <Modal visible={qrVisible} animationType="slide" transparent onRequestClose={() => setQrVisible(false)}>
+        <View style={styles.qrBackdrop}>
+          <View style={[styles.qrCard, { backgroundColor: colors.surface }]}>
+            <Text style={styles.modalTitle}>Scanne pour voir mon profil</Text>
+            <Image source={{ uri: qrUrl }} style={{ width: QR_SIZE, height: QR_SIZE }} resizeMode="contain" />
+            <Text style={[styles.qrHint, { color: colors.textSecondary }]}>Si l'app n'est pas installée, tu seras redirigé(e) vers le store ({Platform.OS === 'ios' ? 'App Store' : 'Google Play'}).</Text>
+            <TouchableOpacity
+              onPress={() => setQrVisible(false)}
+              style={[styles.modalButton, { marginTop: 12, alignSelf: 'center' }]}
+              hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+            >
+              <Text style={styles.modalButtonText}>✖</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <TouchableOpacity
         style={styles.returnToListButton}
@@ -1082,6 +1257,81 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     tintColor: '#00c2cb',
+  },
+  // --- Icônes de partage (entre bio et réseaux sociaux) ---
+  shareIconsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+    marginTop: height * 0.02,
+  },
+  shareIconBtn: {
+    width: Math.min(width * 0.14, 56),
+    height: Math.min(width * 0.14, 56),
+    borderRadius: Math.min(width * 0.07, 28),
+    backgroundColor: '#00c2cb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  shareIconEmoji: {
+    fontSize: 22,
+    color: '#fff',
+  },
+  // --- Partage styles ---
+  shareTitle: {
+    fontSize: width * 0.06,
+    fontWeight: '600',
+    color: '#00c2cb',
+    marginBottom: 8,
+  },
+  shareRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  shareButton: {
+    backgroundColor: '#00c2cb',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexGrow: 1,
+    minWidth: '48%',
+    marginVertical: 6,
+  },
+  shareButtonText: {
+    color: '#fff',
+    fontSize: Math.min(width * 0.045, 16),
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  qrBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  qrCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    alignItems: 'center',
+    padding: 16,
+    width: '100%',
+    maxWidth: 420,
+  },
+  qrHint: {
+    marginTop: 10,
+    color: '#555',
+    textAlign: 'center',
   },
   returnToListButton: {
     backgroundColor: '#00c2cb',

@@ -28,11 +28,13 @@ import {
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
   const { user, updateUser } = useContext(UserContext);
+  const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
   const [isVisible, setIsVisible] = useState(user?.isVisible ?? true);
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
@@ -267,7 +269,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
   };
 
   return (
-    <View style={styles.container} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={saveAndReturn}
@@ -283,7 +285,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Général</Text>
         <View style={styles.optionContainer}>
-          <Text style={styles.optionText}>Être visible</Text>
+          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Être visible</Text>
           <Switch
             value={isVisible}
             onValueChange={toggleVisibility}
@@ -293,10 +295,25 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
         </View>
 
         <View style={styles.optionContainer}>
-          <Text style={styles.optionText}>Nom affiché (tap pour changer): {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}</Text>
+          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Nom affiché (tap pour changer): {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}</Text>
           <TouchableOpacity onPress={toggleDisplayNameMode} style={styles.smallPill}>
             <Text style={styles.smallPillText}>{displayNameMode === 'full' ? 'Prénom Nom' : 'Custom'}</Text>
           </TouchableOpacity>
+        </View>
+
+        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Apparence</Text>
+        <View style={[styles.optionContainer, { borderBottomWidth: 0, paddingVertical: 10 }]}>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity onPress={() => setThemeMode('light')} style={[styles.smallPill, themeMode === 'light' && { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent }]}>
+              <Text style={[styles.smallPillText]}>Clair</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setThemeMode('dark')} style={[styles.smallPill, themeMode === 'dark' && { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent }]}>
+              <Text style={[styles.smallPillText]}>Sombre</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setThemeMode('system')} style={[styles.smallPill, themeMode === 'system' && { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent }]}>
+              <Text style={[styles.smallPillText]}>Automatique</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={async () => { try { await apiLogout(); } catch(_) {} finally { onLogout && onLogout(); } }}>
@@ -309,7 +326,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
         </TouchableOpacity>
 
         <View style={styles.optionContainer}>
-          <Text style={styles.optionText}>Consentement donné</Text>
+          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Consentement donné</Text>
           <Switch
             value={consentAccepted}
             onValueChange={handleToggleConsent}
@@ -318,7 +335,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
           />
         </View>
         <View style={styles.optionContainer}>
-          <Text style={styles.optionText}>Partage analytics</Text>
+          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Partage analytics</Text>
           <Switch
             value={analytics}
             onValueChange={handleToggleAnalytics}
@@ -327,7 +344,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
           />
         </View>
         <View style={styles.optionContainer}>
-          <Text style={styles.optionText}>Communication marketing</Text>
+          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Communication marketing</Text>
           <Switch
             value={marketing}
             onValueChange={handleToggleMarketing}
