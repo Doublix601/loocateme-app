@@ -1,5 +1,5 @@
 // Utility to build social profile URLs consistently across the app
-// Supported networks: instagram, tiktok, snapchat, x (twitter), linkedin (personal), facebook (personal new format)
+// Supported networks: instagram, tiktok, snapchat, x (twitter), linkedin (personal), facebook (personal new format), youtube
 
 function cleanUsername(v = '') {
   let s = String(v || '').trim();
@@ -27,6 +27,10 @@ export function buildSocialProfileUrl(type, username) {
       return `https://www.linkedin.com/in/${encodeURIComponent(u)}`;
     case 'facebook': // personal profile, new format
       return `https://www.facebook.com/${encodeURIComponent(u)}`;
+    case 'youtube':
+      // Prefer handle URLs. If a channel ID is used, user should paste it as handle and it will still build a usable URL.
+      // Supports both @handle and plain handle, we always prefix with @ for consistency.
+      return `https://www.youtube.com/@${encodeURIComponent(u)}`;
     default:
       return '';
   }

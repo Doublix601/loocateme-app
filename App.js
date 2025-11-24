@@ -42,6 +42,7 @@ function AppInner() {
     instagram: require('./assets/socialMediaIcons/instagram_logo.png'),
     tiktok: require('./assets/socialMediaIcons/tiktok_logo.png'),
     snapchat: require('./assets/socialMediaIcons/snapchat_logo.png'),
+    youtube: require('./assets/socialMediaIcons/yt_logo.png'),
   };
 
   // Preload all local icons/images to avoid UI flicker when screens mount
@@ -59,6 +60,7 @@ function AppInner() {
           require('./assets/socialMediaIcons/instagram_logo.png'),
           require('./assets/socialMediaIcons/tiktok_logo.png'),
           require('./assets/socialMediaIcons/snapchat_logo.png'),
+          require('./assets/socialMediaIcons/yt_logo.png'),
           require('./assets/socialMediaIcons/addSocialNetwork_logo.png'),
         ]);
       } catch (e) {
