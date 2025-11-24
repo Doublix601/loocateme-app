@@ -1,4 +1,4 @@
-const SERVER_ADDRESS = 'http://54.38.34.4:4000';
+const SERVER_ADDRESS = 'http://api.loocate.me';
 
 export function getServerAddress() {
     return SERVER_ADDRESS;
