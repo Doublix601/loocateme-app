@@ -35,6 +35,7 @@ const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
+  const isDark = themeMode === 'dark';
   const [isVisible, setIsVisible] = useState(user?.isVisible ?? true);
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
@@ -367,16 +368,16 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
       </ScrollView>
 
       <Modal visible={policyModalVisible} animationType="slide" onRequestClose={() => setPolicyModalVisible(false)}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { backgroundColor: colors.surface }] }>
           <TouchableOpacity style={styles.modalClose} onPress={() => setPolicyModalVisible(false)}>
-            <Text style={styles.modalCloseText}>Fermer</Text>
+            <Text style={[styles.modalCloseText, { color: colors.textPrimary }]}>Fermer</Text>
           </TouchableOpacity>
-          <Text style={styles.modalTitle}>Politique de confidentialité</Text>
+          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Politique de confidentialité</Text>
           {policyLoading ? (
             <ActivityIndicator size="large" color="#00c2cb" />
           ) : (
             <ScrollView>
-              <Text style={styles.policyText}>{policyText}</Text>
+              <Text style={[styles.policyText, { color: colors.textSecondary }]}>{policyText}</Text>
             </ScrollView>
           )}
         </View>
@@ -384,21 +385,21 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
 
       {/* Revocation (Delete Account) Modal */}
       <Modal transparent visible={revokeVisible} animationType="fade" onRequestClose={() => setRevokeVisible(false)}>
-        <View style={styles.revokeBackdrop}>
-          <View style={styles.revokeCard}>
-            <Text style={styles.revokeTitle}>Suppression du compte</Text>
-            <Text style={styles.revokeDesc}>Pour confirmer, entrez votre mot de passe. Cette action est irréversible.</Text>
+        <View style={[styles.revokeBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
+          <View style={[styles.revokeCard, { backgroundColor: colors.surface, borderColor: colors.border }] }>
+            <Text style={[styles.revokeTitle, { color: colors.textPrimary }]}>Suppression du compte</Text>
+            <Text style={[styles.revokeDesc, { color: colors.textSecondary }]}>Pour confirmer, entrez votre mot de passe. Cette action est irréversible.</Text>
             <TextInput
-              style={styles.revokeInput}
+              style={[styles.revokeInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
               placeholder="Mot de passe"
-              placeholderTextColor="#666"
+              placeholderTextColor={isDark ? '#999' : '#666'}
               secureTextEntry
               value={revokePassword}
               onChangeText={setRevokePassword}
             />
             <View style={styles.revokeButtons}>
               <TouchableOpacity style={[styles.primaryButton, styles.secondaryButton]} onPress={() => setRevokeVisible(false)} disabled={revokeWorking}>
-                <Text style={styles.secondaryButtonText}>Annuler</Text>
+                <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.primaryButton, styles.dangerButton]} onPress={performRevokeDelete} disabled={revokeWorking}>
                 <Text style={styles.dangerButtonText}>{revokeWorking ? 'Suppression...' : 'Supprimer'}</Text>

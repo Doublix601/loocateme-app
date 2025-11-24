@@ -72,6 +72,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     instagram: require('../assets/socialMediaIcons/instagram_logo.png'),
     tiktok: require('../assets/socialMediaIcons/tiktok_logo.png'),
     snapchat: require('../assets/socialMediaIcons/snapchat_logo.png'),
+    youtube: require('../assets/socialMediaIcons/yt_logo.png'),
   };
 
   // Map backend user to context shape

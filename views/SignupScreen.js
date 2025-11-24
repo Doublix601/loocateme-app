@@ -2,6 +2,7 @@ import { useState, useContext } from 'react';
 import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, Image, useWindowDimensions, Switch, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { signup as apiSignup, setAccessToken, updateConsent, getPrivacyPolicy } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 // Map backend user to frontend context shape
 const mapBackendUser = (u = {}) => ({
@@ -37,6 +38,8 @@ const SignupScreen = ({ onSignup, onLogin }) => {
 
     const { updateUser } = useContext(UserContext);
     const { width, height } = useWindowDimensions();
+    const { colors, mode: themeMode } = useTheme();
+    const isDark = themeMode === 'dark';
 
     const handleSignup = async () => {
         // Normaliser et valider le username selon les règles Instagram
@@ -225,9 +228,9 @@ const SignupScreen = ({ onSignup, onLogin }) => {
 
             {/* GDPR Modal: Policy -> Preferences -> Signup */}
             <Modal visible={gdprModalVisible} animationType="slide" onRequestClose={() => setGdprModalVisible(false)}>
-                <SafeAreaView style={styles.gdprContainer}>
+                <SafeAreaView style={[styles.gdprContainer, { backgroundColor: colors.surface }]}>
                     <View style={styles.gdprHeader}>
-                        <Text style={styles.gdprTitle}>Confidentialité & RGPD</Text>
+                        <Text style={[styles.gdprTitle, { color: colors.textPrimary }]}>Confidentialité & RGPD</Text>
                     </View>
                     {gdprStep === 'policy' ? (
                         <View style={{ flex: 1 }}>
@@ -237,10 +240,10 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                                 </View>
                             ) : (
                                 <ScrollView contentContainerStyle={styles.gdprContent}>
-                                    <Text style={styles.gdprPolicyText}>{policyText}</Text>
+                                    <Text style={[styles.gdprPolicyText, { color: colors.textSecondary }]}>{policyText}</Text>
                                 </ScrollView>
                             )}
-                            <View style={styles.gdprActions}>
+                            <View style={[styles.gdprActions, { borderTopColor: colors.border }]}>
                                 <TouchableOpacity style={[styles.gdprButton, styles.gdprDecline]} onPress={() => { setGdprModalVisible(false); }}>
                                     <Text style={styles.gdprButtonText}>Refuser</Text>
                                 </TouchableOpacity>
@@ -252,16 +255,16 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                     ) : (
                         <View style={{ flex: 1 }}>
                             <View style={styles.gdprContent}>
-                                <View style={styles.gdprToggleRow}>
-                                    <Text style={styles.gdprLabel}>Partage analytics</Text>
+                                <View style={[styles.gdprToggleRow, { borderBottomColor: colors.border }]}>
+                                    <Text style={[styles.gdprLabel, { color: colors.textPrimary }]}>Partage analytics</Text>
                                     <Switch value={prefAnalytics} onValueChange={setPrefAnalytics} trackColor={{ false: '#ccc', true: '#00c2cb' }} thumbColor={prefAnalytics ? '#00c2cb' : '#f4f3f4'} />
                                 </View>
-                                <View style={styles.gdprToggleRow}>
-                                    <Text style={styles.gdprLabel}>Communication marketing</Text>
+                                <View style={[styles.gdprToggleRow, { borderBottomColor: colors.border }]}>
+                                    <Text style={[styles.gdprLabel, { color: colors.textPrimary }]}>Communication marketing</Text>
                                     <Switch value={prefMarketing} onValueChange={setPrefMarketing} trackColor={{ false: '#ccc', true: '#00c2cb' }} thumbColor={prefMarketing ? '#00c2cb' : '#f4f3f4'} />
                                 </View>
                             </View>
-                            <View style={styles.gdprActions}>
+                            <View style={[styles.gdprActions, { borderTopColor: colors.border }]}>
                                 <TouchableOpacity style={[styles.gdprButton, styles.gdprAccept]} onPress={doSignupWithConsent} disabled={processing}>
                                     <Text style={styles.gdprButtonText}>{processing ? "Création..." : "Valider et créer mon compte"}</Text>
                                 </TouchableOpacity>

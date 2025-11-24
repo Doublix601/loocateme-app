@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, useWindowDimensions, ActivityIndicator, View } from 'react-native';
+import { SafeAreaView, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, useWindowDimensions, ActivityIndicator, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useTheme } from '../components/contexts/ThemeContext';
 import { forgotPassword } from '../components/ApiRequest';
 
 const ForgotPasswordScreen = ({ onResetPassword, onBack }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const { width, height } = useWindowDimensions();
+  const { colors, isDark } = useTheme();
 
   const handleReset = async () => {
     try {
@@ -22,42 +24,60 @@ const ForgotPasswordScreen = ({ onResetPassword, onBack }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: height * 0.1 }] }>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={onBack}
-        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }] }>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <Image
-          source={require('../assets/appIcons/backArrow.png')}
-          style={styles.backButtonImage}
-        />
-      </TouchableOpacity>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingTop: height * 0.1, alignItems: 'center', paddingBottom: Math.max(24, height * 0.2) }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBack}
+            hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+          >
+            <Image
+              source={require('../assets/appIcons/backArrow.png')}
+              style={styles.backButtonImage}
+            />
+          </TouchableOpacity>
 
-      <Image
-        source={require('../assets/appIcons/SquareBanner.png')}
-        style={[styles.logo, { width: width * 0.6, height: width * 0.6 }]}
-      />
-      <Text style={[styles.title, { fontSize: width * 0.08 }]}>Mot de passe oublié</Text>
+          <Image
+            source={require('../assets/appIcons/SquareBanner.png')}
+            style={[styles.logo, { width: width * 0.6, height: width * 0.6 }]}
+          />
+          <Text style={[styles.title, { fontSize: width * 0.08 }]}>Mot de passe oublié</Text>
 
-      <View style={styles.formContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#666"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
+          <View style={styles.formContainer}>
+            <TextInput
+              style={[
+                styles.input,
+                { borderColor: colors.border, backgroundColor: isDark ? '#0f1115' : '#ffffff', color: colors.textPrimary }
+              ]}
+              placeholder="Email"
+              placeholderTextColor={isDark ? '#999' : '#666'}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+              returnKeyType="done"
+            />
 
-        <TouchableOpacity onPress={handleReset} style={styles.button} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Réinitialiser le mot de passe</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity onPress={handleReset} style={styles.button} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Réinitialiser le mot de passe</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -111,12 +131,13 @@ const styles = StyleSheet.create({
   button: {
     width: '70%',
     alignSelf: 'center',
-    paddingVertical: 15,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#00c2cb',
-    borderRadius: 25,
-    marginTop: 10,
+    borderRadius: 28,
+    marginTop: 12,
   },
   buttonText: {
     color: '#fff',

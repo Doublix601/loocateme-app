@@ -81,7 +81,7 @@ export default function UserSearchView({ onClose, onSelectUser }) {
           <Text style={{ color: '#fff', fontWeight: '700' }}>{(getDisplayName(item)[0] || 'U').toUpperCase()}</Text>
         </View>
       )}
-      <Text style={styles.rowText} numberOfLines={1}>{getDisplayName(item)}</Text>
+      <Text style={[styles.rowText, { color: colors.textPrimary }]} numberOfLines={1}>{getDisplayName(item)}</Text>
     </TouchableOpacity>
   );
 
