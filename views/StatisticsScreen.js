@@ -7,7 +7,6 @@ const { width, height } = Dimensions.get('window');
 
 export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const { colors } = useTheme();
-  const [range, setRange] = useState('day');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
@@ -32,11 +31,11 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     })
   ).current;
 
-  async function load(r) {
+  async function load() {
     setLoading(true);
     setError('');
     try {
-      const res = await getStatsOverview(r);
+      const res = await getStatsOverview('30d');
       setData(res || null);
     } catch (e) {
       setError("Impossible de récupérer les statistiques");
@@ -45,7 +44,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     }
   }
 
-  useEffect(() => { load(range); }, [range]);
+  useEffect(() => { load(); }, []);
 
   async function loadDetailed() {
     setDetailedLoading(true);
@@ -89,12 +88,6 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     }
   }
 
-  const tabs = [
-    { key: 'day', label: 'Jour' },
-    { key: 'week', label: 'Semaine' },
-    { key: 'month', label: 'Mois' },
-  ];
-
   const clicks = data?.clicksByNetwork || {};
   const clicksEntries = Object.entries(clicks);
 
@@ -108,14 +101,6 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
         <View style={{ width: 28 }} />
       </View>
 
-      <View style={styles.tabs}>
-        {tabs.map((t) => (
-          <TouchableOpacity key={t.key} onPress={() => setRange(t.key)} style={[styles.tab, range === t.key && { borderBottomColor: colors.accent }]}>
-            <Text style={[styles.tabText, { color: range === t.key ? colors.accent : colors.textMuted }]}>{t.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       {loading ? (
         <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 24 }} />
       ) : error ? (
@@ -127,7 +112,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
           <View style={[styles.card, { backgroundColor: colors.surface }] }>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Vues de profil</Text>
             <Text style={[styles.metric, { color: colors.accent }]}>{data?.views ?? 0}</Text>
-            <Text style={{ color: colors.textMuted }}>sur la période sélectionnée</Text>
+            <Text style={{ color: colors.textMuted }}>sur les 30 derniers jours</Text>
           </View>
 
           <View style={[styles.card, { backgroundColor: colors.surface }] }>
@@ -218,9 +203,7 @@ const styles = StyleSheet.create({
   backBtn: { padding: 8 },
   backIcon: { width: 28, height: 28 },
   title: { fontSize: Math.min(width * 0.07, 28), fontWeight: 'bold' },
-  tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#ddd', marginTop: 12 },
-  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  tabText: { fontWeight: '600' },
+  // Tabs supprimés (on affiche uniquement les 30 derniers jours)
   card: { borderRadius: 12, padding: 16, marginBottom: 16 },
   cardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
   metric: { fontSize: 36, fontWeight: '800' },

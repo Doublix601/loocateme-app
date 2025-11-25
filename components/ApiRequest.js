@@ -321,7 +321,7 @@ export async function trackUserSearch(query) {
     return request('/events/user-search', { method: 'POST', body: { query } });
 }
 
-export async function getStatsOverview(range = 'day') {
+export async function getStatsOverview(range = '30d') {
     const qs = new URLSearchParams({ range });
     return request(`/stats/overview?${qs.toString()}`, { method: 'GET' });
 }
