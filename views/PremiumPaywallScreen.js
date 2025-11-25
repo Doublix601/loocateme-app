@@ -11,13 +11,11 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
   const [loading, setLoading] = useState(false);
   const { user, updateUser } = useContext(UserContext);
 
-  // Si l'utilisateur est déjà Premium (ou en essai actif), rediriger directement
+  // Si l'utilisateur est déjà Premium, rediriger directement
   useEffect(() => {
     try {
-      const now = new Date();
       const premium = !!user?.isPremium;
-      const trialActive = user?.premiumTrialEnd ? new Date(user.premiumTrialEnd) > now : false;
-      if (premium || trialActive) {
+      if (premium) {
         // Rediriger immédiatement vers Statistiques si possible, sinon retour
         if (onAlreadyPremium) onAlreadyPremium();
         else if (onBack) onBack();
@@ -26,7 +24,7 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
       // ignore
     }
     // We only want to check when user or dates change
-  }, [user?.isPremium, user?.premiumTrialEnd]);
+  }, [user?.isPremium]);
 
   // Double-vérification côté serveur pour éviter les états de contexte obsolètes
   useEffect(() => {
@@ -46,10 +44,8 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
             });
           }
         } catch (_) {}
-        const now = new Date();
         const premium = !!me.isPremium;
-        const trialActive = me.premiumTrialEnd ? new Date(me.premiumTrialEnd) > now : false;
-        if (premium || trialActive) {
+        if (premium) {
           if (onAlreadyPremium) onAlreadyPremium();
           else if (onBack) onBack();
         }

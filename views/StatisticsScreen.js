@@ -1,16 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert, ScrollView } from 'react-native';
-import { getStatsOverview } from '../components/ApiRequest';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder } from 'react-native';
+import { getStatsOverview, getDetailedProfileViews } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
-export default function StatisticsScreen({ onBack }) {
+export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const { colors } = useTheme();
   const [range, setRange] = useState('day');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
+  const [detailed, setDetailed] = useState([]);
+  const [detailedError, setDetailedError] = useState('');
+  const [detailedLoading, setDetailedLoading] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  // Geste de retour (slide de gauche vers la droite)
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_evt, g) => {
+        const isH = Math.abs(g.dx) > Math.abs(g.dy);
+        return isH && g.dx > 10; // gauche -> droite
+      },
+      onPanResponderRelease: (_evt, g) => {
+        if (g.dx > 60 || g.vx > 0.3) {
+          onBack && onBack();
+        }
+      },
+    })
+  ).current;
 
   async function load(r) {
     setLoading(true);
@@ -27,6 +47,48 @@ export default function StatisticsScreen({ onBack }) {
 
   useEffect(() => { load(range); }, [range]);
 
+  async function loadDetailed() {
+    setDetailedLoading(true);
+    setDetailedError('');
+    try {
+      const res = await getDetailedProfileViews(50);
+      setDetailed(Array.isArray(res?.items) ? res.items : []);
+    } catch (e) {
+      const code = e?.code || e?.response?.code || '';
+      if (code === 'PREMIUM_REQUIRED' || e?.status === 403) {
+        setDetailedError('Premium requis pour voir la liste des visiteurs.');
+      } else {
+        setDetailedError("Impossible de récupérer la liste des visiteurs");
+      }
+      setDetailed([]);
+    } finally {
+      setDetailedLoading(false);
+    }
+  }
+
+  useEffect(() => { loadDetailed(); }, []);
+
+  useEffect(() => {
+    // Reset visible count on refresh of the list
+    setVisibleCount(10);
+  }, [detailed.length]);
+
+  function timeAgo(ts) {
+    try {
+      const now = Date.now();
+      const t = new Date(ts).getTime();
+      const diffMs = Math.max(0, now - t);
+      const min = Math.floor(diffMs / (60 * 1000));
+      if (min < 60) return `${min} min`;
+      const hours = Math.floor(min / 60);
+      if (hours < 24) return `${hours} h`;
+      const days = Math.floor(hours / 24);
+      return `${days} j`;
+    } catch (_) {
+      return '';
+    }
+  }
+
   const tabs = [
     { key: 'day', label: 'Jour' },
     { key: 'week', label: 'Semaine' },
@@ -37,10 +99,10 @@ export default function StatisticsScreen({ onBack }) {
   const clicksEntries = Object.entries(clicks);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: colors.accent }]}>◀</Text>
+          <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: colors.accent }]} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.accent }]}>Mes statistiques</Text>
         <View style={{ width: 28 }} />
@@ -81,6 +143,69 @@ export default function StatisticsScreen({ onBack }) {
               ))
             )}
           </View>
+
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Dernières visites</Text>
+            {detailedLoading ? (
+              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 8 }} />
+            ) : detailedError ? (
+              <Text style={{ color: colors.textMuted }}>{detailedError}</Text>
+            ) : detailed.length === 0 ? (
+              <Text style={{ color: colors.textMuted }}>Aucune visite récente</Text>
+            ) : (
+              <>
+                {detailed.slice(0, visibleCount).map((it) => (
+                  <TouchableOpacity
+                    key={String(it.id)}
+                    style={styles.visitorRow}
+                    onPress={() => {
+                      if (!onOpenUserProfile || !it?.actor) return;
+                      // Map minimal user object expected by profile screen
+                      const socials = Array.isArray(it.actor?.socialNetworks)
+                        ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+                        : [];
+                      const coords = Array.isArray(it.actor?.location?.coordinates)
+                        ? it.actor.location.coordinates
+                        : null;
+                      const u = {
+                        _id: it.actor.id || it.actor._id,
+                        id: it.actor.id || it.actor._id,
+                        username: it.actor.username || it.actor.name || 'Utilisateur',
+                        firstName: '',
+                        lastName: '',
+                        customName: it.actor.name || '',
+                        photo: it.actor.profileImageUrl || null,
+                        bio: it.actor?.bio || '',
+                        socialMedias: socials,
+                        locationCoordinates: coords,
+                      };
+                      onOpenUserProfile(u);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    {it.actor?.profileImageUrl ? (
+                      <Image source={{ uri: it.actor.profileImageUrl }} style={styles.avatar} />
+                    ) : (
+                      <View style={[styles.avatar, styles.avatarPh]}>
+                        <Text style={{ color: '#fff', fontWeight: '700' }}>{(it.actor?.name?.[0] || 'U').toUpperCase()}</Text>
+                      </View>
+                    )}
+                    <View style={{ flex: 1, marginLeft: 10 }}>
+                      <Text style={{ color: colors.textPrimary, fontWeight: '600' }} numberOfLines={1}>
+                        {it.actor?.name || it.actor?.username || 'Utilisateur'}
+                      </Text>
+                      <Text style={{ color: colors.textSecondary, marginTop: 2 }}>{timeAgo(it.at)}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                {visibleCount < detailed.length && (
+                  <TouchableOpacity onPress={() => setVisibleCount((c) => Math.min(c + 10, detailed.length))} style={styles.moreBtn}>
+                    <Text style={[styles.moreTxt, { color: colors.accent }]}>Afficher plus</Text>
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+          </View>
         </ScrollView>
       )}
     </View>
@@ -91,7 +216,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingTop: height * 0.02 },
   backBtn: { padding: 8 },
-  backText: { fontSize: 18 },
+  backIcon: { width: 28, height: 28 },
   title: { fontSize: Math.min(width * 0.07, 28), fontWeight: 'bold' },
   tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#ddd', marginTop: 12 },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
@@ -102,4 +227,9 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   rowLabel: { fontSize: 16 },
   rowValue: { fontSize: 16, fontWeight: '700' },
+  visitorRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
+  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#eee' },
+  avatarPh: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#00c2cb' },
+  moreBtn: { paddingVertical: 10, alignItems: 'center' },
+  moreTxt: { fontWeight: '700' },
 });

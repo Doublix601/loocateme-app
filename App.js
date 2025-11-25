@@ -22,6 +22,7 @@ import { subscribe } from './components/EventBus';
 function AppInner() {
   const [currentScreen, setCurrentScreen] = useState('Login');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [profileReturnTo, setProfileReturnTo] = useState('UserList'); // 'UserList' | 'Statistics'
   const [userListScrollOffset, setUserListScrollOffset] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -231,6 +232,7 @@ function AppInner() {
 
   const handleSelectUser = (user) => {
     setSelectedUser(user);
+    setProfileReturnTo('UserList');
     setCurrentScreen('UserProfile');
   };
 
@@ -326,7 +328,7 @@ function AppInner() {
       screenToShow = (
         <UserSearchView
           onClose={() => setCurrentScreen('UserList')}
-          onSelectUser={(u) => { setSelectedUser(u); setCurrentScreen('UserProfile'); }}
+          onSelectUser={(u) => { setSelectedUser(u); setProfileReturnTo('UserList'); setCurrentScreen('UserProfile'); }}
         />
       );
       break;
@@ -334,7 +336,10 @@ function AppInner() {
       screenToShow = (
         <UserProfileScreen
           user={selectedUser}
-          onReturnToList={handleReturnToList}
+          onReturnToList={() => {
+            if (profileReturnTo === 'Statistics') setCurrentScreen('Statistics');
+            else handleReturnToList();
+          }}
           onReturnToAccount={handleReturnToAccount}
           socialMediaIcons={socialMediaIcons}
         />
@@ -351,6 +356,7 @@ function AppInner() {
       screenToShow = (
         <StatisticsScreen
           onBack={() => setCurrentScreen('MyAccount')}
+          onOpenUserProfile={(u) => { setSelectedUser(u); setProfileReturnTo('Statistics'); setCurrentScreen('UserProfile'); }}
         />
       );
       break;

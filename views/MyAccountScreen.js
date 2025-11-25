@@ -133,10 +133,8 @@ const MyAccountScreen = ({
 
     const handleOpenStats = () => {
         try {
-            const now = new Date();
             const premium = !!user?.isPremium;
-            const trialActive = user?.premiumTrialEnd ? new Date(user.premiumTrialEnd) > now : false;
-            if (premium || trialActive) {
+            if (premium) {
                 onOpenStatistics && onOpenStatistics();
             } else {
                 onOpenPremiumPaywall && onOpenPremiumPaywall();
