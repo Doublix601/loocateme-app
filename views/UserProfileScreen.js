@@ -16,6 +16,7 @@ import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
+import { trackProfileView, trackSocialClick } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
@@ -89,10 +90,27 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     return v;
   };
 
+  // Track a profile view when this screen mounts or when the viewed user changes
+  React.useEffect(() => {
+    const targetId = user?._id || user?.id;
+    const myId = currentUser?._id || currentUser?.id;
+    if (!targetId) return;
+    if (myId && String(myId) === String(targetId)) return; // don't track self
+    (async () => {
+      try { await trackProfileView(String(targetId)); } catch (_) {}
+    })();
+  }, [user?._id, user?.id]);
+
   const openSocial = async (platform, rawHandle) => {
     const handle = String(rawHandle || '').trim();
     if (!platform || !handle) return;
     try {
+      // Fire-and-forget: track social click
+      try {
+        const targetId = user?._id || user?.id;
+        if (targetId) await trackSocialClick(String(targetId), String(platform));
+      } catch (_) {}
+
       if (platform === 'instagram') {
         const username = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(username)) {

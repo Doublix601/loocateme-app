@@ -308,6 +308,37 @@ export async function removeSocial(type) {
     return request(`/social/${encodeURIComponent(type)}`, { method: 'DELETE' });
 }
 
+// EVENTS & STATS & PUSH & PREMIUM
+export async function trackProfileView(targetUserId) {
+    return request('/events/profile-view', { method: 'POST', body: { targetUserId } });
+}
+
+export async function trackSocialClick(targetUserId, socialNetwork) {
+    return request('/events/social-click', { method: 'POST', body: { targetUserId, socialNetwork } });
+}
+
+export async function trackUserSearch(query) {
+    return request('/events/user-search', { method: 'POST', body: { query } });
+}
+
+export async function getStatsOverview(range = 'day') {
+    const qs = new URLSearchParams({ range });
+    return request(`/stats/overview?${qs.toString()}`, { method: 'GET' });
+}
+
+export async function getDetailedProfileViews(limit = 50) {
+    const qs = new URLSearchParams({ limit: String(limit) });
+    return request(`/stats/profile-views/detailed?${qs.toString()}`, { method: 'GET' });
+}
+
+export async function registerPushToken({ token, platform = 'unknown' }) {
+    return request('/push/register-token', { method: 'POST', body: { token, platform } });
+}
+
+export async function startPremiumTrial() {
+    return request('/premium/trial/start', { method: 'POST' });
+}
+
 // SETTINGS
 export async function setVisibility(isVisible) {
     return request('/settings/visibility', { method: 'PUT', body: { isVisible } });

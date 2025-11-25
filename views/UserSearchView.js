@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, PanResponder } from 'react-native';
-import { searchUsers } from '../components/ApiRequest';
+import { searchUsers, trackUserSearch } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
@@ -36,6 +36,8 @@ export default function UserSearchView({ onClose, onSelectUser }) {
       if (!q || q.length < 2) { setResults([]); setLoading(false); return; }
       try {
         setLoading(true);
+        // Fire-and-forget tracking of the search query
+        try { await trackUserSearch(q); } catch (_) {}
         const res = await searchUsers({ q, limit: 10 });
         const users = res?.users || [];
         const mapped = users.map((u) => ({

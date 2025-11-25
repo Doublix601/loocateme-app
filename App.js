@@ -12,6 +12,8 @@ import SettingsScreen from './views/SettingsScreen';
 import UserSearchView from './views/UserSearchView';
 import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
+import StatisticsScreen from './views/StatisticsScreen';
+import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import { UserProvider } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { initApiFromStorage, getAccessToken, getMyUser } from './components/ApiRequest';
@@ -303,6 +305,8 @@ function AppInner() {
           onReturnToList={handleReturnToList}
           socialMediaIcons={socialMediaIcons}
           onReturnToSettings={onReturnToSettings}
+          onOpenStatistics={() => setCurrentScreen('Statistics')}
+          onOpenPremiumPaywall={() => setCurrentScreen('PremiumPaywall')}
         />
       );
       break;
@@ -340,6 +344,21 @@ function AppInner() {
       screenToShow = (
         <DebugScreen
           onBack={() => setCurrentScreen('Settings')}
+        />
+      );
+      break;
+    case 'Statistics':
+      screenToShow = (
+        <StatisticsScreen
+          onBack={() => setCurrentScreen('MyAccount')}
+        />
+      );
+      break;
+    case 'PremiumPaywall':
+      screenToShow = (
+        <PremiumPaywallScreen
+          onBack={() => setCurrentScreen('MyAccount')}
+          onTrialStarted={() => setCurrentScreen('Statistics')}
         />
       );
       break;

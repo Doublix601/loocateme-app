@@ -32,6 +32,8 @@ const MyAccountScreen = ({
                              socialMediaIcons,
                              onReturnToSettings,
                              onOpenDataManagement,
+                             onOpenStatistics,
+                             onOpenPremiumPaywall,
                          }) => {
     const { colors, isDark } = useTheme();
     const panResponder = PanResponder.create({
@@ -113,6 +115,8 @@ const MyAccountScreen = ({
                         photo: me.profileImageUrl || user?.photo || null,
                         socialMedia: mappedSocial,
                         isVisible: me.isVisible !== false,
+                        isPremium: !!me.isPremium,
+                        premiumTrialEnd: me.premiumTrialEnd || null,
                         consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
                         privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
                     });
@@ -126,6 +130,21 @@ const MyAccountScreen = ({
         return () => { mounted = false; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const handleOpenStats = () => {
+        try {
+            const now = new Date();
+            const premium = !!user?.isPremium;
+            const trialActive = user?.premiumTrialEnd ? new Date(user.premiumTrialEnd) > now : false;
+            if (premium || trialActive) {
+                onOpenStatistics && onOpenStatistics();
+            } else {
+                onOpenPremiumPaywall && onOpenPremiumPaywall();
+            }
+        } catch (_) {
+            onOpenPremiumPaywall && onOpenPremiumPaywall();
+        }
+    };
 
     // Au cas où l'effet précédent ne se déclenche pas, récupérer l'id
     useEffect(() => {
@@ -1052,6 +1071,14 @@ const MyAccountScreen = ({
                     source={require('../assets/appIcons/userList.png')}
                     style={styles.roundButtonImage}
                 />
+            </TouchableOpacity>
+
+            {/* Voir mes statistiques */}
+            <TouchableOpacity
+                style={styles.dataButton}
+                onPress={handleOpenStats}
+            >
+                <Text style={styles.dataButtonText}>Voir mes statistiques</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
