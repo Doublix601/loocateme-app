@@ -800,6 +800,14 @@ const MyAccountScreen = ({
                             >
                                 <Text style={styles.shareIconEmoji}>🔳</Text>
                             </TouchableOpacity>
+                            {/* Bouton statistiques (emoji diagramme vers le haut) */}
+                            <TouchableOpacity
+                                style={styles.shareIconBtn}
+                                onPress={handleOpenStats}
+                                accessibilityLabel="Voir mes statistiques"
+                            >
+                                <Text style={styles.shareIconEmoji}>📈</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -1073,13 +1081,7 @@ const MyAccountScreen = ({
                 />
             </TouchableOpacity>
 
-            {/* Voir mes statistiques */}
-            <TouchableOpacity
-                style={styles.dataButton}
-                onPress={handleOpenStats}
-            >
-                <Text style={styles.dataButtonText}>Voir mes statistiques</Text>
-            </TouchableOpacity>
+            {/* Bouton texte supprimé et remplacé par un bouton circulaire 📈 à côté des boutons de partage */}
 
             <TouchableOpacity
                 style={styles.settingsButton}

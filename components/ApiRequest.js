@@ -374,3 +374,12 @@ export async function getAllUsers({ page = 1, limit = 100 } = {}) {
     const p = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
     return request(`/admin/users?${p}`, { method: 'GET' });
 }
+
+export async function setUserPremium(userId, isPremium) {
+    const id = String(userId || '');
+    if (!id) throw new Error('userId requis');
+    return request(`/admin/users/${encodeURIComponent(id)}/role`, {
+        method: 'PUT',
+        body: { isPremium: !!isPremium },
+    });
+}

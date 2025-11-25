@@ -1,35 +1,112 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert, ScrollView, Image } from 'react-native';
-import { startPremiumTrial } from '../components/ApiRequest';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert, ScrollView, Image, PanResponder, Platform, Linking } from 'react-native';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { getMyUser } from '../components/ApiRequest';
+import { UserContext } from '../components/contexts/UserContext';
 
 const { width, height } = Dimensions.get('window');
 
-export default function PremiumPaywallScreen({ onBack, onTrialStarted }) {
+export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
+  const { user, updateUser } = useContext(UserContext);
 
-  const onStartTrial = async () => {
+  // Si l'utilisateur est déjà Premium (ou en essai actif), rediriger directement
+  useEffect(() => {
+    try {
+      const now = new Date();
+      const premium = !!user?.isPremium;
+      const trialActive = user?.premiumTrialEnd ? new Date(user.premiumTrialEnd) > now : false;
+      if (premium || trialActive) {
+        // Rediriger immédiatement vers Statistiques si possible, sinon retour
+        if (onAlreadyPremium) onAlreadyPremium();
+        else if (onBack) onBack();
+      }
+    } catch (_) {
+      // ignore
+    }
+    // We only want to check when user or dates change
+  }, [user?.isPremium, user?.premiumTrialEnd]);
+
+  // Double-vérification côté serveur pour éviter les états de contexte obsolètes
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getMyUser();
+        const me = res?.user;
+        if (!me || cancelled) return;
+        // Optionnel: synchroniser le contexte si les flags ont changé
+        try {
+          if (updateUser) {
+            updateUser({
+              ...user,
+              isPremium: !!me.isPremium,
+              premiumTrialEnd: me.premiumTrialEnd || null,
+            });
+          }
+        } catch (_) {}
+        const now = new Date();
+        const premium = !!me.isPremium;
+        const trialActive = me.premiumTrialEnd ? new Date(me.premiumTrialEnd) > now : false;
+        if (premium || trialActive) {
+          if (onAlreadyPremium) onAlreadyPremium();
+          else if (onBack) onBack();
+        }
+      } catch (_) {
+        // en cas d'erreur réseau, on laisse l'écran tel quel
+      }
+    })();
+    return () => { cancelled = true; };
+    // On veut exécuter cette vérif uniquement au montage
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Geste de retour (slide droite)
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_evt, g) => {
+        const isH = Math.abs(g.dx) > Math.abs(g.dy);
+        return isH && g.dx > 10; // gauche -> droite
+      },
+      onPanResponderRelease: (_evt, g) => {
+        if (g.dx > 60 || g.vx > 0.3) {
+          onBack && onBack();
+        }
+      },
+    })
+  ).current;
+
+  // Redirection vers les pages d’abonnement/paiement des stores
+  const openPurchaseFlow = async () => {
     try {
       setLoading(true);
-      const res = await startPremiumTrial();
-      if (res?.success) {
-        onTrialStarted && onTrialStarted();
+      const iosUrl = process.env.EXPO_PUBLIC_IOS_SUB_URL || process.env.EXPO_PUBLIC_IOS_APP_URL || '';
+      const androidUrl = process.env.EXPO_PUBLIC_ANDROID_SUB_URL || process.env.EXPO_PUBLIC_ANDROID_APP_URL || '';
+      const target = Platform.OS === 'ios' ? iosUrl : androidUrl;
+      if (!target) {
+        Alert.alert('Indisponible', 'Lien de paiement non configuré. Définissez EXPO_PUBLIC_IOS_SUB_URL / EXPO_PUBLIC_ANDROID_SUB_URL.');
         return;
       }
-      Alert.alert('Erreur', "Impossible de démarrer l'essai gratuit");
+      const supported = await Linking.canOpenURL(target);
+      if (supported) {
+        await Linking.openURL(target);
+      } else {
+        Alert.alert('Indisponible', "Impossible d'ouvrir la page de paiement");
+      }
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible de démarrer l'essai gratuit");
+      Alert.alert('Erreur', e?.message || "Impossible d'ouvrir la page de paiement");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: colors.accent }]}>◀</Text>
+          <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: colors.accent }]} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.accent }]}>Passer en Premium</Text>
         <View style={{ width: 28 }} />
@@ -48,7 +125,7 @@ export default function PremiumPaywallScreen({ onBack, onTrialStarted }) {
           </View>
         </View>
 
-        <TouchableOpacity disabled={loading} onPress={onStartTrial} style={[styles.cta, { backgroundColor: colors.accent }]}>
+        <TouchableOpacity disabled={loading} onPress={openPurchaseFlow} style={[styles.cta, { backgroundColor: colors.accent }]}>
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
@@ -64,7 +141,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingTop: height * 0.02 },
   backBtn: { padding: 8 },
-  backText: { fontSize: 18 },
+  backIcon: { width: 28, height: 28 },
   title: { fontSize: Math.min(width * 0.07, 28), fontWeight: 'bold' },
   card: { borderRadius: 12, padding: 16, marginBottom: 16 },
   hero: { fontSize: 22, fontWeight: '800', marginBottom: 8 },

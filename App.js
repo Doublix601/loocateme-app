@@ -358,7 +358,7 @@ function AppInner() {
       screenToShow = (
         <PremiumPaywallScreen
           onBack={() => setCurrentScreen('MyAccount')}
-          onTrialStarted={() => setCurrentScreen('Statistics')}
+          onAlreadyPremium={() => setCurrentScreen('Statistics')}
         />
       );
       break;
