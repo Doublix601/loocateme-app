@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder } from 'react-native';
+import { proxifyImageUrl } from '../components/ServerUtils';
 import { getStatsOverview, getDetailedProfileViews } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 
@@ -169,7 +170,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
                     activeOpacity={0.7}
                   >
                     {it.actor?.profileImageUrl ? (
-                      <Image source={{ uri: it.actor.profileImageUrl }} style={styles.avatar} />
+                      <Image source={{ uri: proxifyImageUrl(it.actor.profileImageUrl) }} style={styles.avatar} />
                     ) : (
                       <View style={[styles.avatar, styles.avatarPh]}>
                         <Text style={{ color: '#fff', fontWeight: '700' }}>{(it.actor?.name?.[0] || 'U').toUpperCase()}</Text>

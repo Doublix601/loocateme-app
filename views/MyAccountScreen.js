@@ -22,6 +22,7 @@ import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
 import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser } from '../components/ApiRequest';
+import { proxifyImageUrl } from '../components/ServerUtils';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
 
@@ -716,7 +717,7 @@ const MyAccountScreen = ({
                                 <TouchableOpacity onLongPress={handleProfileImageLongPress}>
                                     {user.photo ? (
                                         <Image
-                                            source={{ uri: user.photo }}
+                                            source={{ uri: proxifyImageUrl(user.photo) }}
                                             style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
                                         />
                                     ) : (
@@ -1016,7 +1017,7 @@ const MyAccountScreen = ({
 
                             <View style={{ alignItems: 'center', marginBottom: height * 0.02 }}>
                                 {user.photo ? (
-                                    <Image source={{ uri: user.photo }} style={styles.profileImage} />
+                                    <Image source={{ uri: proxifyImageUrl(user.photo) }} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
                                 ) : (
                                     <View style={styles.placeholderImage}>
                                         <Image
@@ -1057,7 +1058,7 @@ const MyAccountScreen = ({
                 <View style={[styles.qrBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.5)' }]}>
                     <View style={[styles.qrCard, { backgroundColor: colors.surface }]}>
                         <Text style={styles.modalTitle}>Scanne pour voir mon profil</Text>
-                        <Image source={{ uri: qrUrl }} style={{ width: QR_SIZE, height: QR_SIZE }} resizeMode="contain" />
+                        <Image source={{ uri: proxifyImageUrl(qrUrl) }} style={{ width: QR_SIZE, height: QR_SIZE }} resizeMode="contain" />
                         <Text style={[styles.qrHint, { color: colors.textSecondary }]}>Si l'app n'est pas installée, tu seras redirigé(e) vers le store ({Platform.OS === 'ios' ? 'App Store' : 'Google Play'}).</Text>
                         <TouchableOpacity
                             onPress={() => setQrVisible(false)}

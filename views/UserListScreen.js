@@ -14,6 +14,7 @@ import {
   TextInput,
 } from 'react-native';
 import * as Location from 'expo-location';
+import { proxifyImageUrl } from '../components/ServerUtils';
 import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility, getPopularUsers, searchUsers } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
@@ -332,7 +333,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       <View style={styles.userRow}>
         <View style={styles.avatar}>
           {item.photo ? (
-            <Image source={{ uri: item.photo }} style={styles.avatarImage} />
+            <Image source={{ uri: proxifyImageUrl(item.photo) }} style={styles.avatarImage} />
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Image
@@ -417,7 +418,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       activeOpacity={0.8}
    >
       {item.photo ? (
-        <Image source={{ uri: item.photo }} style={[styles.popularAvatarImage, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]} />
+        <Image source={{ uri: proxifyImageUrl(item.photo) }} style={[styles.popularAvatarImage, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]} />
       ) : (
         <View style={[styles.popularAvatarPlaceholder, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]}>
           <Image

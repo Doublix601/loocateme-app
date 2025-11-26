@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
+import { proxifyImageUrl } from '../components/ServerUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
 import { trackProfileView, trackSocialClick } from '../components/ApiRequest';
@@ -285,7 +286,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
             <View style={[styles.imgUsernameSplitBox, { backgroundColor: colors.surfaceAlt }]}>
               <View style={styles.userProfilePictureContainer}>
                 {user.photo ? (
-                  <Image source={{ uri: user.photo }} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
+                  <Image source={{ uri: proxifyImageUrl(user.photo) }} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
                 ) : (
                   <View style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}>
                     <Image
