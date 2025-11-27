@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "loocateme-app",
-    "slug": "snack-3e32dc50-0c2e-41c8-b316-000afd3978d0",
+    "slug": "loocateme-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,10 +14,18 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "me.loocate.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "UIBackgroundModes": [
+          "location"
+        ],
+        "NSLocationWhenInUseUsageDescription": "Votre position est utilisée pour afficher les utilisateurs autour de vous.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Votre position en arrière-plan peut être partagée pendant 1 heure lorsque vous l’activez.",
+        "NSLocationAlwaysUsageDescription": "Votre position en arrière-plan peut être partagée pendant 1 heure lorsque vous l’activez."
       }
     },
     "android": {
@@ -25,10 +33,14 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "me.loocate.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-asset"
+    ]
   }
 }
