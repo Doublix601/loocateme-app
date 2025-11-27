@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator
 import { proxifyImageUrl } from '../components/ServerUtils';
 import { getStatsOverview, getDetailedProfileViews } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { subscribe } from '../components/EventBus';
 
 const { width, height } = Dimensions.get('window');
 
@@ -15,6 +16,28 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const [detailedError, setDetailedError] = useState('');
   const [detailedLoading, setDetailedLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
+
+  // Icônes des réseaux sociaux disponibles dans le projet
+  const socialMediaIcons = {
+    facebook: require('../assets/socialMediaIcons/fb_logo.png'),
+    x: require('../assets/socialMediaIcons/x_logo.png'),
+    linkedin: require('../assets/socialMediaIcons/linkedin_logo.png'),
+    instagram: require('../assets/socialMediaIcons/instagram_logo.png'),
+    tiktok: require('../assets/socialMediaIcons/tiktok_logo.png'),
+    snapchat: require('../assets/socialMediaIcons/snapchat_logo.png'),
+    youtube: require('../assets/socialMediaIcons/yt_logo.png'),
+  };
+
+  // Liste des réseaux à afficher (toujours visibles, même si 0)
+  const supportedNetworks = [
+    { key: 'instagram', label: 'Instagram' },
+    { key: 'tiktok', label: 'TikTok' },
+    { key: 'snapchat', label: 'Snapchat' },
+    { key: 'facebook', label: 'Facebook' },
+    { key: 'x', label: 'X' },
+    { key: 'linkedin', label: 'LinkedIn' },
+    { key: 'youtube', label: 'YouTube' },
+  ];
 
   // Geste de retour (slide de gauche vers la droite)
   const panResponder = useRef(
@@ -46,6 +69,28 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   }
 
   useEffect(() => { load(); }, []);
+
+  // Rafraîchir automatiquement quand un clic social est tracké ailleurs dans l'app
+  useEffect(() => {
+    const unsub = subscribe('social_click_tracked', () => {
+      load();
+    });
+    return () => { try { unsub && unsub(); } catch (_) {} };
+  }, []);
+
+  // Polling léger pour récupérer les mises à jour effectuées depuis d'autres appareils
+  useEffect(() => {
+    let timer = null;
+    const start = () => {
+      // rafraîchit toutes les 10 secondes pendant que l'écran est monté
+      timer = setInterval(() => {
+        load();
+      }, 10000);
+    };
+    const stop = () => { if (timer) { try { clearInterval(timer); } catch (_) {} timer = null; } };
+    start();
+    return () => stop();
+  }, []);
 
   async function loadDetailed() {
     setDetailedLoading(true);
@@ -90,7 +135,13 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   }
 
   const clicks = data?.clicksByNetwork || {};
-  const clicksEntries = Object.entries(clicks);
+  const getCountFor = (platform) => {
+    // Normalisation éventuelle de clés reçues de l'API
+    if (platform === 'x') {
+      return Number(clicks.x ?? clicks.twitter ?? 0) || 0;
+    }
+    return Number(clicks[platform] ?? 0) || 0;
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
@@ -118,16 +169,19 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
 
           <View style={[styles.card, { backgroundColor: colors.surface }] }>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Clics par réseau</Text>
-            {clicksEntries.length === 0 ? (
-              <Text style={{ color: colors.textMuted }}>Aucun clic pour cette période</Text>
-            ) : (
-              clicksEntries.map(([net, count]) => (
-                <View key={net} style={styles.row}>
-                  <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>{net}</Text>
-                  <Text style={[styles.rowValue, { color: colors.textSecondary }]}>{count}</Text>
+            {supportedNetworks.map(({ key, label }) => (
+              <View key={key} style={styles.row}>
+                <View style={styles.rowLeft}>
+                  {socialMediaIcons[key] ? (
+                    <Image source={socialMediaIcons[key]} style={styles.smIcon} />
+                  ) : (
+                    <View style={[styles.smIcon, { backgroundColor: '#ccc', borderRadius: 8 }]} />
+                  )}
+                  <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>{label}</Text>
                 </View>
-              ))
-            )}
+                <Text style={[styles.rowValue, { color: colors.textSecondary }]}>{getCountFor(key)}</Text>
+              </View>
+            ))}
           </View>
 
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -209,6 +263,8 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
   metric: { fontSize: 36, fontWeight: '800' },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
+  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  smIcon: { width: 22, height: 22, marginRight: 10, borderRadius: 6 },
   rowLabel: { fontSize: 16 },
   rowValue: { fontSize: 16, fontWeight: '700' },
   visitorRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },

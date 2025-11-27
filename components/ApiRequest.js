@@ -75,35 +75,43 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
     let res;
     let controller;
     let timeoutId;
-    try {
-        // If AbortController exists, attach a signal pre-fetch so aborts can cancel the request
+    const doFetchWithTimeout = async (targetUrl) => {
+        let localController;
+        let localTimeoutId;
+        const localInit = { ...init };
         if (typeof AbortController !== 'undefined' && timeoutMs && timeoutMs > 0) {
-            controller = new AbortController();
-            init.signal = controller.signal;
+            localController = new AbortController();
+            localInit.signal = localController.signal;
         }
-
-        const fetchPromise = fetch(url, init);
-
+        const fetchPromise = fetch(targetUrl, localInit);
         let racePromise = fetchPromise;
         if (timeoutMs && timeoutMs > 0) {
             const timeoutPromise = new Promise((_, reject) => {
-                timeoutId = setTimeout(() => {
+                localTimeoutId = setTimeout(() => {
                     const err = new Error('Délai dépassé');
                     err.code = 'TIMEOUT';
                     err.status = 0;
-                    // Try to abort underlying fetch if supported
-                    try { controller && controller.abort && controller.abort(); } catch {}
+                    try { localController && localController.abort && localController.abort(); } catch {}
                     reject(err);
                 }, timeoutMs);
             });
             racePromise = Promise.race([fetchPromise, timeoutPromise]);
         }
+        try {
+            const response = await racePromise;
+            if (localTimeoutId) { try { clearTimeout(localTimeoutId); } catch {} }
+            return response;
+        } catch (e) {
+            if (localTimeoutId) { try { clearTimeout(localTimeoutId); } catch {} }
+            throw e;
+        }
+    };
 
-        res = await racePromise;
-        if (timeoutId) { try { clearTimeout(timeoutId); } catch {} }
+    try {
+        // First attempt
+        res = await doFetchWithTimeout(url);
     } catch (networkErr) {
-        if (timeoutId) { try { clearTimeout(timeoutId); } catch {} }
-        // Forward TIMEOUT error as-is
+        // Forward TIMEOUT/Abort as-is
         if (networkErr && (networkErr.code === 'TIMEOUT' || networkErr.name === 'AbortError' || networkErr.message?.toLowerCase().includes('aborted'))) {
             if (networkErr.code !== 'TIMEOUT') {
                 const err = new Error('Délai dépassé');
@@ -113,8 +121,17 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
             }
             throw networkErr;
         }
-        console.error('[API] Network error', { url, method, error: networkErr?.message || networkErr });
-        throw networkErr;
+        // If network error, try protocol fallback (http <-> https) for same host once
+        try {
+            const u = new URL(url);
+            const toggledProtocol = u.protocol === 'http:' ? 'https:' : 'http:';
+            const fallbackUrl = `${toggledProtocol}//${u.host}${u.pathname}${u.search}${u.hash}`;
+            console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });
+            res = await doFetchWithTimeout(fallbackUrl);
+        } catch (_fallbackErr) {
+            console.error('[API] Network error (no fallback succeeded)', { url, method, error: networkErr?.message || networkErr });
+            throw networkErr;
+        }
     }
 
     // Attempt refresh on 401 once (only for non-auth endpoints)

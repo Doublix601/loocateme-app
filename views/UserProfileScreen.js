@@ -18,6 +18,7 @@ import { proxifyImageUrl } from '../components/ServerUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
 import { trackProfileView, trackSocialClick } from '../components/ApiRequest';
+import { publish } from '../components/EventBus';
 import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
@@ -104,13 +105,31 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
   const openSocial = async (platform, rawHandle) => {
     const handle = String(rawHandle || '').trim();
-    if (!platform || !handle) return;
+    // On considère le tap comme un clic, même si le handle est vide/invalide.
+    // On ne bloque que si la plateforme est absente.
+    if (!platform) return;
     try {
       // Fire-and-forget: track social click
       try {
         const targetId = user?._id || user?.id;
-        if (targetId) await trackSocialClick(String(targetId), String(platform));
+        const mapPlatform = (p) => {
+          const v = String(p || '').toLowerCase();
+          if (v === 'twitter') return 'x';
+          if (v === 'yt' || v === 'youtube.com') return 'youtube';
+          if (v === 'fb' || v === 'facebook.com') return 'facebook';
+          if (v === 'ig' || v === 'instagram.com') return 'instagram';
+          if (v === 'tt') return 'tiktok';
+          return v;
+        };
+        if (targetId) {
+          await trackSocialClick(String(targetId), mapPlatform(platform));
+          // Notifier le reste de l'app qu'un clic social a été tracké
+          try { publish('social_click_tracked', { platform: mapPlatform(platform), targetUserId: String(targetId) }); } catch (_) {}
+        }
       } catch (_) {}
+
+      // Si aucun handle, on s'arrête après le tracking (on n'a rien à ouvrir)
+      if (!handle) return;
 
       if (platform === 'instagram') {
         const username = extractInstagramUsername(handle);
@@ -331,16 +350,31 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
               const socials = user.socialMedias ?? user.socialMedia ?? [];
               return socials.length > 0 ? (
                 socials.map((social, index) => {
-                  const platform = social.platform ?? social.socialMedia;
-                  const iconSrc = platform ? socialMediaIcons[platform] : undefined;
+                  // Supporte différents schémas d'objets provenant de diverses sources
+                  // - Backend: { type, handle }
+                  // - Ancien front: { platform, username }
+                  // - Très ancien: { socialMedia, identifier }
+                  const rawPlatform = social.platform ?? social.type ?? social.socialMedia;
+                  const canonPlatform = (() => {
+                    const v = String(rawPlatform || '').toLowerCase();
+                    if (v === 'twitter' || v === 'twitter.com' || v === 'x.com') return 'x';
+                    if (v === 'yt' || v === 'youtu.be' || v === 'youtube.com') return 'youtube';
+                    if (v === 'fb' || v === 'facebook.com') return 'facebook';
+                    if (v === 'ig' || v === 'insta' || v === 'instagram.com') return 'instagram';
+                    if (v === 'tt' || v === 'tiktok.com') return 'tiktok';
+                    if (v === 'snap' || v === 'snapchat.com') return 'snapchat';
+                    return rawPlatform;
+                  })();
+                  const iconSrc = canonPlatform ? socialMediaIcons[canonPlatform] : undefined;
                   if (!iconSrc) return null;
                   return (
                     <TouchableOpacity
                       key={index}
                       style={styles.socialMediaTile}
                       onPress={() => {
-                        const handle = social.username || social.link || social.identifier || '';
-                        openSocial(platform, handle);
+                        // Support de plusieurs schémas: username | handle | link | identifier
+                        const handle = social.username || social.handle || social.link || social.identifier || '';
+                        openSocial(canonPlatform, handle);
                       }}
                     >
                       <Image
