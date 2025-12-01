@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatLi
 import { searchUsers, trackUserSearch } from '../components/ApiRequest';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import { useTheme } from '../components/contexts/ThemeContext';
+import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 
 const { width, height } = Dimensions.get('window');
 
@@ -78,7 +79,7 @@ export default function UserSearchView({ onClose, onSelectUser }) {
   const renderRow = ({ item }) => (
     <TouchableOpacity style={styles.row} onPress={() => onSelectUser && onSelectUser(item)}>
       {item.photo ? (
-        <Image source={{ uri: proxifyImageUrl(item.photo) }} style={styles.avatar} />
+        <ImageWithPlaceholder uri={item.photo} style={styles.avatar} />
       ) : (
         <View style={[styles.avatar, styles.avatarPh]}>
           <Text style={{ color: '#fff', fontWeight: '700' }}>{(getDisplayName(item)[0] || 'U').toUpperCase()}</Text>

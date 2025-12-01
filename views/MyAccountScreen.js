@@ -23,6 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
 import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser } from '../components/ApiRequest';
 import { proxifyImageUrl } from '../components/ServerUtils';
+import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
 
@@ -82,6 +83,22 @@ const MyAccountScreen = ({
     const [selectedSocialPlatform, setSelectedSocialPlatform] = useState('');
     const [socialLinks, setSocialLinks] = useState(user.socialMedia || []);
     const [socialModalVisible, setSocialModalVisible] = useState(false);
+
+    // Mesure dynamique de la largeur du nom pour adapter la box image+nom
+    const [measuredNameWidth, setMeasuredNameWidth] = useState(0);
+    const SAFE_LEFT_FOR_BACK = 56; // espace minimum à gauche pour le bouton retour (padding+icône)
+    const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
+    const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
+    // Légère marge supplémentaire pour éviter un rendu trop serré autour de l'image et du nom
+    const extraSlack = Math.max(10, Math.round(width * 0.025));
+    const minBoxWidth = Math.min(maxBoxWidth, Math.round(width * 0.92));
+    const desiredBoxWidth = Math.max(
+        minBoxWidth,
+        Math.min(
+            maxBoxWidth,
+            Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack
+        )
+    );
 
     // Refs pour gérer le scroll et le focus dans le modal d'ajout de réseaux sociaux
     const addSocialScrollRef = useRef(null);
@@ -712,12 +729,15 @@ const MyAccountScreen = ({
                 <Text style={styles.title}>Mon Compte</Text>
                 <View style={styles.userInfoContainer}>
                     <View style={styles.profileHeader}>
-                        <View style={[styles.imgUsernameSplitBox, { backgroundColor: colors.surfaceAlt }]}>
+                        <View style={[
+                            styles.imgUsernameSplitBox,
+                            { backgroundColor: colors.surfaceAlt, width: desiredBoxWidth, paddingHorizontal: boxHorizontalPadding }
+                        ]}>
                             <View style={styles.userProfilePictureContainer}>
                                 <TouchableOpacity onLongPress={handleProfileImageLongPress}>
                                     {user.photo ? (
-                                        <Image
-                                            source={{ uri: proxifyImageUrl(user.photo) }}
+                                        <ImageWithPlaceholder
+                                            uri={user.photo}
                                             style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
                                         />
                                     ) : (
@@ -736,7 +756,20 @@ const MyAccountScreen = ({
                                     delayLongPress={300}
                                     activeOpacity={1}
                                 >
-                                    <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>{user.username}</Text>
+                                    <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>
+                                        {user.username}
+                                    </Text>
+                                    {/* Mesure invisible sur une ligne pour calculer la largeur exacte du nom */}
+                                    <Text
+                                        style={[styles.usernameUnderPhoto, { fontSize: usernameFont, position: 'absolute', opacity: 0 }]}
+                                        numberOfLines={1}
+                                        onLayout={(e) => {
+                                            const w = e?.nativeEvent?.layout?.width || 0;
+                                            if (w && Math.abs(w - measuredNameWidth) > 0.5) setMeasuredNameWidth(w);
+                                        }}
+                                    >
+                                        {user.username}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -1017,7 +1050,7 @@ const MyAccountScreen = ({
 
                             <View style={{ alignItems: 'center', marginBottom: height * 0.02 }}>
                                 {user.photo ? (
-                                    <Image source={{ uri: proxifyImageUrl(user.photo) }} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
+                                    <ImageWithPlaceholder uri={user.photo} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
                                 ) : (
                                     <View style={styles.placeholderImage}>
                                         <Image
@@ -1140,14 +1173,16 @@ const styles = StyleSheet.create({
         marginBottom: height * 0.03,
     },
     imgUsernameSplitBox: {
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        paddingVertical: height * 0.02,
-        backgroundColor: '#f5f5f5',
-        borderRadius: 10,
-    },
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Réduit pour éviter le chevauchement avec le bouton retour
+    width: '88%',
+    alignSelf: 'center',
+    paddingVertical: height * 0.02,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+  },
 
     userProfilePictureContainer: {
         alignItems: 'center',

@@ -15,6 +15,7 @@ import {
 import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { proxifyImageUrl } from '../components/ServerUtils';
+import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
 import { trackProfileView, trackSocialClick } from '../components/ApiRequest';
@@ -91,6 +92,22 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     if (v.startsWith('@')) v = v.slice(1);
     return v;
   };
+
+  // Mesure dynamique de la largeur du nom pour adapter la box image+nom
+  const [measuredNameWidth, setMeasuredNameWidth] = React.useState(0);
+  const SAFE_LEFT_FOR_BACK = 56; // espace minimum pour le bouton retour
+  const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
+  const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
+  // Légère marge supplémentaire pour éviter un rendu trop serré autour de l'image et du nom
+  const extraSlack = Math.max(10, Math.round(width * 0.025));
+  const minBoxWidth = Math.min(maxBoxWidth, Math.round(width * 0.92));
+  const desiredBoxWidth = Math.max(
+    minBoxWidth,
+    Math.min(
+      maxBoxWidth,
+      Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack
+    )
+  );
 
   // Track a profile view when this screen mounts or when the viewed user changes
   React.useEffect(() => {
@@ -302,10 +319,10 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
-            <View style={[styles.imgUsernameSplitBox, { backgroundColor: colors.surfaceAlt }]}>
+            <View style={[styles.imgUsernameSplitBox, { backgroundColor: colors.surfaceAlt, width: desiredBoxWidth, paddingHorizontal: boxHorizontalPadding }]}>
               <View style={styles.userProfilePictureContainer}>
                 {user.photo ? (
-                  <Image source={{ uri: proxifyImageUrl(user.photo) }} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
+                  <ImageWithPlaceholder uri={user.photo} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
                 ) : (
                   <View style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}>
                     <Image
@@ -316,7 +333,18 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                 )}
               </View>
               <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]} numberOfLines={2} ellipsizeMode="tail">{displayName}</Text>
+                <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>{displayName}</Text>
+                {/* Mesure invisible en une seule ligne */}
+                <Text
+                  style={[styles.usernameUnderPhoto, { fontSize: usernameFont, position: 'absolute', opacity: 0 }]}
+                  numberOfLines={1}
+                  onLayout={(e) => {
+                    const w = e?.nativeEvent?.layout?.width || 0;
+                    if (w && Math.abs(w - measuredNameWidth) > 0.5) setMeasuredNameWidth(w);
+                  }}
+                >
+                  {displayName}
+                </Text>
               </View>
             </View>
 
@@ -445,7 +473,9 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
+    // Réduit pour éviter le chevauchement avec le bouton retour
+    width: '88%',
+    alignSelf: 'center',
     paddingVertical: height * 0.02,
     backgroundColor: '#f5f5f5',
     borderRadius: 10,

@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { proxifyImageUrl } from '../components/ServerUtils';
-import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility, getPopularUsers, searchUsers } from '../components/ApiRequest';
+import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility, getPopularUsers, searchUsers, invalidateApiCacheByPrefix } from '../components/ApiRequest';
+import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { UserContext } from '../components/contexts/UserContext';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -64,6 +65,11 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const searchDebounceRef = useRef(null);
+  // Persisted caches/flags keys
+  const STORAGE_NEARBY_USERS = 'lm_cached_nearby_users_v1';
+  const STORAGE_POPULAR_USERS = 'lm_cached_popular_users_v1';
+  const STORAGE_NEARBY_LOADED_ONCE = 'lm_nearby_loaded_once_flag_v1';
+  const hasLoadedOnceRef = useRef(false);
 
   // Local social media icons map for quick badges in list
   const socialMediaIcons = {
@@ -222,7 +228,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     };
   }, [searchMode, searchQuery]);
 
-  const fetchNearby = async () => {
+  const fetchNearby = async ({ force = false } = {}) => {
     try {
       if (!currentUser?.isVisible) {
         setNearbyUsers([]);
@@ -243,6 +249,11 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       const apiUsers = res?.users || [];
       const mapped = apiUsers.map((u) => mapBackendUserToUi(u, { lat, lon }));
       setNearbyUsers(mapped);
+      // persist cache
+      try { await AsyncStorage.setItem(STORAGE_NEARBY_USERS, JSON.stringify(mapped)); } catch (_) {}
+      // mark as loaded once
+      hasLoadedOnceRef.current = true;
+      try { await AsyncStorage.setItem(STORAGE_NEARBY_LOADED_ONCE, '1'); } catch (_) {}
     } catch (e) {
       console.error('[UserListScreen] Nearby fetch error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
       Alert.alert('Localisation', e?.message || 'Impossible de récupérer votre position.');
@@ -252,13 +263,28 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     }
   };
 
-  const fetchPopular = async (limit = 20) => {
+  const fetchPopular = async (limit = 20, { force = false } = {}) => {
     try {
       setLoadingPopular(true);
+      if (!force) {
+        // Try load from storage first
+        try {
+          const raw = await AsyncStorage.getItem(STORAGE_POPULAR_USERS);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setPopularUsers(parsed);
+              setLoadingPopular(false);
+              return;
+            }
+          }
+        } catch (_) {}
+      }
       const res = await getPopularUsers({ limit });
       const apiUsers = res?.users || [];
       const mapped = apiUsers.map((u) => mapBackendUserToUi(u));
       setPopularUsers(mapped);
+      try { await AsyncStorage.setItem(STORAGE_POPULAR_USERS, JSON.stringify(mapped)); } catch (_) {}
     } catch (e) {
       console.error('[UserListScreen] Popular fetch error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
     } finally {
@@ -266,19 +292,35 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     }
   };
 
+  // Initial load: restore caches, avoid refetch if already loaded once
   useEffect(() => {
-    if (!users || users.length === 0) {
-      fetchNearby();
-    }
+    (async () => {
+      try {
+        const flag = await AsyncStorage.getItem(STORAGE_NEARBY_LOADED_ONCE);
+        hasLoadedOnceRef.current = flag === '1';
+      } catch (_) { hasLoadedOnceRef.current = false; }
+
+      // Restore nearby cache
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_NEARBY_USERS);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) setNearbyUsers(parsed);
+        }
+      } catch (_) {}
+
+      // Restore popular cache or prefill
+      fetchPopular(20, { force: false }).catch(() => {});
+
+      // Only fetch nearby from network on the very first opening
+      if ((!users || users.length === 0) && !hasLoadedOnceRef.current) {
+        fetchNearby({ force: true });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // When nearby results are scarce, fetch popular profiles (even if invisible)
-  useEffect(() => {
-    const count = nearbyUsers?.length || 0;
-    if (count < 10) {
-      fetchPopular(20);
-    }
-  }, [nearbyUsers]);
+  // Remove auto-fetching popular on nearby change. Popular stays cached unless manually refreshed.
 
   // On app reopen, if visibility was auto-disabled by background timeout, restore it
   useEffect(() => {
@@ -313,11 +355,9 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     }
   }, [currentUser?.isVisible]);
 
-  // Refetch when user becomes visible
+  // Do not auto refetch when visibility toggles; respect manual refresh requirement
   useEffect(() => {
-    if (currentUser?.isVisible) {
-      fetchNearby();
-    } else {
+    if (!currentUser?.isVisible) {
       setNearbyUsers([]);
     }
   }, [currentUser?.isVisible]);
@@ -333,7 +373,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       <View style={styles.userRow}>
         <View style={styles.avatar}>
           {item.photo ? (
-            <Image source={{ uri: proxifyImageUrl(item.photo) }} style={styles.avatarImage} />
+            <ImageWithPlaceholder uri={item.photo} style={styles.avatarImage} />
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Image
@@ -418,7 +458,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       activeOpacity={0.8}
    >
       {item.photo ? (
-        <Image source={{ uri: proxifyImageUrl(item.photo) }} style={[styles.popularAvatarImage, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]} />
+        <ImageWithPlaceholder uri={item.photo} style={[styles.popularAvatarImage, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]} />
       ) : (
         <View style={[styles.popularAvatarPlaceholder, { width: POP_AVATAR, height: POP_AVATAR, borderRadius: POP_AVATAR / 2 }]}>
           <Image
@@ -502,7 +542,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
           const aroundCount = nearbyUsers?.length || 0;
           // Afficher en pied uniquement lorsqu'on affiche réellement les "Autour de moi"
           const showingNearby = !users || users.length === 0;
-          return (showingNearby && data.length > 0 && aroundCount < 10)
+          return (showingNearby && data.length > 0 && aroundCount < 20)
             ? <PopularSection />
             : null;
         })()}
@@ -511,9 +551,11 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              fetchNearby();
+              try { invalidateApiCacheByPrefix('/users/'); } catch (_) {}
+              fetchNearby({ force: true });
               // Refresh popular as well
-              fetchPopular(20);
+              try { invalidateApiCacheByPrefix('/stats/'); invalidateApiCacheByPrefix('/popular'); } catch (_) {}
+              fetchPopular(20, { force: true });
             }}
           />
         }

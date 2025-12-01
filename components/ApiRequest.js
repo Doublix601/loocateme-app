@@ -3,6 +3,7 @@
 import { getServerAddress } from './ServerUtils';
 import { publish } from './EventBus';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { optimizeImageForUpload } from './ImageUtils';
 
 const resolvedBase = process.env.EXPO_PUBLIC_API_URL
   ? String(process.env.EXPO_PUBLIC_API_URL)
@@ -15,6 +16,22 @@ const ACCESS_TOKEN_KEY = 'loocateme_access_token';
 // In-memory access token holder. Persisted via AsyncStorage for auto-login.
 let accessToken = null;
 let loggedBaseUrlOnce = false;
+
+// --- Lightweight cache for GET requests to avoid spamming the API on navigation ---
+// Key format: `${method}:${url}` (method is uppercased)
+const apiCache = new Map();
+
+export function clearApiCache() {
+    try { apiCache.clear(); } catch (_) {}
+}
+
+export function invalidateApiCacheByPrefix(prefix = '') {
+    if (!prefix) return;
+    const p = String(prefix);
+    for (const key of apiCache.keys()) {
+        if (key.includes(p)) apiCache.delete(key);
+    }
+}
 
 export function setAccessToken(token) {
     accessToken = token || null;
@@ -43,7 +60,7 @@ export async function initApiFromStorage() {
     }
 }
 
-async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false, timeoutMs, suppressAuthHandling = false } = {}) {
+async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false, timeoutMs, suppressAuthHandling = false, cache: cacheMode = 'default', ttlMs = 30000 } = {}) {
     if (!loggedBaseUrlOnce) {
         console.log(`[API] Using BASE_URL: ${BASE_URL}`);
         loggedBaseUrlOnce = true;
@@ -70,6 +87,17 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
     } else if (body !== undefined) {
         init.headers['Content-Type'] = 'application/json';
         init.body = JSON.stringify(body);
+    }
+
+    const isGet = String(method).toUpperCase() === 'GET';
+    const cacheKey = `${String(method).toUpperCase()}:${url}`;
+
+    // Serve from cache for GET requests unless explicit reload is requested
+    if (isGet && cacheMode !== 'reload') {
+        const cached = apiCache.get(cacheKey);
+        if (cached && cached.expiry > Date.now()) {
+            return cached.data;
+        }
     }
 
     let res;
@@ -188,6 +216,11 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         throw err;
     }
 
+    // Cache successful GET responses
+    if (isGet && cacheMode !== 'reload') {
+        const expiry = Date.now() + Math.max(0, ttlMs || 0);
+        try { apiCache.set(cacheKey, { expiry, data }); } catch (_) {}
+    }
     return data;
 }
 
@@ -307,8 +340,15 @@ export async function uploadProfilePhoto(file) {
         err.code = 'INVALID_FILE';
         throw err;
     }
+    // Optimize image before upload to reduce payload size
+    let optimized = part;
+    try {
+        optimized = await optimizeImageForUpload(part, { maxWidth: 720, maxHeight: 720, quality: 0.8 });
+    } catch (_e) {
+        // ignore optimization failures, send original
+    }
     const form = new FormData();
-    form.append('photo', part);
+    form.append('photo', optimized);
     return request('/profile/photo', { method: 'POST', formData: form });
 }
 

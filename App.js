@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions, Alert } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState } from 'react-native';
 import * as Linking from 'expo-linking';
 import { Asset } from 'expo-asset';
 import LoginScreen from './views/LoginScreen';
@@ -16,7 +16,7 @@ import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import { UserProvider } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
-import { initApiFromStorage, getAccessToken, getMyUser } from './components/ApiRequest';
+import { initApiFromStorage, getAccessToken, getMyUser, clearApiCache } from './components/ApiRequest';
 import { subscribe } from './components/EventBus';
 
 function AppInner() {
@@ -26,6 +26,10 @@ function AppInner() {
   const [userListScrollOffset, setUserListScrollOffset] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const appState = useRef(AppState.currentState);
+  // IMPORTANT: useTheme (uses useContext under the hood) must be called unconditionally
+  // and before any early returns to preserve the Hooks call order across renders.
+  const { colors } = useTheme();
 
   // Transition animation state
   const transitionX = useRef(new Animated.Value(0)).current;
@@ -98,6 +102,18 @@ function AppInner() {
       }
     };
     initAuth();
+  }, []);
+
+  // Invalidate API cache when app returns to foreground (freshness on reopen)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      const wasBackground = appState.current.match(/inactive|background/);
+      appState.current = nextState;
+      if (wasBackground && nextState === 'active') {
+        try { clearApiCache(); } catch (_) {}
+      }
+    });
+    return () => { try { subscription.remove(); } catch (_) {} };
   }, []);
 
   // Handle email verification redirect: detect emailVerified=1 in URL
@@ -396,7 +412,6 @@ function AppInner() {
       break;
   }
 
-  const { colors } = useTheme();
   return (
     <UserProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
