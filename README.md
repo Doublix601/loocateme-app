@@ -3,7 +3,7 @@
 Ce guide couvre l’installation des dépendances et le passage d’Expo Go à une app build prête pour TestFlight (bêta fermée) via EAS Build.
 
 Prérequis côté poste:
-- Node.js LTS 18+ (ou 20+)
+- Node.js LTS 18 (recommandé 18.20.3) ou 20. N'utilisez pas Node 21+ ou 23+ pour ce projet.
 - Compte Apple Developer (99$/an) avec accès App Store Connect
 - Xcode installé (pour signer et pour les simulateurs)
 
@@ -15,9 +15,9 @@ Prérequis côté poste:
   npm run doctor
 
 2) Connexion à EAS
-- Installer le CLI si ce n’est pas déjà fait (installé comme devDependency):
+- Vérifier le CLI (installé comme devDependency):
   npx eas --version
-- Se connecter:
+- Se connecter si nécessaire:
   npx eas login
 
 3) Configuration iOS incluse
@@ -26,22 +26,31 @@ Prérequis côté poste:
 - Chaîne de permissions iOS définie.
 - Profils de build EAS prêts (eas.json): development, preview (interne), production (store).
 
-4) Build iOS pour TestFlight (bêta fermée)
-- Build interne (profile preview):
+4) Build iOS pour TestFlight (automatique)
+- Tout‑en‑un (build + envoi TestFlight, profils gérés auto):
+  npm run release:ios
+  (Le script ouvre une session Expo si besoin, lance le build iOS «production» et auto‑soumet sur TestFlight. Il imprime des liens utiles et des instructions testeurs.)
+- Build interne (profile preview) si besoin:
   npm run build:ios:preview
-  Ensuite, téléchargez l’ipa depuis la page de build EAS.
-- Build store (profile production):
-  npx eas build -p ios --profile production
 
 EAS vous guidera pour créer/ajouter les certificats et Provisioning Profiles. Laissez EAS gérer automatiquement, sauf besoin spécifique.
 
-5) Soumission à TestFlight
-- Depuis un build store terminé, soumettez:
+5) Soumission à TestFlight (manuel)
+- Depuis un build store terminé, vous pouvez aussi soumettre manuellement:
   npm run submit:ios
   ou
   npx eas submit -p ios --latest
 
 Après la validation par Apple, ajoutez vos testeurs internes/externes dans App Store Connect.
+
+Instructions TestFlight (rappel)
+- Testeurs internes (équipe, accès immédiat): App Store Connect > My Apps > Votre App > TestFlight > Ajouter des utilisateurs internes.
+- Testeurs externes: Créer un groupe de test externe, ajouter des emails ou activer un lien public, puis soumettre à la Beta App Review si demandé.
+
+Liens utiles
+- L’outil affiche la page du build et (si dispo) les logs de soumission.
+- Lister les derniers builds: npx eas build:list --platform ios
+- Re‑soumettre le dernier IPA: npx eas submit -p ios --latest
 
 Notes techniques
 - Le partage de position en arrière-plan utilise expo-location et expo-task-manager. Sur iOS, la permission Always peut être demandée selon le flux système; le code n’envoie des updates en arrière-plan que pendant 1h quand l’utilisateur l’active.
@@ -51,3 +60,20 @@ Dépannage
 - expo doctor pour diagnostiquer la config.
 - S’assurer que le Bundle Identifier (app.json) correspond bien à votre App ID.
 - Si vous changez le bundleIdentifier, regénérez les credentials dans EAS lors du prochain build.
+
+Versions de Node recommandées (important)
+- Le projet impose Node >=18 <21 (voir package.json). Des versions récentes comme 23.x provoqueront l’erreur: The engine "node" is incompatible with this module. Expected version ">=18 <21".
+- Un fichier .nvmrc est fourni à la racine du repo avec la version 18.20.3, alignée avec eas.json.
+
+Basculer de version facilement
+- Avec nvm:
+  - nvm install 18.20.3
+  - nvm use
+  - Optionnel: nvm alias default 18.20.3
+- Avec asdf:
+  - asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git (si besoin)
+  - asdf install nodejs 18.20.3
+  - asdf local nodejs 18.20.3 (à la racine du repo)
+
+Vérifier:
+- node -v doit afficher v18.20.3 (ou une 18.x compatible) avant npm install / expo start.

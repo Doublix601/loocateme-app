@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 12.6.0"
+    "version": ">= 16.28.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -8,15 +9,18 @@
         "simulator": false
       },
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "18.20.3"
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "node": "18.20.3"
     },
     "production": {
       "distribution": "store",
-      "channel": "production"
+      "channel": "production",
+      "node": "18.20.3"
     }
   },
   "submit": {

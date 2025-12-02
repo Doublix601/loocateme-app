@@ -7,14 +7,18 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "doctor": "expo doctor",
-    "build:ios:preview": "eas build -p ios --profile preview",
-    "submit:ios": "eas submit -p ios --latest"
+    "eas-build-pre-install": "bash -lc 'rm -f yarn.lock || true'",
+    "build:ios:preview": "npx eas build -p ios --profile preview",
+    "build:ios:store": "npx eas build -p ios --profile production --auto-submit",
+    "submit:ios": "npx eas submit -p ios --latest",
+    "release:ios": "bash ./scripts/eas-build-submit-ios.sh"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~54.0.0",
     "expo-asset": "~12.0.10",
+    "expo-font": "~14.0.9",
     "expo-blur": "~15.0.7",
     "expo-image-manipulator": "^14.0.7",
     "expo-image-picker": "~17.0.8",
@@ -22,18 +26,22 @@
     "expo-location": "~19.0.7",
     "expo-status-bar": "~3.0.8",
     "expo-task-manager": "~14.0.8",
+    "expo-updates": "~29.0.13",
     "react": "19.1.0",
     "react-native": "0.81.5",
-    "react-native-linear-gradient": "*",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-paper": "4.9.2",
-    "react-native-safe-area-context": "~5.6.0"
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "@react-native-community/cli": "latest",
-    "eas-cli": "^12.6.0"
+    "@babel/core": "^7.20.0"
   },
   "private": true,
   "name": "loocateme-app",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=18 <21",
+    "npm": ">=9"
+  }
 }
