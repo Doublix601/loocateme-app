@@ -41,7 +41,7 @@
       "package": "me.loocate.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/appIcons/AppIcon.png"
     },
     "plugins": [
       "expo-asset"

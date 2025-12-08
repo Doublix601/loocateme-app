@@ -66,8 +66,9 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
   const [searchResults, setSearchResults] = useState([]);
   const searchDebounceRef = useRef(null);
   // Persisted caches/flags keys
-  const STORAGE_NEARBY_USERS = 'lm_cached_nearby_users_v1';
-  const STORAGE_POPULAR_USERS = 'lm_cached_popular_users_v1';
+  // Bump cache keys to v2 to invalidate old caches that might contain unverified accounts
+  const STORAGE_NEARBY_USERS = 'lm_cached_nearby_users_v2';
+  const STORAGE_POPULAR_USERS = 'lm_cached_popular_users_v2';
   const STORAGE_NEARBY_LOADED_ONCE = 'lm_nearby_loaded_once_flag_v1';
   const hasLoadedOnceRef = useRef(false);
 
@@ -246,7 +247,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       setMyLocation({ lat, lon });
       await updateMyLocation({ lat, lon }).catch(() => {});
       const res = await getUsersAroundMe({ lat, lon, radius: 2000 });
-      const apiUsers = res?.users || [];
+      const apiUsers = (res?.users || []).filter((u) => u?.emailVerified === true);
       const mapped = apiUsers.map((u) => mapBackendUserToUi(u, { lat, lon }));
       setNearbyUsers(mapped);
       // persist cache
@@ -281,7 +282,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         } catch (_) {}
       }
       const res = await getPopularUsers({ limit });
-      const apiUsers = res?.users || [];
+      const apiUsers = (res?.users || []).filter((u) => u?.emailVerified === true);
       const mapped = apiUsers.map((u) => mapBackendUserToUi(u));
       setPopularUsers(mapped);
       try { await AsyncStorage.setItem(STORAGE_POPULAR_USERS, JSON.stringify(mapped)); } catch (_) {}
