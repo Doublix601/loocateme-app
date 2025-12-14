@@ -149,16 +149,39 @@ const MyAccountScreen = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const handleOpenStats = () => {
+    const handleOpenStats = async () => {
         try {
-            const premium = !!user?.isPremium;
-            if (premium) {
+            // One-shot re-sync from server to avoid stale context after plan change
+            const res = await getMyUser();
+            const me = res?.user;
+            const nowPremium = !!me?.isPremium;
+            if (updateUser && me) {
+                updateUser({
+                    ...user,
+                    username: me.username || me.name || user?.username || '',
+                    firstName: typeof me.firstName === 'string' ? me.firstName : (user?.firstName || ''),
+                    lastName: typeof me.lastName === 'string' ? me.lastName : (user?.lastName || ''),
+                    customName: typeof me.customName === 'string' ? me.customName : (user?.customName || ''),
+                    bio: typeof me.bio === 'string' ? me.bio : (user?.bio || ''),
+                    photo: me.profileImageUrl || user?.photo || null,
+                    socialMedia: Array.isArray(me.socialNetworks) ? mapNetworksToSocialMedia(me.socialNetworks) : (user?.socialMedia || []),
+                    isVisible: me.isVisible !== false,
+                    isPremium: nowPremium,
+                    premiumTrialEnd: me.premiumTrialEnd || null,
+                    consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
+                    privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
+                });
+            }
+            if (nowPremium) {
                 onOpenStatistics && onOpenStatistics();
             } else {
                 onOpenPremiumPaywall && onOpenPremiumPaywall();
             }
         } catch (_) {
-            onOpenPremiumPaywall && onOpenPremiumPaywall();
+            // Fallback to current context state
+            const premium = !!user?.isPremium;
+            if (premium) onOpenStatistics && onOpenStatistics();
+            else onOpenPremiumPaywall && onOpenPremiumPaywall();
         }
     };
 
@@ -271,6 +294,30 @@ const MyAccountScreen = ({
             })
             .filter(Boolean);
 
+    // After any profile update, reload my profile from backend to keep context fully in sync
+    const refreshMyProfile = async () => {
+        try {
+            const res = await getMyUser();
+            const me = res?.user;
+            if (!me || !updateUser) return;
+            updateUser({
+                ...user,
+                username: me.username || me.name || user.username || '',
+                firstName: typeof me.firstName === 'string' ? me.firstName : (user.firstName || ''),
+                lastName: typeof me.lastName === 'string' ? me.lastName : (user.lastName || ''),
+                customName: typeof me.customName === 'string' ? me.customName : (user.customName || ''),
+                bio: typeof me.bio === 'string' ? me.bio : (user.bio || ''),
+                photo: me.profileImageUrl || user.photo || null,
+                socialMedia: Array.isArray(me.socialNetworks) ? mapNetworksToSocialMedia(me.socialNetworks) : (user.socialMedia || []),
+                isVisible: me.isVisible !== false,
+                isPremium: !!me.isPremium,
+                premiumTrialEnd: me.premiumTrialEnd || null,
+                consent: me.consent || user.consent || { accepted: false, version: '', consentAt: null },
+                privacyPreferences: me.privacyPreferences || user.privacyPreferences || { analytics: false, marketing: false },
+            });
+        } catch (_) {}
+    };
+
     const handleEdit = (type) => {
         setEditType(type);
         setNewValue(user[type]);
@@ -296,6 +343,7 @@ const MyAccountScreen = ({
                     bio: updated.bio ?? user.bio,
                     photo: updated.profileImageUrl ?? user.photo,
                 });
+                await refreshMyProfile();
             } else if (editType === 'bio') {
                 // La bio peut être une chaîne vide: on envoie tel quel
                 const res = await apiUpdateProfile({ bio: raw });
@@ -306,6 +354,7 @@ const MyAccountScreen = ({
                     bio: updated.bio ?? raw,
                     photo: updated.profileImageUrl ?? user.photo,
                 });
+                await refreshMyProfile();
             } else if (editType === 'firstName') {
                 let normalized = raw.trim();
                 if (normalized) {
@@ -339,6 +388,7 @@ const MyAccountScreen = ({
                     bio: updated.bio ?? user.bio,
                     photo: updated.profileImageUrl ?? user.photo,
                 });
+                await refreshMyProfile();
             } else if (editType === 'lastName') {
                 let normalized = raw.trim();
                 if (normalized) {
@@ -371,6 +421,7 @@ const MyAccountScreen = ({
                     bio: updated.bio ?? user.bio,
                     photo: updated.profileImageUrl ?? user.photo,
                 });
+                await refreshMyProfile();
             } else if (editType === 'customName') {
                 const normalized = raw.trim();
                 // Interdire de vider le nom personnalisé si prénom ou nom sont vides
@@ -389,6 +440,7 @@ const MyAccountScreen = ({
                     bio: updated.bio ?? user.bio,
                     photo: updated.profileImageUrl ?? user.photo,
                 });
+                await refreshMyProfile();
             }
         } catch (e) {
             Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
@@ -430,6 +482,7 @@ const MyAccountScreen = ({
             setShowSocialModal(false);
             setSelectedSocialPlatform('');
             setNewValue('');
+            await refreshMyProfile();
         } catch (e) {
             console.error('[MyAccount] Add social error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             Alert.alert('Erreur', e?.message || "Impossible d'ajouter le réseau social");
@@ -553,6 +606,7 @@ const MyAccountScreen = ({
             setSocialLinks(mapped);
             updateUser({ ...user, socialMedia: mapped });
             setSocialModalVisible(false);
+            await refreshMyProfile();
         } catch (e) {
             console.error('[MyAccount] Edit social error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             Alert.alert('Erreur', e?.message || "Impossible de modifier le réseau social");
@@ -572,6 +626,7 @@ const MyAccountScreen = ({
             setSocialLinks(mapped);
             updateUser({ ...user, socialMedia: mapped });
             setSocialModalVisible(false);
+            await refreshMyProfile();
         } catch (e) {
             console.error('[MyAccount] Delete social error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             Alert.alert('Erreur', e?.message || "Impossible de supprimer le réseau social");
@@ -619,6 +674,7 @@ const MyAccountScreen = ({
                         username: updated.name ?? user.username,
                         bio: updated.bio ?? user.bio,
                     });
+                    await refreshMyProfile();
                 } catch (e2) {
                     Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
                 }
@@ -647,6 +703,7 @@ const MyAccountScreen = ({
                             username: updated.name ?? user.username,
                             bio: updated.bio ?? user.bio,
                         });
+                        await refreshMyProfile();
                     } catch (e2) {
                         console.error('[MyAccount] Upload photo (web) error', { code: e2?.code, message: e2?.message, status: e2?.status });
                         Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
@@ -682,6 +739,7 @@ const MyAccountScreen = ({
                         username: updated.name ?? user.username,
                         bio: updated.bio ?? user.bio,
                     });
+                    await refreshMyProfile();
                 } catch (e2) {
                     Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
                 }
@@ -704,6 +762,7 @@ const MyAccountScreen = ({
                 username: updated.name ?? user.username,
                 bio: updated.bio ?? user.bio,
             });
+            await refreshMyProfile();
         } catch (e) {
             console.error('[MyAccount] Delete photo error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             Alert.alert('Erreur', e?.message || "Impossible de supprimer la photo de profil");

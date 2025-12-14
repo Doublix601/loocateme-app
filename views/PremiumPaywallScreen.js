@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert, ScrollView, Image, PanResponder, Platform, Linking } from 'react-native';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { getMyUser } from '../components/ApiRequest';
+import { subscribe } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
 
 const { width, height } = Dimensions.get('window');
@@ -56,6 +57,22 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
     return () => { cancelled = true; };
     // On veut exécuter cette vérif uniquement au montage
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Réagir au signal global de reload UI (ex: upgrade/downgrade depuis un autre écran/appareil)
+  useEffect(() => {
+    const off = subscribe('ui:reload', async () => {
+      try {
+        const res = await getMyUser();
+        const me = res?.user;
+        const nowPremium = !!me?.isPremium;
+        if (nowPremium) {
+          if (onAlreadyPremium) onAlreadyPremium();
+          else if (onBack) onBack();
+        }
+      } catch (_) {}
+    });
+    return () => { try { off && off(); } catch (_) {} };
   }, []);
 
   // Geste de retour (slide droite)

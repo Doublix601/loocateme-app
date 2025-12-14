@@ -1,15 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder } from 'react-native';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
-import { getStatsOverview, getDetailedProfileViews } from '../components/ApiRequest';
+import { getStatsOverview, getDetailedProfileViews, getMyUser } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { subscribe } from '../components/EventBus';
+import { UserContext } from '../components/contexts/UserContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const { colors } = useTheme();
+  const { user } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
@@ -69,29 +71,50 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (!user?.isPremium) return; // ne pas charger si compte Free
+    load();
+  }, [user?.isPremium]);
+
+  // One-shot recheck on mount in case context is stale right after upgrade
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (user?.isPremium) return;
+        const res = await getMyUser();
+        const me = res?.user;
+        if (cancelled) return;
+        if (me?.isPremium) {
+          // trigger load paths by updating a local state dependency
+          load();
+        }
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+    // run only on first mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Rafraîchir automatiquement quand un clic social est tracké ailleurs dans l'app
   useEffect(() => {
-    const unsub = subscribe('social_click_tracked', () => {
-      load();
-    });
+    if (!user?.isPremium) return;
+    const unsub = subscribe('social_click_tracked', () => { load(); });
     return () => { try { unsub && unsub(); } catch (_) {} };
-  }, []);
+  }, [user?.isPremium]);
 
   // Polling léger pour récupérer les mises à jour effectuées depuis d'autres appareils
   useEffect(() => {
+    if (!user?.isPremium) return;
     let timer = null;
     const start = () => {
       // rafraîchit toutes les 10 secondes pendant que l'écran est monté
-      timer = setInterval(() => {
-        load();
-      }, 10000);
+      timer = setInterval(() => { load(); }, 10000);
     };
     const stop = () => { if (timer) { try { clearInterval(timer); } catch (_) {} timer = null; } };
     start();
     return () => stop();
-  }, []);
+  }, [user?.isPremium]);
 
   async function loadDetailed() {
     setDetailedLoading(true);
@@ -110,6 +133,29 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     } finally {
       setDetailedLoading(false);
     }
+  }
+
+  // Vue paywall pour les comptes Free
+  if (!user?.isPremium) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backIcon} />
+          </TouchableOpacity>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Statistiques</Text>
+        </View>
+        <View style={styles.centerBox}>
+          <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Fonctionnalité Premium</Text>
+          <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
+            Les statistiques sont réservées aux comptes Premium.
+          </Text>
+          <TouchableOpacity onPress={onBack} style={styles.paywallBtn}>
+            <Text style={styles.paywallBtnText}>Retour</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   useEffect(() => { loadDetailed(); }, []);

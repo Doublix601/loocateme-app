@@ -4,6 +4,7 @@ import { getServerAddress } from './ServerUtils';
 import { publish } from './EventBus';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { optimizeImageForUpload } from './ImageUtils';
+import { Platform } from 'react-native';
 
 const resolvedBase = process.env.EXPO_PUBLIC_API_URL
   ? String(process.env.EXPO_PUBLIC_API_URL)
@@ -65,12 +66,20 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         console.log(`[API] Using BASE_URL: ${BASE_URL}`);
         loggedBaseUrlOnce = true;
     }
-    const url = `${BASE_URL}${path}`;
-
+    // Prepare request init upfront so we can safely append headers below
     const init = {
         method,
         headers: { ...headers },
     };
+
+    // Enforce shouldReload parameter on all API calls except login/signup (backend requirement)
+    const isLoginOrSignup = typeof path === 'string' && (path.startsWith('/auth/login') || path.startsWith('/auth/signup'));
+    let url = `${BASE_URL}${path}`;
+    if (!isLoginOrSignup) {
+        const joiner = url.includes('?') ? '&' : '?';
+        url = `${url}${joiner}shouldReload=1`;
+        init.headers['X-Should-Reload'] = '1';
+    }
 
     // Only include credentials when explicitly required (e.g., refresh/logout)
     if (includeCredentials) {
@@ -164,7 +173,9 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 
     // Attempt refresh on 401 once (only for non-auth endpoints)
     const isAuthPath = typeof path === 'string' && path.startsWith('/auth/');
-    if (res.status === 401 && retry && accessToken && !isAuthPath) {
+    // Do NOT attempt refresh on native platforms (RN) because backend uses httpOnly cookies → web-only
+    const canAttemptRefresh = Platform && Platform.OS === 'web';
+    if (res.status === 401 && retry && accessToken && !isAuthPath && canAttemptRefresh) {
         try {
             const refreshed = await refreshAccessToken();
             if (refreshed?.accessToken) {
@@ -177,6 +188,15 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
             console.error('[API] Refresh token failed', { url: `${BASE_URL}/auth/refresh`, status: refreshErr?.status, error: refreshErr?.message || refreshErr });
         }
     }
+
+    // If backend signals UI reload (abonnement changé), publish event and clear cache
+    try {
+        const headerReload = res?.headers?.get && res.headers.get('X-UI-Reload');
+        if (headerReload === '1') {
+            try { clearApiCache(); } catch (_) {}
+            try { publish('ui:reload'); } catch (_) {}
+        }
+    } catch (_) {}
 
     // Parse JSON or throw error
     let data = null;
@@ -194,12 +214,15 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         // Detect authentication/user-not-found errors and auto-logout
         const code = data?.code;
         const msg = (data?.message || '').toString().toLowerCase();
-        const isAuthStatus = res.status === 401 || res.status === 403;
-        const isAuthCode = code === 'AUTH_MISSING' || code === 'AUTH_INVALID' || code === 'REFRESH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
+        // Only treat 401 as an authentication status. 403s are feature/business restrictions in our app.
+        const isAuthStatus = res.status === 401;
+        // Do not treat REFRESH_INVALID as a standalone trigger (avoid logging out on failed /auth/refresh)
+        const isAuthCode = code === 'AUTH_MISSING' || code === 'AUTH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
         const isUserNotFound404 = res.status === 404 && (code === 'NOT_FOUND' || msg.includes('user not found')) && path.startsWith('/users');
-        // Do NOT treat visibility restriction as an auth error
-        const isVisibilityForbidden = res.status === 403 && code === 'INVISIBLE';
-        const shouldGlobalLogout = ((isAuthStatus && !isVisibilityForbidden) || isAuthCode || isUserNotFound404) && !suppressAuthHandling && !isAuthPath;
+        // Do NOT treat business 403 restrictions as auth errors
+        const nonAuthForbiddenCodes = new Set(['INVISIBLE', 'PREMIUM_REQUIRED', 'PLAN_REQUIRED', 'PAYWALL', 'PLAN_DOWNGRADED']);
+        const isNonAuthForbidden = res.status === 403 && (nonAuthForbiddenCodes.has(String(code)) || msg.includes('premium'));
+        const shouldGlobalLogout = ((isAuthStatus && !isNonAuthForbidden) || isAuthCode || isUserNotFound404) && !suppressAuthHandling && !isAuthPath;
         if (shouldGlobalLogout) {
             try {
                 await logout();
@@ -272,7 +295,8 @@ export async function forgotPassword(email) {
 
 // USERS
 export async function getMyUser() {
-    return request('/users/me', { method: 'GET' });
+    // Always bypass cache to avoid stale profile (socials, photo, premium, etc.)
+    return request('/users/me', { method: 'GET', cache: 'reload' });
 }
 
 export async function updateMyLocation({ lat, lon }) {
@@ -291,7 +315,8 @@ export async function getPopularUsers({ limit = 10 } = {}) {
 
 export async function searchUsers({ q, limit = 10 }) {
     const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) });
-    return request(`/users/search?${qs.toString()}`, { method: 'GET' });
+    // Use cache reload to minimize stale results in DebugScreen searches
+    return request(`/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
 // PROFILE
@@ -358,11 +383,17 @@ export async function deleteProfilePhoto() {
 
 // SOCIAL
 export async function upsertSocial({ type, handle }) {
-    return request('/social', { method: 'PUT', body: { type, handle } });
+    const data = await request('/social', { method: 'PUT', body: { type, handle } });
+    // Clear GET cache so subsequent getMyUser or lists reflect latest socials immediately
+    try { clearApiCache(); } catch (_) {}
+    return data;
 }
 
 export async function removeSocial(type) {
-    return request(`/social/${encodeURIComponent(type)}`, { method: 'DELETE' });
+    const data = await request(`/social/${encodeURIComponent(type)}`, { method: 'DELETE' });
+    // Clear GET cache so subsequent getMyUser or lists reflect latest socials immediately
+    try { clearApiCache(); } catch (_) {}
+    return data;
 }
 
 // EVENTS & STATS & PUSH & PREMIUM
@@ -429,7 +460,8 @@ export async function deleteMyAccount({ password }) {
 // ADMIN / DEBUG
 export async function getAllUsers({ page = 1, limit = 100 } = {}) {
     const p = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
-    return request(`/admin/users?${p}`, { method: 'GET' });
+    // Bypass cache to always fetch fresh data for admin listings used by DebugScreen
+    return request(`/admin/users?${p}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function setUserPremium(userId, isPremium) {

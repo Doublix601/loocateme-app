@@ -16,6 +16,8 @@ function mapBackendUser(u = {}) {
       ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
       : [],
     isVisible: u.isVisible !== false,
+    // Premium flag from backend; free if falsy
+    isPremium: !!u.isPremium,
     // Include GDPR consent and privacy preferences if present
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
@@ -33,6 +35,7 @@ export const UserProvider = ({ children }) => {
     photo: null,
     socialMedia: [],
     isVisible: true,
+    isPremium: false,
     consent: { accepted: false, version: '', consentAt: null },
     privacyPreferences: { analytics: false, marketing: false },
   });
@@ -80,6 +83,7 @@ export const UserProvider = ({ children }) => {
         photo: null,
         socialMedia: [],
         isVisible: false,
+        isPremium: false,
         consent: { accepted: false, version: '', consentAt: null },
         privacyPreferences: { analytics: false, marketing: false },
       });
@@ -93,7 +97,15 @@ export const UserProvider = ({ children }) => {
         // silent
       }
     });
-    return () => { offLogout(); offLogin(); };
+    // Lorsque le backend signale un reload UI (abonnement changé), recharger le profil
+    const offUiReload = subscribe('ui:reload', async () => {
+      try {
+        const res = await getMyUser();
+        const me = res?.user;
+        if (me) setUser(mapBackendUser(me));
+      } catch (_) {}
+    });
+    return () => { offLogout(); offLogin(); offUiReload(); };
   }, []);
 
   return (

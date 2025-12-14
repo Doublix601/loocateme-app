@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput } from 'react-native';
-import { getAllUsers, setUserPremium, searchUsers } from '../components/ApiRequest';
+import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix } from '../components/ApiRequest';
+import { subscribe } from '../components/EventBus';
 
 const DebugScreen = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
@@ -36,12 +37,28 @@ const DebugScreen = ({ onBack }) => {
       setUsers((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, isPremium } : u)));
       setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, isPremium } : u)));
       setSelectedUser((prev) => (prev && String(prev._id || prev.id) === String(userId) ? { ...prev, isPremium } : prev));
+      // Invalidate admin cache to avoid stale data and refetch
+      try { invalidateApiCacheByPrefix('/api/admin'); } catch (_) {}
+      try { await runAllApiUsers(); } catch (_) {}
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de changer le rôle.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Réagir au signal global de reload UI pour rafraîchir les listes (utile si on modifie son propre plan)
+  useEffect(() => {
+    const off = subscribe('ui:reload', () => {
+      try { runAllApiUsers(); } catch (_) {}
+    });
+    return () => { try { off && off(); } catch (_) {} };
+  }, []);
+
+  // Charger systématiquement des données fraîches à l'ouverture de l'écran
+  useEffect(() => {
+    try { runAllApiUsers(); } catch (_) {}
+  }, []);
 
   // Recherche avec debounce
   useEffect(() => {

@@ -293,7 +293,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     }
   };
 
-  // Initial load: restore caches, avoid refetch if already loaded once
+  // Initial load: restore caches, then FORCE a fresh reload from network at app open
   useEffect(() => {
     (async () => {
       try {
@@ -310,13 +310,10 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         }
       } catch (_) {}
 
-      // Restore popular cache or prefill
-      fetchPopular(20, { force: false }).catch(() => {});
-
-      // Only fetch nearby from network on the very first opening
-      if ((!users || users.length === 0) && !hasLoadedOnceRef.current) {
-        fetchNearby({ force: true });
-      }
+      // Always refresh from network on app open to avoid stale lists
+      fetchPopular(20, { force: true }).catch(() => {});
+      setRefreshing(true);
+      fetchNearby({ force: true }).finally(() => setRefreshing(false));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
