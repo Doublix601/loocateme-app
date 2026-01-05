@@ -472,3 +472,9 @@ export async function setUserPremium(userId, isPremium) {
         body: { isPremium: !!isPremium },
     });
 }
+
+// ADMIN: push de test/unifié
+export async function sendAdminPush(options = {}) {
+    // options: { userIds, tokens, title, body, data, imageUrl, sound, badge, androidChannelId, priority, collapseKey, mutableContent, contentAvailable }
+    return request('/admin/push/send', { method: 'POST', body: options, cache: 'reload' });
+}

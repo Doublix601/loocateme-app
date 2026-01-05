@@ -24,7 +24,6 @@
           "NSAllowsArbitraryLoads": true
         },
         "UIBackgroundModes": [
-          "location",
           "location"
         ],
         "NSLocationWhenInUseUsageDescription": "Votre position est utilisée pour afficher les utilisateurs autour de vous.",
@@ -44,7 +43,8 @@
       "favicon": "./assets/appIcons/AppIcon.png"
     },
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ],
     "extra": {
       "eas": {
