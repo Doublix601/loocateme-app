@@ -10,17 +10,17 @@
       },
       "developmentClient": true,
       "distribution": "internal",
-      "node": "18.20.3"
+      "node": "20.19.0"
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "node": "18.20.3"
+      "node": "20.19.0"
     },
     "production": {
       "distribution": "store",
       "channel": "production",
-      "node": "18.20.3"
+      "node": "20.19.0"
     }
   },
   "submit": {

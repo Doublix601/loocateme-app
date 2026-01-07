@@ -3,7 +3,7 @@
 Ce guide couvre l’installation des dépendances et le passage d’Expo Go à une app build prête pour TestFlight (bêta fermée) via EAS Build.
 
 Prérequis côté poste:
-- Node.js LTS 18 (recommandé 18.20.3) ou 20. N'utilisez pas Node 21+ ou 23+ pour ce projet.
+- Node.js LTS 20 (recommandé 20.18.0). N'utilisez pas Node 23+ pour ce projet.
 - Compte Apple Developer (99$/an) avec accès App Store Connect
 - Xcode installé (pour signer et pour les simulateurs)
 
@@ -62,18 +62,18 @@ Dépannage
 - Si vous changez le bundleIdentifier, regénérez les credentials dans EAS lors du prochain build.
 
 Versions de Node recommandées (important)
-- Le projet impose Node >=18 <21 (voir package.json). Des versions récentes comme 23.x provoqueront l’erreur: The engine "node" is incompatible with this module. Expected version ">=18 <21".
-- Un fichier .nvmrc est fourni à la racine du repo avec la version 18.20.3, alignée avec eas.json.
+- Le projet impose Node >=20 <23 (voir package.json). Des versions récentes comme 23.x provoqueront l’erreur: The engine "node" is incompatible with this module. Expected version ">=20 <23".
+- Un fichier .nvmrc est fourni à la racine du repo avec la version 20.18.0, alignée avec eas.json.
 
 Basculer de version facilement
 - Avec nvm:
-  - nvm install 18.20.3
-  - nvm use
-  - Optionnel: nvm alias default 18.20.3
+  - nvm install 20.18.0
+  - nvm use 20.18.0
+  - Optionnel: nvm alias default 20.18.0
 - Avec asdf:
   - asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git (si besoin)
-  - asdf install nodejs 18.20.3
-  - asdf local nodejs 18.20.3 (à la racine du repo)
+  - asdf install nodejs 20.18.0
+  - asdf local nodejs 20.18.0 (à la racine du repo)
 
 Vérifier:
-- node -v doit afficher v18.20.3 (ou une 18.x compatible) avant npm install / expo start.
+- node -v doit afficher v20.18.0 (ou une 20.x compatible) avant npm install / expo start.

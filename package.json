@@ -9,7 +9,9 @@
     "build:ios:preview": "npx eas build -p ios --profile preview",
     "build:ios:store": "npx eas build -p ios --profile production --auto-submit",
     "submit:ios": "npx eas submit -p ios --latest",
-    "release:ios": "bash ./scripts/eas-build-submit-ios.sh"
+    "release:ios": "bash ./scripts/eas-build-submit-ios.sh",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -40,7 +42,7 @@
   "name": "loocateme-app",
   "version": "1.0.0",
   "engines": {
-    "node": ">=18 <21",
+    "node": ">=20 <23",
     "npm": ">=9"
   }
 }

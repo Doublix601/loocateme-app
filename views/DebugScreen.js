@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput } from 'react-native';
 import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
+import { sendLocalNotification } from '../components/notifications';
 
 const DebugScreen = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
@@ -151,19 +152,6 @@ const DebugScreen = ({ onBack }) => {
       const ok = await ensureLocalNotifSetup();
       if (!ok) return;
       const Notifications = notificationsRef.current;
-      // Permissions
-      try {
-        const perm = await Notifications.getPermissionsAsync();
-        let status = perm?.status;
-        if (status !== 'granted') {
-          const req = await Notifications.requestPermissionsAsync();
-          status = req?.status;
-          if (status !== 'granted') {
-            Alert.alert('Permission requise', 'Autorisez les notifications pour tester.');
-            return;
-          }
-        }
-      } catch (_) {}
 
       const content = {
         title: locTitle || 'Notification',
@@ -175,55 +163,80 @@ const DebugScreen = ({ onBack }) => {
       }
       const delay = parseInt(String(locDelaySec || '0'), 10) || 0;
       if (delay > 0) {
-        // Try native scheduling first
-        if (typeof Notifications?.scheduleNotificationAsync === 'function') {
-          await Notifications.scheduleNotificationAsync({
-            content,
-            trigger: { seconds: Math.max(1, delay) },
-          });
-          Alert.alert('Programmé', `Notification dans ${Math.max(1, delay)}s`);
-        } else if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.Notification !== 'undefined') {
-          // Fallback for web where expo-notifications scheduling may be unavailable
-          const seconds = Math.max(1, delay);
+        // Utilise le helper qui programme via scheduleNotificationAsync
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
           try {
-            if (window.Notification.permission !== 'granted') {
-              await window.Notification.requestPermission();
-            }
-          } catch (_) {}
-          setTimeout(() => {
+            await sendLocalNotification(content, { delaySeconds: Math.max(1, delay) });
+            Alert.alert('Programmé', `Notification dans ${Math.max(1, delay)}s`);
+          } catch (err) {
+            Alert.alert(
+              'Non disponible',
+              'La planification de notifications locales n’est pas disponible dans cet environnement. Sur iOS/Android, utilisez un build de dev (EAS) avec le plugin expo-notifications.'
+            );
+          }
+        } else if (Platform.OS === 'web') {
+          // Fallback for web where expo-notifications scheduling may be unavailable
+          if (typeof window !== 'undefined' && typeof window.Notification !== 'undefined') {
+            const seconds = Math.max(1, delay);
             try {
+              if (window.Notification.permission !== 'granted') {
+                await window.Notification.requestPermission();
+              }
+            } catch (_) {}
+            setTimeout(() => {
+              try {
+                if (window.Notification.permission === 'granted') {
+                  new window.Notification(content.title || 'Notification', { body: content.body || '', data: content.data });
+                } else {
+                  Alert.alert('Permission requise', 'Autorisez les notifications du navigateur pour tester.');
+                }
+              } catch (_) {}
+            }, seconds * 1000);
+            Alert.alert('Programmé (web)', `Notification dans ${seconds}s`);
+          } else {
+            Alert.alert('Non supporté', "Les notifications web ne sont pas supportées par ce navigateur.");
+          }
+        } else {
+          Alert.alert(
+            'Non disponible',
+            'Notifications.scheduleNotificationAsync est indisponible sur cette plateforme (probablement Expo Web, simulateur ou build sans plugin).'
+          );
+        }
+      } else {
+        // Envoi immédiat: utiliser scheduleNotificationAsync avec trigger: null
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          try {
+            await sendLocalNotification(content, { delaySeconds: 0 });
+            Alert.alert('Affichée', 'Notification locale affichée.');
+          } catch (err) {
+            Alert.alert(
+              'Non disponible',
+              'Notifications locales indisponibles dans cet environnement. Sur iOS/Android, utilisez un build de dev (EAS) et ajoutez le plugin expo-notifications.'
+            );
+          }
+        } else if (Platform.OS === 'web') {
+          if (typeof window !== 'undefined' && typeof window.Notification !== 'undefined') {
+            try {
+              if (window.Notification.permission !== 'granted') {
+                await window.Notification.requestPermission();
+              }
               if (window.Notification.permission === 'granted') {
                 new window.Notification(content.title || 'Notification', { body: content.body || '', data: content.data });
+                Alert.alert('Affichée (web)', 'Notification locale affichée (web).');
               } else {
                 Alert.alert('Permission requise', 'Autorisez les notifications du navigateur pour tester.');
               }
-            } catch (_) {}
-          }, seconds * 1000);
-          Alert.alert('Programmé (web)', `Notification dans ${seconds}s`);
-        } else {
-          throw new Error('Notifications.scheduleNotificationAsync indisponible sur cette plateforme.');
-        }
-      } else {
-        // Immediate display
-        if (typeof Notifications?.presentNotificationAsync === 'function') {
-          await Notifications.presentNotificationAsync(content);
-          Alert.alert('Affichée', 'Notification locale affichée.');
-        } else if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof window.Notification !== 'undefined') {
-          try {
-            if (window.Notification.permission !== 'granted') {
-              await window.Notification.requestPermission();
+            } catch (err) {
+              Alert.alert('Non supporté', "Les notifications locales ne sont pas supportées sur cette plateforme.");
             }
-            if (window.Notification.permission === 'granted') {
-              new window.Notification(content.title || 'Notification', { body: content.body || '', data: content.data });
-              Alert.alert('Affichée (web)', 'Notification locale affichée (web).');
-            } else {
-              Alert.alert('Permission requise', 'Autorisez les notifications du navigateur pour tester.');
-            }
-          } catch (err) {
-            Alert.alert('Non supporté', "Les notifications locales ne sont pas supportées sur cette plateforme.");
+          } else {
+            Alert.alert('Non supporté', "Les notifications web ne sont pas supportées par ce navigateur.");
           }
         } else {
-          throw new Error('Notifications.presentNotificationAsync indisponible sur cette plateforme.');
+          Alert.alert(
+            'Non disponible',
+            'Notifications.presentNotificationAsync est indisponible sur cette plateforme (probablement simulateur ou build sans plugin).'
+          );
         }
       }
     } catch (e) {
