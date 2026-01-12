@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState } from 'react-native';
+import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { Asset } from 'expo-asset';
 import LoginScreen from './views/LoginScreen';
@@ -18,6 +18,8 @@ import { UserProvider } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { initApiFromStorage, getAccessToken, getMyUser, clearApiCache } from './components/ApiRequest';
 import { subscribe } from './components/EventBus';
+import { initInactivityTracking } from './components/NotificationScheduler';
+import { registerPushToken } from './components/ApiRequest';
 
 function AppInner() {
   const [currentScreen, setCurrentScreen] = useState('Login');
@@ -102,6 +104,41 @@ function AppInner() {
       }
     };
     initAuth();
+  }, []);
+
+  // Notifications: inactivity reminder scheduling and push token registration
+  useEffect(() => {
+    // Start inactivity tracking (schedules reminder on background)
+    const stopTracking = initInactivityTracking({
+      // Tip: shorten in dev by setting e.g. 30 for 30s
+      devShortDelaySeconds: __DEV__ ? 0 : undefined,
+    });
+
+    // Register Expo push token with backend
+    (async () => {
+      try {
+        const mod = await import('expo-notifications');
+        const Notifications = mod?.default ?? mod;
+        // Ask permission (idempotent)
+        const perm = await Notifications.getPermissionsAsync();
+        if (perm?.status !== 'granted') {
+          await Notifications.requestPermissionsAsync();
+        }
+        if (Platform.OS === 'ios' || Platform.OS === 'android') {
+          const { expo } = require('./app.json');
+          const projectId = expo?.extra?.eas?.projectId;
+          const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+          const token = res?.data || res?.token || res;
+          if (token) {
+            try { await registerPushToken({ token, platform: Platform.OS }); } catch (_) {}
+          }
+        }
+      } catch (_e) {
+        // ignore if expo-notifications not available in current env
+      }
+    })();
+
+    return () => { try { stopTracking && stopTracking(); } catch (_) {} };
   }, []);
 
   // Invalidate API cache when app returns to foreground (freshness on reopen)

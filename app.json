@@ -1,25 +1,24 @@
 {
   "expo": {
-    "name": "loocateme-app",
+    "name": "LoocateMe",
     "slug": "loocateme-app",
     "version": "1.0.0",
     "runtimeVersion": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/appIcons/AppIcon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "updates": {
       "url": "https://u.expo.dev/da2f75d4-ab23-4073-8db9-1ab186cc22d6"
     },
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/appIcons/AppIcon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "me.loocate.app",
-      "icon" : "./assets/appIcons/AppIcon.png",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -34,10 +33,6 @@
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/appIcons/AppIcon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "me.loocate.app"
     },
     "web": {
