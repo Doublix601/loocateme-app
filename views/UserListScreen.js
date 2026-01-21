@@ -152,8 +152,12 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
       : [];
     let distance = null;
+    let locationCoordinates = null;
     try {
       const coords = u?.location?.coordinates; // [lon, lat]
+      if (Array.isArray(coords) && coords.length >= 2) {
+        locationCoordinates = coords;
+      }
       const ref = baseLatLon || myLocation;
       if (ref && Array.isArray(coords) && coords.length >= 2) {
         const [lon2, lat2] = coords;
@@ -170,6 +174,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       bio,
       photo,
       distance,
+      // Keep raw coordinates so Profile screen can compute distance when opening from Popular/search
+      locationCoordinates,
       socialMedias: socials,
     };
   };

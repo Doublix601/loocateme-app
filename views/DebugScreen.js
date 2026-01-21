@@ -149,98 +149,61 @@ const DebugScreen = ({ onBack }) => {
   const onSendLocalNotification = async () => {
     try {
       setSendingLocal(true);
+
+      // 1. Vérification initiale
       const ok = await ensureLocalNotifSetup();
       if (!ok) return;
-      const Notifications = notificationsRef.current;
 
+      // 2. Préparation du contenu
       const content = {
-        title: locTitle || 'Notification',
-        body: locBody || 'Test',
-        data: {},
+        title: locTitle?.trim() || 'LoocateMe',
+        body: locBody?.trim() || 'Ceci est un test de notification',
+        data: locDeepLink?.trim() ? { deepLink: locDeepLink.trim() } : {},
       };
-      if (locDeepLink && String(locDeepLink).trim()) {
-        content.data.deepLink = String(locDeepLink).trim();
-      }
-      const delay = parseInt(String(locDelaySec || '0'), 10) || 0;
-      if (delay > 0) {
-        // Utilise le helper qui programme via scheduleNotificationAsync
-        if (Platform.OS === 'ios' || Platform.OS === 'android') {
-          try {
-            await sendLocalNotification(content, { delaySeconds: Math.max(1, delay) });
-            Alert.alert('Programmé', `Notification dans ${Math.max(1, delay)}s`);
-          } catch (err) {
-            Alert.alert(
-              'Non disponible',
-              'La planification de notifications locales n’est pas disponible dans cet environnement. Sur iOS/Android, utilisez un build de dev (EAS) avec le plugin expo-notifications.'
-            );
-          }
-        } else if (Platform.OS === 'web') {
-          // Fallback for web where expo-notifications scheduling may be unavailable
-          if (typeof window !== 'undefined' && typeof window.Notification !== 'undefined') {
-            const seconds = Math.max(1, delay);
-            try {
-              if (window.Notification.permission !== 'granted') {
-                await window.Notification.requestPermission();
-              }
-            } catch (_) {}
-            setTimeout(() => {
-              try {
-                if (window.Notification.permission === 'granted') {
-                  new window.Notification(content.title || 'Notification', { body: content.body || '', data: content.data });
-                } else {
-                  Alert.alert('Permission requise', 'Autorisez les notifications du navigateur pour tester.');
-                }
-              } catch (_) {}
-            }, seconds * 1000);
-            Alert.alert('Programmé (web)', `Notification dans ${seconds}s`);
-          } else {
-            Alert.alert('Non supporté', "Les notifications web ne sont pas supportées par ce navigateur.");
-          }
-        } else {
-          Alert.alert(
-            'Non disponible',
-            'Notifications.scheduleNotificationAsync est indisponible sur cette plateforme (probablement Expo Web, simulateur ou build sans plugin).'
-          );
+
+      const delay = Math.max(0, parseInt(String(locDelaySec || '0'), 10));
+
+      // 3. Logique par plateforme
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        try {
+          await sendLocalNotification(content, { delaySeconds: delay });
+
+          const msg = delay > 0
+              ? `Notification programmée dans ${delay}s`
+              : 'Notification affichée immédiatement';
+          Alert.alert('Succès', msg);
+
+        } catch (err) {
+          console.error("Détails erreur native:", err);
+          Alert.alert('Erreur Native', err.message);
         }
-      } else {
-        // Envoi immédiat: utiliser scheduleNotificationAsync avec trigger: null
-        if (Platform.OS === 'ios' || Platform.OS === 'android') {
-          try {
-            await sendLocalNotification(content, { delaySeconds: 0 });
-            Alert.alert('Affichée', 'Notification locale affichée.');
-          } catch (err) {
-            Alert.alert(
-              'Non disponible',
-              'Notifications locales indisponibles dans cet environnement. Sur iOS/Android, utilisez un build de dev (EAS) et ajoutez le plugin expo-notifications.'
-            );
+      }
+      else if (Platform.OS === 'web') {
+        // Fallback Web
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (window.Notification.permission !== 'granted') {
+            await window.Notification.requestPermission();
           }
-        } else if (Platform.OS === 'web') {
-          if (typeof window !== 'undefined' && typeof window.Notification !== 'undefined') {
-            try {
-              if (window.Notification.permission !== 'granted') {
-                await window.Notification.requestPermission();
-              }
-              if (window.Notification.permission === 'granted') {
-                new window.Notification(content.title || 'Notification', { body: content.body || '', data: content.data });
-                Alert.alert('Affichée (web)', 'Notification locale affichée (web).');
-              } else {
-                Alert.alert('Permission requise', 'Autorisez les notifications du navigateur pour tester.');
-              }
-            } catch (err) {
-              Alert.alert('Non supporté', "Les notifications locales ne sont pas supportées sur cette plateforme.");
+
+          const deliverWeb = () => {
+            if (window.Notification.permission === 'granted') {
+              new window.Notification(content.title, { body: content.body });
             }
+          };
+
+          if (delay > 0) {
+            setTimeout(deliverWeb, delay * 1000);
+            Alert.alert('Web', `Programmé dans ${delay}s`);
           } else {
-            Alert.alert('Non supporté', "Les notifications web ne sont pas supportées par ce navigateur.");
+            deliverWeb();
           }
         } else {
-          Alert.alert(
-            'Non disponible',
-            'Notifications.presentNotificationAsync est indisponible sur cette plateforme (probablement simulateur ou build sans plugin).'
-          );
+          Alert.alert('Non supporté', "Notifications non disponibles sur ce navigateur.");
         }
       }
     } catch (e) {
-      Alert.alert('Erreur notification', e?.message || String(e));
+      console.error(e);
+      Alert.alert('Erreur', e?.message || "Une erreur inconnue est survenue");
     } finally {
       setSendingLocal(false);
     }

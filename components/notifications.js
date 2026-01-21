@@ -54,26 +54,40 @@ export async function ensureNotificationPermissions(Notifications) {
 /**
  * Envoie une notification locale en utilisant scheduleNotificationAsync.
  * - Immédiat: trigger: null
- * - Différé: trigger: { seconds }
+ * - Différé: trigger: { type: 'timeInterval', seconds }
  */
 export async function sendLocalNotification(content, { delaySeconds = 0 } = {}) {
   const Notifications = await ensureNotificationsSetup();
   const hasPerm = await ensureNotificationPermissions(Notifications);
+
   if (!hasPerm) {
     const err = new Error('Notifications non autorisées');
     err.code = 'E_NO_PERMISSION';
     throw err;
   }
-  const delay = Number(delaySeconds) || 0;
-  if (delay > 0) {
-    return Notifications.scheduleNotificationAsync({
-      content,
-      trigger: { seconds: Math.max(1, delay) },
-    });
-  }
-  // immédiat
+
+  const delay = Math.floor(Number(delaySeconds)) || 0;
+
+  // Préparation du contenu avec ChannelId pour Android
+  const finalContent = {
+    ...content,
+    android: {
+      channelId: 'default', // Assure la compatibilité Android
+      ...content.android,
+    },
+  };
+
+  // Correction du Trigger : ajout explicite du type
+  const trigger = delay > 0
+      ? {
+        type: 'timeInterval', // Correction pour l'erreur "trigger object invalid"
+        seconds: delay,
+        repeats: false
+      }
+      : null;
+
   return Notifications.scheduleNotificationAsync({
-    content,
-    trigger: null,
+    content: finalContent,
+    trigger: trigger,
   });
 }
