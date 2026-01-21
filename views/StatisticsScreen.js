@@ -140,18 +140,29 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backIcon} />
+          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+            <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: colors.accent }]} />
           </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Statistiques</Text>
+          <Text style={[styles.title, { color: colors.accent }]}>Statistiques</Text>
+          <View style={{ width: 28 }} />
         </View>
         <View style={styles.centerBox}>
-          <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Fonctionnalité Premium</Text>
+          <Image 
+            source={require('../assets/appIcons/userProfile.png')} 
+            style={{ width: 64, height: 64, tintColor: colors.accent, marginBottom: 16, opacity: 0.5 }} 
+          />
+          <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Qui te stalke ? 👀</Text>
           <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
-            Les statistiques sont réservées aux comptes Premium.
+            Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
           </Text>
-          <TouchableOpacity onPress={onBack} style={styles.paywallBtn}>
-            <Text style={styles.paywallBtnText}>Retour</Text>
+          <TouchableOpacity 
+            onPress={() => publish('ui:open_premium')} 
+            style={[styles.paywallBtn, { backgroundColor: colors.accent }]}
+          >
+            <Text style={styles.paywallBtnText}>Découvrir mes visiteurs</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onBack} style={{ marginTop: 16 }}>
+            <Text style={{ color: colors.textMuted }}>Plus tard</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -319,4 +330,9 @@ const styles = StyleSheet.create({
   avatarPh: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#00c2cb' },
   moreBtn: { paddingVertical: 10, alignItems: 'center' },
   moreTxt: { fontWeight: '700' },
+  centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  paywallTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 12 },
+  paywallText: { fontSize: 16, textAlign: 'center', marginBottom: 24, lineHeight: 22 },
+  paywallBtn: { paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  paywallBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 });

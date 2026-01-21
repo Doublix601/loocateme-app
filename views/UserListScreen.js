@@ -301,9 +301,12 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
     }
   };
 
-  // Initial load: restore caches, then FORCE a fresh reload from network at app open
+  // Initial load: restore caches
   useEffect(() => {
     (async () => {
+      let hasNearbyCache = false;
+      let hasPopularCache = false;
+
       try {
         const flag = await AsyncStorage.getItem(STORAGE_NEARBY_LOADED_ONCE);
         hasLoadedOnceRef.current = flag === '1';
@@ -314,14 +317,31 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         const raw = await AsyncStorage.getItem(STORAGE_NEARBY_USERS);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) setNearbyUsers(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setNearbyUsers(parsed);
+            hasNearbyCache = true;
+          }
         }
       } catch (_) {}
 
-      // Always refresh from network on app open to avoid stale lists
-      fetchPopular(20, { force: true }).catch(() => {});
-      setRefreshing(true);
-      fetchNearby({ force: true }).finally(() => setRefreshing(false));
+      // Restore popular cache (missing in previous version but useful)
+      try {
+        const rawPop = await AsyncStorage.getItem(STORAGE_POPULAR_USERS);
+        if (rawPop) {
+          const parsedPop = JSON.parse(rawPop);
+          if (Array.isArray(parsedPop) && parsedPop.length > 0) {
+            setPopularUsers(parsedPop);
+            hasPopularCache = true;
+          }
+        }
+      } catch (_) {}
+
+      // If no cache, force a refresh immediately
+      if (!hasNearbyCache || !hasPopularCache) {
+        setRefreshing(true);
+        fetchPopular(20, { force: true }).catch(() => {});
+        fetchNearby({ force: true }).finally(() => setRefreshing(false));
+      }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

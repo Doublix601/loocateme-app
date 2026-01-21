@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Platform } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
 import { Asset } from 'expo-asset';
 import Constants from 'expo-constants';
@@ -93,9 +94,15 @@ function AppInner() {
             const me = res?.user;
             const consentAccepted = !!(me?.consent?.accepted);
             setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
+            if (consentAccepted) {
+              // Trigger refresh for initial cold start
+              // Increase delay to ensure UserListScreen is mounted and subscribed
+              setTimeout(() => publish('userlist:refresh'), 1000);
+            }
           } catch (_e) {
             // If fetching me fails, fallback to UserList; global auth handler will handle errors
             setCurrentScreen('UserList');
+            setTimeout(() => publish('userlist:refresh'), 1000);
           }
         }
       } catch (e) {
@@ -172,8 +179,15 @@ function AppInner() {
             setCurrentScreen('UserList');
             // Déclenche un rafraîchissement forcé de la liste
             setTimeout(() => publish('userlist:refresh'), 100);
-          } else if (data?.kind === 'profile_view' || data?.kind === 'social_click') {
+          } else if (data?.kind === 'profile_view' || data?.kind === 'social_click' || data?.kind === 'weekly_digest' || data?.url === 'loocateme://statistics') {
             setCurrentScreen('Statistics');
+          } else if (data?.kind === 'new_neighbor' && data?.neighborId) {
+            // Optionnel: rediriger vers le profil du voisin
+            // setSelectedUser({ _id: data.neighborId });
+            // setCurrentScreen('UserProfile');
+            // Pour l'instant on va sur la liste nearby car le profil nécessite un objet complet
+            setCurrentScreen('UserList');
+            setTimeout(() => publish('userlist:refresh'), 100);
           }
         });
       } catch (_) {}
@@ -238,7 +252,10 @@ function AppInner() {
       setUserListScrollOffset(0);
       setCurrentScreen('Login');
     });
-    return () => unsub();
+    const unsubPremium = subscribe('ui:open_premium', () => {
+      setCurrentScreen('PremiumPaywall');
+    });
+    return () => { unsub(); unsubPremium(); };
   }, []);
 
   const users = [
@@ -331,6 +348,8 @@ function AppInner() {
       // If fetching me fails, default to UserList; auth guard will handle errors elsewhere
       setCurrentScreen('UserList');
     }
+    // Trigger refresh for login
+    setTimeout(() => publish('userlist:refresh'), 100);
   };
   const handleForgotPassword = () => setCurrentScreen('ForgotPassword');
   const handleSignup = () => setCurrentScreen('Signup');
