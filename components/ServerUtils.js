@@ -2,7 +2,7 @@
 // Strategy (safe-by-default):
 // - If EXPO_PUBLIC_API_ORIGIN is provided, use it (developers can point to localhost manually)
 // - Otherwise, default to production API origin over HTTP (per project requirement)
-const DEFAULT_ORIGIN = process.env.EXPO_PUBLIC_API_ORIGIN || 'http://api.loocate.me';
+const DEFAULT_ORIGIN = process.env.EXPO_PUBLIC_API_ORIGIN || 'https://api.loocate.me';
 
 export function getServerAddress() {
     // Kept for backward compatibility; returns the origin

@@ -127,10 +127,16 @@ function AppInner() {
         }
         if (Platform.OS === 'ios' || Platform.OS === 'android') {
           const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
+          if (!projectId) {
+            console.warn('[Notifications] No projectId found. Push tokens might fail in production.');
+          }
           const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-          const token = res?.data || res?.token || res;
+          const token = res?.data || res?.token || (typeof res === 'string' ? res : null);
           if (token) {
-            try { await registerPushToken({ token, platform: Platform.OS }); } catch (_) {}
+            console.log('[Notifications] Token retrieved:', token);
+            try { await registerPushToken({ token, platform: Platform.OS }); } catch (err) {
+              console.warn('[Notifications] Failed to register token with backend:', err.message);
+            }
           }
         }
       } catch (_e) {
@@ -309,9 +315,13 @@ function AppInner() {
         const mod = await import('expo-notifications');
         const Notifications = mod?.default ?? mod;
         const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
+        if (!projectId) {
+          console.warn('[Notifications] No projectId found during login. Push token registration might fail.');
+        }
         const tokRes = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-        const token = tokRes?.data || tokRes?.token || tokRes;
+        const token = tokRes?.data || tokRes?.token || (typeof tokRes === 'string' ? tokRes : null);
         if (token) {
+          console.log('[Notifications] Token retrieved during login:', token);
           await registerPushToken({ token, platform: Platform.OS });
         }
       } catch (_) {}

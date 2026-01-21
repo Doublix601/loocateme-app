@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/appIcons/AppIcon.png",
     "userInterfaceStyle": "light",
+    "scheme": "loocateme",
     "newArchEnabled": true,
     "updates": {
       "url": "https://u.expo.dev/da2f75d4-ab23-4073-8db9-1ab186cc22d6"
@@ -19,6 +20,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "me.loocate.app",
+      "scheme": "loocateme",
+      "associatedDomains": ["applinks:api.loocate.me"],
       "infoPlist": {
         "UIBackgroundModes": [
           "location",
@@ -32,7 +35,24 @@
     },
     "android": {
       "package": "me.loocate.app",
-      "googleServicesFile": "./google-services.json"
+      "scheme": "loocateme",
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "api.loocate.me"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "plugins": [
       "expo-asset",
