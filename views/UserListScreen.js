@@ -18,6 +18,7 @@ import { proxifyImageUrl } from '../components/ServerUtils';
 import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetVisibility, getPopularUsers, searchUsers, invalidateApiCacheByPrefix } from '../components/ApiRequest';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { UserContext } from '../components/contexts/UserContext';
+import { subscribe } from '../components/EventBus';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -321,6 +322,17 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       setRefreshing(true);
       fetchNearby({ force: true }).finally(() => setRefreshing(false));
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Listen for refresh events (e.g. from notification deep link)
+  useEffect(() => {
+    const unsub = subscribe('userlist:refresh', () => {
+      setRefreshing(true);
+      fetchPopular(20, { force: true }).catch(() => {});
+      fetchNearby({ force: true }).finally(() => setRefreshing(false));
+    });
+    return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

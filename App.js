@@ -17,7 +17,7 @@ import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import { UserProvider } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { initApiFromStorage, getAccessToken, getMyUser, clearApiCache } from './components/ApiRequest';
-import { subscribe } from './components/EventBus';
+import { subscribe, publish } from './components/EventBus';
 import { initInactivityTracking } from './components/NotificationScheduler';
 import { registerPushToken } from './components/ApiRequest';
 
@@ -141,7 +141,7 @@ function AppInner() {
     return () => { try { stopTracking && stopTracking(); } catch (_) {} };
   }, []);
 
-  // Invalidate API cache when app returns to foreground (freshness on reopen)
+    // Invalidate API cache when app returns to foreground (freshness on reopen)
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
       const wasBackground = appState.current.match(/inactive|background/);
@@ -150,7 +150,30 @@ function AppInner() {
         try { clearApiCache(); } catch (_) {}
       }
     });
-    return () => { try { subscription.remove(); } catch (_) {} };
+
+    // Handle push notification responses (deep links to Statistics)
+    let notifSub;
+    (async () => {
+      try {
+        const mod = await import('expo-notifications');
+        const Notifications = mod?.default ?? mod;
+        notifSub = Notifications.addNotificationResponseReceivedListener(response => {
+          const data = response?.notification?.request?.content?.data;
+          if (data?.url === 'loocateme://nearby' || data?.reason === 'inactivity_reminder') {
+            setCurrentScreen('UserList');
+            // Déclenche un rafraîchissement forcé de la liste
+            setTimeout(() => publish('userlist:refresh'), 100);
+          } else if (data?.kind === 'profile_view' || data?.kind === 'social_click') {
+            setCurrentScreen('Statistics');
+          }
+        });
+      } catch (_) {}
+    })();
+
+    return () => {
+      try { subscription.remove(); } catch (_) {}
+      try { notifSub && notifSub.remove(); } catch (_) {}
+    };
   }, []);
 
   // Handle email verification redirect: detect emailVerified=1 in URL
@@ -177,9 +200,23 @@ function AppInner() {
     };
 
     // Check initial URL when app starts (web or deep link)
-    Linking.getInitialURL().then(handleUrl).catch(() => {});
+    Linking.getInitialURL().then(url => {
+      if (url === 'loocateme://nearby') {
+        setCurrentScreen('UserList');
+        setTimeout(() => publish('userlist:refresh'), 500);
+      } else {
+        handleUrl(url);
+      }
+    }).catch(() => {});
     // Subscribe to future URL events while app is running
-    const sub = Linking.addEventListener('url', (evt) => handleUrl(evt?.url));
+    const sub = Linking.addEventListener('url', (evt) => {
+      if (evt?.url === 'loocateme://nearby') {
+        setCurrentScreen('UserList');
+        setTimeout(() => publish('userlist:refresh'), 100);
+      } else {
+        handleUrl(evt?.url);
+      }
+    });
     return () => {
       try { sub && sub.remove && sub.remove(); } catch {}
     };
@@ -263,6 +300,20 @@ function AppInner() {
       const res = await getMyUser();
       const me = res?.user;
       const consentAccepted = !!(me?.consent?.accepted);
+
+      // Re-register push token on login to ensure it's linked to the correct user
+      try {
+        const mod = await import('expo-notifications');
+        const Notifications = mod?.default ?? mod;
+        const { expo: expoCfg } = require('./app.json');
+        const projectId = expoCfg?.extra?.eas?.projectId;
+        const tokRes = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+        const token = tokRes?.data || tokRes?.token || tokRes;
+        if (token) {
+          await registerPushToken({ token, platform: Platform.OS });
+        }
+      } catch (_) {}
+
       setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
     } catch (_e) {
       // If fetching me fails, default to UserList; auth guard will handle errors elsewhere

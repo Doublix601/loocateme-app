@@ -27,12 +27,16 @@ export async function scheduleInactivityReminder({ delaySeconds = SIX_HOURS } = 
   await cancelInactivityReminder();
   const id = await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Garde ta visibilité 📈',
-      body: 'Ouvre LoocateMe pour redevenir visible dans la liste 🔝',
-      data: { reason: 'inactivity_6h' },
+      title: 'LoocateMe',
+      body: 'Reconnecte-toi pour rester visible !',
+      data: { reason: 'inactivity_reminder', url: 'loocateme://nearby' },
       sound: 'default',
     },
-    trigger: { seconds: Math.max(1, Number(delaySeconds) || SIX_HOURS) },
+    trigger: {
+      type: 'timeInterval',
+      seconds: Math.max(1, Number(delaySeconds) || SIX_HOURS),
+      repeats: false
+    },
   });
   await AsyncStorage.setItem(KEY_SCHEDULED_ID, String(id));
   return id;
@@ -54,8 +58,8 @@ export function initInactivityTracking({ devShortDelaySeconds } = {}) {
         await cancelInactivityReminder();
         await touchUserActivity();
       } else if (state === 'background' || state === 'inactive') {
-        // Schedule reminder in 6h (or shorter in dev)
-        const delay = Number(devShortDelaySeconds) > 0 ? Number(devShortDelaySeconds) : SIX_HOURS;
+        // Schedule reminder in 6h (or 5s in dev)
+        const delay = __DEV__ ? 5 : SIX_HOURS;
         await scheduleInactivityReminder({ delaySeconds: delay });
       }
     });
