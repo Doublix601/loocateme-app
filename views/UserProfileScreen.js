@@ -270,6 +270,28 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     return `${km.toFixed(km < 10 ? 1 : 0)} km`;
   }, []);
 
+  const formatLastSeen = React.useCallback((dateInput) => {
+    if (!dateInput) return null;
+    try {
+      const date = new Date(dateInput);
+      if (isNaN(date.getTime())) return null;
+      const now = new Date();
+      const diffMs = now - date;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHr = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHr / 24);
+
+      if (diffSec < 60) return "À l'instant";
+      if (diffMin < 60) return `Il y a ${diffMin} min`;
+      if (diffHr < 24) return `Il y a ${diffHr} h`;
+      if (diffDay === 1) return "Hier";
+      return `Il y a ${diffDay} j`;
+    } catch (_) {
+      return null;
+    }
+  }, []);
+
   React.useEffect(() => {
     (async () => {
       try {
@@ -364,10 +386,15 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
             ) : null}
 
             {currentUser?.isVisible !== false && (
-              <View style={{ alignItems: 'center', marginTop: height * 0.015 }}>
-                <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.015 }}>
+                <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent, marginRight: 8 }]}>
                   <Text style={[styles.distanceText, { color: colors.accent }]}>{user.distance ?? computedDistance ?? '—'}</Text>
                 </View>
+                {user.updatedAt && (
+                  <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
+                    <Text style={[styles.distanceText, { color: colors.accent }]}>{formatLastSeen(user.updatedAt)}</Text>
+                  </View>
+                )}
               </View>
             )}
 

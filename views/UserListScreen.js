@@ -178,6 +178,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       // Keep raw coordinates so Profile screen can compute distance when opening from Popular/search
       locationCoordinates,
       socialMedias: socials,
+      updatedAt: u?.location?.updatedAt || u?.updatedAt || null,
     };
   };
 
