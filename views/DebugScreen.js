@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput } from 'react-native';
-import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush } from '../components/ApiRequest';
+import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
 
@@ -25,6 +25,42 @@ const DebugScreen = ({ onBack }) => {
   const [pushContentAvail, setPushContentAvail] = useState(false);
   const [sendingPush, setSendingPush] = useState(false);
   const [pushResponse, setPushResponse] = useState(null);
+  const [currentPushToken, setCurrentPushToken] = useState('Chargement...');
+  const [registering, setRegistering] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const mod = await import('expo-notifications');
+        const Notifications = mod?.default ?? mod;
+        const Constants = (await import('expo-constants')).default;
+        const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+        const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+        setCurrentPushToken(res?.data || res?.token || String(res));
+      } catch (e) {
+        setCurrentPushToken('Erreur: ' + e.message);
+      }
+    })();
+  }, []);
+
+  const onForceRegister = async () => {
+    try {
+      setRegistering(true);
+      const mod = await import('expo-notifications');
+      const Notifications = mod?.default ?? mod;
+      const Constants = (await import('expo-constants')).default;
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+      const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+      const token = res?.data || res?.token || String(res);
+      setCurrentPushToken(token);
+      await registerPushToken({ token, platform: Platform.OS });
+      Alert.alert('Succès', 'Token envoyé au serveur');
+    } catch (e) {
+      Alert.alert('Erreur', e.message);
+    } finally {
+      setRegistering(false);
+    }
+  };
   // Local notifications (expo-notifications)
   const [locTitle, setLocTitle] = useState('Notif locale');
   const [locBody, setLocBody] = useState('Ceci est une notification locale');
@@ -277,6 +313,26 @@ const DebugScreen = ({ onBack }) => {
             </Text>
           </TouchableOpacity>
         </View>
+        {/* Test notifications */}
+        <Text style={styles.sectionTitle}>Expo Push Token</Text>
+        <View style={styles.card}>
+          <Text style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Token actuel :</Text>
+          <TextInput
+            style={[styles.input, { height: 'auto', minHeight: 40, fontSize: 11 }]}
+            value={currentPushToken}
+            multiline
+            editable={false}
+          />
+          <TouchableOpacity
+            style={[styles.cmdBtn, registering ? styles.btnDisabled : null, { marginTop: 10, backgroundColor: '#4a90e2' }]}
+            onPress={onForceRegister}
+            disabled={registering}
+          >
+            <ActivityIndicator animating={registering} size="small" color="#fff" style={{ position: 'absolute', left: 15 }} />
+            <Text style={styles.cmdTxt}>Forcer l'envoi au serveur</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Test notifications */}
         <Text style={styles.sectionTitle}>Test notifications (push)</Text>
         <View style={styles.card}>

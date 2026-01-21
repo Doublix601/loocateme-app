@@ -125,8 +125,8 @@ function AppInner() {
           await Notifications.requestPermissionsAsync();
         }
         if (Platform.OS === 'ios' || Platform.OS === 'android') {
-          const { expo } = require('./app.json');
-          const projectId = expo?.extra?.eas?.projectId;
+          const Constants = (await import('expo-constants')).default;
+          const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
           const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
           const token = res?.data || res?.token || res;
           if (token) {
@@ -308,8 +308,8 @@ function AppInner() {
       try {
         const mod = await import('expo-notifications');
         const Notifications = mod?.default ?? mod;
-        const { expo: expoCfg } = require('./app.json');
-        const projectId = expoCfg?.extra?.eas?.projectId;
+        const Constants = (await import('expo-constants')).default;
+        const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
         const tokRes = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
         const token = tokRes?.data || tokRes?.token || tokRes;
         if (token) {
