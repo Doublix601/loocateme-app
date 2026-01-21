@@ -6,18 +6,34 @@
   "build": {
     "development": {
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "autoIncrement": true
+      },
+      "android": {
+        "autoIncrement": true
       },
       "developmentClient": true,
       "distribution": "internal",
       "node": "20.19.0"
     },
     "preview": {
+      "ios": {
+        "autoIncrement": true
+      },
+      "android": {
+        "autoIncrement": true
+      },
       "distribution": "internal",
       "channel": "preview",
       "node": "20.19.0"
     },
     "production": {
+      "ios": {
+        "autoIncrement": true
+      },
+      "android": {
+        "autoIncrement": true
+      },
       "distribution": "store",
       "channel": "production",
       "node": "20.19.0"
