@@ -8,8 +8,8 @@ import { updateMyLocation, setVisibility } from './ApiRequest';
 const TASK_NAME = 'BG_LOCATION_UPDATE';
 const STORAGE_START_KEY = 'bg_loc_start_ts';
 const STORAGE_AUTO_INVISIBLE_KEY = 'bg_loc_auto_invisible';
-const FIFTEEN_MIN_MS = 15 * 60 * 1000;
 const ONE_HOUR_MS = 60 * 60 * 1000;
+const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 let taskDefined = false;
 
 async function autoStopAndMakeInvisible() {
@@ -37,8 +37,8 @@ function defineTaskOnce() {
       const startTsStr = await AsyncStorage.getItem(STORAGE_START_KEY);
       const startTs = startTsStr ? parseInt(startTsStr, 10) : 0;
       const now = Date.now();
-      if (!startTs || now - startTs > ONE_HOUR_MS) {
-        // Stop updates after 1 hour and set invisible until app reopen
+      if (!startTs || now - startTs > SIX_HOURS_MS) {
+        // Stop updates after 6 hours and set invisible until app reopen
         await autoStopAndMakeInvisible();
         return;
       }
@@ -64,7 +64,7 @@ function defineTaskOnce() {
   taskDefined = true;
 }
 
-export async function startBackgroundLocationForOneHour() {
+export async function startBackgroundLocationForSixHours() {
   try {
     defineTaskOnce();
     // Do not start twice
@@ -84,20 +84,20 @@ export async function startBackgroundLocationForOneHour() {
 
       await Location.startLocationUpdatesAsync(TASK_NAME, {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: FIFTEEN_MIN_MS,
+        timeInterval: ONE_HOUR_MS,
         // Minimal movement to reduce battery
-        distanceInterval: 50,
+        distanceInterval: 100,
         // Android foreground service notification while in background
         foregroundService: {
           notificationTitle: 'LoocateMe',
-          notificationBody: 'Partage de position actif (1h)',
+          notificationBody: 'Partage de position actif (6h)',
           notificationColor: '#00c2cb',
         },
         pausesUpdatesAutomatically: true,
-        showsBackgroundLocationIndicator: false,
+        showsBackgroundIndicator: false,
       });
     } else {
-      // refresh the hour window if currently running
+      // refresh the 6 hours window if currently running
       await AsyncStorage.setItem(STORAGE_START_KEY, String(Date.now()));
     }
     return true;

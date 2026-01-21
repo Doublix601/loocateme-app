@@ -19,7 +19,7 @@ import { updateMyLocation, getUsersAroundMe, getMyUser, setVisibility as apiSetV
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { UserContext } from '../components/contexts/UserContext';
 import { subscribe } from '../components/EventBus';
-import { startBackgroundLocationForOneHour, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
+import { startBackgroundLocationForSixHours, stopBackgroundLocation, BGLocKeys } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
 
@@ -350,7 +350,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
           if (updateUser) updateUser({ ...currentUser, isVisible: true });
           await AsyncStorage.removeItem(BGLocKeys.STORAGE_AUTO_INVISIBLE_KEY);
           // restart background updates window
-          try { await startBackgroundLocationForOneHour(); } catch (_) {}
+          try { await startBackgroundLocationForSixHours(); } catch (_) {}
           // refetch nearby now that we're visible
           fetchNearby();
         }
@@ -365,7 +365,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
   // Start/stop background location based on visibility
   useEffect(() => {
     if (currentUser?.isVisible) {
-      startBackgroundLocationForOneHour();
+      startBackgroundLocationForSixHours();
     } else {
       stopBackgroundLocation();
     }

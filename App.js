@@ -147,7 +147,10 @@ function AppInner() {
       const wasBackground = appState.current.match(/inactive|background/);
       appState.current = nextState;
       if (wasBackground && nextState === 'active') {
-        try { clearApiCache(); } catch (_) {}
+        try {
+          clearApiCache();
+          publish('userlist:refresh');
+        } catch (_) {}
       }
     });
 
