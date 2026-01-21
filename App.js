@@ -31,9 +31,9 @@ function AppInner() {
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const appState = useRef(AppState.currentState);
-  // IMPORTANT: useTheme (uses useContext under the hood) must be called unconditionally
-  // and before any early returns to preserve the Hooks call order across renders.
+  // IMPORTANT: useTheme and UserContext must be called unconditionally
   const { colors } = useTheme();
+  const { user: appUser, updateUser } = useContext(UserContext);
 
   // Transition animation state
   const transitionX = useRef(new Animated.Value(0)).current;
@@ -179,15 +179,26 @@ function AppInner() {
             setCurrentScreen('UserList');
             // Déclenche un rafraîchissement forcé de la liste
             setTimeout(() => publish('userlist:refresh'), 100);
-          } else if (data?.kind === 'profile_view' || data?.kind === 'social_click' || data?.kind === 'weekly_digest' || data?.url === 'loocateme://statistics') {
+          } else if (data?.kind === 'profile_view') {
+            // Logique Premium : ouvrir le profil ou le paywall
+            if (appUser?.isPremium) {
+              if (data?.actorId) {
+                setSelectedUser({ _id: data.actorId, id: data.actorId }); // Objet minimal
+                setProfileReturnTo('Statistics');
+                setCurrentScreen('UserProfile');
+              } else {
+                setCurrentScreen('Statistics');
+              }
+            } else {
+              setCurrentScreen('PremiumPaywall');
+            }
+          } else if (data?.kind === 'social_click' || data?.kind === 'weekly_digest' || data?.url === 'loocateme://statistics') {
             setCurrentScreen('Statistics');
           } else if (data?.kind === 'new_neighbor' && data?.neighborId) {
-            // Optionnel: rediriger vers le profil du voisin
-            // setSelectedUser({ _id: data.neighborId });
-            // setCurrentScreen('UserProfile');
-            // Pour l'instant on va sur la liste nearby car le profil nécessite un objet complet
-            setCurrentScreen('UserList');
-            setTimeout(() => publish('userlist:refresh'), 100);
+            // On va voir le profil du nouveau voisin
+            setSelectedUser({ _id: data.neighborId, id: data.neighborId });
+            setProfileReturnTo('UserList');
+            setCurrentScreen('UserProfile');
           }
         });
       } catch (_) {}

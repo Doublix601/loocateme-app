@@ -8,7 +8,7 @@
     "icon": "./assets/appIcons/AppIcon.png",
     "userInterfaceStyle": "light",
     "scheme": "loocateme",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "updates": {
       "url": "https://u.expo.dev/da2f75d4-ab23-4073-8db9-1ab186cc22d6"
     },
@@ -31,8 +31,8 @@
           "remote-notification"
         ],
         "NSLocationWhenInUseUsageDescription": "Votre position est utilisée pour afficher les utilisateurs autour de vous.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Votre position en arrière-plan peut être partagée pendant 1 heure lorsque vous l’activez.",
-        "NSLocationAlwaysUsageDescription": "Votre position en arrière-plan peut être partagée pendant 1 heure lorsque vous l’activez.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
+        "NSLocationAlwaysUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -70,7 +70,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Votre position en arrière-plan peut être partagée pendant 1 heure lorsque vous l’activez."
+          "locationAlwaysAndWhenInUsePermission": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez."
         }
       ]
     ],
