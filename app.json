@@ -23,6 +23,9 @@
       "scheme": "loocateme",
       "associatedDomains": ["applinks:api.loocate.me"],
       "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
         "UIBackgroundModes": [
           "location",
           "remote-notification"
