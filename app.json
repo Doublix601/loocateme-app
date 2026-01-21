@@ -20,11 +20,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "me.loocate.app",
       "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        },
         "UIBackgroundModes": [
-          "location"
+          "location",
+          "remote-notification"
         ],
         "NSLocationWhenInUseUsageDescription": "Votre position est utilisée pour afficher les utilisateurs autour de vous.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Votre position en arrière-plan peut être partagée pendant 1 heure lorsque vous l’activez.",
@@ -33,15 +31,25 @@
       }
     },
     "android": {
-      "package": "me.loocate.app"
-    },
-    "web": {
-      "favicon": "./assets/appIcons/AppIcon.png"
+      "package": "me.loocate.app",
+      "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-asset",
       "expo-font",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/appIcons/AppIcon.png",
+          "color": "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Votre position en arrière-plan peut être partagée pendant 1 heure lorsque vous l’activez."
+        }
+      ]
     ],
     "extra": {
       "eas": {

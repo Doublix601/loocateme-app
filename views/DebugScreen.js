@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput } from 'react-native';
+import Constants from 'expo-constants';
 import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
@@ -33,8 +34,7 @@ const DebugScreen = ({ onBack }) => {
       try {
         const mod = await import('expo-notifications');
         const Notifications = mod?.default ?? mod;
-        const Constants = (await import('expo-constants')).default;
-        const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+        const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
         const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
         setCurrentPushToken(res?.data || res?.token || String(res));
       } catch (e) {
@@ -48,8 +48,7 @@ const DebugScreen = ({ onBack }) => {
       setRegistering(true);
       const mod = await import('expo-notifications');
       const Notifications = mod?.default ?? mod;
-      const Constants = (await import('expo-constants')).default;
-      const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+      const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
       const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
       const token = res?.data || res?.token || String(res);
       setCurrentPushToken(token);

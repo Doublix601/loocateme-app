@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { SafeAreaView, ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { Asset } from 'expo-asset';
+import Constants from 'expo-constants';
 import LoginScreen from './views/LoginScreen';
 import ForgotPasswordScreen from './views/ForgotPasswordScreen';
 import SignupScreen from './views/SignupScreen';
@@ -125,8 +126,7 @@ function AppInner() {
           await Notifications.requestPermissionsAsync();
         }
         if (Platform.OS === 'ios' || Platform.OS === 'android') {
-          const Constants = (await import('expo-constants')).default;
-          const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+          const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
           const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
           const token = res?.data || res?.token || res;
           if (token) {
@@ -308,8 +308,7 @@ function AppInner() {
       try {
         const mod = await import('expo-notifications');
         const Notifications = mod?.default ?? mod;
-        const Constants = (await import('expo-constants')).default;
-        const projectId = Constants?.expoConfig?.extra?.eas?.projectId;
+        const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
         const tokRes = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
         const token = tokRes?.data || tokRes?.token || tokRes;
         if (token) {
