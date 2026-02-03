@@ -32,7 +32,7 @@ import { useTheme } from '../components/contexts/ThemeContext';
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
-const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
+const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModerator }) => {
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
   const isDark = themeMode === 'dark';
@@ -354,12 +354,20 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
           />
         </View>
 
-        {user?.role === 'admin' && (
+        {['admin', 'moderator'].includes(user?.role) && (
           <>
-            <Text style={[styles.sectionTitle, { marginTop: height * 0.04 }]}>Développeur</Text>
-            <TouchableOpacity style={styles.linkRow} onPress={onOpenDebug}>
-              <Text style={styles.linkRowText}>Debug</Text>
+            <Text style={[styles.sectionTitle, { marginTop: height * 0.04 }]}>Modération</Text>
+            <TouchableOpacity style={styles.linkRow} onPress={onOpenModerator}>
+              <Text style={styles.linkRowText}>Signalements</Text>
             </TouchableOpacity>
+            {user?.role === 'admin' && (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: height * 0.02 }]}>Développeur</Text>
+                <TouchableOpacity style={styles.linkRow} onPress={onOpenDebug}>
+                  <Text style={styles.linkRowText}>Debug</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </>
         )}
 

@@ -11,6 +11,8 @@ import {
   SafeAreaView,
   Linking,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
@@ -18,7 +20,7 @@ import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
-import { trackProfileView, trackSocialClick } from '../components/ApiRequest';
+import { trackProfileView, trackSocialClick, createReport, blockUser } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
 import { useTheme } from '../components/contexts/ThemeContext';
 
@@ -26,9 +28,24 @@ const { width, height } = Dimensions.get('window');
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
+const REPORT_CATEGORIES = [
+  { value: 'harassment', label: 'Harcèlement' },
+  { value: 'spam', label: 'Spam' },
+  { value: 'inappropriate', label: 'Contenu inapproprié' },
+  { value: 'impersonation', label: 'Usurpation d’identité' },
+  { value: 'scam', label: 'Arnaque' },
+  { value: 'other', label: 'Autre' },
+];
+
 const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons }) => {
   const { user: currentUser } = React.useContext(UserContext);
   const { colors } = useTheme();
+  const [actionMenuVisible, setActionMenuVisible] = React.useState(false);
+  const [reportVisible, setReportVisible] = React.useState(false);
+  const [reportCategory, setReportCategory] = React.useState('harassment');
+  const [reportReason, setReportReason] = React.useState('');
+  const [reportDescription, setReportDescription] = React.useState('');
+  const [reportSubmitting, setReportSubmitting] = React.useState(false);
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -312,6 +329,56 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     })();
   }, [user, distanceBetweenMeters, formatDistance]);
 
+  const handleBlockUser = async () => {
+    if (!user?._id) return;
+    Alert.alert(
+      'Bloquer cet utilisateur ?'
+      , 'Vous ne verrez plus cet utilisateur et il ne pourra plus vous contacter.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Bloquer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await blockUser(user._id);
+              setActionMenuVisible(false);
+              Alert.alert('Utilisateur bloqué', 'Cet utilisateur a été bloqué.');
+            } catch (e) {
+              Alert.alert('Erreur', e?.message || 'Impossible de bloquer cet utilisateur.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSubmitReport = async () => {
+    if (!user?._id) return;
+    if (!reportReason.trim()) {
+      Alert.alert('Motif requis', 'Merci d’indiquer un motif.');
+      return;
+    }
+    try {
+      setReportSubmitting(true);
+      await createReport({
+        reportedUserId: user._id,
+        category: reportCategory,
+        reason: reportReason.trim(),
+        description: reportDescription.trim(),
+      });
+      setReportVisible(false);
+      setActionMenuVisible(false);
+      setReportReason('');
+      setReportDescription('');
+      Alert.alert('Signalement envoyé', 'Merci pour votre signalement.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible d’envoyer le signalement.');
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
@@ -335,6 +402,13 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
           source={require('../assets/appIcons/backArrow.png')}
           style={styles.backButtonImage}
         />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.menuButton}
+        onPress={() => setActionMenuVisible(true)}
+        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+      >
+        <Text style={styles.menuButtonText}>...</Text>
       </TouchableOpacity>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
@@ -446,6 +520,78 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
           </View>
         </View>
       </ScrollView>
+
+      <Modal transparent visible={actionMenuVisible} animationType="fade" onRequestClose={() => setActionMenuVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.menuCard, { backgroundColor: colors.surface }]}> 
+            <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Actions</Text>
+            <TouchableOpacity style={styles.menuAction} onPress={handleBlockUser}>
+              <Text style={styles.menuActionText}>Bloquer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuAction}
+              onPress={() => {
+                setActionMenuVisible(false);
+                setReportVisible(true);
+              }}
+            >
+              <Text style={styles.menuActionText}>Signaler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuAction, styles.menuCancel]} onPress={() => setActionMenuVisible(false)}>
+              <Text style={styles.menuCancelText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={reportVisible} animationType="slide" onRequestClose={() => setReportVisible(false)}>
+        <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}> 
+          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Signaler un utilisateur</Text>
+          <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>Les signalements abusifs peuvent entraîner des sanctions. Merci d’être honnête.</Text>
+
+          <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Catégorie</Text>
+          <View style={styles.categoryGrid}>
+            {REPORT_CATEGORIES.map((cat) => {
+              const selected = reportCategory === cat.value;
+              return (
+                <TouchableOpacity
+                  key={cat.value}
+                  style={[styles.categoryChip, selected && styles.categoryChipSelected]}
+                  onPress={() => setReportCategory(cat.value)}
+                >
+                  <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>{cat.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Motif</Text>
+          <TextInput
+            style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
+            placeholder="Expliquez brièvement le motif"
+            placeholderTextColor={colors.textSecondary}
+            value={reportReason}
+            onChangeText={setReportReason}
+          />
+
+          <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Description (optionnelle)</Text>
+          <TextInput
+            style={[styles.modalInput, styles.modalTextarea, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
+            placeholder="Détails supplémentaires"
+            placeholderTextColor={colors.textSecondary}
+            value={reportDescription}
+            onChangeText={setReportDescription}
+            multiline
+          />
+
+          <TouchableOpacity style={styles.modalButton} onPress={handleSubmitReport} disabled={reportSubmitting}>
+            <Text style={styles.modalButtonText}>{reportSubmitting ? 'Envoi...' : 'Envoyer le signalement'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.modalButton, styles.deleteButton]} onPress={() => setReportVisible(false)} disabled={reportSubmitting}>
+            <Text style={styles.modalButtonText}>Annuler</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
     </SafeAreaView>
   );
@@ -698,16 +844,109 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 8,
   },
+  menuButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    padding: 8,
+  },
+  menuButtonText: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#00c2cb',
+    letterSpacing: 2,
+  },
   backButtonImage: {
     width: 28,
     height: 28,
     tintColor: '#00c2cb',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: width * 0.05,
+  },
+  menuCard: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: 12,
+    padding: 16,
+  },
+  menuTitle: {
+    fontSize: width * 0.055,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  menuAction: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  menuActionText: {
+    fontSize: width * 0.05,
+    textAlign: 'center',
+    color: '#00c2cb',
+    fontWeight: '600',
+  },
+  menuCancel: {
+    borderBottomWidth: 0,
+    marginTop: 6,
+  },
+  menuCancelText: {
+    fontSize: width * 0.05,
+    textAlign: 'center',
+    color: '#ff4d4d',
+    fontWeight: '700',
   },
   error: {
     fontSize: width * 0.05,
     color: 'red',
     textAlign: 'center',
     marginBottom: height * 0.02,
+  },
+  reportWarning: {
+    fontSize: width * 0.04,
+    textAlign: 'center',
+    marginBottom: height * 0.02,
+  },
+  sectionLabel: {
+    fontSize: width * 0.045,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  categoryChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#f7f7f7',
+  },
+  categoryChipSelected: {
+    borderColor: '#00c2cb',
+    backgroundColor: '#e6fbfc',
+  },
+  categoryChipText: {
+    fontSize: width * 0.04,
+    color: '#333',
+  },
+  categoryChipTextSelected: {
+    color: '#00aab2',
+    fontWeight: '600',
+  },
+  modalTextarea: {
+    height: height * 0.14,
+    textAlignVertical: 'top',
   },
 });
 

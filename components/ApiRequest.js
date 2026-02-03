@@ -452,6 +452,42 @@ export async function setVisibility(isVisible) {
     return request('/settings/visibility', { method: 'PUT', body: { isVisible } });
 }
 
+// REPORTS & BLOCKS
+export async function createReport({ reportedUserId, category, reason, description }) {
+    return request('/reports', {
+        method: 'POST',
+        body: { reportedUserId, category, reason, description },
+    });
+}
+
+export async function getReports({ status = 'pending', page = 1, limit = 50 } = {}) {
+    const qs = new URLSearchParams({ status, page: String(page), limit: String(limit) });
+    return request(`/reports?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+}
+
+export async function actOnReport(reportId, { action, target, durationHours, note } = {}) {
+    const id = String(reportId || '');
+    if (!id) throw new Error('reportId requis');
+    return request(`/reports/${encodeURIComponent(id)}/action`, {
+        method: 'POST',
+        body: { action, target, durationHours, note },
+    });
+}
+
+export async function getBlockedUsers() {
+    return request('/blocks', { method: 'GET' });
+}
+
+export async function blockUser(targetUserId) {
+    return request('/blocks', { method: 'POST', body: { targetUserId } });
+}
+
+export async function unblockUser(blockId) {
+    const id = String(blockId || '');
+    if (!id) throw new Error('blockId requis');
+    return request(`/blocks/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
 // Convenience: initialize from a provided token (manual init)
 export function initApi({ token } = {}) {
     if (token) setAccessToken(token);

@@ -16,6 +16,7 @@ import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
 import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
+import ModeratorScreen from './views/ModeratorScreen';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { FeatureFlagsProvider, useFeatureFlags } from './components/contexts/FeatureFlagsContext';
@@ -548,6 +549,14 @@ function AppInner() {
           onReturnToAccount={handleReturnToAccount}
           onLogout={handleLogout}
           onOpenDebug={() => setCurrentScreen('Debug')}
+          onOpenModerator={() => setCurrentScreen('Moderator')}
+        />
+      );
+      break;
+    case 'Moderator':
+      screenToShow = (
+        <ModeratorScreen
+          onBack={() => setCurrentScreen('Settings')}
         />
       );
       break;
