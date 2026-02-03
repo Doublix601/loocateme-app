@@ -24,6 +24,23 @@ import { subscribe, publish } from './components/EventBus';
 import { initInactivityTracking } from './components/NotificationScheduler';
 import { registerPushToken } from './components/ApiRequest';
 
+const mapBackendUser = (u = {}) => ({
+  username: u.username || u.name || '',
+  firstName: u.firstName || '',
+  lastName: u.lastName || '',
+  customName: u.customName || '',
+  bio: u.bio || '',
+  photo: u.profileImageUrl || null,
+  socialMedia: Array.isArray(u.socialNetworks)
+    ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+    : [],
+  isVisible: u.isVisible !== false,
+  isPremium: !!u.isPremium,
+  role: u.role || 'user',
+  consent: u.consent || { accepted: false, version: '', consentAt: null },
+  privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
+});
+
 function AppInner() {
   const [currentScreen, setCurrentScreen] = useState('Login');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -93,6 +110,9 @@ function AppInner() {
           try {
             const res = await getMyUser();
             const me = res?.user;
+            if (me && updateUser) {
+              updateUser(mapBackendUser(me));
+            }
             const consentAccepted = !!(me?.consent?.accepted);
             setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
             if (consentAccepted) {

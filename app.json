@@ -8,7 +8,7 @@
     "icon": "./assets/appIcons/AppIcon.png",
     "userInterfaceStyle": "light",
     "scheme": "loocateme",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "updates": {
       "url": "https://u.expo.dev/da2f75d4-ab23-4073-8db9-1ab186cc22d6"
     },

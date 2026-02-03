@@ -5,11 +5,13 @@ import { UserContext } from '../components/contexts/UserContext';
 
 // Map backend user to frontend shape used by context/UI
 const mapBackendUser = (u = {}) => ({
-    username: u.name || '',
+    username: u.username || u.name || '',
     bio: u.bio || '',
     photo: u.profileImageUrl || null,
     socialMedia: Array.isArray(u.socialNetworks) ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : [],
     isVisible: u.isVisible !== false,
+    isPremium: !!u.isPremium,
+    role: u.role || 'user',
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
 });
