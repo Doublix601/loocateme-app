@@ -336,7 +336,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         }
       } catch (_) {}
 
-      // If no cache, force a refresh immediately
+      // If no cache and we haven't loaded yet in this session, force a refresh immediately
+      // This ensures first opening of the app (empty cache) triggers a load.
       if (!hasNearbyCache || !hasPopularCache) {
         setRefreshing(true);
         fetchPopular(20, { force: true }).catch(() => {});
@@ -373,6 +374,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
           // restart background updates window
           try { await startBackgroundLocationForSixHours(); } catch (_) {}
           // refetch nearby now that we're visible
+          // This only happens if we were auto-hidden due to background timeout,
+          // which qualifies as "opening after background"
           fetchNearby();
         }
       } catch (e) {

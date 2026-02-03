@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
@@ -16,8 +16,9 @@ import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
 import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
-import { UserProvider } from './components/contexts/UserContext';
+import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
+import { FeatureFlagsProvider, useFeatureFlags } from './components/contexts/FeatureFlagsContext';
 import { initApiFromStorage, getAccessToken, getMyUser, clearApiCache } from './components/ApiRequest';
 import { subscribe, publish } from './components/EventBus';
 import { initInactivityTracking } from './components/NotificationScheduler';
@@ -95,8 +96,10 @@ function AppInner() {
             const consentAccepted = !!(me?.consent?.accepted);
             setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
             if (consentAccepted) {
-              // Trigger refresh for initial cold start
-              // Increase delay to ensure UserListScreen is mounted and subscribed
+              // Trigger refresh for initial cold start only if needed.
+              // UserListScreen now handles its own initial load from cache.
+              // We only publish if we want to FORCE a refresh (e.g. cold start).
+              // Initial opening of the app is one of the cases where refresh is allowed.
               setTimeout(() => publish('userlist:refresh'), 1000);
             }
           } catch (_e) {
@@ -181,7 +184,9 @@ function AppInner() {
             setTimeout(() => publish('userlist:refresh'), 100);
           } else if (data?.kind === 'profile_view') {
             // Logique Premium : ouvrir le profil ou le paywall
-            if (appUser?.isPremium) {
+            // Admin and moderator roles have premium access
+            const hasPremiumAccess = appUser?.isPremium || appUser?.role === 'admin' || appUser?.role === 'moderator';
+            if (hasPremiumAccess) {
               if (data?.actorId) {
                 setSelectedUser({ _id: data.actorId, id: data.actorId }); // Objet minimal
                 setProfileReturnTo('Statistics');
@@ -355,12 +360,15 @@ function AppInner() {
       } catch (_) {}
 
       setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
+      // Trigger refresh for login (considered as first opening/session start)
+      if (consentAccepted) {
+        setTimeout(() => publish('userlist:refresh'), 100);
+      }
     } catch (_e) {
       // If fetching me fails, default to UserList; auth guard will handle errors elsewhere
       setCurrentScreen('UserList');
+      setTimeout(() => publish('userlist:refresh'), 100);
     }
-    // Trigger refresh for login
-    setTimeout(() => publish('userlist:refresh'), 100);
   };
   const handleForgotPassword = () => setCurrentScreen('ForgotPassword');
   const handleSignup = () => setCurrentScreen('Signup');
@@ -543,20 +551,22 @@ function AppInner() {
   }
 
   return (
-    <UserProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-        <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.bg }}>
-          {screenToShow}
-        </Animated.View>
-      </SafeAreaView>
-    </UserProvider>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.bg }}>
+        {screenToShow}
+      </Animated.View>
+    </SafeAreaView>
   );
 }
 
 export default function App() {
   return (
     <ThemeProvider>
-      <AppInner />
+      <FeatureFlagsProvider>
+        <UserProvider>
+          <AppInner />
+        </UserProvider>
+      </FeatureFlagsProvider>
     </ThemeProvider>
   );
 }

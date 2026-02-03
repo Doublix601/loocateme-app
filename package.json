@@ -37,13 +37,15 @@
     "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@react-native-community/cli": "latest",
+    "@react-native/metro-config": "^0.81.0"
   },
   "private": true,
   "name": "loocateme-app",
   "version": "1.0.0",
   "engines": {
-    "node": ">=20 <23",
+    "node": ">=20",
     "npm": ">=9"
   }
 }

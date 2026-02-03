@@ -1,14 +1,22 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput } from 'react-native';
+import React, { useRef, useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput, Switch } from 'react-native';
 import Constants from 'expo-constants';
-import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken } from '../components/ApiRequest';
+import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
+import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
+import { UserContext } from '../components/contexts/UserContext';
 
 const DebugScreen = ({ onBack }) => {
+  const { refresh: refreshFlags } = useFeatureFlags();
+  const { user: currentUser } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [users, setUsers] = useState([]);
+  // Feature flags state
+  const [flags, setFlags] = useState([]);
+  const [flagsLoading, setFlagsLoading] = useState(false);
+  const [flagsError, setFlagsError] = useState(null);
   // Formulaire push
   const [pushTitle, setPushTitle] = useState('Test push');
   const [pushBody, setPushBody] = useState('Ceci est un test');
@@ -119,7 +127,60 @@ const DebugScreen = ({ onBack }) => {
   // Charger systématiquement des données fraîches à l'ouverture de l'écran
   useEffect(() => {
     try { runAllApiUsers(); } catch (_) {}
+    try { loadFlags(); } catch (_) {}
   }, []);
+
+  // Load feature flags from admin endpoint
+  const loadFlags = async () => {
+    try {
+      setFlagsLoading(true);
+      setFlagsError(null);
+      const res = await getAdminFlags();
+      setFlags(Array.isArray(res?.flags) ? res.flags : []);
+    } catch (e) {
+      console.error('[DebugScreen] Load flags error', e);
+      setFlagsError(e?.message || 'Impossible de charger les flags');
+    } finally {
+      setFlagsLoading(false);
+    }
+  };
+
+  // Toggle a feature flag
+  const toggleFlag = async (key, currentValue) => {
+    try {
+      setFlagsLoading(true);
+      await setFeatureFlag(key, !currentValue);
+      // Refresh flags list
+      await loadFlags();
+      // Refresh global context so all screens get updated
+      refreshFlags();
+      Alert.alert('Succès', `Flag "${key}" mis à jour`);
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de modifier le flag');
+    } finally {
+      setFlagsLoading(false);
+    }
+  };
+
+  // Change user role (admin/moderator/user)
+  const changeUserRole = async (userId, role) => {
+    try {
+      setLoading(true);
+      await setUserRole(userId, role);
+      // Optimistic update
+      setUsers((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, role } : u)));
+      setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, role } : u)));
+      setSelectedUser((prev) => (prev && String(prev._id || prev.id) === String(userId) ? { ...prev, role } : prev));
+      // Invalidate admin cache and refetch
+      try { invalidateApiCacheByPrefix('/api/admin'); } catch (_) {}
+      try { await runAllApiUsers(); } catch (_) {}
+      Alert.alert('Succès', `Rôle mis à jour: ${role}`);
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de changer le rôle.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Recherche avec debounce
   useEffect(() => {
@@ -290,6 +351,36 @@ const DebugScreen = ({ onBack }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+        {/* Feature Flags Section */}
+        <Text style={styles.sectionTitle}>Feature Flags (Global)</Text>
+        <View style={styles.card}>
+          {flagsLoading ? (
+            <ActivityIndicator size="small" color="#00c2cb" />
+          ) : flagsError ? (
+            <Text style={{ color: '#f66' }}>{flagsError}</Text>
+          ) : flags.length === 0 ? (
+            <Text style={{ color: '#9ab' }}>Aucun flag configuré</Text>
+          ) : (
+            flags.map((f) => (
+              <View key={f.key} style={styles.flagRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.flagKey}>{f.key}</Text>
+                  {f.description ? <Text style={styles.flagDesc}>{f.description}</Text> : null}
+                </View>
+                <Switch
+                  value={!!f.enabled}
+                  onValueChange={() => toggleFlag(f.key, f.enabled)}
+                  trackColor={{ false: '#3e3e3e', true: '#00c2cb' }}
+                  thumbColor={f.enabled ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+            ))
+          )}
+          <TouchableOpacity style={[styles.cmdBtn, { marginTop: 12 }]} onPress={loadFlags} disabled={flagsLoading}>
+            <Text style={styles.cmdTxt}>Rafraîchir les flags</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Test notifications locales */}
         <Text style={styles.sectionTitle}>Test notifications locales</Text>
         <View style={styles.card}>
@@ -414,7 +505,7 @@ const DebugScreen = ({ onBack }) => {
             <Text style={styles.selectedName} numberOfLines={1}>
               {(selectedUser.username || selectedUser.customName || selectedUser.firstName || selectedUser.email || 'Utilisateur')}
             </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
               <Text style={[styles.badge, selectedUser.isPremium ? styles.badgePrem : styles.badgeFree]}>
                 {selectedUser.isPremium ? 'Premium' : 'Free'}
               </Text>
@@ -423,6 +514,20 @@ const DebugScreen = ({ onBack }) => {
               </TouchableOpacity>
               <TouchableOpacity style={[styles.smallBtn, styles.btnFree, { marginLeft: 8 }]} onPress={() => togglePremium(selectedUser._id || selectedUser.id, false)}>
                 <Text style={styles.smallBtnTxt}>Free</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+              <Text style={[styles.badge, selectedUser.role === 'admin' ? styles.badgeAdmin : selectedUser.role === 'moderator' ? styles.badgeMod : styles.badgeUser]}>
+                {selectedUser.role || 'user'}
+              </Text>
+              <TouchableOpacity style={[styles.smallBtn, styles.btnAdmin, { marginLeft: 8 }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'admin')}>
+                <Text style={styles.smallBtnTxt}>Admin</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, styles.btnMod, { marginLeft: 8 }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'moderator')}>
+                <Text style={styles.smallBtnTxt}>Mod</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, styles.btnUser, { marginLeft: 8 }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'user')}>
+                <Text style={styles.smallBtnTxt}>User</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -516,6 +621,17 @@ const styles = StyleSheet.create({
   toggleBtn: { borderWidth: 1, borderColor: '#1e2d39', marginRight: 8 },
   toggleOn: { backgroundColor: '#1d2f24' },
   toggleOff: { backgroundColor: '#2f1d1d' },
+  // Feature flags styles
+  flagRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1e2d39' },
+  flagKey: { color: '#cde', fontSize: 16, fontWeight: '600' },
+  flagDesc: { color: '#7a8a99', fontSize: 12, marginTop: 2 },
+  // Role badges
+  badgeAdmin: { backgroundColor: '#e74c3c', color: '#fff' },
+  badgeMod: { backgroundColor: '#9b59b6', color: '#fff' },
+  badgeUser: { backgroundColor: '#3498db', color: '#fff' },
+  btnAdmin: { backgroundColor: '#c0392b' },
+  btnMod: { backgroundColor: '#8e44ad' },
+  btnUser: { backgroundColor: '#2980b9' },
 });
 
 // Entrées réutilisables

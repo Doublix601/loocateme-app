@@ -354,10 +354,14 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug }) => {
           />
         </View>
 
-        <Text style={[styles.sectionTitle, { marginTop: height * 0.04 }]}>Développeur</Text>
-        <TouchableOpacity style={styles.linkRow} onPress={onOpenDebug}>
-          <Text style={styles.linkRowText}>Debug</Text>
-        </TouchableOpacity>
+        {user?.role === 'admin' && (
+          <>
+            <Text style={[styles.sectionTitle, { marginTop: height * 0.04 }]}>Développeur</Text>
+            <TouchableOpacity style={styles.linkRow} onPress={onOpenDebug}>
+              <Text style={styles.linkRowText}>Debug</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
         <TouchableOpacity style={[styles.primaryButton, { marginTop: height * 0.02 }]} onPress={handleExport}>
           <Text style={styles.primaryButtonText}>Exporter mes données</Text>

@@ -478,3 +478,32 @@ export async function sendAdminPush(options = {}) {
     // options: { userIds, tokens, title, body, data, imageUrl, sound, badge, androidChannelId, priority, collapseKey, mutableContent, contentAvailable }
     return request('/admin/push/send', { method: 'POST', body: options, cache: 'reload' });
 }
+
+// FEATURE FLAGS
+export async function getFeatureFlags() {
+    // Public endpoint - no auth required
+    return request('/settings/flags', { method: 'GET', cache: 'reload' });
+}
+
+// ADMIN: Get all feature flags with details
+export async function getAdminFlags() {
+    return request('/admin/flags', { method: 'GET', cache: 'reload' });
+}
+
+// ADMIN: Update a feature flag
+export async function setFeatureFlag(key, enabled) {
+    return request(`/admin/flags/${encodeURIComponent(key)}`, {
+        method: 'PUT',
+        body: { enabled: !!enabled },
+    });
+}
+
+// ADMIN: Update user role (admin/moderator/user)
+export async function setUserRole(userId, role) {
+    const id = String(userId || '');
+    if (!id) throw new Error('userId requis');
+    return request(`/admin/users/${encodeURIComponent(id)}/user-role`, {
+        method: 'PUT',
+        body: { role },
+    });
+}

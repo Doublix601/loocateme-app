@@ -6,12 +6,21 @@ import { getStatsOverview, getDetailedProfileViews, getMyUser } from '../compone
 import { useTheme } from '../components/contexts/ThemeContext';
 import { subscribe } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
+import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const { colors } = useTheme();
   const { user } = useContext(UserContext);
+  const { flags } = useFeatureFlags();
+  // If premium is disabled globally, treat everyone as premium for stats access
+  const premiumEnabled = flags.premiumEnabled ?? false;
+  const statisticsEnabled = flags.statisticsEnabled ?? false;
+  // Admin and moderator roles have premium access
+  const hasPremiumAccess = user?.isPremium || user?.role === 'admin' || user?.role === 'moderator';
+  // User has access if: stats are enabled AND (premium disabled OR user has premium access)
+  const hasAccess = statisticsEnabled && (!premiumEnabled || hasPremiumAccess);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
@@ -72,20 +81,23 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   }
 
   useEffect(() => {
-    if (!user?.isPremium) return; // ne pas charger si compte Free
+    if (!hasAccess) return; // ne pas charger si pas d'accès
     load();
-  }, [user?.isPremium]);
+  }, [hasAccess]);
 
   // One-shot recheck on mount in case context is stale right after upgrade
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        if (user?.isPremium) return;
+        if (hasAccess) return;
         const res = await getMyUser();
         const me = res?.user;
         if (cancelled) return;
-        if (me?.isPremium) {
+        // Recheck access with fresh user data (admin/moderator also have premium access)
+        const freshHasPremiumAccess = me?.isPremium || me?.role === 'admin' || me?.role === 'moderator';
+        const freshHasAccess = statisticsEnabled && (!premiumEnabled || freshHasPremiumAccess);
+        if (freshHasAccess) {
           // trigger load paths by updating a local state dependency
           load();
         }
@@ -98,14 +110,14 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
 
   // Rafraîchir automatiquement quand un clic social est tracké ailleurs dans l'app
   useEffect(() => {
-    if (!user?.isPremium) return;
+    if (!hasAccess) return;
     const unsub = subscribe('social_click_tracked', () => { load(); });
     return () => { try { unsub && unsub(); } catch (_) {} };
-  }, [user?.isPremium]);
+  }, [hasAccess]);
 
   // Polling léger pour récupérer les mises à jour effectuées depuis d'autres appareils
   useEffect(() => {
-    if (!user?.isPremium) return;
+    if (!hasAccess) return;
     let timer = null;
     const start = () => {
       // rafraîchit toutes les 10 secondes pendant que l'écran est monté
@@ -114,7 +126,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     const stop = () => { if (timer) { try { clearInterval(timer); } catch (_) {} timer = null; } };
     start();
     return () => stop();
-  }, [user?.isPremium]);
+  }, [hasAccess]);
 
   async function loadDetailed() {
     setDetailedLoading(true);
@@ -135,8 +147,10 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     }
   }
 
-  // Vue paywall pour les comptes Free
-  if (!user?.isPremium) {
+  // Vue paywall pour les comptes sans accès (stats désactivées ou premium requis)
+  if (!hasAccess) {
+    // If statistics are disabled globally, show a different message
+    const isStatsDisabled = !statisticsEnabled;
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
         <View style={styles.header}>
@@ -151,16 +165,27 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
             source={require('../assets/appIcons/userProfile.png')} 
             style={{ width: 64, height: 64, tintColor: colors.accent, marginBottom: 16, opacity: 0.5 }} 
           />
-          <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Qui te stalke ? 👀</Text>
-          <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
-            Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
-          </Text>
-          <TouchableOpacity 
-            onPress={() => publish('ui:open_premium')} 
-            style={[styles.paywallBtn, { backgroundColor: colors.accent }]}
-          >
-            <Text style={styles.paywallBtnText}>Découvrir mes visiteurs</Text>
-          </TouchableOpacity>
+          {isStatsDisabled ? (
+            <>
+              <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Bientôt disponible 🚀</Text>
+              <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
+                Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux.
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Qui te stalke ? 👀</Text>
+              <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
+                Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
+              </Text>
+              <TouchableOpacity 
+                onPress={() => publish('ui:open_premium')} 
+                style={[styles.paywallBtn, { backgroundColor: colors.accent }]}
+              >
+                <Text style={styles.paywallBtnText}>Découvrir mes visiteurs</Text>
+              </TouchableOpacity>
+            </>
+          )}
           <TouchableOpacity onPress={onBack} style={{ marginTop: 16 }}>
             <Text style={{ color: colors.textMuted }}>Plus tard</Text>
           </TouchableOpacity>
