@@ -153,7 +153,7 @@ const DebugScreen = ({ onBack }) => {
       // Refresh flags list
       await loadFlags();
       // Refresh global context so all screens get updated
-      refreshFlags();
+      refreshFlags({ force: true });
       Alert.alert('Succès', `Flag "${key}" mis à jour`);
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de modifier le flag');

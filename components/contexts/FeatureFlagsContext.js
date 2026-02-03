@@ -13,11 +13,12 @@ export function FeatureFlagsProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (options = {}) => {
+    const { force = false } = options;
     setLoading(true);
     setError(null);
     try {
-      const res = await getFeatureFlags();
+      const res = await getFeatureFlags({ cache: force ? 'reload' : 'default' });
       setFlags(res?.flags || {});
     } catch (e) {
       console.warn('[FeatureFlags] Failed to fetch flags:', e?.message || e);

@@ -21,6 +21,8 @@ let loggedBaseUrlOnce = false;
 // --- Lightweight cache for GET requests to avoid spamming the API on navigation ---
 // Key format: `${method}:${url}` (method is uppercased)
 const apiCache = new Map();
+// In-flight dedupe for GET requests (avoid bursts)
+const inflightRequests = new Map();
 
 export function clearApiCache() {
     try { apiCache.clear(); } catch (_) {}
@@ -100,6 +102,7 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 
     const isGet = String(method).toUpperCase() === 'GET';
     const cacheKey = `${String(method).toUpperCase()}:${url}`;
+    const inflightKey = `${cacheKey}|${cacheMode}`;
 
     // Serve from cache for GET requests unless explicit reload is requested
     if (isGet && cacheMode !== 'reload') {
@@ -107,6 +110,11 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         if (cached && cached.expiry > Date.now()) {
             return cached.data;
         }
+    }
+
+    // Dedupe in-flight GET requests
+    if (isGet && inflightRequests.has(inflightKey)) {
+        return inflightRequests.get(inflightKey);
     }
 
     let res;
@@ -144,10 +152,11 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         }
     };
 
-    try {
-        // First attempt
-        res = await doFetchWithTimeout(url);
-    } catch (networkErr) {
+    const runRequest = (async () => {
+        try {
+            // First attempt
+            res = await doFetchWithTimeout(url);
+        } catch (networkErr) {
         // Forward TIMEOUT/Abort as-is
         if (networkErr && (networkErr.code === 'TIMEOUT' || networkErr.name === 'AbortError' || networkErr.message?.toLowerCase().includes('aborted'))) {
             if (networkErr.code !== 'TIMEOUT') {
@@ -158,58 +167,58 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
             }
             throw networkErr;
         }
-        // If network error, try protocol fallback (http <-> https) for same host once
-        try {
-            const u = new URL(url);
-            const toggledProtocol = u.protocol === 'http:' ? 'https:' : 'http:';
-            const fallbackUrl = `${toggledProtocol}//${u.host}${u.pathname}${u.search}${u.hash}`;
-            console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });
-            res = await doFetchWithTimeout(fallbackUrl);
-        } catch (_fallbackErr) {
-            console.error('[API] Network error (no fallback succeeded)', { url, method, error: networkErr?.message || networkErr });
-            throw networkErr;
-        }
-    }
-
-    // Attempt refresh on 401 once (only for non-auth endpoints)
-    const isAuthPath = typeof path === 'string' && path.startsWith('/auth/');
-    // Do NOT attempt refresh on native platforms (RN) because backend uses httpOnly cookies → web-only
-    const canAttemptRefresh = Platform && Platform.OS === 'web';
-    if (res.status === 401 && retry && accessToken && !isAuthPath && canAttemptRefresh) {
-        try {
-            const refreshed = await refreshAccessToken();
-            if (refreshed?.accessToken) {
-                accessToken = refreshed.accessToken;
-                // Persist refreshed token
-                AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken).catch(() => {});
-                return request(path, { method, body, headers, formData, retry: false });
+            // If network error, try protocol fallback (http <-> https) for same host once
+            try {
+                const u = new URL(url);
+                const toggledProtocol = u.protocol === 'http:' ? 'https:' : 'http:';
+                const fallbackUrl = `${toggledProtocol}//${u.host}${u.pathname}${u.search}${u.hash}`;
+                console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });
+                res = await doFetchWithTimeout(fallbackUrl);
+            } catch (_fallbackErr) {
+                console.error('[API] Network error (no fallback succeeded)', { url, method, error: networkErr?.message || networkErr });
+                throw networkErr;
             }
-        } catch (refreshErr) {
-            console.error('[API] Refresh token failed', { url: `${BASE_URL}/auth/refresh`, status: refreshErr?.status, error: refreshErr?.message || refreshErr });
         }
-    }
 
-    // If backend signals UI reload (abonnement changé), publish event and clear cache
-    try {
-        const headerReload = res?.headers?.get && res.headers.get('X-UI-Reload');
-        if (headerReload === '1') {
-            try { clearApiCache(); } catch (_) {}
-            try { publish('ui:reload'); } catch (_) {}
+        // Attempt refresh on 401 once (only for non-auth endpoints)
+        const isAuthPath = typeof path === 'string' && path.startsWith('/auth/');
+        // Do NOT attempt refresh on native platforms (RN) because backend uses httpOnly cookies → web-only
+        const canAttemptRefresh = Platform && Platform.OS === 'web';
+        if (res.status === 401 && retry && accessToken && !isAuthPath && canAttemptRefresh) {
+            try {
+                const refreshed = await refreshAccessToken();
+                if (refreshed?.accessToken) {
+                    accessToken = refreshed.accessToken;
+                    // Persist refreshed token
+                    AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken).catch(() => {});
+                    return request(path, { method, body, headers, formData, retry: false });
+                }
+            } catch (refreshErr) {
+                console.error('[API] Refresh token failed', { url: `${BASE_URL}/auth/refresh`, status: refreshErr?.status, error: refreshErr?.message || refreshErr });
+            }
         }
-    } catch (_) {}
 
-    // Parse JSON or throw error
-    let data = null;
-    const text = await res.text();
-    try {
-        data = text ? JSON.parse(text) : null;
-    } catch (_e) {
-        // ignore, keep raw text
-        data = text;
-    }
+        // If backend signals UI reload (abonnement changé), publish event and clear cache
+        try {
+            const headerReload = res?.headers?.get && res.headers.get('X-UI-Reload');
+            if (headerReload === '1') {
+                try { clearApiCache(); } catch (_) {}
+                try { publish('ui:reload'); } catch (_) {}
+            }
+        } catch (_) {}
 
-    if (!res.ok) {
-        console.error('[API] Request failed', { url, method, status: res.status, code: data?.code, message: data?.message, response: data });
+        // Parse JSON or throw error
+        let data = null;
+        const text = await res.text();
+        try {
+            data = text ? JSON.parse(text) : null;
+        } catch (_e) {
+            // ignore, keep raw text
+            data = text;
+        }
+
+        if (!res.ok) {
+            console.error('[API] Request failed', { url, method, status: res.status, code: data?.code, message: data?.message, response: data });
 
         // Detect authentication/user-not-found errors and auto-logout
         const code = data?.code;
@@ -231,20 +240,31 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
             }
         }
 
-        const err = new Error(data?.message || `Request failed with ${res.status}`);
-        err.status = res.status;
-        err.code = data?.code;
-        err.details = data?.details;
-        err.response = data;
-        throw err;
+            const err = new Error(data?.message || `Request failed with ${res.status}`);
+            err.status = res.status;
+            err.code = data?.code;
+            err.details = data?.details;
+            err.response = data;
+            throw err;
+        }
+
+        // Cache successful GET responses
+        if (isGet && cacheMode !== 'reload') {
+            const expiry = Date.now() + Math.max(0, ttlMs || 0);
+            try { apiCache.set(cacheKey, { expiry, data }); } catch (_) {}
+        }
+        return data;
+    })();
+
+    if (isGet) {
+        inflightRequests.set(inflightKey, runRequest);
     }
 
-    // Cache successful GET responses
-    if (isGet && cacheMode !== 'reload') {
-        const expiry = Date.now() + Math.max(0, ttlMs || 0);
-        try { apiCache.set(cacheKey, { expiry, data }); } catch (_) {}
+    try {
+        return await runRequest;
+    } finally {
+        if (isGet) inflightRequests.delete(inflightKey);
     }
-    return data;
 }
 
 // AUTH
@@ -480,9 +500,9 @@ export async function sendAdminPush(options = {}) {
 }
 
 // FEATURE FLAGS
-export async function getFeatureFlags() {
+export async function getFeatureFlags({ cache = 'default', ttlMs = 30000 } = {}) {
     // Public endpoint - no auth required
-    return request('/settings/flags', { method: 'GET', cache: 'reload' });
+    return request('/settings/flags', { method: 'GET', cache, ttlMs });
 }
 
 // ADMIN: Get all feature flags with details

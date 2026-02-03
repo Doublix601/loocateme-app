@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder, AppState } from 'react-native';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { getStatsOverview, getDetailedProfileViews, getMyUser } from '../components/ApiRequest';
@@ -17,10 +17,11 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   // If premium is disabled globally, treat everyone as premium for stats access
   const premiumEnabled = flags.premiumEnabled ?? false;
   const statisticsEnabled = flags.statisticsEnabled ?? false;
+  const effectiveStatisticsEnabled = statisticsEnabled || premiumEnabled;
   // Admin and moderator roles have premium access
   const hasPremiumAccess = user?.isPremium || user?.role === 'admin' || user?.role === 'moderator';
   // User has access if: stats are enabled AND (premium disabled OR user has premium access)
-  const hasAccess = statisticsEnabled && (!premiumEnabled || hasPremiumAccess);
+  const hasAccess = effectiveStatisticsEnabled && (!premiumEnabled || hasPremiumAccess);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
@@ -96,7 +97,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
         if (cancelled) return;
         // Recheck access with fresh user data (admin/moderator also have premium access)
         const freshHasPremiumAccess = me?.isPremium || me?.role === 'admin' || me?.role === 'moderator';
-        const freshHasAccess = statisticsEnabled && (!premiumEnabled || freshHasPremiumAccess);
+        const freshHasAccess = (statisticsEnabled || premiumEnabled) && (!premiumEnabled || freshHasPremiumAccess);
         if (freshHasAccess) {
           // trigger load paths by updating a local state dependency
           load();
@@ -120,12 +121,20 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     if (!hasAccess) return;
     let timer = null;
     const start = () => {
-      // rafraîchit toutes les 10 secondes pendant que l'écran est monté
-      timer = setInterval(() => { load(); }, 10000);
+      if (!timer) {
+        // rafraîchit toutes les 30 secondes pendant que l'écran est monté et l'app active
+        timer = setInterval(() => { load(); }, 30000);
+      }
     };
     const stop = () => { if (timer) { try { clearInterval(timer); } catch (_) {} timer = null; } };
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') start(); else stop();
+    });
     start();
-    return () => stop();
+    return () => {
+      stop();
+      try { sub && sub.remove && sub.remove(); } catch (_) {}
+    };
   }, [hasAccess]);
 
   async function loadDetailed() {
@@ -150,7 +159,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   // Vue paywall pour les comptes sans accès (stats désactivées ou premium requis)
   if (!hasAccess) {
     // If statistics are disabled globally, show a different message
-    const isStatsDisabled = !statisticsEnabled;
+    const isStatsDisabled = !effectiveStatisticsEnabled;
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
         <View style={styles.header}>
@@ -161,9 +170,9 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
           <View style={{ width: 28 }} />
         </View>
         <View style={styles.centerBox}>
-          <Image 
-            source={require('../assets/appIcons/userProfile.png')} 
-            style={{ width: 64, height: 64, tintColor: colors.accent, marginBottom: 16, opacity: 0.5 }} 
+          <Image
+            source={require('../assets/appIcons/userProfile.png')}
+            style={{ width: 64, height: 64, tintColor: colors.accent, marginBottom: 16, opacity: 0.5 }}
           />
           {isStatsDisabled ? (
             <>
@@ -178,8 +187,8 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
               <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
                 Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
               </Text>
-              <TouchableOpacity 
-                onPress={() => publish('ui:open_premium')} 
+              <TouchableOpacity
+                onPress={() => publish('ui:open_premium')}
                 style={[styles.paywallBtn, { backgroundColor: colors.accent }]}
               >
                 <Text style={styles.paywallBtnText}>Découvrir mes visiteurs</Text>
