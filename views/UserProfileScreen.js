@@ -13,6 +13,10 @@ import {
   Alert,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
@@ -522,75 +526,93 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
       </ScrollView>
 
       <Modal transparent visible={actionMenuVisible} animationType="fade" onRequestClose={() => setActionMenuVisible(false)}>
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.menuCard, { backgroundColor: colors.surface }]}> 
-            <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Actions</Text>
-            <TouchableOpacity style={styles.menuAction} onPress={handleBlockUser}>
-              <Text style={styles.menuActionText}>Bloquer</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuAction}
-              onPress={() => {
-                setActionMenuVisible(false);
-                setReportVisible(true);
-              }}
-            >
-              <Text style={styles.menuActionText}>Signaler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.menuAction, styles.menuCancel]} onPress={() => setActionMenuVisible(false)}>
-              <Text style={styles.menuCancelText}>Annuler</Text>
-            </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={() => setActionMenuVisible(false)}>
+          <View style={styles.modalBackdrop}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.menuCard, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Actions</Text>
+                <TouchableOpacity style={styles.menuAction} onPress={handleBlockUser}>
+                  <Text style={styles.menuActionText}>Bloquer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.menuAction}
+                  onPress={() => {
+                    setActionMenuVisible(false);
+                    setReportVisible(true);
+                  }}
+                >
+                  <Text style={styles.menuActionText}>Signaler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.menuAction, styles.menuCancel]} onPress={() => setActionMenuVisible(false)}>
+                  <Text style={styles.menuCancelText}>Annuler</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
-      <Modal visible={reportVisible} animationType="slide" onRequestClose={() => setReportVisible(false)}>
-        <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}> 
-          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Signaler un utilisateur</Text>
-          <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>Les signalements abusifs peuvent entraîner des sanctions. Merci d’être honnête.</Text>
-
-          <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Catégorie</Text>
-          <View style={styles.categoryGrid}>
-            {REPORT_CATEGORIES.map((cat) => {
-              const selected = reportCategory === cat.value;
-              return (
-                <TouchableOpacity
-                  key={cat.value}
-                  style={[styles.categoryChip, selected && styles.categoryChipSelected]}
-                  onPress={() => setReportCategory(cat.value)}
+      <Modal transparent visible={reportVisible} animationType="fade" onRequestClose={() => setReportVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setReportVisible(false); }}>
+          <View style={styles.modalBackdrop}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ width: '100%' }}
+              >
+                <ScrollView
+                  contentContainerStyle={[styles.reportCard, { backgroundColor: colors.surface }]}
+                  keyboardShouldPersistTaps="handled"
                 >
-                  <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>{cat.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
+                  <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Signaler un utilisateur</Text>
+                  <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>Les signalements abusifs peuvent entraîner des sanctions. Merci d’être honnête.</Text>
+
+                  <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Catégorie</Text>
+                  <View style={styles.categoryGrid}>
+                    {REPORT_CATEGORIES.map((cat) => {
+                      const selected = reportCategory === cat.value;
+                      return (
+                        <TouchableOpacity
+                          key={cat.value}
+                          style={[styles.categoryChip, selected && styles.categoryChipSelected]}
+                          onPress={() => setReportCategory(cat.value)}
+                        >
+                          <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>{cat.label}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Motif</Text>
+                  <TextInput
+                    style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
+                    placeholder="Expliquez brièvement le motif"
+                    placeholderTextColor={colors.textSecondary}
+                    value={reportReason}
+                    onChangeText={setReportReason}
+                  />
+
+                  <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Description (optionnelle)</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextarea, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
+                    placeholder="Détails supplémentaires"
+                    placeholderTextColor={colors.textSecondary}
+                    value={reportDescription}
+                    onChangeText={setReportDescription}
+                    multiline
+                  />
+
+                  <TouchableOpacity style={styles.modalButton} onPress={handleSubmitReport} disabled={reportSubmitting}>
+                    <Text style={styles.modalButtonText}>{reportSubmitting ? 'Envoi...' : 'Envoyer le signalement'}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.modalButton, styles.deleteButton]} onPress={() => setReportVisible(false)} disabled={reportSubmitting}>
+                    <Text style={styles.modalButtonText}>Annuler</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
           </View>
-
-          <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Motif</Text>
-          <TextInput
-            style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
-            placeholder="Expliquez brièvement le motif"
-            placeholderTextColor={colors.textSecondary}
-            value={reportReason}
-            onChangeText={setReportReason}
-          />
-
-          <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Description (optionnelle)</Text>
-          <TextInput
-            style={[styles.modalInput, styles.modalTextarea, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
-            placeholder="Détails supplémentaires"
-            placeholderTextColor={colors.textSecondary}
-            value={reportDescription}
-            onChangeText={setReportDescription}
-            multiline
-          />
-
-          <TouchableOpacity style={styles.modalButton} onPress={handleSubmitReport} disabled={reportSubmitting}>
-            <Text style={styles.modalButtonText}>{reportSubmitting ? 'Envoi...' : 'Envoyer le signalement'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.modalButton, styles.deleteButton]} onPress={() => setReportVisible(false)} disabled={reportSubmitting}>
-            <Text style={styles.modalButtonText}>Annuler</Text>
-          </TouchableOpacity>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
     </SafeAreaView>
@@ -759,6 +781,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: width * 0.05,
     paddingTop: height * 0.05,
+  },
+  reportCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 12,
+    padding: 16,
+    alignSelf: 'center',
   },
   modalTitle: {
     fontSize: width * 0.06,

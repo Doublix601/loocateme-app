@@ -557,6 +557,19 @@ function AppInner() {
       screenToShow = (
         <ModeratorScreen
           onBack={() => setCurrentScreen('Settings')}
+          onOpenUserProfile={(u) => {
+            if (!u) return;
+            setSelectedUser({
+              _id: u.id || u._id,
+              username: u.username || '',
+              firstName: u.firstName || '',
+              lastName: u.lastName || '',
+              customName: u.customName || '',
+              photo: u.profileImageUrl || null,
+            });
+            setProfileReturnTo('Moderator');
+            setCurrentScreen('UserProfile');
+          }}
         />
       );
       break;

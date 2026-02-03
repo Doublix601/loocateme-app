@@ -10,6 +10,10 @@ import {
   Modal,
   TextInput,
   Dimensions,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from 'react-native';
 import { getReports, actOnReport } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -35,7 +39,7 @@ const formatDate = (d) => {
   }
 };
 
-const ModeratorScreen = ({ onBack }) => {
+const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const { colors } = useTheme();
   const { user } = useContext(UserContext);
   const [reports, setReports] = useState([]);
@@ -76,14 +80,14 @@ const ModeratorScreen = ({ onBack }) => {
   };
 
   const submitAction = async () => {
-    if (!selectedReport?._id) return;
+    if (!selectedReport?.id) return;
     if (actionType === 'ban_temp' && (!durationHours || Number(durationHours) <= 0)) {
       Alert.alert('Durée requise', 'Merci d’indiquer un nombre d’heures valide.');
       return;
     }
     try {
       setWorking(true);
-      await actOnReport(selectedReport._id, {
+      await actOnReport(selectedReport.id, {
         action: actionType,
         target: actionType === 'dismiss' ? undefined : actionTarget,
         durationHours: actionType === 'ban_temp' ? Number(durationHours) : undefined,
@@ -101,7 +105,7 @@ const ModeratorScreen = ({ onBack }) => {
 
   if (!user || !['admin', 'moderator'].includes(user.role)) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]}> 
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Accès refusé</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Cette section est réservée aux modérateurs.</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={onBack}>
@@ -112,7 +116,7 @@ const ModeratorScreen = ({ onBack }) => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}> 
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Signalements</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={loadReports}>
@@ -130,10 +134,20 @@ const ModeratorScreen = ({ onBack }) => {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Aucun signalement en attente.</Text>
           ) : (
             reports.map((rep) => (
-              <View key={rep._id} style={[styles.card, { backgroundColor: colors.surface }]}> 
-                <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                  {formatName(rep.reportedUser)}
-                </Text>
+              <View key={rep.id} style={[styles.card, { backgroundColor: colors.surface }]}>
+                <TouchableOpacity
+                  style={styles.cardTitleButton}
+                  onPress={() => {
+                    if (rep?.reported?.id && onOpenUserProfile) {
+                      onOpenUserProfile(rep.reported);
+                    }
+                  }}
+                  disabled={!rep?.reported?.id || !onOpenUserProfile}
+                >
+                  <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+                    {formatName(rep.reported)}
+                  </Text>
+                </TouchableOpacity>
                 <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Signalé par: {formatName(rep.reporter)}</Text>
                 <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Date: {formatDate(rep.createdAt)}</Text>
                 <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Catégorie: {rep.category}</Text>
@@ -141,7 +155,7 @@ const ModeratorScreen = ({ onBack }) => {
                 {rep.description ? (
                   <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Détails: {rep.description}</Text>
                 ) : null}
-                <Text style={[styles.pendingCount, { color: colors.textSecondary }]}>Signalements en cours: {rep.pendingCount ?? 0}</Text>
+                <Text style={[styles.pendingCount, { color: colors.textSecondary }]}>Signalements en cours: {rep.pendingCountForReported ?? 0}</Text>
 
                 <View style={styles.actionsRow}>
                   <TouchableOpacity style={styles.actionBtn} onPress={() => openAction(rep, 'warn')}>
@@ -168,57 +182,69 @@ const ModeratorScreen = ({ onBack }) => {
       </TouchableOpacity>
 
       <Modal transparent visible={actionVisible} animationType="fade" onRequestClose={() => setActionVisible(false)}>
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}> 
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Action</Text>
-            <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Cible</Text>
-            <View style={styles.targetRow}>
-              <TouchableOpacity
-                style={[styles.targetChip, actionTarget === 'reported' && styles.targetChipActive]}
-                onPress={() => setActionTarget('reported')}
-                disabled={actionType === 'dismiss'}
+        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setActionVisible(false); }}>
+          <View style={styles.modalBackdrop}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ width: '100%' }}
               >
-                <Text style={[styles.targetChipText, actionTarget === 'reported' && styles.targetChipTextActive]}>Accusé</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.targetChip, actionTarget === 'reporter' && styles.targetChipActive]}
-                onPress={() => setActionTarget('reporter')}
-                disabled={actionType === 'dismiss'}
-              >
-                <Text style={[styles.targetChipText, actionTarget === 'reporter' && styles.targetChipTextActive]}>Rapporteur</Text>
-              </TouchableOpacity>
-            </View>
+                <ScrollView
+                  contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Action</Text>
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Cible</Text>
+                  <View style={styles.targetRow}>
+                    <TouchableOpacity
+                      style={[styles.targetChip, actionTarget === 'reported' && styles.targetChipActive]}
+                      onPress={() => setActionTarget('reported')}
+                      disabled={actionType === 'dismiss'}
+                    >
+                      <Text style={[styles.targetChipText, actionTarget === 'reported' && styles.targetChipTextActive]}>Accusé</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.targetChip, actionTarget === 'reporter' && styles.targetChipActive]}
+                      onPress={() => setActionTarget('reporter')}
+                      disabled={actionType === 'dismiss'}
+                    >
+                      <Text style={[styles.targetChipText, actionTarget === 'reporter' && styles.targetChipTextActive]}>Rapporteur</Text>
+                    </TouchableOpacity>
+                  </View>
 
-            {actionType === 'ban_temp' && (
-              <>
-                <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Durée (heures)</Text>
-                <TextInput
-                  style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary }]}
-                  keyboardType="numeric"
-                  value={durationHours}
-                  onChangeText={setDurationHours}
-                />
-              </>
-            )}
+                  {actionType === 'ban_temp' && (
+                    <>
+                      <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Durée (heures)</Text>
+                      <TextInput
+                        style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary }]}
+                        keyboardType="numeric"
+                        value={durationHours}
+                        onChangeText={setDurationHours}
+                      />
+                    </>
+                  )}
 
-            <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Note (optionnelle)</Text>
-            <TextInput
-              style={[styles.modalInput, styles.modalTextarea, { borderColor: colors.border, color: colors.textPrimary }]}
-              value={note}
-              onChangeText={setNote}
-              multiline
-            />
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Note (optionnelle)</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextarea, { borderColor: colors.border, color: colors.textPrimary }]}
+                    value={note}
+                    onChangeText={setNote}
+                    multiline
+                  />
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.primaryButton} onPress={submitAction} disabled={working}>
-                <Text style={styles.primaryButtonText}>{working ? 'Traitement...' : 'Confirmer'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.primaryButton, styles.cancelButton]} onPress={() => setActionVisible(false)} disabled={working}>
-                <Text style={[styles.primaryButtonText, styles.cancelButtonText]}>Annuler</Text>
-              </TouchableOpacity>
-            </View>
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity style={styles.primaryButton} onPress={submitAction} disabled={working}>
+                      <Text style={styles.primaryButtonText}>{working ? 'Traitement...' : 'Confirmer'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.primaryButton, styles.cancelButton]} onPress={() => setActionVisible(false)} disabled={working}>
+                      <Text style={[styles.primaryButtonText, styles.cancelButtonText]}>Annuler</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </View>
   );
@@ -250,6 +276,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginTop: 12,
+  },
+  cardTitleButton: {
+    alignSelf: 'flex-start',
   },
   cardTitle: {
     fontSize: width * 0.055,
