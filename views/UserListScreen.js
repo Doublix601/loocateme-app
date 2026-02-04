@@ -12,6 +12,7 @@ import {
   Alert,
   PanResponder,
   TextInput,
+  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { proxifyImageUrl } from '../components/ServerUtils';
@@ -254,7 +255,7 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
       const lon = loc.coords.longitude;
       setMyLocation({ lat, lon });
       await updateMyLocation({ lat, lon }).catch(() => {});
-      const res = await getUsersAroundMe({ lat, lon, radius: 2000 });
+      const res = await getUsersAroundMe({ lat, lon, radius: 5000 });
       const apiUsers = (res?.users || []).filter((u) => u?.emailVerified === true);
       const mapped = apiUsers.map((u) => mapBackendUserToUi(u, { lat, lon }));
       setNearbyUsers(mapped);
@@ -545,8 +546,9 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         data={data}
         keyExtractor={(item, index) => getUserKey(item, index)}
         renderItem={renderItem}
-        bounces={false}
-        overScrollMode="never"
+        bounces={Platform.OS === 'ios'}
+        alwaysBounceVertical={Platform.OS === 'ios'}
+        overScrollMode={Platform.OS === 'android' ? 'always' : undefined}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={[styles.listContainer, { flexGrow: 1 }]}
