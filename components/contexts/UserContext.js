@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getAccessToken, getMyUser } from '../ApiRequest';
+import { registerCurrentDevicePushToken } from '../PushService';
 import { subscribe } from '../EventBus';
 
 export const UserContext = createContext();
@@ -63,6 +64,7 @@ export const UserProvider = ({ children }) => {
         const me = res?.user;
         if (!cancelled && me) {
           setUser(mapBackendUser(me));
+          try { await registerCurrentDevicePushToken(); } catch (_) {}
         }
       } catch (e) {
         console.error('[UserContext] Auto-hydration failed', { code: e?.code, message: e?.message, status: e?.status });
@@ -100,6 +102,7 @@ export const UserProvider = ({ children }) => {
         const res = await getMyUser();
         const me = res?.user;
         if (me) setUser(mapBackendUser(me));
+        try { await registerCurrentDevicePushToken(); } catch (_) {}
       } catch (e) {
         // silent
       }
@@ -110,6 +113,7 @@ export const UserProvider = ({ children }) => {
         const res = await getMyUser();
         const me = res?.user;
         if (me) setUser(mapBackendUser(me));
+        try { await registerCurrentDevicePushToken(); } catch (_) {}
       } catch (_) {}
     });
     return () => { offLogout(); offLogin(); offUiReload(); };

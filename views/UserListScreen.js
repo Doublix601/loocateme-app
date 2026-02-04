@@ -545,6 +545,8 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
         data={data}
         keyExtractor={(item, index) => getUserKey(item, index)}
         renderItem={renderItem}
+        bounces={false}
+        overScrollMode="never"
         onScroll={handleScroll}
         scrollEventThrottle={16}
         contentContainerStyle={[styles.listContainer, { flexGrow: 1 }]}

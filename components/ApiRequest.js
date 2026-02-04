@@ -13,6 +13,7 @@ const resolvedBase = process.env.EXPO_PUBLIC_API_URL
 export const BASE_URL = resolvedBase.replace(/\/$/, '');
 
 const ACCESS_TOKEN_KEY = 'loocateme_access_token';
+const PUSH_TOKEN_KEY = 'loocateme_push_token';
 
 // In-memory access token holder. Persisted via AsyncStorage for auto-login.
 let accessToken = null;
@@ -299,12 +300,29 @@ export async function refreshAccessToken() {
 
 export async function logout() {
     try {
+        let pushToken = null;
+        try {
+            pushToken = await AsyncStorage.getItem(PUSH_TOKEN_KEY);
+        } catch (_) {}
+        if (pushToken) {
+            try {
+                await request('/push/unregister-token', {
+                    method: 'POST',
+                    body: { token: pushToken },
+                    retry: false,
+                    suppressAuthHandling: true,
+                });
+            } catch (e) {
+                console.warn('[API] Push unregister failed', e?.message || e);
+            }
+        }
         await request('/auth/logout', { method: 'POST', includeCredentials: true, retry: false, suppressAuthHandling: true });
     } catch (e) {
         console.error('[API] Logout error', e);
     } finally {
         setAccessToken(null);
         try { await AsyncStorage.removeItem(ACCESS_TOKEN_KEY); } catch {}
+        try { await AsyncStorage.removeItem(PUSH_TOKEN_KEY); } catch {}
         try { publish('auth:logout', { reason: 'USER_REQUEST' }); } catch (_) {}
     }
 }
@@ -446,7 +464,14 @@ export async function getDetailedProfileViews(limit = 50) {
 }
 
 export async function registerPushToken({ token, platform = 'unknown' }) {
-    return request('/push/register-token', { method: 'POST', body: { token, platform } });
+    const res = await request('/push/register-token', { method: 'POST', body: { token, platform } });
+    try { await AsyncStorage.setItem(PUSH_TOKEN_KEY, String(token)); } catch (_) {}
+    return res;
+}
+
+export async function unregisterPushToken({ token }) {
+    if (!token) return { success: false, skipped: true };
+    return request('/push/unregister-token', { method: 'POST', body: { token }, retry: false, suppressAuthHandling: true });
 }
 
 export async function startPremiumTrial() {

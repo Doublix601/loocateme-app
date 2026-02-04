@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useLocale } from '../components/contexts/LocalizationContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,6 +20,7 @@ const { width, height } = Dimensions.get('window');
 const WarningsScreen = ({ onBack }) => {
   const { user } = useContext(UserContext);
   const { colors } = useTheme();
+  const { locale } = useLocale();
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -85,7 +87,7 @@ const WarningsScreen = ({ onBack }) => {
               </Text>
 
               <Text style={[styles.warningDate, { color: colors.textSecondary }]}>
-                {entry.at.toLocaleString('fr-FR')}
+                {entry.at.toLocaleString(locale)}
               </Text>
             </View>
           ))

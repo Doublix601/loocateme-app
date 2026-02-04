@@ -19,6 +19,7 @@ import WarningsScreen from './views/WarningsScreen';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
+import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 
@@ -434,11 +435,13 @@ function AppInner() {
 export default function App() {
   return (
     <ThemeProvider>
-      <FeatureFlagsProvider>
-        <UserProvider>
-          <AppInner />
-        </UserProvider>
-      </FeatureFlagsProvider>
+      <LocalizationProvider>
+        <FeatureFlagsProvider>
+          <UserProvider>
+            <AppInner />
+          </UserProvider>
+        </FeatureFlagsProvider>
+      </LocalizationProvider>
     </ThemeProvider>
   );
 }

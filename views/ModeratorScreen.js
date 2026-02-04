@@ -10,6 +10,8 @@ import {
   Modal,
   TextInput,
   Dimensions,
+  PanResponder,
+  Image,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
@@ -17,6 +19,7 @@ import {
 } from 'react-native';
 import { getReports, actOnReport, searchModerationUsers, moderateUser } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useLocale } from '../components/contexts/LocalizationContext';
 import { UserContext } from '../components/contexts/UserContext';
 
 const { width, height } = Dimensions.get('window');
@@ -31,9 +34,9 @@ const formatName = (u) => {
   );
 };
 
-const formatDate = (d) => {
+const formatDate = (d, locale) => {
   try {
-    return new Date(d).toLocaleString('fr-FR');
+    return new Date(d).toLocaleString(locale);
   } catch (_) {
     return '';
   }
@@ -50,6 +53,7 @@ const CATEGORY_LABELS = {
 
 const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const { colors } = useTheme();
+  const { locale } = useLocale();
   const { user } = useContext(UserContext);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -72,6 +76,20 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const [banNote, setBanNote] = useState('');
   const [moderationWorking, setModerationWorking] = useState(false);
   const searchDebounceRef = useRef(null);
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => false,
+    onMoveShouldSetPanResponder: (_evt, gestureState) => {
+      const { dx, dy } = gestureState;
+      const isHorizontal = Math.abs(dx) > Math.abs(dy);
+      return isHorizontal && dx > 10;
+    },
+    onPanResponderRelease: (_evt, gestureState) => {
+      const { dx, vx } = gestureState;
+      if (dx > 50 || vx > 0.3) {
+        onBack && onBack();
+      }
+    },
+  });
 
   const mapModerationUser = (u) => ({
     id: u?.id || u?._id,
@@ -209,13 +227,23 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
     const bannedUntil = mod.bannedUntil ? new Date(mod.bannedUntil) : null;
     const bannedUntilActive = bannedUntil && !isNaN(bannedUntil.getTime()) && bannedUntil.getTime() > Date.now();
     if (bannedPermanent) return 'Ban définitif';
-    if (bannedUntilActive) return `Ban jusqu’au ${bannedUntil.toLocaleString('fr-FR')}`;
+    if (bannedUntilActive) return `Ban jusqu’au ${bannedUntil.toLocaleString(locale)}`;
     return 'Non banni';
   };
 
   if (!user || !['admin', 'moderator'].includes(user.role)) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={onBack}
+          hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+        >
+          <Image
+            source={require('../assets/appIcons/backArrow.png')}
+            style={styles.backButtonImage}
+          />
+        </TouchableOpacity>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Accès refusé</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Cette section est réservée aux modérateurs.</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={onBack}>
@@ -226,9 +254,19 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={onBack}
+        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+      >
+        <Image
+          source={require('../assets/appIcons/backArrow.png')}
+          style={styles.backButtonImage}
+        />
+      </TouchableOpacity>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Signalements</Text>
+        <Text style={[styles.title, { color: colors.accent }]}>Signalements</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={loadReports}>
           <Text style={styles.primaryButtonText}>Rafraîchir</Text>
         </TouchableOpacity>
@@ -306,7 +344,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
                   </Text>
                 </TouchableOpacity>
                 <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Signalé par: {formatName(rep.reporter)}</Text>
-                <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Date: {formatDate(rep.createdAt)}</Text>
+                <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Date: {formatDate(rep.createdAt, locale)}</Text>
                 <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Catégorie: {rep.category}</Text>
                 <Text style={[styles.cardMeta, { color: colors.textSecondary }]}>Motif: {rep.reason}</Text>
                 {rep.description ? (
@@ -333,10 +371,6 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
           )}
         </ScrollView>
       )}
-
-      <TouchableOpacity style={styles.backButton} onPress={onBack}>
-        <Text style={styles.backButtonText}>Retour</Text>
-      </TouchableOpacity>
 
       <Modal transparent visible={actionVisible} animationType="fade" onRequestClose={() => setActionVisible(false)}>
         <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setActionVisible(false); }}>
@@ -497,14 +531,28 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: width * 0.05,
   },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 10,
+    padding: 8,
+  },
+  backButtonImage: {
+    width: 28,
+    height: 28,
+    tintColor: '#00c2cb',
+  },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     alignItems: 'center',
+    paddingTop: Math.max(8, height * 0.02),
+    gap: 8,
   },
   title: {
-    fontSize: width * 0.07,
+    fontSize: width * 0.08,
     fontWeight: '700',
+    textAlign: 'center',
   },
   sectionTitle: {
     fontSize: width * 0.055,
@@ -574,15 +622,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: '#fff',
     fontWeight: '700',
-  },
-  backButton: {
-    alignSelf: 'center',
-    marginTop: 12,
-  },
-  backButtonText: {
-    color: '#00c2cb',
-    fontSize: width * 0.045,
-    fontWeight: '600',
   },
   searchSection: {
     marginTop: 12,

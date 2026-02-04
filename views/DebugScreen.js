@@ -6,9 +6,11 @@ import { subscribe } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { UserContext } from '../components/contexts/UserContext';
+import { useLocale } from '../components/contexts/LocalizationContext';
 
 const DebugScreen = ({ onBack }) => {
   const { refresh: refreshFlags } = useFeatureFlags();
+  const { locale } = useLocale();
   const { user: currentUser } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -540,7 +542,7 @@ const DebugScreen = ({ onBack }) => {
               const banLabel = bannedPermanent
                 ? 'Ban définitif'
                 : bannedUntilActive
-                  ? `Ban jusqu’au ${bannedUntil.toLocaleString('fr-FR')}`
+                  ? `Ban jusqu’au ${bannedUntil.toLocaleString(locale)}`
                   : 'Non banni';
               return (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>

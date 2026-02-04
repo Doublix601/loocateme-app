@@ -8,6 +8,7 @@ import {
     StyleSheet,
     Image,
     ScrollView,
+    RefreshControl,
     Dimensions,
     PanResponder,
     Alert,
@@ -26,6 +27,7 @@ import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useLocale } from '../components/contexts/LocalizationContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -39,6 +41,7 @@ const MyAccountScreen = ({
                              onOpenWarnings,
                          }) => {
     const { colors, isDark } = useTheme();
+    const { locale } = useLocale();
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -62,6 +65,7 @@ const MyAccountScreen = ({
     // Partage / QR
     const [qrVisible, setQrVisible] = useState(false);
     const [myUserId, setMyUserId] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
 
     // Dynamically scale UI based on number of social networks to best fill the page without scrolling
     const socialCountForScale = Array.isArray(user?.socialMedia) ? user.socialMedia.length : 0;
@@ -140,6 +144,7 @@ const MyAccountScreen = ({
                         premiumTrialEnd: me.premiumTrialEnd || null,
                         consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
                         privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
+                        moderation: me.moderation || user?.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
                     });
                 }
                 // Capture id utilisateur pour le partage
@@ -327,8 +332,18 @@ const MyAccountScreen = ({
                 premiumTrialEnd: me.premiumTrialEnd || null,
                 consent: me.consent || user.consent || { accepted: false, version: '', consentAt: null },
                 privacyPreferences: me.privacyPreferences || user.privacyPreferences || { analytics: false, marketing: false },
+                moderation: me.moderation || user.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
             });
         } catch (_) {}
+    };
+
+    const handleRefresh = async () => {
+        try {
+            setRefreshing(true);
+            await refreshMyProfile();
+        } finally {
+            setRefreshing(false);
+        }
     };
 
     const handleEdit = (type) => {
@@ -371,8 +386,8 @@ const MyAccountScreen = ({
             } else if (editType === 'firstName') {
                 let normalized = raw.trim();
                 if (normalized) {
-                    const lower = normalized.toLocaleLowerCase('fr');
-                    normalized = lower.charAt(0).toLocaleUpperCase('fr') + lower.slice(1);
+                    const lower = normalized.toLocaleLowerCase(locale);
+                    normalized = lower.charAt(0).toLocaleUpperCase(locale) + lower.slice(1);
                 }
                 const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
                 if (normalized && !NAME_RE.test(normalized)) {
@@ -405,8 +420,8 @@ const MyAccountScreen = ({
             } else if (editType === 'lastName') {
                 let normalized = raw.trim();
                 if (normalized) {
-                    const lower = normalized.toLocaleLowerCase('fr');
-                    normalized = lower.charAt(0).toLocaleUpperCase('fr') + lower.slice(1);
+                    const lower = normalized.toLocaleLowerCase(locale);
+                    normalized = lower.charAt(0).toLocaleUpperCase(locale) + lower.slice(1);
                 }
                 const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
                 if (normalized && !NAME_RE.test(normalized)) {
@@ -797,7 +812,13 @@ const MyAccountScreen = ({
                 />
             </TouchableOpacity>
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+                }
+            >
                 <Text style={styles.title}>Mon Compte</Text>
                 <View style={styles.userInfoContainer}>
                     <View style={styles.profileHeader}>
