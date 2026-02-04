@@ -460,11 +460,17 @@ const UserListScreen = ({ users = [], onSelectUser, onReturnToAccount, onOpenSea
   const renderItem = ({ item }) => renderUserCard({ ...item, username: getDisplayName(item) });
 
   const listRef = useRef(null);
+  const hasRestoredOffsetRef = useRef(false);
 
   useEffect(() => {
-    if (listRef.current && initialScrollOffset > 0) {
-      // Restore previous scroll position without animation
+    if (!listRef.current) return;
+    if (initialScrollOffset > 0 && !hasRestoredOffsetRef.current) {
+      // Restore previous scroll position without animation (only once per mount)
       listRef.current.scrollToOffset({ offset: initialScrollOffset, animated: false });
+      hasRestoredOffsetRef.current = true;
+    }
+    if (initialScrollOffset <= 0) {
+      hasRestoredOffsetRef.current = false;
     }
   }, [initialScrollOffset]);
 
