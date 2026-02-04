@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput, Switch } from 'react-native';
 import Constants from 'expo-constants';
-import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole } from '../components/ApiRequest';
+import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
@@ -177,6 +177,32 @@ const DebugScreen = ({ onBack }) => {
       Alert.alert('Succès', `Rôle mis à jour: ${role}`);
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de changer le rôle.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnban = async (userId) => {
+    try {
+      setLoading(true);
+      await unbanUser(userId);
+      setUsers((prev) => prev.map((u) => (String(u._id) === String(userId) ? {
+        ...u,
+        moderation: { ...(u.moderation || {}), bannedUntil: null, bannedPermanent: false, bannedAt: null, bannedBy: null, banReason: '' },
+      } : u)));
+      setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? {
+        ...u,
+        moderation: { ...(u.moderation || {}), bannedUntil: null, bannedPermanent: false, bannedAt: null, bannedBy: null, banReason: '' },
+      } : u)));
+      setSelectedUser((prev) => (prev && String(prev._id || prev.id) === String(userId) ? {
+        ...prev,
+        moderation: { ...(prev.moderation || {}), bannedUntil: null, bannedPermanent: false, bannedAt: null, bannedBy: null, banReason: '' },
+      } : prev));
+      try { invalidateApiCacheByPrefix('/api/admin'); } catch (_) {}
+      try { await runAllApiUsers(); } catch (_) {}
+      Alert.alert('Succès', 'Utilisateur débanni.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || "Impossible de lever le ban.");
     } finally {
       setLoading(false);
     }
@@ -505,6 +531,32 @@ const DebugScreen = ({ onBack }) => {
             <Text style={styles.selectedName} numberOfLines={1}>
               {(selectedUser.username || selectedUser.customName || selectedUser.firstName || selectedUser.email || 'Utilisateur')}
             </Text>
+            {(() => {
+              const mod = selectedUser.moderation || {};
+              const bannedPermanent = !!mod.bannedPermanent;
+              const bannedUntil = mod.bannedUntil ? new Date(mod.bannedUntil) : null;
+              const bannedUntilActive = bannedUntil && !isNaN(bannedUntil.getTime()) && bannedUntil.getTime() > Date.now();
+              const isBanned = bannedPermanent || bannedUntilActive;
+              const banLabel = bannedPermanent
+                ? 'Ban définitif'
+                : bannedUntilActive
+                  ? `Ban jusqu’au ${bannedUntil.toLocaleString('fr-FR')}`
+                  : 'Non banni';
+              return (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+                  <Text style={[styles.badge, isBanned ? styles.badgeBanActive : styles.badgeBanInactive]}>
+                    {banLabel}
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.smallBtn, styles.btnUnban, { marginLeft: 8 }, !isBanned ? styles.btnDisabled : null]}
+                    onPress={() => handleUnban(selectedUser._id || selectedUser.id)}
+                    disabled={!isBanned}
+                  >
+                    <Text style={styles.smallBtnTxt}>Unban</Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })()}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
               <Text style={[styles.badge, selectedUser.isPremium ? styles.badgePrem : styles.badgeFree]}>
                 {selectedUser.isPremium ? 'Premium' : 'Free'}
@@ -629,9 +681,12 @@ const styles = StyleSheet.create({
   badgeAdmin: { backgroundColor: '#e74c3c', color: '#fff' },
   badgeMod: { backgroundColor: '#9b59b6', color: '#fff' },
   badgeUser: { backgroundColor: '#3498db', color: '#fff' },
+  badgeBanActive: { backgroundColor: '#ff4d4d', color: '#fff' },
+  badgeBanInactive: { backgroundColor: '#1f2a34', color: '#9ab' },
   btnAdmin: { backgroundColor: '#c0392b' },
   btnMod: { backgroundColor: '#8e44ad' },
   btnUser: { backgroundColor: '#2980b9' },
+  btnUnban: { backgroundColor: '#16a085' },
 });
 
 // Entrées réutilisables

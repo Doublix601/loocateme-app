@@ -40,6 +40,7 @@ const mapBackendUser = (u = {}) => ({
   role: u.role || 'user',
   consent: u.consent || { accepted: false, version: '', consentAt: null },
   privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
+  moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
 });
 
 function AppInner() {

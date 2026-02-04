@@ -563,3 +563,12 @@ export async function setUserRole(userId, role) {
         body: { role },
     });
 }
+
+// ADMIN: Unban user
+export async function unbanUser(userId) {
+    const id = String(userId || '');
+    if (!id) throw new Error('userId requis');
+    return request(`/admin/users/${encodeURIComponent(id)}/unban`, {
+        method: 'PUT',
+    });
+}

@@ -54,6 +54,19 @@ const MyAccountScreen = ({
         },
     });
     const { user, updateUser } = useContext(UserContext);
+    const warningsCount = user?.moderation?.warningsCount || 0;
+    const lastWarningAt = user?.moderation?.lastWarningAt || null;
+    const lastWarningReason = user?.moderation?.lastWarningReason || '';
+    const warningHistory = Array.isArray(user?.moderation?.warningsHistory)
+      ? user.moderation.warningsHistory
+          .map((entry) => ({
+            at: entry?.at ? new Date(entry.at) : null,
+            reason: entry?.reason ? String(entry.reason) : '',
+          }))
+          .filter((entry) => entry.at && !isNaN(entry.at.getTime()))
+      : [];
+    const sortedWarningHistory = warningHistory.sort((a, b) => b.at.getTime() - a.at.getTime());
+    const formattedLastWarning = lastWarningAt ? new Date(lastWarningAt).toLocaleString('fr-FR') : null;
     const [modalVisible, setModalVisible] = useState(false);
     const [editType, setEditType] = useState('');
     const [newValue, setNewValue] = useState('');
@@ -878,6 +891,31 @@ const MyAccountScreen = ({
                             </View>
                         </View>
 
+                        {warningsCount > 0 && (
+                            <View style={[styles.warningCard, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}> 
+                                <Text style={[styles.warningTitle, { color: colors.accent }]}>Avertissements</Text>
+                                <Text style={[styles.warningText, { color: colors.textPrimary }]}>
+                                    Vous avez {warningsCount} avertissement{warningsCount > 1 ? 's' : ''}.
+                                </Text>
+                                {sortedWarningHistory.length > 0 ? (
+                                    <View style={styles.warningList}>
+                                        {sortedWarningHistory.map((entry, index) => (
+                                            <Text key={`${entry.at.getTime()}_${index}`} style={[styles.warningMeta, { color: colors.textSecondary }]}>
+                                                • {entry.reason || 'Avertissement'} — {entry.at.toLocaleString('fr-FR')}
+                                            </Text>
+                                        ))}
+                                    </View>
+                                ) : lastWarningReason ? (
+                                    <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>Motif : {lastWarningReason}</Text>
+                                ) : (
+                                    <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>Motif : Avertissement</Text>
+                                )}
+                                {formattedLastWarning ? (
+                                    <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>Dernier avertissement : {formattedLastWarning}</Text>
+                                ) : null}
+                            </View>
+                        )}
+
                         {/* Boutons de partage entre la bio et les réseaux sociaux (icônes uniquement) */}
                         <View style={styles.shareIconsRow}>
                             <TouchableOpacity
@@ -1227,6 +1265,32 @@ const styles = StyleSheet.create({
     bioTextContainer: {
         alignItems: 'center',
         width: '100%',
+    },
+    warningCard: {
+        width: '100%',
+        borderRadius: 10,
+        borderWidth: 1,
+        padding: 12,
+        marginTop: height * 0.02,
+        alignItems: 'center',
+    },
+    warningTitle: {
+        fontSize: width * 0.05,
+        fontWeight: '700',
+        marginBottom: 6,
+    },
+    warningText: {
+        fontSize: width * 0.042,
+        textAlign: 'center',
+    },
+    warningList: {
+        marginTop: 6,
+        width: '100%',
+    },
+    warningMeta: {
+        marginTop: 6,
+        fontSize: width * 0.038,
+        textAlign: 'center',
     },
     profileHeader: {
         flexDirection: width > 600 ? 'row' : 'column',

@@ -23,6 +23,7 @@ function mapBackendUser(u = {}) {
     // Include GDPR consent and privacy preferences if present
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
+    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
   };
 }
 
@@ -41,6 +42,7 @@ export const UserProvider = ({ children }) => {
     role: 'user',
     consent: { accepted: false, version: '', consentAt: null },
     privacyPreferences: { analytics: false, marketing: false },
+    moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
   });
 
   const updateUser = (updatedUser) => {
@@ -90,6 +92,7 @@ export const UserProvider = ({ children }) => {
         role: 'user',
         consent: { accepted: false, version: '', consentAt: null },
         privacyPreferences: { analytics: false, marketing: false },
+        moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
       });
     });
     const offLogin = subscribe('auth:login', async () => {
