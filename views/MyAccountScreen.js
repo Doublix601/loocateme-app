@@ -240,6 +240,14 @@ const MyAccountScreen = ({
         const size = `${QR_SIZE}x${QR_SIZE}`;
         return `https://api.qrserver.com/v1/create-qr-code/?size=${size}&data=${encodeURIComponent(data)}`;
     })();
+    const [qrImageUri, setQrImageUri] = useState('');
+    useEffect(() => {
+        if (!qrUrl) {
+            setQrImageUri('');
+            return;
+        }
+        setQrImageUri(proxifyImageUrl(qrUrl));
+    }, [qrUrl]);
     const [selectedSocialLink, setSelectedSocialLink] = useState(null);
     const [photoOptionsModalVisible, setPhotoOptionsModalVisible] =
         useState(false);
@@ -1169,7 +1177,18 @@ const MyAccountScreen = ({
                 <View style={[styles.qrBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.5)' }]}>
                     <View style={[styles.qrCard, { backgroundColor: colors.surface }]}>
                         <Text style={styles.modalTitle}>Scanne pour voir mon profil</Text>
-                        <Image source={{ uri: proxifyImageUrl(qrUrl) }} style={{ width: QR_SIZE, height: QR_SIZE }} resizeMode="contain" />
+                        {qrImageUri ? (
+                            <Image
+                                source={{ uri: qrImageUri }}
+                                style={{ width: QR_SIZE, height: QR_SIZE }}
+                                resizeMode="contain"
+                                onError={() => {
+                                    if (qrImageUri !== qrUrl) {
+                                        setQrImageUri(qrUrl);
+                                    }
+                                }}
+                            />
+                        ) : null}
                         <Text style={[styles.qrHint, { color: colors.textSecondary }]}>Si l'app n'est pas installée, tu seras redirigé(e) vers le store ({Platform.OS === 'ios' ? 'App Store' : 'Google Play'}).</Text>
                         <TouchableOpacity
                             onPress={() => setQrVisible(false)}
