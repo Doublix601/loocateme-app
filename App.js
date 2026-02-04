@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
 import LoginScreen from './views/LoginScreen';
@@ -19,7 +19,7 @@ import WarningsScreen from './views/WarningsScreen';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
-import { initApiFromStorage, getMyUser, clearApiCache } from './components/ApiRequest';
+import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 
 const mapBackendUser = (u = {}) => ({
@@ -40,6 +40,20 @@ const mapBackendUser = (u = {}) => ({
   moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
 });
 
+const mapProfileUser = (u = {}) => ({
+  _id: u._id || u.id,
+  username: u.username || u.name || '',
+  firstName: u.firstName || '',
+  lastName: u.lastName || '',
+  customName: u.customName || '',
+  bio: u.bio || '',
+  photo: u.profileImageUrl || null,
+  socialMedia: Array.isArray(u.socialNetworks)
+    ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+    : [],
+  locationCoordinates: Array.isArray(u.location?.coordinates) ? u.location.coordinates : undefined,
+});
+
 function AppInner() {
   const [currentScreen, setCurrentScreen] = useState('Login');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -47,6 +61,7 @@ function AppInner() {
   const [userListScrollOffset, setUserListScrollOffset] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [pendingProfileId, setPendingProfileId] = useState(null);
   const appState = useRef(AppState.currentState);
   const { colors } = useTheme();
   const { user: appUser, updateUser } = useContext(UserContext);
@@ -144,6 +159,54 @@ function AppInner() {
     });
     return () => { try { off && off(); } catch (_) {} };
   }, []);
+
+  useEffect(() => {
+    const extractProfileId = (url) => {
+      if (!url) return null;
+      const match = String(url).match(/profile\/([^?#]+)/i);
+      if (!match || !match[1]) return null;
+      try {
+        return decodeURIComponent(match[1]);
+      } catch (_) {
+        return match[1];
+      }
+    };
+
+    const handleUrl = (url) => {
+      const id = extractProfileId(url);
+      if (id) setPendingProfileId(id);
+    };
+
+    (async () => {
+      try {
+        const initial = await Linking.getInitialURL();
+        if (initial) handleUrl(initial);
+      } catch (_) {}
+    })();
+
+    const sub = Linking.addEventListener?.('url', ({ url }) => handleUrl(url));
+    return () => { try { sub?.remove?.(); } catch (_) {} };
+  }, []);
+
+  useEffect(() => {
+    const openProfileFromLink = async () => {
+      if (!pendingProfileId || !authReady) return;
+      if (!getAccessToken()) return;
+      try {
+        const res = await getUserById(pendingProfileId);
+        const u = res?.user;
+        if (!u) return;
+        setSelectedUser(mapProfileUser(u));
+        setProfileReturnTo('UserList');
+        setCurrentScreen('UserProfile');
+        setPendingProfileId(null);
+      } catch (e) {
+        if (e?.status === 401) return;
+        setPendingProfileId(null);
+      }
+    };
+    openProfileFromLink();
+  }, [pendingProfileId, authReady, appUser]);
 
   const handleLogin = (user) => {
     const consentAccepted = !!(user?.consent?.accepted);

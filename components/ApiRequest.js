@@ -319,6 +319,12 @@ export async function getMyUser() {
     return request('/users/me', { method: 'GET', cache: 'reload' });
 }
 
+export async function getUserById(userId) {
+    const id = String(userId || '');
+    if (!id) throw new Error('userId requis');
+    return request(`/users/${encodeURIComponent(id)}`, { method: 'GET', cache: 'reload' });
+}
+
 export async function updateMyLocation({ lat, lon }) {
     return request('/users/location', { method: 'POST', body: { lat, lon } });
 }
