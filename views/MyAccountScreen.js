@@ -36,6 +36,7 @@ const MyAccountScreen = ({
                              onOpenDataManagement,
                              onOpenStatistics,
                              onOpenPremiumPaywall,
+                             onOpenWarnings,
                          }) => {
     const { colors, isDark } = useTheme();
     const panResponder = PanResponder.create({
@@ -55,18 +56,6 @@ const MyAccountScreen = ({
     });
     const { user, updateUser } = useContext(UserContext);
     const warningsCount = user?.moderation?.warningsCount || 0;
-    const lastWarningAt = user?.moderation?.lastWarningAt || null;
-    const lastWarningReason = user?.moderation?.lastWarningReason || '';
-    const warningHistory = Array.isArray(user?.moderation?.warningsHistory)
-      ? user.moderation.warningsHistory
-          .map((entry) => ({
-            at: entry?.at ? new Date(entry.at) : null,
-            reason: entry?.reason ? String(entry.reason) : '',
-          }))
-          .filter((entry) => entry.at && !isNaN(entry.at.getTime()))
-      : [];
-    const sortedWarningHistory = warningHistory.sort((a, b) => b.at.getTime() - a.at.getTime());
-    const formattedLastWarning = lastWarningAt ? new Date(lastWarningAt).toLocaleString('fr-FR') : null;
     const [modalVisible, setModalVisible] = useState(false);
     const [editType, setEditType] = useState('');
     const [newValue, setNewValue] = useState('');
@@ -892,28 +881,17 @@ const MyAccountScreen = ({
                         </View>
 
                         {warningsCount > 0 && (
-                            <View style={[styles.warningCard, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}> 
+                            <TouchableOpacity
+                                style={[styles.warningCard, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}
+                                onPress={onOpenWarnings}
+                                activeOpacity={0.8}
+                            >
                                 <Text style={[styles.warningTitle, { color: colors.accent }]}>Avertissements</Text>
                                 <Text style={[styles.warningText, { color: colors.textPrimary }]}>
                                     Vous avez {warningsCount} avertissement{warningsCount > 1 ? 's' : ''}.
                                 </Text>
-                                {sortedWarningHistory.length > 0 ? (
-                                    <View style={styles.warningList}>
-                                        {sortedWarningHistory.map((entry, index) => (
-                                            <Text key={`${entry.at.getTime()}_${index}`} style={[styles.warningMeta, { color: colors.textSecondary }]}>
-                                                • {entry.reason || 'Avertissement'} — {entry.at.toLocaleString('fr-FR')}
-                                            </Text>
-                                        ))}
-                                    </View>
-                                ) : lastWarningReason ? (
-                                    <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>Motif : {lastWarningReason}</Text>
-                                ) : (
-                                    <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>Motif : Avertissement</Text>
-                                )}
-                                {formattedLastWarning ? (
-                                    <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>Dernier avertissement : {formattedLastWarning}</Text>
-                                ) : null}
-                            </View>
+                                <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>Appuyez pour voir le détail</Text>
+                            </TouchableOpacity>
                         )}
 
                         {/* Boutons de partage entre la bio et les réseaux sociaux (icônes uniquement) */}

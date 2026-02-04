@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Platform } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Linking from 'expo-linking';
 import { Asset } from 'expo-asset';
-import Constants from 'expo-constants';
 import LoginScreen from './views/LoginScreen';
 import ForgotPasswordScreen from './views/ForgotPasswordScreen';
 import SignupScreen from './views/SignupScreen';
@@ -17,13 +15,12 @@ import DebugScreen from './views/DebugScreen';
 import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import ModeratorScreen from './views/ModeratorScreen';
+import WarningsScreen from './views/WarningsScreen';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
-import { FeatureFlagsProvider, useFeatureFlags } from './components/contexts/FeatureFlagsContext';
-import { initApiFromStorage, getAccessToken, getMyUser, clearApiCache } from './components/ApiRequest';
-import { subscribe, publish } from './components/EventBus';
-import { initInactivityTracking } from './components/NotificationScheduler';
-import { registerPushToken } from './components/ApiRequest';
+import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
+import { initApiFromStorage, getMyUser, clearApiCache } from './components/ApiRequest';
+import { publish, subscribe } from './components/EventBus';
 
 const mapBackendUser = (u = {}) => ({
   username: u.username || u.name || '',
@@ -40,29 +37,27 @@ const mapBackendUser = (u = {}) => ({
   role: u.role || 'user',
   consent: u.consent || { accepted: false, version: '', consentAt: null },
   privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-  moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+  moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
 });
 
 function AppInner() {
   const [currentScreen, setCurrentScreen] = useState('Login');
   const [selectedUser, setSelectedUser] = useState(null);
-  const [profileReturnTo, setProfileReturnTo] = useState('UserList'); // 'UserList' | 'Statistics'
+  const [profileReturnTo, setProfileReturnTo] = useState('UserList');
   const [userListScrollOffset, setUserListScrollOffset] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const appState = useRef(AppState.currentState);
-  // IMPORTANT: useTheme and UserContext must be called unconditionally
   const { colors } = useTheme();
   const { user: appUser, updateUser } = useContext(UserContext);
 
-  // Transition animation state
   const transitionX = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get('window');
   const prevScreenRef = useRef('Login');
 
   const [userInfo, setUserInfo] = useState({
     username: 'Arnaud',
-    bio: "Développeur full stack, j'ai une bio plutôt longue comme tu peux le voir, afin de voir comment ça se comporte en responsive", // Exemple de bio
+    bio: "Développeur full stack, j'ai une bio plutôt longue comme tu peux le voir, afin de voir comment ça se comporte en responsive",
     photo: '',
   });
 
@@ -76,7 +71,6 @@ function AppInner() {
     youtube: require('./assets/socialMediaIcons/yt_logo.png'),
   };
 
-  // Preload all local icons/images to avoid UI flicker when screens mount
   useEffect(() => {
     const preload = async () => {
       try {
@@ -94,8 +88,8 @@ function AppInner() {
           require('./assets/socialMediaIcons/yt_logo.png'),
           require('./assets/socialMediaIcons/addSocialNetwork_logo.png'),
         ]);
-      } catch (e) {
-        // noop: even if preloading fails, we still allow app to render
+      } catch (_) {
+        // noop
       } finally {
         setAssetsReady(true);
       }
@@ -103,7 +97,6 @@ function AppInner() {
     preload();
   }, []);
 
-  // Initialize auth from stored token for auto-login
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -118,278 +111,45 @@ function AppInner() {
             const consentAccepted = !!(me?.consent?.accepted);
             setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
             if (consentAccepted) {
-              // Trigger refresh for initial cold start only if needed.
-              // UserListScreen now handles its own initial load from cache.
-              // We only publish if we want to FORCE a refresh (e.g. cold start).
-              // Initial opening of the app is one of the cases where refresh is allowed.
               setTimeout(() => publish('userlist:refresh'), 1000);
             }
-          } catch (_e) {
-            // If fetching me fails, fallback to UserList; global auth handler will handle errors
+          } catch (_) {
             setCurrentScreen('UserList');
             setTimeout(() => publish('userlist:refresh'), 1000);
           }
         }
-      } catch (e) {
+      } catch (_) {
         // ignore
       } finally {
         setAuthReady(true);
       }
     };
     initAuth();
-  }, []);
+  }, [updateUser]);
 
-  // Notifications: inactivity reminder scheduling and push token registration
   useEffect(() => {
-    // Start inactivity tracking (schedules reminder on background)
-    const stopTracking = initInactivityTracking({
-      // Tip: shorten in dev by setting e.g. 30 for 30s
-      devShortDelaySeconds: __DEV__ ? 0 : undefined,
+    const sub = AppState.addEventListener?.('change', (next) => {
+      if (appState.current.match(/inactive|background/) && next === 'active') {
+        try { publish('userlist:refresh'); } catch (_) {}
+      }
+      appState.current = next;
     });
-
-    // Register Expo push token with backend
-    (async () => {
-      try {
-        const mod = await import('expo-notifications');
-        const Notifications = mod?.default ?? mod;
-        // Ask permission (idempotent)
-        const perm = await Notifications.getPermissionsAsync();
-        if (perm?.status !== 'granted') {
-          await Notifications.requestPermissionsAsync();
-        }
-        if (Platform.OS === 'ios' || Platform.OS === 'android') {
-          const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
-          if (!projectId) {
-            console.warn('[Notifications] No projectId found. Push tokens might fail in production.');
-          }
-          const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-          const token = res?.data || res?.token || (typeof res === 'string' ? res : null);
-          if (token) {
-            console.log('[Notifications] Token retrieved:', token);
-            try { await registerPushToken({ token, platform: Platform.OS }); } catch (err) {
-              console.warn('[Notifications] Failed to register token with backend:', err.message);
-            }
-          }
-        }
-      } catch (_e) {
-        // ignore if expo-notifications not available in current env
-      }
-    })();
-
-    return () => { try { stopTracking && stopTracking(); } catch (_) {} };
+    return () => { try { sub?.remove?.(); } catch (_) {} };
   }, []);
 
-    // Invalidate API cache when app returns to foreground (freshness on reopen)
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      const wasBackground = appState.current.match(/inactive|background/);
-      appState.current = nextState;
-      if (wasBackground && nextState === 'active') {
-        try {
-          clearApiCache();
-          publish('userlist:refresh');
-        } catch (_) {}
-      }
-    });
-
-    // Handle push notification responses (deep links to Statistics)
-    let notifSub;
-    (async () => {
-      try {
-        const mod = await import('expo-notifications');
-        const Notifications = mod?.default ?? mod;
-        notifSub = Notifications.addNotificationResponseReceivedListener(response => {
-          const data = response?.notification?.request?.content?.data;
-          if (data?.url === 'loocateme://nearby' || data?.reason === 'inactivity_reminder') {
-            setCurrentScreen('UserList');
-            // Déclenche un rafraîchissement forcé de la liste
-            setTimeout(() => publish('userlist:refresh'), 100);
-          } else if (data?.kind === 'profile_view') {
-            // Logique Premium : ouvrir le profil ou le paywall
-            // Admin and moderator roles have premium access
-            const hasPremiumAccess = appUser?.isPremium || appUser?.role === 'admin' || appUser?.role === 'moderator';
-            if (hasPremiumAccess) {
-              if (data?.actorId) {
-                setSelectedUser({ _id: data.actorId, id: data.actorId }); // Objet minimal
-                setProfileReturnTo('Statistics');
-                setCurrentScreen('UserProfile');
-              } else {
-                setCurrentScreen('Statistics');
-              }
-            } else {
-              setCurrentScreen('PremiumPaywall');
-            }
-          } else if (data?.kind === 'social_click' || data?.kind === 'weekly_digest' || data?.url === 'loocateme://statistics') {
-            setCurrentScreen('Statistics');
-          } else if (data?.kind === 'new_neighbor' && data?.neighborId) {
-            // On va voir le profil du nouveau voisin
-            setSelectedUser({ _id: data.neighborId, id: data.neighborId });
-            setProfileReturnTo('UserList');
-            setCurrentScreen('UserProfile');
-          }
-        });
-      } catch (_) {}
-    })();
-
-    return () => {
-      try { subscription.remove(); } catch (_) {}
-      try { notifSub && notifSub.remove(); } catch (_) {}
-    };
-  }, []);
-
-  // Handle email verification redirect: detect emailVerified=1 in URL
-  useEffect(() => {
-    const handleUrl = (url) => {
-      try {
-        if (!url) return;
-        const parsed = Linking.parse(url);
-        // Support both query param and fragment style
-        const params = { ...(parsed?.queryParams || {}) };
-        // Some redirects may append as fragment ?a=b#emailVerified=1
-        if (parsed?.fragment) {
-          const fragParams = Object.fromEntries(new URLSearchParams(parsed.fragment));
-          Object.assign(params, fragParams);
-        }
-        if (String(params.emailVerified) === '1') {
-          Alert.alert('Email vérifié', 'Votre adresse email a été confirmée. Vous pouvez vous connecter.');
-          // Retourner à l’écran de connexion si on n’est pas déjà authentifié
-          setCurrentScreen('Login');
-        }
-      } catch (_e) {
-        // ignore parsing errors
-      }
-    };
-
-    // Check initial URL when app starts (web or deep link)
-    Linking.getInitialURL().then(url => {
-      if (url === 'loocateme://nearby') {
-        setCurrentScreen('UserList');
-        setTimeout(() => publish('userlist:refresh'), 500);
-      } else {
-        handleUrl(url);
-      }
-    }).catch(() => {});
-    // Subscribe to future URL events while app is running
-    const sub = Linking.addEventListener('url', (evt) => {
-      if (evt?.url === 'loocateme://nearby') {
-        setCurrentScreen('UserList');
-        setTimeout(() => publish('userlist:refresh'), 100);
-      } else {
-        handleUrl(evt?.url);
-      }
-    });
-    return () => {
-      try { sub && sub.remove && sub.remove(); } catch {}
-    };
-  }, []);
-
-  // Force logout and redirect to Login when auth errors occur
-  useEffect(() => {
-    const unsub = subscribe('auth:logout', () => {
-      setSelectedUser(null);
-      setUserListScrollOffset(0);
+    const off = subscribe('auth:logout', () => {
+      try { clearApiCache(); } catch (_) {}
       setCurrentScreen('Login');
     });
-    const unsubPremium = subscribe('ui:open_premium', () => {
-      setCurrentScreen('PremiumPaywall');
-    });
-    return () => { unsub(); unsubPremium(); };
+    return () => { try { off && off(); } catch (_) {} };
   }, []);
 
-  const users = [
-    {
-      id: 1,
-      username: 'Arnaud',
-      bio: "Développeur full stack, j'ai une bio plutôt longue comme tu peux le voir, afin de voir comment ça se comporte en responsive", // Exemple de bio
-      photo: '',
-      distance: '20 m',
-      socialMedias: [
-        {
-          socialMedia: 'instagram',
-          link: 'arnaud.theret'
-        },
-        {
-          socialMedia: 'facebook',
-          identifier: '100081250702076'
-        }
-      ]
-    },
-    {
-      id: 2,
-      username: 'Florian',
-      bio: "C'est la bio de Florian",
-      photo: '',
-      distance: '50 m',
-    },
-    {
-      id: 3,
-      username: 'Mattéo',
-      bio: "C'est la bio de Mat",
-      photo: '',
-      distance: '100 m',
-    },
-    {
-      id: 5,
-      username: 'Léna',
-      bio: "C'est la bio de Léna",
-      photo: '',
-      distance: '110 m',
-    },
-    {
-      id: 5,
-      username: 'Kilian',
-      bio: "C'est la bio de Kiki",
-      photo: '',
-      distance: '120 m',
-    },
-    {
-      id: 6,
-      username: 'Miracle',
-      bio: "Eh oui les chats peuvent aussi s'inscrire y'a quoi",
-      photo: '',
-      distance: '150 m',
-    },
-    {
-      id: 7,
-      username: 'Trooper',
-      bio: "Eh oui les chiens peuvent aussi s'inscrire y'a quoi",
-      photo: '',
-      distance: '200 m',
-    },
-  ];
-
-  // Fonctions de navigation
-  const handleLogin = async () => {
-    try {
-      const res = await getMyUser();
-      const me = res?.user;
-      const consentAccepted = !!(me?.consent?.accepted);
-
-      // Re-register push token on login to ensure it's linked to the correct user
-      try {
-        const mod = await import('expo-notifications');
-        const Notifications = mod?.default ?? mod;
-        const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
-        if (!projectId) {
-          console.warn('[Notifications] No projectId found during login. Push token registration might fail.');
-        }
-        const tokRes = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-        const token = tokRes?.data || tokRes?.token || (typeof tokRes === 'string' ? tokRes : null);
-        if (token) {
-          console.log('[Notifications] Token retrieved during login:', token);
-          await registerPushToken({ token, platform: Platform.OS });
-        }
-      } catch (_) {}
-
-      setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
-      // Trigger refresh for login (considered as first opening/session start)
-      if (consentAccepted) {
-        setTimeout(() => publish('userlist:refresh'), 100);
-      }
-    } catch (_e) {
-      // If fetching me fails, default to UserList; auth guard will handle errors elsewhere
-      setCurrentScreen('UserList');
-      setTimeout(() => publish('userlist:refresh'), 100);
+  const handleLogin = (user) => {
+    const consentAccepted = !!(user?.consent?.accepted);
+    setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
+    if (consentAccepted) {
+      setTimeout(() => publish('userlist:refresh'), 1000);
     }
   };
   const handleForgotPassword = () => setCurrentScreen('ForgotPassword');
@@ -403,7 +163,6 @@ function AppInner() {
   const handleReturnToList = () => setCurrentScreen('UserList');
   const handleReturnToAccount = () => setCurrentScreen('MyAccount');
   const onReturnToSettings = () => setCurrentScreen('Settings');
-  const handleOpenDebug = () => setCurrentScreen('Debug');
   const handleLogout = () => setCurrentScreen('Login');
 
   const handleSelectUser = (user) => {
@@ -412,17 +171,16 @@ function AppInner() {
     setCurrentScreen('UserProfile');
   };
 
-  // Animate on screen change for list/detail and account/settings flows
   useEffect(() => {
     const prev = prevScreenRef.current;
 
     const isForward =
       (prev === 'UserList' && (currentScreen === 'UserProfile' || currentScreen === 'MyAccount')) ||
-      (prev === 'MyAccount' && currentScreen === 'Settings');
+      (prev === 'MyAccount' && (currentScreen === 'Settings' || currentScreen === 'Warnings'));
 
     const isBack =
       (currentScreen === 'UserList' && (prev === 'UserProfile' || prev === 'MyAccount')) ||
-      (currentScreen === 'MyAccount' && prev === 'Settings');
+      (currentScreen === 'MyAccount' && (prev === 'Settings' || prev === 'Warnings'));
 
     if (isForward || isBack) {
       const from = isForward ? width : -width;
@@ -440,7 +198,6 @@ function AppInner() {
     prevScreenRef.current = currentScreen;
   }, [currentScreen, transitionX, width]);
 
-  // Fonction pour mettre à jour les informations de l'utilisateur
   const handleUpdateUser = (type, value) => {
     setUserInfo((prevState) => ({
       ...prevState,
@@ -448,7 +205,7 @@ function AppInner() {
     }));
   };
 
-  if (!assetsReady) {
+  if (!assetsReady || !authReady) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#00c2cb" />
@@ -478,13 +235,14 @@ function AppInner() {
     case 'MyAccount':
       screenToShow = (
         <MyAccountScreen
-          user={userInfo} // Passez les informations utilisateur ici
-          onUpdateUser={handleUpdateUser} // Passez la fonction de mise à jour
+          user={userInfo}
+          onUpdateUser={handleUpdateUser}
           onReturnToList={handleReturnToList}
           socialMediaIcons={socialMediaIcons}
           onReturnToSettings={onReturnToSettings}
           onOpenStatistics={() => setCurrentScreen('Statistics')}
           onOpenPremiumPaywall={() => setCurrentScreen('PremiumPaywall')}
+          onOpenWarnings={() => setCurrentScreen('Warnings')}
         />
       );
       break;
@@ -514,10 +272,18 @@ function AppInner() {
           user={selectedUser}
           onReturnToList={() => {
             if (profileReturnTo === 'Statistics') setCurrentScreen('Statistics');
+            else if (profileReturnTo === 'Moderator') setCurrentScreen('Moderator');
             else handleReturnToList();
           }}
           onReturnToAccount={handleReturnToAccount}
           socialMediaIcons={socialMediaIcons}
+        />
+      );
+      break;
+    case 'Warnings':
+      screenToShow = (
+        <WarningsScreen
+          onBack={() => setCurrentScreen('MyAccount')}
         />
       );
       break;
@@ -585,7 +351,7 @@ function AppInner() {
     default:
       screenToShow = (
         <LoginScreen
-          onReturnToAccount={handleLogin}
+          onLogin={handleLogin}
           onForgotPassword={handleForgotPassword}
           onSignup={handleSignup}
         />

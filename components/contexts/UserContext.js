@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getAccessToken, getMyUser } from '../ApiRequest';
 import { subscribe } from '../EventBus';
 
@@ -23,7 +23,7 @@ function mapBackendUser(u = {}) {
     // Include GDPR consent and privacy preferences if present
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
   };
 }
 
@@ -42,12 +42,12 @@ export const UserProvider = ({ children }) => {
     role: 'user',
     consent: { accepted: false, version: '', consentAt: null },
     privacyPreferences: { analytics: false, marketing: false },
-    moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
   });
 
-  const updateUser = (updatedUser) => {
+  const updateUser = useCallback((updatedUser) => {
     setUser(updatedUser);
-  };
+  }, []);
 
   // Auto-hydrate user from backend if a token exists (e.g., after auto-login)
   useEffect(() => {
@@ -92,7 +92,7 @@ export const UserProvider = ({ children }) => {
         role: 'user',
         consent: { accepted: false, version: '', consentAt: null },
         privacyPreferences: { analytics: false, marketing: false },
-        moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+        moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
       });
     });
     const offLogin = subscribe('auth:login', async () => {
@@ -115,8 +115,10 @@ export const UserProvider = ({ children }) => {
     return () => { offLogout(); offLogin(); offUiReload(); };
   }, []);
 
+  const value = useMemo(() => ({ user, updateUser }), [user, updateUser]);
+
   return (
-    <UserContext.Provider value={{ user, updateUser }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );

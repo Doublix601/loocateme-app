@@ -465,12 +465,28 @@ export async function getReports({ status = 'pending', page = 1, limit = 50 } = 
     return request(`/reports?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
-export async function actOnReport(reportId, { action, target, durationHours, note } = {}) {
+export async function actOnReport(reportId, { action, target, durationHours, note, warningType } = {}) {
     const id = String(reportId || '');
     if (!id) throw new Error('reportId requis');
     return request(`/reports/${encodeURIComponent(id)}/action`, {
         method: 'POST',
-        body: { action, target, durationHours, note },
+        body: { action, target, durationHours, note, warningType },
+    });
+}
+
+export async function searchModerationUsers({ q, limit = 10 }) {
+    const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) });
+    return request(`/reports/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+}
+
+export async function moderateUser(userId, { action, count } = {}) {
+    const id = String(userId || '');
+    if (!id) throw new Error('userId requis');
+    const body = { action };
+    if (typeof count === 'number') body.count = count;
+    return request(`/reports/users/${encodeURIComponent(id)}/moderate`, {
+        method: 'POST',
+        body,
     });
 }
 

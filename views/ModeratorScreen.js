@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
   Keyboard,
   Platform,
 } from 'react-native';
-import { getReports, actOnReport } from '../components/ApiRequest';
+import { getReports, actOnReport, searchModerationUsers, moderateUser } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { UserContext } from '../components/contexts/UserContext';
 
@@ -39,6 +39,15 @@ const formatDate = (d) => {
   }
 };
 
+const CATEGORY_LABELS = {
+  harassment: 'Harcèlement',
+  spam: 'Spam',
+  inappropriate: 'Contenu inapproprié',
+  impersonation: 'Usurpation d’identité',
+  scam: 'Arnaque',
+  other: 'Autre',
+};
+
 const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const { colors } = useTheme();
   const { user } = useContext(UserContext);
@@ -50,8 +59,31 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const [actionType, setActionType] = useState('warn');
   const [actionTarget, setActionTarget] = useState('reported');
   const [durationHours, setDurationHours] = useState('24');
+  const [warningType, setWarningType] = useState('');
   const [note, setNote] = useState('');
   const [working, setWorking] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [moderationVisible, setModerationVisible] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [removeCount, setRemoveCount] = useState('1');
+  const [moderationWorking, setModerationWorking] = useState(false);
+  const searchDebounceRef = useRef(null);
+
+  const mapModerationUser = (u) => ({
+    id: u?.id || u?._id,
+    username: u?.username || '',
+    firstName: u?.firstName || '',
+    lastName: u?.lastName || '',
+    customName: u?.customName || '',
+    email: u?.email || '',
+    profileImageUrl: u?.profileImageUrl || '',
+    role: u?.role || 'user',
+    isVisible: u?.isVisible !== false,
+    moderation: u?.moderation || {},
+  });
 
   const loadReports = async () => {
     try {
@@ -70,11 +102,41 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
     loadReports();
   }, []);
 
+  useEffect(() => {
+    const q = String(searchQuery || '').trim();
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (!q) {
+      setSearchResults([]);
+      setSearchError('');
+      setSearching(false);
+      return;
+    }
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        setSearching(true);
+        setSearchError('');
+        const res = await searchModerationUsers({ q, limit: 10 });
+        const list = Array.isArray(res?.users) ? res.users.map(mapModerationUser) : [];
+        setSearchResults(list);
+      } catch (e) {
+        setSearchError(e?.message || 'Recherche impossible.');
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 250);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
+
   const openAction = (report, type) => {
     setSelectedReport(report);
     setActionType(type);
     setActionTarget('reported');
     setDurationHours('24');
+    const categoryLabel = report?.category ? (CATEGORY_LABELS[report.category] || report.category) : '';
+    setWarningType(categoryLabel || '');
     setNote('');
     setActionVisible(true);
   };
@@ -91,6 +153,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
         action: actionType,
         target: actionType === 'dismiss' ? undefined : actionTarget,
         durationHours: actionType === 'ban_temp' ? Number(durationHours) : undefined,
+        warningType: actionType === 'warn' ? (warningType.trim() || undefined) : undefined,
         note: note.trim() || undefined,
       });
       setActionVisible(false);
@@ -101,6 +164,41 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
     } finally {
       setWorking(false);
     }
+  };
+
+  const openUserModeration = (u) => {
+    const mapped = mapModerationUser(u);
+    setSelectedUser(mapped);
+    setRemoveCount('1');
+    setModerationVisible(true);
+  };
+
+  const applyUserModeration = async (action) => {
+    if (!selectedUser?.id) return;
+    try {
+      setModerationWorking(true);
+      const count = Math.max(1, parseInt(removeCount, 10) || 1);
+      const res = await moderateUser(selectedUser.id, { action, count });
+      const updated = res?.user ? mapModerationUser(res.user) : null;
+      if (updated) {
+        setSelectedUser(updated);
+        setSearchResults((prev) => prev.map((item) => (String(item.id) === String(updated.id) ? updated : item)));
+      }
+      Alert.alert('Succès', 'Action enregistrée.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible d’appliquer cette action.');
+    } finally {
+      setModerationWorking(false);
+    }
+  };
+
+  const getBanLabel = (mod = {}) => {
+    const bannedPermanent = !!mod.bannedPermanent;
+    const bannedUntil = mod.bannedUntil ? new Date(mod.bannedUntil) : null;
+    const bannedUntilActive = bannedUntil && !isNaN(bannedUntil.getTime()) && bannedUntil.getTime() > Date.now();
+    if (bannedPermanent) return 'Ban définitif';
+    if (bannedUntilActive) return `Ban jusqu’au ${bannedUntil.toLocaleString('fr-FR')}`;
+    return 'Non banni';
   };
 
   if (!user || !['admin', 'moderator'].includes(user.role)) {
@@ -122,6 +220,53 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
         <TouchableOpacity style={styles.primaryButton} onPress={loadReports}>
           <Text style={styles.primaryButtonText}>Rafraîchir</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchSection}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recherche utilisateur</Text>
+        <View style={[styles.searchBar, { borderColor: colors.border, backgroundColor: colors.surface }]}> 
+          <Text style={[styles.searchIcon, { color: colors.textSecondary }]}>🔎</Text>
+          <TextInput
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Nom, prénom, username..."
+            placeholderTextColor={colors.textSecondary}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
+          />
+        </View>
+        {searching ? (
+          <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 8 }} />
+        ) : searchError ? (
+          <Text style={[styles.error, { color: '#ff4d4d' }]}>{searchError}</Text>
+        ) : searchResults.length > 0 ? (
+          <View style={[styles.resultsBox, { borderColor: colors.border, backgroundColor: colors.surface }]}> 
+            {searchResults.map((u) => {
+              const mod = u?.moderation || {};
+              const warningsCount = typeof mod.warningsCount === 'number' ? mod.warningsCount : (Array.isArray(mod.warningsHistory) ? mod.warningsHistory.length : 0);
+              return (
+                <TouchableOpacity
+                  key={String(u.id)}
+                  style={[styles.resultRow, { borderBottomColor: colors.border }]}
+                  onLongPress={() => openUserModeration(u)}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.resultName, { color: colors.textPrimary }]} numberOfLines={1}>
+                      {formatName(u)}
+                    </Text>
+                    <Text style={[styles.resultMeta, { color: colors.textSecondary }]} numberOfLines={1}>
+                      {u.email || '—'}
+                    </Text>
+                  </View>
+                  <View style={styles.resultBadges}>
+                    <Text style={[styles.badge, styles.badgeWarnings]}>{warningsCount} av.</Text>
+                    <Text style={[styles.badge, styles.badgeBan]}>{getBanLabel(mod)}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        ) : null}
+        <Text style={[styles.helperText, { color: colors.textSecondary }]}>Appui long sur un utilisateur pour gérer ses avertissements ou son ban.</Text>
       </View>
 
       {loading ? (
@@ -224,7 +369,20 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
                     </>
                   )}
 
-                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Note (optionnelle)</Text>
+                  {actionType === 'warn' && (
+                    <>
+                      <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Type d’avertissement</Text>
+                      <TextInput
+                        style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary }]}
+                        value={warningType}
+                        onChangeText={setWarningType}
+                        placeholder="Ex: Harcèlement"
+                        placeholderTextColor={colors.textSecondary}
+                      />
+                    </>
+                  )}
+
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Motif (optionnel)</Text>
                   <TextInput
                     style={[styles.modalInput, styles.modalTextarea, { borderColor: colors.border, color: colors.textPrimary }]}
                     value={note}
@@ -238,6 +396,56 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.primaryButton, styles.cancelButton]} onPress={() => setActionVisible(false)} disabled={working}>
                       <Text style={[styles.primaryButtonText, styles.cancelButtonText]}>Annuler</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      <Modal transparent visible={moderationVisible} animationType="fade" onRequestClose={() => setModerationVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setModerationVisible(false); }}>
+          <View style={styles.modalBackdrop}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ width: '100%' }}
+              >
+                <ScrollView contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]} keyboardShouldPersistTaps="handled">
+                  <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Gestion utilisateur</Text>
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Utilisateur</Text>
+                  <Text style={[styles.modalValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                    {formatName(selectedUser)}
+                  </Text>
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Statut</Text>
+                  <Text style={[styles.modalValue, { color: colors.textPrimary }]}>{getBanLabel(selectedUser?.moderation || {})}</Text>
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Avertissements</Text>
+                  <Text style={[styles.modalValue, { color: colors.textPrimary }]}> 
+                    {selectedUser?.moderation?.warningsCount || 0}
+                  </Text>
+
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Nombre d’avertissements à retirer</Text>
+                  <TextInput
+                    style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary }]}
+                    keyboardType="numeric"
+                    value={removeCount}
+                    onChangeText={setRemoveCount}
+                  />
+
+                  <View style={styles.modalActionsColumn}>
+                    <TouchableOpacity style={styles.primaryButton} onPress={() => applyUserModeration('remove_warnings')} disabled={moderationWorking}>
+                      <Text style={styles.primaryButtonText}>{moderationWorking ? 'Traitement...' : 'Retirer les avertissements'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.primaryButton, styles.dismissBtn]} onPress={() => applyUserModeration('clear_warnings')} disabled={moderationWorking}>
+                      <Text style={[styles.primaryButtonText, styles.dismissBtnText]}>Retirer tous les avertissements</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.primaryButton, styles.actionBtn]} onPress={() => applyUserModeration('unban')} disabled={moderationWorking}>
+                      <Text style={styles.primaryButtonText}>Retirer le ban</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.primaryButton, styles.cancelButton]} onPress={() => setModerationVisible(false)} disabled={moderationWorking}>
+                      <Text style={[styles.primaryButtonText, styles.cancelButtonText]}>Fermer</Text>
                     </TouchableOpacity>
                   </View>
                 </ScrollView>
@@ -263,6 +471,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: width * 0.07,
     fontWeight: '700',
+  },
+  sectionTitle: {
+    fontSize: width * 0.055,
+    fontWeight: '700',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: width * 0.045,
@@ -337,6 +550,67 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
     fontWeight: '600',
   },
+  searchSection: {
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  searchIcon: {
+    marginRight: 8,
+    fontSize: 14,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: width * 0.042,
+  },
+  resultsBox: {
+    borderWidth: 1,
+    borderRadius: 10,
+    marginTop: 8,
+  },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+  },
+  resultName: {
+    fontSize: width * 0.045,
+    fontWeight: '600',
+  },
+  resultMeta: {
+    fontSize: width * 0.035,
+  },
+  resultBadges: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  badge: {
+    fontSize: width * 0.032,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    color: '#fff',
+    overflow: 'hidden',
+  },
+  badgeWarnings: {
+    backgroundColor: '#f39c12',
+  },
+  badgeBan: {
+    backgroundColor: '#34495e',
+  },
+  helperText: {
+    marginTop: 6,
+    fontSize: width * 0.034,
+  },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -376,6 +650,10 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 14,
   },
+  modalActionsColumn: {
+    gap: 10,
+    marginTop: 14,
+  },
   cancelButton: {
     backgroundColor: '#e0f7f9',
   },
@@ -404,6 +682,11 @@ const styles = StyleSheet.create({
   targetChipTextActive: {
     color: '#00aab2',
     fontWeight: '600',
+  },
+  modalValue: {
+    fontSize: width * 0.045,
+    fontWeight: '600',
+    marginBottom: 6,
   },
 });
 
