@@ -383,6 +383,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     }
   };
 
+
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
@@ -614,6 +615,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
 
     </SafeAreaView>
   );
@@ -897,6 +899,63 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: width * 0.05,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 420,
+    borderRadius: 12,
+    padding: 16,
+    alignSelf: 'center',
+  },
+  modalLabel: {
+    fontSize: width * 0.04,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  primaryButton: {
+    backgroundColor: '#00c2cb',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  cancelButton: {
+    backgroundColor: '#e0f7f9',
+  },
+  cancelButtonText: {
+    color: '#00c2cb',
+  },
+  targetRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  targetChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  targetChipActive: {
+    borderColor: '#00c2cb',
+    backgroundColor: '#e6fbfc',
+  },
+  targetChipText: {
+    fontSize: width * 0.04,
+    color: '#333',
+  },
+  targetChipTextActive: {
+    color: '#00aab2',
+    fontWeight: '600',
   },
   menuCard: {
     width: '100%',

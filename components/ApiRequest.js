@@ -479,11 +479,13 @@ export async function searchModerationUsers({ q, limit = 10 }) {
     return request(`/reports/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
-export async function moderateUser(userId, { action, count } = {}) {
+export async function moderateUser(userId, { action, count, durationHours, note } = {}) {
     const id = String(userId || '');
     if (!id) throw new Error('userId requis');
     const body = { action };
     if (typeof count === 'number') body.count = count;
+    if (typeof durationHours === 'number') body.durationHours = durationHours;
+    if (typeof note === 'string') body.note = note;
     return request(`/reports/users/${encodeURIComponent(id)}/moderate`, {
         method: 'POST',
         body,

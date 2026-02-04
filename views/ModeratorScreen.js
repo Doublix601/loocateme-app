@@ -68,7 +68,8 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const [searchError, setSearchError] = useState('');
   const [moderationVisible, setModerationVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [removeCount, setRemoveCount] = useState('1');
+  const [banDurationHours, setBanDurationHours] = useState('24');
+  const [banNote, setBanNote] = useState('');
   const [moderationWorking, setModerationWorking] = useState(false);
   const searchDebounceRef = useRef(null);
 
@@ -169,16 +170,27 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const openUserModeration = (u) => {
     const mapped = mapModerationUser(u);
     setSelectedUser(mapped);
-    setRemoveCount('1');
+    setBanDurationHours('24');
+    setBanNote('');
     setModerationVisible(true);
   };
 
-  const applyUserModeration = async (action) => {
+  const applyUserModeration = async (action, options = {}) => {
     if (!selectedUser?.id) return;
     try {
       setModerationWorking(true);
-      const count = Math.max(1, parseInt(removeCount, 10) || 1);
-      const res = await moderateUser(selectedUser.id, { action, count });
+      if (action === 'ban_temp') {
+        const hours = Math.max(1, parseInt(options.durationHours, 10) || 0);
+        if (!hours) {
+          Alert.alert('Durée requise', 'Merci d’indiquer un nombre d’heures valide.');
+          return;
+        }
+      }
+      const res = await moderateUser(selectedUser.id, {
+        action,
+        durationHours: options.durationHours,
+        note: options.note,
+      });
       const updated = res?.user ? mapModerationUser(res.user) : null;
       if (updated) {
         setSelectedUser(updated);
@@ -425,21 +437,43 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
                   <Text style={[styles.modalValue, { color: colors.textPrimary }]}> 
                     {selectedUser?.moderation?.warningsCount || 0}
                   </Text>
-
-                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Nombre d’avertissements à retirer</Text>
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Ban sans signalement</Text>
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Durée (heures)</Text>
                   <TextInput
                     style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary }]}
                     keyboardType="numeric"
-                    value={removeCount}
-                    onChangeText={setRemoveCount}
+                    value={banDurationHours}
+                    onChangeText={setBanDurationHours}
+                  />
+                  <Text style={[styles.modalLabel, { color: colors.textSecondary }]}>Motif (optionnel)</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextarea, { borderColor: colors.border, color: colors.textPrimary }]}
+                    value={banNote}
+                    onChangeText={setBanNote}
+                    multiline
                   />
 
                   <View style={styles.modalActionsColumn}>
-                    <TouchableOpacity style={styles.primaryButton} onPress={() => applyUserModeration('remove_warnings')} disabled={moderationWorking}>
-                      <Text style={styles.primaryButtonText}>{moderationWorking ? 'Traitement...' : 'Retirer les avertissements'}</Text>
+                    <TouchableOpacity
+                      style={styles.primaryButton}
+                      onPress={() => applyUserModeration('clear_warnings')}
+                      disabled={moderationWorking}
+                    >
+                      <Text style={styles.primaryButtonText}>{moderationWorking ? 'Traitement...' : 'Retirer tous les avertissements'}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.primaryButton, styles.dismissBtn]} onPress={() => applyUserModeration('clear_warnings')} disabled={moderationWorking}>
-                      <Text style={[styles.primaryButtonText, styles.dismissBtnText]}>Retirer tous les avertissements</Text>
+                    <TouchableOpacity
+                      style={[styles.primaryButton, styles.actionBtn]}
+                      onPress={() => applyUserModeration('ban_temp', { durationHours: banDurationHours, note: banNote })}
+                      disabled={moderationWorking}
+                    >
+                      <Text style={styles.primaryButtonText}>Ban temporaire</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.primaryButton, styles.actionBtn]}
+                      onPress={() => applyUserModeration('ban_permanent', { note: banNote })}
+                      disabled={moderationWorking}
+                    >
+                      <Text style={styles.primaryButtonText}>Ban définitif</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.primaryButton, styles.actionBtn]} onPress={() => applyUserModeration('unban')} disabled={moderationWorking}>
                       <Text style={styles.primaryButtonText}>Retirer le ban</Text>
