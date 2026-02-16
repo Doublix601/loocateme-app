@@ -20,7 +20,6 @@ const { width, height } = Dimensions.get('window');
 import { UserContext } from '../components/contexts/UserContext';
 import {
   setVisibility as apiSetVisibility,
-  logout as apiLogout,
   getPrivacyPolicy,
   updateConsent,
   exportMyData,
@@ -317,7 +316,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
           </View>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={async () => { try { await apiLogout(); } catch(_) {} finally { onLogout && onLogout(); } }}>
+        <TouchableOpacity style={styles.logoutButton} onPress={async () => { try { await (onLogout && onLogout()); } catch(_) {} }}>
           <Text style={styles.logoutText}>Déconnexion</Text>
         </TouchableOpacity>
 

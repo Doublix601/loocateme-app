@@ -20,7 +20,7 @@ import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
-import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken } from './components/ApiRequest';
+import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken, logout as apiLogout } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 
 const mapBackendUser = (u = {}) => ({
@@ -224,10 +224,19 @@ function AppInner() {
     } catch {}
     setCurrentScreen('Login');
   };
+  const handleGoToLogin = () => setCurrentScreen('Login');
   const handleReturnToList = () => setCurrentScreen('UserList');
   const handleReturnToAccount = () => setCurrentScreen('MyAccount');
   const onReturnToSettings = () => setCurrentScreen('Settings');
-  const handleLogout = () => setCurrentScreen('Login');
+  const handleLogout = async () => {
+    try {
+      await apiLogout();
+    } catch (_) {
+      // ignore
+    } finally {
+      setCurrentScreen('Login');
+    }
+  };
 
   const handleSelectUser = (user) => {
     setSelectedUser(user);
@@ -290,7 +299,7 @@ function AppInner() {
       break;
     case 'Signup':
       screenToShow = (
-        <SignupScreen onSignup={handleSignupSuccess} onLogin={handleLogout} />
+        <SignupScreen onSignup={handleSignupSuccess} onLogin={handleGoToLogin} />
       );
       break;
     case 'ForgotPassword':

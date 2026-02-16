@@ -28,6 +28,7 @@ import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
+import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -58,6 +59,10 @@ const MyAccountScreen = ({
         },
     });
     const { user, updateUser } = useContext(UserContext);
+    const { flags } = useFeatureFlags();
+    const premiumEnabled = flags?.premiumEnabled ?? false;
+    const statisticsEnabled = flags?.statisticsEnabled ?? false;
+    const effectiveStatisticsEnabled = statisticsEnabled || premiumEnabled;
     const warningsCount = user?.moderation?.warningsCount || 0;
     const [modalVisible, setModalVisible] = useState(false);
     const [editType, setEditType] = useState('');
@@ -163,6 +168,9 @@ const MyAccountScreen = ({
             const res = await getMyUser();
             const me = res?.user;
             const nowPremium = !!me?.isPremium;
+            const nowRole = me?.role || user?.role || 'user';
+            const hasPremiumAccess = nowPremium || nowRole === 'admin' || nowRole === 'moderator';
+            const hasStatsAccess = effectiveStatisticsEnabled && (!premiumEnabled || hasPremiumAccess);
             if (updateUser && me) {
                 updateUser({
                     ...user,
@@ -181,7 +189,7 @@ const MyAccountScreen = ({
                     privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
                 });
             }
-            if (nowPremium) {
+            if (hasStatsAccess) {
                 onOpenStatistics && onOpenStatistics();
             } else {
                 onOpenPremiumPaywall && onOpenPremiumPaywall();
@@ -189,7 +197,10 @@ const MyAccountScreen = ({
         } catch (_) {
             // Fallback to current context state
             const premium = !!user?.isPremium;
-            if (premium) onOpenStatistics && onOpenStatistics();
+            const role = user?.role || 'user';
+            const hasPremiumAccess = premium || role === 'admin' || role === 'moderator';
+            const hasStatsAccess = effectiveStatisticsEnabled && (!premiumEnabled || hasPremiumAccess);
+            if (hasStatsAccess) onOpenStatistics && onOpenStatistics();
             else onOpenPremiumPaywall && onOpenPremiumPaywall();
         }
     };
