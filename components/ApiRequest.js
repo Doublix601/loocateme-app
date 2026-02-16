@@ -621,3 +621,75 @@ export async function unbanUser(userId) {
         method: 'PUT',
     });
 }
+
+// FOLLOW / RELATIONS
+export async function getFollowStatus(targetUserId) {
+    const id = String(targetUserId || '');
+    if (!id) throw new Error('targetUserId requis');
+    return request(`/follow/status/${encodeURIComponent(id)}`, { method: 'GET', cache: 'reload' });
+}
+
+export async function createFollowRequest(targetUserId) {
+    return request('/follow/request', { method: 'POST', body: { targetUserId } });
+}
+
+export async function listFollowRequests({ type = 'incoming' } = {}) {
+    const qs = new URLSearchParams({ type: String(type || 'incoming') });
+    return request(`/follow/requests?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+}
+
+export async function acceptFollowRequest(requestId) {
+    const id = String(requestId || '');
+    if (!id) throw new Error('requestId requis');
+    return request(`/follow/requests/${encodeURIComponent(id)}/accept`, { method: 'POST' });
+}
+
+export async function declineFollowRequest(requestId) {
+    const id = String(requestId || '');
+    if (!id) throw new Error('requestId requis');
+    return request(`/follow/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' });
+}
+
+// CHAT
+export async function listConversations() {
+    return request('/chat/conversations', { method: 'GET', cache: 'reload' });
+}
+
+export async function getConversationMessages(conversationId, { before, limit = 20 } = {}) {
+    const id = String(conversationId || '');
+    if (!id) throw new Error('conversationId requis');
+    const qs = new URLSearchParams({ limit: String(limit || 20) });
+    if (before) qs.set('before', String(before));
+    return request(`/chat/conversations/${encodeURIComponent(id)}/messages?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+}
+
+export async function sendChatMessage({ conversationId, targetUserId, type = 'text', text = '', mediaUrl = '', thumbnailUrl = '' } = {}) {
+    const body = { type, text, mediaUrl, thumbnailUrl };
+    if (conversationId) body.conversationId = conversationId;
+    if (targetUserId) body.targetUserId = targetUserId;
+    return request('/chat/messages', { method: 'POST', body });
+}
+
+export async function markConversationRead(conversationId, { messageId } = {}) {
+    const id = String(conversationId || '');
+    if (!id) throw new Error('conversationId requis');
+    return request(`/chat/conversations/${encodeURIComponent(id)}/read`, { method: 'POST', body: { messageId } });
+}
+
+export async function uploadChatMedia({ media, thumbnail } = {}) {
+    if (!media) throw new Error('media requis');
+    const formData = new FormData();
+    formData.append('media', {
+        uri: media.uri,
+        name: media.name || `media_${Date.now()}`,
+        type: media.type || 'application/octet-stream',
+    });
+    if (thumbnail?.uri) {
+        formData.append('thumbnail', {
+            uri: thumbnail.uri,
+            name: thumbnail.name || `thumb_${Date.now()}`,
+            type: thumbnail.type || 'image/jpeg',
+        });
+    }
+    return request('/chat/media', { method: 'POST', formData });
+}
