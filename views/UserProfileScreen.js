@@ -17,6 +17,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
@@ -24,9 +25,10 @@ import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
-import { trackProfileView, trackSocialClick, createReport, blockUser } from '../components/ApiRequest';
+import { trackProfileView, trackSocialClick, createReport, blockUser, getFollowStatus as apiGetFollowStatus, createFollowRequest as apiCreateFollowRequest } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { Feather } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,7 +43,7 @@ const REPORT_CATEGORIES = [
   { value: 'other', label: 'Autre' },
 ];
 
-const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons }) => {
+const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons, onOpenMessages, onOpenConversation }) => {
   const { user: currentUser } = React.useContext(UserContext);
   const { colors } = useTheme();
   const [actionMenuVisible, setActionMenuVisible] = React.useState(false);
@@ -50,6 +52,8 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const [reportReason, setReportReason] = React.useState('');
   const [reportDescription, setReportDescription] = React.useState('');
   const [reportSubmitting, setReportSubmitting] = React.useState(false);
+  const [followStatus, setFollowStatus] = React.useState('none'); // 'none' | 'pending' | 'accepted'
+  const [followLoading, setFollowLoading] = React.useState(false);
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -395,6 +399,43 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     );
   }
 
+  // Charger l'état de suivi au montage
+  React.useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!user?._id && !user?.id) return;
+      try {
+        const targetId = user._id || user.id;
+        const res = await apiGetFollowStatus(targetId);
+        const st = res?.status || 'none';
+        if (mounted) setFollowStatus(st);
+      } catch (_) {
+        if (mounted) setFollowStatus('none');
+      }
+    };
+    load();
+    return () => { mounted = false; };
+  }, [user?._id, user?.id]);
+
+  const handleMessagePress = async () => {
+    if (!user) return;
+    if (followStatus === 'accepted') {
+      if (onOpenConversation) onOpenConversation(user);
+      else try { publish('chat:openConversation', user); } catch (_) {}
+      return;
+    }
+    if (followStatus === 'pending') return; // désactivé
+    // none -> créer une demande de suivi
+    try {
+      setFollowLoading(true);
+      await apiCreateFollowRequest(user._id || user.id);
+      setFollowStatus('pending');
+    } catch (e) {
+      try { Alert.alert('Erreur', e?.message || 'Impossible d’envoyer la demande'); } catch (_) {}
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
@@ -414,6 +455,31 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
       >
         <Text style={styles.menuButtonText}>...</Text>
+      </TouchableOpacity>
+      {/* Bouton Suivre/Message en icône seule (lien) */}
+      <TouchableOpacity
+        style={[
+          styles.followIconButton,
+          {
+            backgroundColor: followStatus === 'accepted' ? colors.accent : colors.surfaceAlt,
+            borderColor: colors.accent,
+            opacity: (followLoading || followStatus === 'pending') ? 0.6 : 1,
+          },
+        ]}
+        onPress={handleMessagePress}
+        disabled={followLoading || followStatus === 'pending'}
+        hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+        accessibilityLabel={followStatus === 'accepted' ? 'Ouvrir la conversation' : followStatus === 'pending' ? 'Demande en attente' : 'Envoyer une demande de suivi'}
+      >
+        {followLoading ? (
+          <ActivityIndicator color={followStatus === 'accepted' ? '#fff' : colors.accent} />
+        ) : (
+          <Feather
+            name="link-2"
+            size={22}
+            color={followStatus === 'accepted' ? '#fff' : colors.accent}
+          />
+        )}
       </TouchableOpacity>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
@@ -881,6 +947,18 @@ const styles = StyleSheet.create({
     right: 10,
     zIndex: 10,
     padding: 8,
+  },
+  followIconButton: {
+    position: 'absolute',
+    top: 56,
+    right: 14,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   menuButtonText: {
     fontSize: 26,

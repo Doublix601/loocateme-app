@@ -693,3 +693,4 @@ export async function uploadChatMedia({ media, thumbnail } = {}) {
     }
     return request('/chat/media', { method: 'POST', formData });
 }
+
