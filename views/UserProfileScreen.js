@@ -420,8 +420,8 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const handleMessagePress = async () => {
     if (!user) return;
     if (followStatus === 'accepted') {
-      if (onOpenConversation) onOpenConversation(user);
-      else try { publish('chat:openConversation', user); } catch (_) {}
+      // Chat désactivé
+      try { Alert.alert('Indisponible', 'La messagerie a été désactivée.'); } catch (_) {}
       return;
     }
     if (followStatus === 'pending') return; // désactivé

@@ -16,8 +16,7 @@ import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import ModeratorScreen from './views/ModeratorScreen';
 import WarningsScreen from './views/WarningsScreen';
-import ChatListScreen from './views/ChatListScreen';
-import ConversationScreen from './views/ConversationScreen';
+// Chat screens supprimés (fonctionnalité de chat désactivée)
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
@@ -65,7 +64,7 @@ function AppInner() {
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState(null);
-  const [conversationUser, setConversationUser] = useState(null);
+  // Chat désactivé
   const appState = useRef(AppState.currentState);
   const { colors } = useTheme();
   const { user: appUser, updateUser } = useContext(UserContext);
@@ -161,13 +160,7 @@ function AppInner() {
       try { clearApiCache(); } catch (_) {}
       setCurrentScreen('Login');
     });
-    const offOpenConv = subscribe('chat:openConversation', (u) => {
-      if (!u) return;
-      setConversationUser(u);
-      setCurrentScreen('Conversation');
-    });
-    const offOpenList = subscribe('chat:openList', () => setCurrentScreen('ChatList'));
-    return () => { try { off && off(); offOpenConv && offOpenConv(); offOpenList && offOpenList(); } catch (_) {} };
+    return () => { try { off && off(); } catch (_) {} };
   }, []);
 
   useEffect(() => {
@@ -295,21 +288,7 @@ function AppInner() {
     );
   }
 
-  // Minimal mock navigation object for chat screens (since app uses manual navigation)
-  const chatNavigation = {
-    navigate: (screen, params) => {
-      if (screen === 'Conversation') {
-        setConversationUser(params?.conversationUser || null);
-        setCurrentScreen('Conversation');
-      } else if (screen === 'ChatList') {
-        setCurrentScreen('ChatList');
-      }
-    },
-    goBack: () => {
-      if (currentScreen === 'Conversation') setCurrentScreen('ChatList');
-      else setCurrentScreen('UserList');
-    }
-  };
+  // Chat désactivé: aucune navigation de chat
 
   let screenToShow;
   switch (currentScreen) {
@@ -341,7 +320,7 @@ function AppInner() {
           onOpenStatistics={() => setCurrentScreen('Statistics')}
           onOpenPremiumPaywall={() => setCurrentScreen('PremiumPaywall')}
           onOpenWarnings={() => setCurrentScreen('Warnings')}
-          onOpenMessages={() => setCurrentScreen('ChatList')}
+          onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
         />
       );
       break;
@@ -354,7 +333,7 @@ function AppInner() {
           onOpenSearchView={() => setCurrentScreen('UserSearch')}
           initialScrollOffset={userListScrollOffset}
           onUpdateScrollOffset={setUserListScrollOffset}
-          onOpenMessages={() => setCurrentScreen('ChatList')}
+          onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
         />
       );
       break;
@@ -377,8 +356,8 @@ function AppInner() {
           }}
           onReturnToAccount={handleReturnToAccount}
           socialMediaIcons={socialMediaIcons}
-          onOpenMessages={() => setCurrentScreen('ChatList')}
-          onOpenConversation={(u) => { setConversationUser(u || selectedUser); setCurrentScreen('Conversation'); }}
+          onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
+          onOpenConversation={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
         />
       );
       break;
@@ -422,21 +401,7 @@ function AppInner() {
         />
       );
       break;
-    case 'ChatList':
-      screenToShow = (
-        <ChatListScreen
-          navigation={chatNavigation}
-        />
-      );
-      break;
-    case 'Conversation':
-      screenToShow = (
-        <ConversationScreen
-          navigation={chatNavigation}
-          route={{ params: { conversationUser } }}
-        />
-      );
-      break;
+    // Chat désactivé: aucun écran de chat
     case 'Moderator':
       screenToShow = (
         <ModeratorScreen
