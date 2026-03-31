@@ -361,6 +361,9 @@ const MyAccountScreen = ({
     };
 
     const handleUpdateStatus = async (status) => {
+        if (user?.status === status) {
+            return;
+        }
         try {
             const res = await apiUpdateUserStatus(status);
             if (res && res.user) {
