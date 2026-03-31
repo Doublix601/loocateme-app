@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAccessToken, getMyUser } from '../ApiRequest';
 import { registerCurrentDevicePushToken } from '../PushService';
 import { subscribe } from '../EventBus';
@@ -22,6 +23,7 @@ function mapBackendUser(u = {}) {
     // User role: 'user', 'moderator', or 'admin'
     role: u.role || 'user',
     // Include GDPR consent and privacy preferences if present
+    status: u.status || 'green',
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
     moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
@@ -41,6 +43,7 @@ export const UserProvider = ({ children }) => {
     isVisible: true,
     isPremium: false,
     role: 'user',
+    status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
     privacyPreferences: { analytics: false, marketing: false },
     moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
@@ -48,6 +51,9 @@ export const UserProvider = ({ children }) => {
 
   const updateUser = useCallback((updatedUser) => {
     setUser(updatedUser);
+    if (updatedUser?.status) {
+      AsyncStorage.setItem('user_status', updatedUser.status).catch(() => {});
+    }
   }, []);
 
   // Auto-hydrate user from backend if a token exists (e.g., after auto-login)
@@ -55,6 +61,11 @@ export const UserProvider = ({ children }) => {
     let cancelled = false;
     const hydrate = async () => {
       try {
+        const savedStatus = await AsyncStorage.getItem('user_status');
+        if (savedStatus && !cancelled) {
+          setUser(prev => ({ ...prev, status: savedStatus }));
+        }
+
         const token = getAccessToken && getAccessToken();
         if (!token) return;
         // If already hydrated with socials and photo, skip initial fetch
@@ -92,6 +103,7 @@ export const UserProvider = ({ children }) => {
         isVisible: false,
         isPremium: false,
         role: 'user',
+        status: 'green',
         consent: { accepted: false, version: '', consentAt: null },
         privacyPreferences: { analytics: false, marketing: false },
         moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },

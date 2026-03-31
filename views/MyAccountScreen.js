@@ -22,9 +22,10 @@ import {
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
-import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser } from '../components/ApiRequest';
+import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser, updateUserStatus as apiUpdateUserStatus } from '../components/ApiRequest';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
+import Toast from '../components/Toast';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
@@ -69,6 +70,8 @@ const MyAccountScreen = ({
     const [newValue, setNewValue] = useState('');
     // Partage / QR
     const [qrVisible, setQrVisible] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastVisible, setToastVisible] = useState(false);
     const [myUserId, setMyUserId] = useState('');
     const [refreshing, setRefreshing] = useState(false);
 
@@ -354,6 +357,32 @@ const MyAccountScreen = ({
             await refreshMyProfile();
         } finally {
             setRefreshing(false);
+        }
+    };
+
+    const handleUpdateStatus = async (status) => {
+        try {
+            const res = await apiUpdateUserStatus(status);
+            if (res && res.user) {
+                updateUser({ ...user, status: res.user.status });
+
+                let message = '';
+                if (status === 'green') {
+                    message = "Vous êtes en mode visible. Tout le monde peut voir vos réseaux sociaux. Vous profitez pleinement de l'app.";
+                } else if (status === 'orange') {
+                    message = "Vous êtes en mode visible restreint. On ne peut pas voir vos réseaux sociaux.";
+                } else if (status === 'red') {
+                    message = "Vous êtes en mode invisible. Personne ne vous verra désormais.";
+                }
+
+                if (message) {
+                    setToastMessage(message);
+                    setToastVisible(true);
+                }
+            }
+        } catch (e) {
+            console.error('[MyAccount] Update status error', e);
+            Alert.alert('Erreur', "Impossible de mettre à jour le statut");
         }
     };
 
@@ -877,6 +906,21 @@ const MyAccountScreen = ({
                                 </TouchableOpacity>
                             </View>
                         </View>
+                        {/* Traffic Light UI for Status */}
+                        <View style={styles.statusSelector}>
+                            <TouchableOpacity
+                                style={[styles.statusCircle, { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.3 }]}
+                                onPress={() => handleUpdateStatus('red')}
+                            />
+                            <TouchableOpacity
+                                style={[styles.statusCircle, { backgroundColor: '#FF9800', opacity: user.status === 'orange' ? 1 : 0.3 }]}
+                                onPress={() => handleUpdateStatus('orange')}
+                            />
+                            <TouchableOpacity
+                                style={[styles.statusCircle, { backgroundColor: '#4CAF50', opacity: user.status === 'green' ? 1 : 0.3 }]}
+                                onPress={() => handleUpdateStatus('green')}
+                            />
+                        </View>
 
                         <View style={styles.bioContainer}>
                             <TouchableOpacity
@@ -1253,6 +1297,12 @@ const MyAccountScreen = ({
                 />
             </TouchableOpacity>
 
+            <Toast
+                message={toastMessage}
+                visible={toastVisible}
+                onHide={() => setToastVisible(false)}
+            />
+
         </SafeAreaView>
     );
 };
@@ -1294,6 +1344,18 @@ const styles = StyleSheet.create({
     bioTextContainer: {
         alignItems: 'center',
         width: '100%',
+    },
+    statusSelector: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: height * 0.02,
+    },
+    statusCircle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        marginHorizontal: 15,
     },
     warningCard: {
         width: '100%',

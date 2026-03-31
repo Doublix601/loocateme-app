@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking } from 'react-native';
+import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
 import LoginScreen from './views/LoginScreen';
 import ForgotPasswordScreen from './views/ForgotPasswordScreen';
 import SignupScreen from './views/SignupScreen';
 import MyAccountScreen from './views/MyAccountScreen';
-import UserListScreen from './views/UserListScreen';
+import LocationListScreen from './views/LocationListScreen';
+import LocationScreen from './views/LocationScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
 import UserSearchView from './views/UserSearchView';
@@ -16,6 +18,7 @@ import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import ModeratorScreen from './views/ModeratorScreen';
 import WarningsScreen from './views/WarningsScreen';
+import LocationPermissionModal from './components/LocationPermissionModal';
 // Chat screens supprimés (fonctionnalité de chat désactivée)
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
@@ -37,6 +40,7 @@ const mapBackendUser = (u = {}) => ({
   isVisible: u.isVisible !== false,
   isPremium: !!u.isPremium,
   role: u.role || 'user',
+  status: u.status || 'green',
   consent: u.consent || { accepted: false, version: '', consentAt: null },
   privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
   moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
@@ -50,20 +54,25 @@ const mapProfileUser = (u = {}) => ({
   customName: u.customName || '',
   bio: u.bio || '',
   photo: u.profileImageUrl || null,
-  socialMedia: Array.isArray(u.socialNetworks)
+  status: u.status || 'green',
+  socialMedias: Array.isArray(u.socialNetworks)
     ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-    : [],
+    : Array.isArray(u.socialMedia) ? u.socialMedia : [],
   locationCoordinates: Array.isArray(u.location?.coordinates) ? u.location.coordinates : undefined,
 });
 
 function AppInner() {
-  const [currentScreen, setCurrentScreen] = useState('Login');
+  const [currentScreen, setCurrentScreen] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [profileReturnTo, setProfileReturnTo] = useState('UserList');
-  const [userListScrollOffset, setUserListScrollOffset] = useState(0);
+  const [selectedLocationId, setSelectedLocationId] = useState(null);
+  const [selectedLocationTertiles, setSelectedLocationTertiles] = useState(null);
+  const [profileReturnTo, setProfileReturnTo] = useState('LocationList');
+  const [locationListScrollOffset, setLocationListScrollOffset] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState(null);
+  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
+  const hasShownLocationModal = useRef(false);
   // Chat désactivé
   const appState = useRef(AppState.currentState);
   const { colors } = useTheme();
@@ -127,17 +136,27 @@ function AppInner() {
               updateUser(mapBackendUser(me));
             }
             const consentAccepted = !!(me?.consent?.accepted);
-            setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
+            setCurrentScreen(consentAccepted ? 'LocationList' : 'Consent');
             if (consentAccepted) {
               setTimeout(() => publish('userlist:refresh'), 1000);
             }
-          } catch (_) {
-            setCurrentScreen('UserList');
-            setTimeout(() => publish('userlist:refresh'), 1000);
+          } catch (err) {
+            console.error('[App] Auth init getMyUser error:', err);
+            // If it's a 401, logout, otherwise maybe network error, retry or let current screen be Login
+            if (err?.status === 401) {
+              await apiLogout();
+              setCurrentScreen('Login');
+            } else {
+              // Network error? Try to proceed to UserList if we have user info, or just stay on Login
+              setCurrentScreen('LocationList');
+            }
           }
+        } else {
+          setCurrentScreen('Login');
         }
-      } catch (_) {
-        // ignore
+      } catch (err) {
+        console.error('[App] Auth init error:', err);
+        setCurrentScreen('Login');
       } finally {
         setAuthReady(true);
       }
@@ -146,14 +165,52 @@ function AppInner() {
   }, [updateUser]);
 
   useEffect(() => {
+    const checkLocationPermissions = async (force = false) => {
+      // Don't check if user is not logged in or is on Consent/Login/Signup screens
+      if (!getAccessToken() || ['Login', 'Signup', 'ForgotPassword', 'Consent', 'Activity'].includes(currentScreen)) {
+        return;
+      }
+
+      // If we've already shown the modal this session, skip unless forced
+      if (hasShownLocationModal.current && !force) {
+        return;
+      }
+
+      try {
+        const { status: fgStatus } = await Location.getForegroundPermissionsAsync();
+
+        if (fgStatus !== 'granted') {
+          setLocationModal({ visible: true, type: 'required' });
+          hasShownLocationModal.current = true;
+          return;
+        }
+
+        // If foreground is granted, check background
+        const { status: bgStatus } = await Location.getBackgroundPermissionsAsync();
+        if (bgStatus !== 'granted') {
+          setLocationModal({ visible: true, type: 'always' });
+          hasShownLocationModal.current = true;
+        } else {
+          // Both granted, hide modal if it was visible
+          setLocationModal(prev => prev.visible ? { ...prev, visible: false } : prev);
+        }
+      } catch (err) {
+        console.warn('[App] Error checking location permissions:', err);
+      }
+    };
+
+    checkLocationPermissions();
+
     const sub = AppState.addEventListener?.('change', (next) => {
       if (appState.current.match(/inactive|background/) && next === 'active') {
         try { publish('userlist:refresh'); } catch (_) {}
+        // Re-check permissions when coming back to app
+        checkLocationPermissions();
       }
       appState.current = next;
     });
     return () => { try { sub?.remove?.(); } catch (_) {} };
-  }, []);
+  }, [currentScreen]);
 
   useEffect(() => {
     const off = subscribe('auth:logout', () => {
@@ -200,7 +257,7 @@ function AppInner() {
         const u = res?.user;
         if (!u) return;
         setSelectedUser(mapProfileUser(u));
-        setProfileReturnTo('UserList');
+        setProfileReturnTo('LocationList');
         setCurrentScreen('UserProfile');
         setPendingProfileId(null);
       } catch (e) {
@@ -213,7 +270,7 @@ function AppInner() {
 
   const handleLogin = (user) => {
     const consentAccepted = !!(user?.consent?.accepted);
-    setCurrentScreen(consentAccepted ? 'UserList' : 'Consent');
+    setCurrentScreen(consentAccepted ? 'LocationList' : 'Consent');
     if (consentAccepted) {
       setTimeout(() => publish('userlist:refresh'), 1000);
     }
@@ -227,7 +284,10 @@ function AppInner() {
     setCurrentScreen('Login');
   };
   const handleGoToLogin = () => setCurrentScreen('Login');
-  const handleReturnToList = () => setCurrentScreen('UserList');
+  const handleReturnToList = (offset = null) => {
+    if (offset !== null) setLocationListScrollOffset(offset);
+    setCurrentScreen('LocationList');
+  };
   const handleReturnToAccount = () => setCurrentScreen('MyAccount');
   const onReturnToSettings = () => setCurrentScreen('Settings');
   const handleLogout = async () => {
@@ -241,20 +301,32 @@ function AppInner() {
   };
 
   const handleSelectUser = (user) => {
-    setSelectedUser(user);
-    setProfileReturnTo('UserList');
+    if (user._id === userInfo?._id || user.id === userInfo?._id) {
+      setCurrentScreen('MyAccount');
+      return;
+    }
+    setSelectedUser(mapProfileUser(user));
+    setProfileReturnTo('Location');
     setCurrentScreen('UserProfile');
+  };
+
+  const handleSelectLocation = (loc) => {
+    setSelectedLocationId(loc._id || loc.id);
+    setSelectedLocationTertiles(loc.tertiles || null);
+    setCurrentScreen('Location');
   };
 
   useEffect(() => {
     const prev = prevScreenRef.current;
 
     const isForward =
-      (prev === 'UserList' && (currentScreen === 'UserProfile' || currentScreen === 'MyAccount')) ||
+      (prev === 'LocationList' && (currentScreen === 'UserProfile' || currentScreen === 'MyAccount' || currentScreen === 'Location')) ||
+      (prev === 'Location' && currentScreen === 'UserProfile') ||
       (prev === 'MyAccount' && (currentScreen === 'Settings' || currentScreen === 'Warnings'));
 
     const isBack =
-      (currentScreen === 'UserList' && (prev === 'UserProfile' || prev === 'MyAccount')) ||
+      (currentScreen === 'LocationList' && (prev === 'UserProfile' || prev === 'MyAccount' || prev === 'Location')) ||
+      (currentScreen === 'Location' && prev === 'UserProfile') ||
       (currentScreen === 'MyAccount' && (prev === 'Settings' || prev === 'Warnings'));
 
     if (isForward || isBack) {
@@ -280,7 +352,7 @@ function AppInner() {
     }));
   };
 
-  if (!assetsReady || !authReady) {
+  if (!assetsReady || !authReady || !currentScreen) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#00c2cb" />
@@ -307,7 +379,7 @@ function AppInner() {
       );
       break;
     case 'ForgotPassword':
-      screenToShow = <ForgotPasswordScreen onResetPassword={handleLogin} onBack={() => setCurrentScreen('Login')} />;
+      screenToShow = <ForgotPasswordScreen onResetPassword={() => setCurrentScreen('Login')} onBack={() => setCurrentScreen('Login')} />;
       break;
     case 'MyAccount':
       screenToShow = (
@@ -324,24 +396,33 @@ function AppInner() {
         />
       );
       break;
-    case 'UserList':
+    case 'LocationList':
       screenToShow = (
-        <UserListScreen
-          users={[]}
-          onSelectUser={handleSelectUser}
+        <LocationListScreen
+          onSelectLocation={handleSelectLocation}
           onReturnToAccount={handleReturnToAccount}
-          onOpenSearchView={() => setCurrentScreen('UserSearch')}
-          initialScrollOffset={userListScrollOffset}
-          onUpdateScrollOffset={setUserListScrollOffset}
-          onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
+          onSearchPeople={() => setCurrentScreen('UserSearch')}
+          initialScrollOffset={locationListScrollOffset}
+          onScroll={(offset) => setLocationListScrollOffset(offset)}
+        />
+      );
+      break;
+    case 'Location':
+      screenToShow = (
+        <LocationScreen
+          locationId={selectedLocationId}
+          tertiles={selectedLocationTertiles}
+          onReturnToList={handleReturnToList}
+          onSelectUser={handleSelectUser}
+          socialMediaIcons={socialMediaIcons}
         />
       );
       break;
     case 'UserSearch':
       screenToShow = (
         <UserSearchView
-          onClose={() => setCurrentScreen('UserList')}
-          onSelectUser={(u) => { setSelectedUser(u); setProfileReturnTo('UserList'); setCurrentScreen('UserProfile'); }}
+          onClose={() => setCurrentScreen('LocationList')}
+          onSelectUser={(u) => { setSelectedUser(u); setProfileReturnTo('LocationList'); setCurrentScreen('UserProfile'); }}
         />
       );
       break;
@@ -352,6 +433,7 @@ function AppInner() {
           onReturnToList={() => {
             if (profileReturnTo === 'Statistics') setCurrentScreen('Statistics');
             else if (profileReturnTo === 'Moderator') setCurrentScreen('Moderator');
+            else if (profileReturnTo === 'Location') setCurrentScreen('Location');
             else handleReturnToList();
           }}
           onReturnToAccount={handleReturnToAccount}
@@ -425,7 +507,7 @@ function AppInner() {
     case 'Consent':
       screenToShow = (
         <ConsentScreen
-          onAccepted={() => setCurrentScreen('UserList')}
+          onAccepted={() => setCurrentScreen('LocationList')}
           onDeclined={() => setCurrentScreen('Login')}
         />
       );
@@ -446,6 +528,11 @@ function AppInner() {
       <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.bg }}>
         {screenToShow}
       </Animated.View>
+      <LocationPermissionModal
+        visible={locationModal.visible}
+        type={locationModal.type}
+        onClose={() => setLocationModal(prev => ({ ...prev, visible: false }))}
+      />
     </SafeAreaView>
   );
 }

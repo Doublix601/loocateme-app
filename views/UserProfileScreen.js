@@ -530,16 +530,11 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
               </View>
             ) : null}
 
-            {currentUser?.isVisible !== false && (
+            {currentUser?.isVisible !== false && user.updatedAt && (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.015 }}>
-                <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent, marginRight: 8 }]}>
-                  <Text style={[styles.distanceText, { color: colors.accent }]}>{user.distance ?? computedDistance ?? '—'}</Text>
+                <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
+                  <Text style={[styles.distanceText, { color: colors.accent }]}>{formatLastSeen(user.updatedAt)}</Text>
                 </View>
-                {user.updatedAt && (
-                  <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
-                    <Text style={[styles.distanceText, { color: colors.accent }]}>{formatLastSeen(user.updatedAt)}</Text>
-                  </View>
-                )}
               </View>
             )}
 
@@ -547,6 +542,13 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
           <View style={styles.socialMediaContainer}>
             {(() => {
+              if (user.status === 'orange') {
+                return (
+                  <Text style={[styles.orangeStatusText, { color: colors.textSecondary }]}>
+                    L'utilisateur ne partage pas ses réseaux sociaux
+                  </Text>
+                );
+              }
               const socials = user.socialMedias ?? user.socialMedia ?? [];
               return socials.length > 0 ? (
                 socials.map((social, index) => {
@@ -813,6 +815,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 14,
+  },
+  orangeStatusText: {
+    fontSize: 16,
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    marginTop: 10,
+    fontStyle: 'italic',
   },
   socialMediaTile: {
     alignItems: 'center',

@@ -357,6 +357,22 @@ export async function getPopularUsers({ limit = 10 } = {}) {
     return request(`/users/popular?${qs.toString()}`, { method: 'GET' });
 }
 
+export async function getLocations({ lat, lon }) {
+    const qs = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+    return request(`/locations?${qs.toString()}`, { method: 'GET' });
+}
+
+export async function getLocationById(id) {
+    return request(`/locations/${id}`, { method: 'GET' });
+}
+
+export async function updateUserStatus(status) {
+    return request('/profile/status', {
+        method: 'PATCH',
+        body: { status },
+    });
+}
+
 export async function searchUsers({ q, limit = 10 }) {
     const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) });
     // Use cache reload to minimize stale results in DebugScreen searches
