@@ -23,7 +23,10 @@ export function proxifyImageUrl(uri) {
 
         // If already pointing to our backend uploads or proxy, keep as-is
         const origin = getApiOrigin().replace(/\/$/, '');
-        if (trimmed.startsWith('/uploads') || trimmed.startsWith(`${origin}/uploads`) || trimmed.startsWith(`${origin}/api/proxy/image`)) {
+        if (trimmed.startsWith('/uploads')) {
+            return `${origin}${trimmed}`;
+        }
+        if (trimmed.startsWith(`${origin}/uploads`) || trimmed.startsWith(`${origin}/api/proxy/image`)) {
             return trimmed;
         }
 

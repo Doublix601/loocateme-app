@@ -27,39 +27,54 @@ import { LocalizationProvider } from './components/contexts/LocalizationContext'
 import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken, logout as apiLogout } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 
-const mapBackendUser = (u = {}) => ({
-  username: u.username || u.name || '',
-  firstName: u.firstName || '',
-  lastName: u.lastName || '',
-  customName: u.customName || '',
-  bio: u.bio || '',
-  photo: u.profileImageUrl || null,
-  socialMedia: Array.isArray(u.socialNetworks)
+const mapBackendUser = (u = {}) => {
+  const socialMedias = Array.isArray(u.socialNetworks)
     ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-    : [],
-  isVisible: u.isVisible !== false,
-  isPremium: !!u.isPremium,
-  role: u.role || 'user',
-  status: u.status || 'green',
-  consent: u.consent || { accepted: false, version: '', consentAt: null },
-  privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-  moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
-});
+    : (Array.isArray(u.socialMedias) ? u.socialMedias : (Array.isArray(u.socialMedia) ? u.socialMedia : []));
+  return {
+    ...u,
+    _id: u._id || u.id,
+    username: u.username || u.name || '',
+    firstName: u.firstName || '',
+    lastName: u.lastName || '',
+    customName: u.customName || '',
+    bio: u.bio || '',
+    photo: u.profileImageUrl || u.photo || null,
+    socialMedias,
+    socialMedia: socialMedias,
+    isVisible: u.isVisible !== false,
+    isPremium: !!u.isPremium,
+    role: u.role || 'user',
+    status: u.status || 'green',
+    consent: u.consent || { accepted: false, version: '', consentAt: null },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
+    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    updatedAt: u.updatedAt,
+  };
+};
 
-const mapProfileUser = (u = {}) => ({
-  _id: u._id || u.id,
-  username: u.username || u.name || '',
-  firstName: u.firstName || '',
-  lastName: u.lastName || '',
-  customName: u.customName || '',
-  bio: u.bio || '',
-  photo: u.profileImageUrl || null,
-  status: u.status || 'green',
-  socialMedias: Array.isArray(u.socialNetworks)
+const mapProfileUser = (u = {}) => {
+  const socialMedias = Array.isArray(u.socialNetworks)
     ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-    : Array.isArray(u.socialMedia) ? u.socialMedia : [],
-  locationCoordinates: Array.isArray(u.location?.coordinates) ? u.location.coordinates : undefined,
-});
+    : (Array.isArray(u.socialMedias) ? u.socialMedias : (Array.isArray(u.socialMedia) ? u.socialMedia : []));
+  return {
+    ...u,
+    _id: u._id || u.id,
+    username: u.username || u.name || '',
+    firstName: u.firstName || '',
+    lastName: u.lastName || '',
+    customName: u.customName || '',
+    bio: u.bio || '',
+    photo: u.profileImageUrl || u.photo || null,
+    status: u.status || 'green',
+    socialMedias,
+    socialMedia: socialMedias,
+    locationCoordinates: Array.isArray(u.location?.coordinates)
+      ? u.location.coordinates
+      : (Array.isArray(u.locationCoordinates) ? u.locationCoordinates : undefined),
+    updatedAt: u.updatedAt,
+  };
+};
 
 function AppInner() {
   const [currentScreen, setCurrentScreen] = useState(null);
@@ -81,12 +96,6 @@ function AppInner() {
   const transitionX = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get('window');
   const prevScreenRef = useRef('Login');
-
-  const [userInfo, setUserInfo] = useState({
-    username: 'Arnaud',
-    bio: "Développeur full stack, j'ai une bio plutôt longue comme tu peux le voir, afin de voir comment ça se comporte en responsive",
-    photo: '',
-  });
 
   const socialMediaIcons = {
     facebook: require('./assets/socialMediaIcons/fb_logo.png'),
@@ -300,13 +309,15 @@ function AppInner() {
     }
   };
 
-  const handleSelectUser = (user) => {
-    if (user._id === userInfo?._id || user.id === userInfo?._id) {
+  const handleSelectUser = (user, returnTo = 'Location') => {
+    const userId = user._id || user.id;
+    const myId = appUser?._id;
+    if (userId && myId && String(userId) === String(myId)) {
       setCurrentScreen('MyAccount');
       return;
     }
     setSelectedUser(mapProfileUser(user));
-    setProfileReturnTo('Location');
+    setProfileReturnTo(returnTo);
     setCurrentScreen('UserProfile');
   };
 
@@ -345,13 +356,6 @@ function AppInner() {
     prevScreenRef.current = currentScreen;
   }, [currentScreen, transitionX, width]);
 
-  const handleUpdateUser = (type, value) => {
-    setUserInfo((prevState) => ({
-      ...prevState,
-      [type]: value,
-    }));
-  };
-
   if (!assetsReady || !authReady || !currentScreen) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -384,8 +388,7 @@ function AppInner() {
     case 'MyAccount':
       screenToShow = (
         <MyAccountScreen
-          user={userInfo}
-          onUpdateUser={handleUpdateUser}
+          user={appUser}
           onReturnToList={handleReturnToList}
           socialMediaIcons={socialMediaIcons}
           onReturnToSettings={onReturnToSettings}
@@ -422,7 +425,9 @@ function AppInner() {
       screenToShow = (
         <UserSearchView
           onClose={() => setCurrentScreen('LocationList')}
-          onSelectUser={(u) => { setSelectedUser(u); setProfileReturnTo('LocationList'); setCurrentScreen('UserProfile'); }}
+          onSelectUser={(u) => handleSelectUser(u, 'LocationList')}
+          onSelectLocation={handleSelectLocation}
+          userLocation={appUser?.location?.coordinates ? { latitude: appUser.location.coordinates[1], longitude: appUser.location.coordinates[0] } : null}
         />
       );
       break;
@@ -461,7 +466,7 @@ function AppInner() {
       screenToShow = (
         <StatisticsScreen
           onBack={() => setCurrentScreen('MyAccount')}
-          onOpenUserProfile={(u) => { setSelectedUser(u); setProfileReturnTo('Statistics'); setCurrentScreen('UserProfile'); }}
+          onOpenUserProfile={(u) => handleSelectUser(u, 'Statistics')}
         />
       );
       break;
@@ -488,19 +493,7 @@ function AppInner() {
       screenToShow = (
         <ModeratorScreen
           onBack={() => setCurrentScreen('Settings')}
-          onOpenUserProfile={(u) => {
-            if (!u) return;
-            setSelectedUser({
-              _id: u.id || u._id,
-              username: u.username || '',
-              firstName: u.firstName || '',
-              lastName: u.lastName || '',
-              customName: u.customName || '',
-              photo: u.profileImageUrl || null,
-            });
-            setProfileReturnTo('Moderator');
-            setCurrentScreen('UserProfile');
-          }}
+          onOpenUserProfile={(u) => handleSelectUser(u, 'Moderator')}
         />
       );
       break;

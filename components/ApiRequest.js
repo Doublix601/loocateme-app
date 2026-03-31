@@ -373,8 +373,13 @@ export async function updateUserStatus(status) {
     });
 }
 
-export async function searchUsers({ q, limit = 10 }) {
-    const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) });
+export async function searchUsers({ q, limit = 10, lat, lon, includeUsers = true, includeLocations = true }) {
+    const params = { q: String(q || ''), limit: String(limit) };
+    if (lat) params.lat = String(lat);
+    if (lon) params.lon = String(lon);
+    if (includeUsers === false) params.includeUsers = 'false';
+    if (includeLocations === false) params.includeLocations = 'false';
+    const qs = new URLSearchParams(params);
     // Use cache reload to minimize stale results in DebugScreen searches
     return request(`/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
