@@ -63,38 +63,20 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     Linking.openURL(url);
   };
 
-  const getStars = (popularity, userCount) => {
-    // Determine the number of stars based on ranking
-    let starCount = 1;
-
-    if (tertiles) {
-      const { firstTertile, secondTertile, count } = tertiles;
-      if (count > 0) {
-        if (count < 3) {
-          if (popularity >= secondTertile && secondTertile > 0) starCount = 3;
-          else if (popularity > 0) starCount = 2;
-          else starCount = 1;
-        } else {
-          if (popularity >= secondTertile) starCount = 3;
-          else if (popularity >= firstTertile) starCount = 2;
-          else starCount = 1;
-        }
-      }
-    } else {
-      // Fallback
-      if (popularity >= 20) starCount = 3;
-      else if (popularity >= 5) starCount = 2;
-      else starCount = 1;
+  const getStars = (starsCount) => {
+    // Determine the number of stars based on backend stars field
+    if (starsCount === 3) {
+      return <Text style={{ fontSize: 18 }}>⭐⭐⭐</Text>;
+    }
+    if (starsCount === 2) {
+      return <Text style={{ fontSize: 18 }}>⭐⭐</Text>;
+    }
+    if (starsCount === 1) {
+      return <Text style={{ fontSize: 18 }}>⭐</Text>;
     }
 
-    // If popularity is 0, show 1 grey star.
-    // We only grey out if popularity itself is 0, even if userCount is 0.
-    if (popularity === 0) {
-      return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
-    }
-
-    const stars = '⭐'.repeat(starCount);
-    return <Text style={{ fontSize: 18 }}>{stars}</Text>;
+    // Default to 1 grey star for 0 stars (though they shouldn't be visible)
+    return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
   };
 
   const renderUser = ({ item }) => {
@@ -165,7 +147,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
 
             <View style={styles.popularityRow}>
               <Text style={[styles.popularityScore, { color: colors.textSecondary }]}>
-                Popularité : {getStars(location.popularity || 0, users.length)}
+                Popularité : {getStars(location.stars || 0)}
               </Text>
 
               <TouchableOpacity style={styles.goButtonRound} onPress={handleGoToLocation}>

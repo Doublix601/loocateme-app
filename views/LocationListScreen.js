@@ -9,7 +9,7 @@ import {
   RefreshControl,
   SafeAreaView,
   Image,
-  PanResponder,
+  ScrollView,
   Dimensions,
 } from 'react-native';
 import * as Location from 'expo-location';
@@ -23,30 +23,13 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
-  const [tertiles, setTertiles] = useState({ firstTertile: 0, secondTertile: 0, count: 0 });
   const [refreshing, setRefreshing] = useState(false);
   const { user: currentUser } = useContext(UserContext);
   const flatListRef = React.useRef(null);
   const currentScrollOffset = React.useRef(0);
 
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only care about horizontal swipes
-        return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx > 50) {
-          // Swipe right (left to right) -> Search People
-          onSearchPeople && onSearchPeople();
-        } else if (gestureState.dx < -50) {
-          // Swipe left (right to left) -> My Account
-          onReturnToAccount && onReturnToAccount();
-        }
-      },
-    })
-  ).current;
+  // Important: do not intercept horizontal gestures here so that
+  // the parent navigator can handle global swipes (Search / MyAccount).
 
   useEffect(() => {
     fetchNearbyLocations();
@@ -60,50 +43,21 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     }
   }, [locations.length]);
 
-  const calculateTertiles = (locs) => {
-    const sortedPops = locs
-      .map((l) => l.popularity || 0)
-      .filter((p) => p > 0)
-      .sort((a, b) => a - b);
 
-    if (sortedPops.length < 3) {
-      const maxPop = sortedPops.length > 0 ? sortedPops[sortedPops.length - 1] : 0;
-      return { firstTertile: maxPop, secondTertile: maxPop, count: sortedPops.length };
+  const getStars = (starsCount) => {
+    // Determine the number of stars based on backend stars field
+    if (starsCount === 3) {
+      return <Text style={{ fontSize: 18 }}>⭐⭐⭐</Text>;
+    }
+    if (starsCount === 2) {
+      return <Text style={{ fontSize: 18 }}>⭐⭐</Text>;
+    }
+    if (starsCount === 1) {
+      return <Text style={{ fontSize: 18 }}>⭐</Text>;
     }
 
-    const n = sortedPops.length;
-    return {
-      firstTertile: sortedPops[Math.floor(n / 3)],
-      secondTertile: sortedPops[Math.floor((2 * n) / 3)],
-      count: n,
-    };
-  };
-
-  const getStars = (popularity, userCount) => {
-    // Determine the number of stars based on ranking
-    let starCount = 1;
-    const { firstTertile, secondTertile, count } = tertiles;
-
-    if (count > 0) {
-      if (count < 3) {
-        if (popularity >= secondTertile && secondTertile > 0) starCount = 3;
-        else if (popularity > 0) starCount = 2;
-        else starCount = 1;
-      } else {
-        if (popularity >= secondTertile) starCount = 3;
-        else if (popularity >= firstTertile) starCount = 2;
-        else starCount = 1;
-      }
-    }
-
-    // If popularity is 0, show 1 grey star.
-    // We only grey out if popularity itself is 0, even if userCount is 0.
-    if (popularity === 0) {
-      return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
-    }
-
-    const stars = '⭐'.repeat(starCount);
-    return <Text style={{ fontSize: 18 }}>{stars}</Text>;
+    // Default to 1 grey star for 0 stars (though they shouldn't be visible)
+    return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
   };
 
   const fetchNearbyLocations = async () => {
@@ -122,10 +76,21 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       await updateMyLocation({ lat: latitude, lon: longitude });
 
       const res = await getLocations({ lat: latitude, lon: longitude });
-      if (res && res.locations) {
-        setLocations(res.locations);
-        const calculated = calculateTertiles(res.locations);
-        setTertiles(calculated);
+      if (res && Array.isArray(res.locations)) {
+        // Garde-fou UI: appliquer le même filtrage que le backend
+        // et garantir au moins 1★ d'affichage lorsqu'un lieu est occupé
+        const normalized = res.locations.map((it) => {
+          const userCount = it?.userCount || 0;
+          const rawStars = typeof it?.stars === 'number' ? it.stars : parseInt(it?.stars, 10) || 0;
+          const stars = userCount > 0 ? Math.max(1, rawStars) : rawStars;
+          return { ...it, stars, userCount };
+        });
+
+        const eligible = normalized.filter((it) => {
+          return it.stars === 3 || (it.userCount > 0 && it.stars >= 1);
+        });
+
+        setLocations(eligible);
       }
     } catch (e) {
       console.error('Error fetching locations:', e);
@@ -145,7 +110,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       style={[styles.locationCard, { backgroundColor: colors.surface }]}
       onPress={() => {
         onScroll && onScroll(currentScrollOffset.current);
-        onSelectLocation({ ...item, tertiles });
+        onSelectLocation({ ...item });
       }}
     >
       <View style={styles.locationInfo}>
@@ -171,44 +136,74 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         </View>
       </View>
       <View style={styles.popularityContainer}>
-        <Text style={styles.popularityStars}>{getStars(item.popularity || 0, item.userCount || 0)}</Text>
+        <Text style={styles.popularityStars}>{getStars(item.stars || 0)}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
-      <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
-            <Text style={{ fontSize: 24 }}>🔎</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onReturnToAccount}>
-            <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
+      ) : locations.length === 0 ? (
+        // Etat vide: permettre le pull-to-refresh même sans éléments
+        <ScrollView
+          contentContainerStyle={[styles.listContent, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#00c2cb"]} />}
+          alwaysBounceVertical
+          bounces
+          overScrollMode="always"
+        >
+          <View style={[styles.header, { alignSelf: 'stretch' }]}> 
+            <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
+            <View style={styles.headerIcons}>
+              <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
+                <Text style={{ fontSize: 24 }}>🔎</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onReturnToAccount}>
+                <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Aucun lieu trouvé à proximité</Text>
+        </ScrollView>
       ) : (
         <FlatList
           ref={flatListRef}
           data={locations}
           keyExtractor={(item) => item._id}
           renderItem={renderLocation}
+          ListHeaderComponent={() => (
+            <View style={styles.header}>
+              <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
+              <View style={styles.headerIcons}>
+                <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
+                  <Text style={{ fontSize: 24 }}>🔎</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={onReturnToAccount}>
+                  <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
           onScroll={(event) => {
             currentScrollOffset.current = event.nativeEvent.contentOffset.y;
           }}
           scrollEventThrottle={16}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#00c2cb']} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#00c2cb"]}
+              // Décale le spinner sous l'en‑tête sur Android si besoin
+              progressViewOffset={10}
+            />
           }
-          ListEmptyComponent={
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Aucun lieu trouvé à proximité</Text>
-          }
-          contentContainerStyle={styles.listContent}
+          // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
+          contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: 20 }]}
+          // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
+          bounces
+          overScrollMode="always"
         />
       )}
     </SafeAreaView>
