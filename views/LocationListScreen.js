@@ -12,6 +12,7 @@ import {
   ScrollView,
   Dimensions,
   PanResponder,
+  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { getLocations, updateMyLocation } from '../components/ApiRequest';
@@ -28,6 +29,46 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   const { user: currentUser } = useContext(UserContext);
   const flatListRef = React.useRef(null);
   const currentScrollOffset = React.useRef(0);
+
+  const LocationItem = React.useMemo(() => {
+    return React.memo(({ item }) => (
+      <TouchableOpacity
+        style={[styles.locationCard, { backgroundColor: colors.surface }]}
+        onPress={() => {
+          onScroll && onScroll(currentScrollOffset.current);
+          onSelectLocation({ ...item });
+        }}
+      >
+        <View style={styles.locationInfo}>
+          <Text style={[styles.locationName, { color: colors.text }]}>{item.name}</Text>
+          <View style={styles.typeBadge}>
+            <Text style={styles.typeText}>{formatLocationType(item.type)}</Text>
+          </View>
+          <View style={styles.activeUsersContainer}>
+            <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
+              {item.userCount || 0} utilisateur{(item.userCount || 0) > 1 ? 's' : ''} dans ce lieu
+            </Text>
+            <View style={styles.avatarStack}>
+              {(item.activeUsers || []).map((u, index) => (
+                <View key={u._id} style={[styles.avatarWrapper, { marginLeft: index === 0 ? 0 : -10 }]}>
+                  <ImageWithPlaceholder
+                    uri={u.profileImageUrl}
+                    style={styles.smallAvatar}
+                  />
+                  <View style={[styles.statusDotSmall, { backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800' }]} />
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
+        <View style={styles.popularityContainer}>
+          <Text style={styles.popularityStars}>{getStars(item)}</Text>
+        </View>
+      </TouchableOpacity>
+    ));
+  }, [colors, onSelectLocation, onScroll]);
+
+  const renderLocation = ({ item }) => <LocationItem item={item} />;
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -93,13 +134,52 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      // Optimization for Android: high accuracy can be slow.
+      // Using balanced accuracy and a timeout to ensure quick feedback.
+      let location;
+      try {
+        // First try to get last known location for immediate feedback if available
+        location = await Location.getLastKnownPositionAsync({});
+
+        // Then start fetching fresh location in the background if last known is old or null
+        // On Android, getCurrentPositionAsync is much faster with a timeout and lower accuracy.
+        Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        }).then(loc => {
+          if (loc && (!location || loc.timestamp > location.timestamp)) {
+             // If we already finished loading but got a better location,
+             // we could trigger a silent refresh here if we wanted.
+          }
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('Location fetching logic error', err);
+      }
+
+      if (!location) {
+        // Fallback to a slow but sure high accuracy if nothing else worked
+        try {
+          location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+            timeout: 5000,
+          });
+        } catch (e) {
+          console.warn('Final fallback failed', e);
+        }
+      }
+
+      if (!location) {
+        console.warn('Could not determine position');
+        return;
+      }
+
       const { latitude, longitude } = location.coords;
 
-      // Update my location in backend (triggers check-in logic)
-      await updateMyLocation({ lat: latitude, lon: longitude });
+      // Parallelize location update and fetching nearby locations to save time
+      const [_, res] = await Promise.all([
+        updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)),
+        getLocations({ lat: latitude, lon: longitude })
+      ]);
 
-      const res = await getLocations({ lat: latitude, lon: longitude });
       if (res && Array.isArray(res.locations)) {
         // Garde-fou UI: appliquer le même filtrage que le backend
         // et garantir au moins 1★ d'affichage lorsqu'un lieu est occupé
@@ -127,41 +207,6 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     setRefreshing(false);
   };
 
-  const renderLocation = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.locationCard, { backgroundColor: colors.surface }]}
-      onPress={() => {
-        onScroll && onScroll(currentScrollOffset.current);
-        onSelectLocation({ ...item });
-      }}
-    >
-      <View style={styles.locationInfo}>
-        <Text style={[styles.locationName, { color: colors.text }]}>{item.name}</Text>
-        <View style={styles.typeBadge}>
-          <Text style={styles.typeText}>{formatLocationType(item.type)}</Text>
-        </View>
-        <View style={styles.activeUsersContainer}>
-          <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
-            {item.userCount || 0} utilisateur{(item.userCount || 0) > 1 ? 's' : ''} dans ce lieu
-          </Text>
-          <View style={styles.avatarStack}>
-            {(item.activeUsers || []).map((u, index) => (
-              <View key={u._id} style={[styles.avatarWrapper, { marginLeft: index === 0 ? 0 : -10 }]}>
-                <ImageWithPlaceholder
-                  uri={u.profileImageUrl}
-                  style={styles.smallAvatar}
-                />
-                <View style={[styles.statusDotSmall, { backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800' }]} />
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-      <View style={styles.popularityContainer}>
-        <Text style={styles.popularityStars}>{getStars(item)}</Text>
-      </View>
-    </TouchableOpacity>
-  );
 
   const renderHeader = () => (
     <View style={styles.header}>
@@ -212,6 +257,11 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
               progressViewOffset={10}
             />
           }
+          // Optimization for performance
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={10}
+          removeClippedSubviews={Platform.OS === 'android'}
           // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
           contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: 20 }]}
           // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
