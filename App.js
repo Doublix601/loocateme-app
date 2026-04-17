@@ -22,6 +22,7 @@ import LocationPermissionModal from './components/LocationPermissionModal';
 // Chat screens supprimés (fonctionnalité de chat désactivée)
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
+import { LocationSyncService } from './services/LocationSyncService';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken, logout as apiLogout } from './components/ApiRequest';
@@ -187,6 +188,13 @@ function AppInner() {
 
       try {
         const { status: fgStatus } = await Location.getForegroundPermissionsAsync();
+
+        if (fgStatus === 'granted') {
+          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          if (pos?.coords) {
+            LocationSyncService.syncNearbyLocations(pos.coords.latitude, pos.coords.longitude);
+          }
+        }
 
         if (fgStatus !== 'granted') {
           setLocationModal({ visible: true, type: 'required' });
