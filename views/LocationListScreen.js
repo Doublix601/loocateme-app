@@ -111,11 +111,8 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           return { ...it, stars, userCount, isPersistent };
         });
 
-        const eligible = normalized.filter((it) => {
-          return it.isPersistent || it.userCount > 0 || it.stars >= 1;
-        });
-
-        setLocations(eligible);
+        // Plus de filtrage restrictif ici, le backend a déjà fait le travail de sélection
+        setLocations(normalized);
       }
     } catch (e) {
       console.error('Error fetching locations:', e);
