@@ -562,6 +562,7 @@ const MyAccountScreen = ({
 
     const handleSocialLongPress = (social) => {
         setSelectedSocialLink(social);
+        setSelectedSocialPlatform(social.platform);
         setNewValue(social.username);
         setSocialModalVisible(true);
     };
@@ -1113,29 +1114,43 @@ const MyAccountScreen = ({
                                                     }, 50);
                                                 }}
                                                 style={[
-                                                    styles.socialMediaTile,
-                                                    selectedSocialPlatform === platform &&
-                                                    styles.selectedTile,
+                                                    styles.modalSocialMediaTile,
+                                                    selectedSocialPlatform === platform && styles.selectedTile,
+                                                    selectedSocialPlatform === platform && { backgroundColor: colors.border + '40' }
                                                 ]}>
                                                 <Image
                                                     source={socialMediaIcons[platform]}
-                                                    style={styles.socialMediaIcon}
+                                                    style={[
+                                                        styles.modalSocialMediaIcon,
+                                                        selectedSocialPlatform !== platform && { opacity: 0.6 }
+                                                    ]}
                                                 />
                                             </TouchableOpacity>
                                         ))}
                                     </View>
-                                    <TextInput
-                                        ref={addSocialInputRef}
-                                        value={newValue}
-                                        onChangeText={setNewValue}
-                                        placeholder="Nom d'utilisateur"
-                                        placeholderTextColor={isDark ? '#999' : '#666'}
-                                        style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
-                                        returnKeyType="done"
-                                        onFocus={() => {
-                                            setTimeout(() => addSocialScrollRef.current?.scrollToEnd({ animated: true }), 50);
-                                        }}
-                                    />
+                                    <View style={[styles.inputWrapper, { borderColor: selectedSocialPlatform ? '#00c2cb' : colors.border, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}>
+                                        {selectedSocialPlatform ? (
+                                            <Image
+                                                source={socialMediaIcons[selectedSocialPlatform]}
+                                                style={styles.inputPrefixIcon}
+                                            />
+                                        ) : null}
+                                        <TextInput
+                                            ref={addSocialInputRef}
+                                            value={newValue}
+                                            onChangeText={setNewValue}
+                                            placeholder={selectedSocialPlatform ? `@username ou ID ${selectedSocialPlatform}` : "Sélectionnez un réseau"}
+                                            placeholderTextColor={isDark ? '#666' : '#999'}
+                                            style={[styles.wrappedInput, { color: colors.textPrimary }]}
+                                            autoCapitalize="none"
+                                            autoCorrect={false}
+                                            returnKeyType="done"
+                                            onFocus={() => {
+                                                setTimeout(() => addSocialScrollRef.current?.scrollToEnd({ animated: true }), 50);
+                                            }}
+                                        />
+                                    </View>
+                                    {selectedSocialPlatform === 'Snapchat' && <Text style={styles.modalHint}>Note: Snapchat n'autorise pas les liens directs, entrez juste votre nom d'utilisateur.</Text>}
                                 </ScrollView>
                                 <View style={styles.actionRow}>
                                     <TouchableOpacity
@@ -1171,19 +1186,30 @@ const MyAccountScreen = ({
                                     style={styles.modalBackButtonImage}
                                 />
                             </TouchableOpacity>
-                            <Text style={styles.modalTitle}>Modifier</Text>
-                            <TextInput
-                                value={newValue}
-                                onChangeText={setNewValue}
-                                placeholderTextColor={isDark ? '#999' : '#666'}
-                                style={[styles.modalInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
-                            />
+                            <Text style={styles.modalTitle}>Modifier {selectedSocialPlatform}</Text>
+                            <View style={[styles.inputWrapper, { borderColor: '#00c2cb', backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}>
+                                {selectedSocialPlatform && socialMediaIcons[selectedSocialPlatform] ? (
+                                    <Image
+                                        source={socialMediaIcons[selectedSocialPlatform]}
+                                        style={styles.inputPrefixIcon}
+                                    />
+                                ) : null}
+                                <TextInput
+                                    value={newValue}
+                                    onChangeText={setNewValue}
+                                    placeholder="Nom d'utilisateur"
+                                    placeholderTextColor={isDark ? '#666' : '#999'}
+                                    style={[styles.wrappedInput, { color: colors.textPrimary }]}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                            </View>
                             <View style={styles.actionRow}>
                                 <TouchableOpacity
                                     onPress={handleSocialDelete}
                                     style={[styles.iconRoundButton, styles.iconDelete]}
                                     accessibilityLabel="Supprimer">
-                                    <Text style={styles.iconEmoji}>🗑️</Text>
+                                    <Text style={[styles.iconEmoji, { color: isDark ? colors.background : '#fff', textAlign: 'center' }]}>✖</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={handleSocialEdit}
@@ -1243,7 +1269,7 @@ const MyAccountScreen = ({
                                     onPress={handleDeletePhoto}
                                     style={[styles.iconRoundButton, styles.iconDelete]}
                                     accessibilityLabel="Supprimer la photo">
-                                    <Text style={styles.iconEmoji}>🗑️</Text>
+                                    <Text style={[styles.iconEmoji, { color: isDark ? colors.background : '#fff', textAlign: 'center' }]}>✖</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -1271,10 +1297,10 @@ const MyAccountScreen = ({
                         <Text style={[styles.qrHint, { color: colors.textSecondary }]}>Si l'app n'est pas installée, tu seras redirigé(e) vers le store ({Platform.OS === 'ios' ? 'App Store' : 'Google Play'}).</Text>
                         <TouchableOpacity
                             onPress={() => setQrVisible(false)}
-                            style={[styles.modalButton, { marginTop: 12, alignSelf: 'center' }]}
+                            style={[styles.modalButton, { marginTop: 12, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' }]}
                             hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
                         >
-                            <Text style={styles.modalButtonText}>✖</Text>
+                            <Text style={[styles.modalButtonText, { textAlign: 'center' }]}>✖</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -1489,9 +1515,22 @@ const styles = StyleSheet.create({
         height: Math.min(width * 0.2, 72),
         resizeMode: 'contain',
     },
+    modalSocialMediaIcon: {
+        width: Math.min(width * 0.12, 44),
+        height: Math.min(width * 0.12, 44),
+        resizeMode: 'contain',
+    },
     socialMediaText: {
         fontSize: width * 0.04,
         marginTop: height * 0.01,
+    },
+    modalSocialMediaTile: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: height * 0.015,
+        marginHorizontal: width * 0.02,
+        padding: 8,
+        borderRadius: 12,
     },
     modalContainer: {
         flex: 1,
@@ -1524,6 +1563,27 @@ const styles = StyleSheet.create({
         paddingLeft: width * 0.03,
         marginBottom: height * 0.02,
     },
+    inputWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        height: height * 0.06,
+        borderWidth: 1.5,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        marginBottom: height * 0.02,
+    },
+    inputPrefixIcon: {
+        width: 24,
+        height: 24,
+        marginRight: 10,
+        resizeMode: 'contain',
+    },
+    wrappedInput: {
+        flex: 1,
+        height: '100%',
+        fontSize: 16,
+    },
     modalButton: {
         backgroundColor: '#00c2cb',
         padding: width * 0.03,
@@ -1536,6 +1596,8 @@ const styles = StyleSheet.create({
     modalButtonText: {
         color: '#fff',
         fontSize: width * 0.05,
+        includeFontPadding: false,
+        textAlignVertical: 'center',
     },
     modalHint: {
         fontSize: 12,
@@ -1582,6 +1644,8 @@ const styles = StyleSheet.create({
     iconEmoji: {
         fontSize: Math.min(width * 0.08, 28),
         color: '#fff',
+        includeFontPadding: false,
+        textAlignVertical: 'center',
     },
     modalBackButton: {
         position: 'absolute',
