@@ -64,6 +64,26 @@ export async function initApiFromStorage() {
     }
 }
 
+export async function get(path, options = {}) {
+    return request(path, { ...options, method: 'GET' });
+}
+
+export async function post(path, body, options = {}) {
+    return request(path, { ...options, method: 'POST', body });
+}
+
+export async function put(path, body, options = {}) {
+    return request(path, { ...options, method: 'PUT', body });
+}
+
+export async function patch(path, body, options = {}) {
+    return request(path, { ...options, method: 'PATCH', body });
+}
+
+export async function del(path, options = {}) {
+    return request(path, { ...options, method: 'DELETE' });
+}
+
 async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false, timeoutMs, suppressAuthHandling = false, cache: cacheMode = 'default', ttlMs = 30000 } = {}) {
     if (!loggedBaseUrlOnce) {
         console.log(`[API] Using BASE_URL: ${BASE_URL}`);
