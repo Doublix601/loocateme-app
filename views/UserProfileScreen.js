@@ -501,6 +501,12 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
               </View>
               <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                 <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>{displayName}</Text>
+                {/* Traffic Light UI for Status (Read-only) */}
+                <View style={styles.statusSelector}>
+                  <View style={[styles.statusCircle, { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.1 }]} />
+                  <View style={[styles.statusCircle, { backgroundColor: '#FF9800', opacity: user.status === 'orange' ? 1 : 0.1 }]} />
+                  <View style={[styles.statusCircle, { backgroundColor: '#4CAF50', opacity: (user.status === 'green' || !user.status) ? 1 : 0.1 }]} />
+                </View>
                 {/* Mesure invisible en une seule ligne */}
                 <Text
                   style={[styles.usernameUnderPhoto, { fontSize: usernameFont, position: 'absolute', opacity: 0 }]}
@@ -542,7 +548,8 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
           <View style={styles.socialMediaContainer}>
             {(() => {
-              if (user.status === 'orange') {
+              const isMe = String(currentUser?._id || currentUser?.id) === String(user?._id || user?.id);
+              if (!isMe && (user.status === 'orange' || user.status === 'red')) {
                 return (
                   <Text style={[styles.orangeStatusText, { color: colors.textSecondary }]}>
                     L'utilisateur ne partage pas ses réseaux sociaux
@@ -766,6 +773,19 @@ const styles = StyleSheet.create({
     color: '#00c2cb',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  statusSelector: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  statusCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginHorizontal: 8,
   },
   profileImage: {
     width: Math.min(width * 0.4, 160),

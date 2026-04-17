@@ -9,6 +9,7 @@ import {
   Linking,
   ActivityIndicator,
   SafeAreaView,
+  RefreshControl,
   PanResponder,
 } from 'react-native';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -20,6 +21,7 @@ import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, socialMediaIcons }) => {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState(null);
   const [users, setUsers] = useState([]);
 
@@ -41,19 +43,29 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     fetchLocationDetails();
   }, [locationId]);
 
-  const fetchLocationDetails = async () => {
+  const fetchLocationDetails = async (isRefreshing = false) => {
     try {
-      setLoading(true);
+      if (!isRefreshing) setLoading(true);
       const res = await getLocationById(locationId);
       if (res && res.location) {
-        setLocation(res.location);
+        const loc = res.location;
+        const userCount = res.users?.length || 0;
+        const stars = typeof loc.stars === 'number' ? loc.stars : parseInt(loc.stars, 10) || 0;
+
+        setLocation({ ...loc, stars, userCount });
         setUsers(res.users || []);
       }
     } catch (e) {
       console.error('Error fetching location details:', e);
     } finally {
-      setLoading(false);
+      if (!isRefreshing) setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchLocationDetails(true);
+    setRefreshing(false);
   };
 
   const handleGoToLocation = () => {
@@ -63,7 +75,10 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     Linking.openURL(url);
   };
 
-  const getStars = (starsCount) => {
+  const getStars = (item) => {
+    const starsCount = item?.stars || 0;
+    const userCount = item?.userCount || 0;
+
     // Determine the number of stars based on backend stars field
     if (starsCount === 3) {
       return <Text style={{ fontSize: 18 }}>⭐⭐⭐</Text>;
@@ -71,16 +86,18 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     if (starsCount === 2) {
       return <Text style={{ fontSize: 18 }}>⭐⭐</Text>;
     }
-    if (starsCount === 1) {
+    // Si starsCount est 1 OU s'il y a des utilisateurs présents, on affiche 1 étoile jaune
+    if (starsCount === 1 || userCount > 0) {
       return <Text style={{ fontSize: 18 }}>⭐</Text>;
     }
 
-    // Default to 1 grey star for 0 stars (though they shouldn't be visible)
+    // Default to 1 grey star for 0 stars
     return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
   };
 
   const renderUser = ({ item }) => {
     const statusColor = item.status === 'green' ? '#4CAF50' : item.status === 'orange' ? '#FF9800' : '#F44336';
+    const isOrangeOrRed = item.status === 'orange' || item.status === 'red';
 
     return (
       <TouchableOpacity
@@ -99,9 +116,11 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
             </Text>
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
           </View>
-          <Text style={[styles.userBio, { color: colors.textSecondary }]} numberOfLines={1}>
-            {item.bio}
-          </Text>
+          {!isOrangeOrRed && item.bio ? (
+            <Text style={[styles.userBio, { color: colors.textSecondary }]} numberOfLines={1}>
+              {item.bio}
+            </Text>
+          ) : null}
         </View>
       </TouchableOpacity>
     );
@@ -139,6 +158,15 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         data={users}
         keyExtractor={(item) => item._id}
         renderItem={renderUser}
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#00c2cb"]}
+          />
+        }
         ListHeaderComponent={
           <View style={styles.locationInfo}>
             <View style={styles.typeBadge}>
@@ -147,7 +175,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
 
             <View style={styles.popularityRow}>
               <Text style={[styles.popularityScore, { color: colors.textSecondary }]}>
-                Popularité : {getStars(location.stars || 0)}
+                Popularité : {getStars(location)}
               </Text>
 
               <TouchableOpacity style={styles.goButtonRound} onPress={handleGoToLocation}>
@@ -161,7 +189,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Personne n'est ici pour le moment</Text>
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
       />
     </SafeAreaView>
   );

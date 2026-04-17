@@ -1,16 +1,101 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert, ScrollView, Image, PanResponder, Platform, Linking } from 'react-native';
 import { useTheme } from '../components/contexts/ThemeContext';
-import { getMyUser } from '../components/ApiRequest';
+import { getMyUser, startPremiumTrial, verifyPurchase } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
+import * as IAP from 'react-native-iap';
 
 const { width, height } = Dimensions.get('window');
+
+const itemSkus = Platform.select({
+  ios: ['com.loocateme.premium.monthly', 'com.loocateme.premium.yearly'],
+  android: ['com.loocateme.premium.monthly', 'com.loocateme.premium.yearly'],
+});
 
 export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [iapAvailable, setIapAvailable] = useState(false);
   const { user, updateUser } = useContext(UserContext);
+
+  // Initialisation IAP
+  useEffect(() => {
+    let purchaseUpdateSubscription;
+    let purchaseErrorSubscription;
+    let isMounted = true;
+
+    const initIAP = async () => {
+      try {
+        console.log('[IAP] Initializing connection...');
+        const connected = await IAP.initConnection();
+        console.log('[IAP] Connected:', connected);
+
+        if (!connected) {
+          console.warn('[IAP] initConnection returned false');
+          return;
+        }
+
+        if (isMounted) setIapAvailable(true);
+
+        if (Platform.OS === 'android') {
+          await IAP.flushFailedPurchasesCachedAsPendingAndroid();
+        }
+        const getProducts = await IAP.getSubscriptions({ skus: itemSkus });
+        console.log('[IAP] Subscriptions found:', getProducts.length);
+        if (isMounted) setProducts(getProducts);
+
+        purchaseUpdateSubscription = IAP.purchaseUpdatedListener(async (purchase) => {
+          const receipt = purchase.transactionReceipt;
+          if (receipt) {
+            try {
+              if (isMounted) setLoading(true);
+              const res = await verifyPurchase({
+                platform: Platform.OS,
+                receipt: receipt,
+                productId: purchase.productId,
+                packageName: Platform.OS === 'android' ? purchase.packageNameAndroid : undefined,
+              });
+              if (res.success) {
+                await IAP.finishTransaction({ purchase, isConsumable: false });
+                Alert.alert('Succès', 'Votre abonnement est activé !');
+                const userRes = await getMyUser();
+                if (updateUser && isMounted) updateUser(userRes.user);
+              }
+            } catch (err) {
+              console.error('[IAP] Verification error', err);
+              Alert.alert('Erreur', 'Impossible de valider votre achat auprès du serveur.');
+            } finally {
+              if (isMounted) setLoading(false);
+            }
+          }
+        });
+
+        purchaseErrorSubscription = IAP.purchaseErrorListener((error) => {
+          console.warn('[IAP] purchaseErrorListener', error);
+          if (error.code !== 'E_USER_CANCELLED') {
+            Alert.alert('Erreur de paiement', error.message);
+          }
+        });
+      } catch (err) {
+        console.warn('[IAP] init error', err.code, err.message);
+        // E_IAP_NOT_AVAILABLE is common in Expo Go / Emulators without Store
+        if (err.code === 'E_IAP_NOT_AVAILABLE') {
+          console.info('[IAP] Native IAP not available. This is expected in Expo Go or emulators without store support.');
+        }
+      }
+    };
+
+    initIAP();
+
+    return () => {
+      isMounted = false;
+      if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
+      if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
+      IAP.endConnection();
+    };
+  }, []);
 
   // Si l'utilisateur est déjà Premium, rediriger directement
   useEffect(() => {
@@ -91,25 +176,31 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
     })
   ).current;
 
-  // Redirection vers les pages d’abonnement/paiement des stores
-  const openPurchaseFlow = async () => {
+  const handleStartTrial = async () => {
     try {
       setLoading(true);
-      const iosUrl = process.env.EXPO_PUBLIC_IOS_SUB_URL || process.env.EXPO_PUBLIC_IOS_APP_URL || '';
-      const androidUrl = process.env.EXPO_PUBLIC_ANDROID_SUB_URL || process.env.EXPO_PUBLIC_ANDROID_APP_URL || '';
-      const target = Platform.OS === 'ios' ? iosUrl : androidUrl;
-      if (!target) {
-        Alert.alert('Indisponible', 'Lien de paiement non configuré. Définissez EXPO_PUBLIC_IOS_SUB_URL / EXPO_PUBLIC_ANDROID_SUB_URL.');
-        return;
-      }
-      const supported = await Linking.canOpenURL(target);
-      if (supported) {
-        await Linking.openURL(target);
-      } else {
-        Alert.alert('Indisponible', "Impossible d'ouvrir la page de paiement");
+      const res = await startPremiumTrial();
+      if (res.success) {
+        Alert.alert('Essai activé !', 'Vous profitez maintenant de 7 jours gratuits.');
+        const userRes = await getMyUser();
+        if (updateUser) updateUser(userRes.user);
       }
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible d'ouvrir la page de paiement");
+      Alert.alert('Erreur', e.message || "Impossible de démarrer l'essai gratuit");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const requestSubscription = async (sku) => {
+    try {
+      setLoading(true);
+      await IAP.requestSubscription({ sku });
+    } catch (err) {
+      console.warn(err.code, err.message);
+      if (err.code !== 'E_USER_CANCELLED') {
+        Alert.alert('Erreur', err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -138,13 +229,49 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
           </View>
         </View>
 
-        <TouchableOpacity disabled={loading} onPress={openPurchaseFlow} style={[styles.cta, { backgroundColor: colors.accent }]}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.ctaText}>Essai gratuit 7 jours</Text>
-          )}
-        </TouchableOpacity>
+        {!user?.premiumTrialEnd && (
+          <TouchableOpacity disabled={loading} onPress={handleStartTrial} style={[styles.cta, { backgroundColor: colors.accent, marginBottom: 20 }]}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.ctaText}>Essai gratuit 7 jours</Text>
+            )}
+          </TouchableOpacity>
+        )}
+
+        {products.map((p) => (
+          <TouchableOpacity
+            key={p.productId}
+            disabled={loading}
+            onPress={() => requestSubscription(p.productId)}
+            style={[styles.productBtn, { borderColor: colors.accent, backgroundColor: colors.surface }]}
+          >
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={[styles.productTitle, { color: colors.textPrimary }]}>{p.title}</Text>
+              <Text style={[styles.productDesc, { color: colors.textSecondary }]}>{p.description}</Text>
+            </View>
+            <Text style={[styles.productPrice, { color: colors.accent }]}>{p.localizedPrice}</Text>
+          </TouchableOpacity>
+        ))}
+
+        {products.length === 0 && !loading && (
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            {iapAvailable ? (
+              <Text style={{ textAlign: 'center', color: colors.textSecondary }}>
+                Chargement des abonnements...
+              </Text>
+            ) : (
+              <View>
+                <Text style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: 10 }}>
+                  Les achats intégrés ne sont pas disponibles dans cet environnement.
+                </Text>
+                <Text style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 12 }}>
+                  (Note : Utilisez un build natif EAS pour tester les paiements réels)
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -163,4 +290,16 @@ const styles = StyleSheet.create({
   bullet: { fontSize: 16, marginVertical: 4 },
   cta: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
   ctaText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  productBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  productTitle: { fontSize: 17, fontWeight: '700' },
+  productDesc: { fontSize: 13 },
+  productPrice: { fontSize: 18, fontWeight: '800' },
 });

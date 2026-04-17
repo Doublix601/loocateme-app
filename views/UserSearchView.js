@@ -24,11 +24,14 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (evt, gestureState) => {
         const { dx, dy } = gestureState;
-        // On ne capture que si c'est un swipe vertical descendant prédominant
-        return Math.abs(dy) > Math.abs(dx) && dy > 10;
+        // On capture si c'est un swipe vertical descendant prédominant
+        const isVerticalSwipe = Math.abs(dy) > Math.abs(dx) && dy > 10;
+        // On capture aussi si c'est un swipe horizontal vers la gauche prédominant (retour)
+        const isHorizontalBackSwipe = Math.abs(dx) > Math.abs(dy) && dx < -10;
+        return isVerticalSwipe || isHorizontalBackSwipe;
       },
       onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dy > 50) {
+        if (gestureState.dy > 50 || gestureState.dx < -50 || gestureState.vx < -0.3) {
           onClose();
         }
       },

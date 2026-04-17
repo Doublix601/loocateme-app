@@ -384,6 +384,18 @@ export async function searchUsers({ q, limit = 10, lat, lon, includeUsers = true
     return request(`/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
+// PREMIUM & IAP
+export async function startPremiumTrial() {
+    return request('/premium/trial/start', { method: 'POST' });
+}
+
+export async function verifyPurchase({ platform, receipt, productId, packageName }) {
+    return request('/premium/verify-purchase', {
+        method: 'POST',
+        body: { platform, receipt, productId, packageName }
+    });
+}
+
 // PROFILE
 export async function updateProfile({ username, firstName, lastName, customName, bio }) {
     const body = {};
@@ -493,10 +505,6 @@ export async function registerPushToken({ token, platform = 'unknown' }) {
 export async function unregisterPushToken({ token }) {
     if (!token) return { success: false, skipped: true };
     return request('/push/unregister-token', { method: 'POST', body: { token }, retry: false, suppressAuthHandling: true });
-}
-
-export async function startPremiumTrial() {
-    return request('/premium/trial/start', { method: 'POST' });
 }
 
 // SETTINGS

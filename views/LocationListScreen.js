@@ -11,6 +11,7 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  PanResponder,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { getLocations, updateMyLocation } from '../components/ApiRequest';
@@ -28,6 +29,25 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   const flatListRef = React.useRef(null);
   const currentScrollOffset = React.useRef(0);
 
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Seuleument capturer si le mouvement est principalement horizontal
+        return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > 50) {
+          // Swipe vers la droite -> UserSearchView
+          onSearchPeople && onSearchPeople();
+        } else if (gestureState.dx < -50) {
+          // Swipe vers la gauche -> MyAccountScreen
+          onReturnToAccount && onReturnToAccount();
+        }
+      },
+    })
+  ).current;
+
   // Important: do not intercept horizontal gestures here so that
   // the parent navigator can handle global swipes (Search / MyAccount).
 
@@ -44,7 +64,10 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   }, [locations.length]);
 
 
-  const getStars = (starsCount) => {
+  const getStars = (item) => {
+    const starsCount = item?.stars || 0;
+    const userCount = item?.userCount || 0;
+
     // Determine the number of stars based on backend stars field
     if (starsCount === 3) {
       return <Text style={{ fontSize: 18 }}>⭐⭐⭐</Text>;
@@ -52,11 +75,12 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     if (starsCount === 2) {
       return <Text style={{ fontSize: 18 }}>⭐⭐</Text>;
     }
-    if (starsCount === 1) {
+    // Si starsCount est 1 OU s'il y a des utilisateurs présents, on affiche 1 étoile jaune
+    if (starsCount === 1 || userCount > 0) {
       return <Text style={{ fontSize: 18 }}>⭐</Text>;
     }
 
-    // Default to 1 grey star for 0 stars (though they shouldn't be visible)
+    // Default to 1 grey star for 0 stars
     return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
   };
 
@@ -81,13 +105,14 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         // et garantir au moins 1★ d'affichage lorsqu'un lieu est occupé
         const normalized = res.locations.map((it) => {
           const userCount = it?.userCount || 0;
-          const rawStars = typeof it?.stars === 'number' ? it.stars : parseInt(it?.stars, 10) || 0;
-          const stars = userCount > 0 ? Math.max(1, rawStars) : rawStars;
-          return { ...it, stars, userCount };
+          const stars = typeof it?.stars === 'number' ? it.stars : parseInt(it?.stars, 10) || 0;
+          // Un lieu avec popularity >= 1000 reste considéré comme persistent (3 étoiles)
+          const isPersistent = (it?.popularity || 0) >= 1000 || stars === 3;
+          return { ...it, stars, userCount, isPersistent };
         });
 
         const eligible = normalized.filter((it) => {
-          return it.stars === 3 || (it.userCount > 0 && it.stars >= 1);
+          return it.isPersistent || it.userCount > 0 || it.stars >= 1;
         });
 
         setLocations(eligible);
@@ -136,35 +161,39 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         </View>
       </View>
       <View style={styles.popularityContainer}>
-        <Text style={styles.popularityStars}>{getStars(item.stars || 0)}</Text>
+        <Text style={styles.popularityStars}>{getStars(item)}</Text>
       </View>
     </TouchableOpacity>
   );
 
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
+      <View style={styles.headerIcons}>
+        <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
+          <Text style={{ fontSize: 24 }}>🔎</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onReturnToAccount}>
+          <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+      {renderHeader()}
       {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
       ) : locations.length === 0 ? (
         // Etat vide: permettre le pull-to-refresh même sans éléments
         <ScrollView
           contentContainerStyle={[styles.listContent, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#00c2cb"]} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#00c2cb"]} progressViewOffset={10} />}
           alwaysBounceVertical
           bounces
           overScrollMode="always"
         >
-          <View style={[styles.header, { alignSelf: 'stretch' }]}> 
-            <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
-            <View style={styles.headerIcons}>
-              <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
-                <Text style={{ fontSize: 24 }}>🔎</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={onReturnToAccount}>
-                <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
-              </TouchableOpacity>
-            </View>
-          </View>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Aucun lieu trouvé à proximité</Text>
         </ScrollView>
       ) : (
@@ -173,19 +202,6 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           data={locations}
           keyExtractor={(item) => item._id}
           renderItem={renderLocation}
-          ListHeaderComponent={() => (
-            <View style={styles.header}>
-              <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
-              <View style={styles.headerIcons}>
-                <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
-                  <Text style={{ fontSize: 24 }}>🔎</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={onReturnToAccount}>
-                  <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
           onScroll={(event) => {
             currentScrollOffset.current = event.nativeEvent.contentOffset.y;
           }}
@@ -271,7 +287,7 @@ const styles = StyleSheet.create({
   },
   popularityContainer: { alignItems: 'flex-end', marginLeft: 10 },
   popularityStars: { fontSize: 18 },
-  emptyText: { textAlign: 'center', marginTop: 50, fontSize: 16 },
+  emptyText: { textAlign: 'center', fontSize: 16 },
 });
 
 export default LocationListScreen;
