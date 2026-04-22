@@ -6,7 +6,7 @@ import { publish } from '../components/EventBus';
 import { listConversations as apiListConversations } from '../components/ApiRequest';
 
 const ChatListScreen = ({ navigation }) => {
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -65,38 +65,48 @@ const ChatListScreen = ({ navigation }) => {
         }
     };
 
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={[styles.conversationItem, { backgroundColor: colors.surface }]}
-            onPress={() => navigation.navigate('Conversation', { conversationUser: item.user })}
-        >
-            <View style={styles.avatarContainer}>
-                {item.user.photo ? (
-                    <Image source={{ uri: proxifyImageUrl(item.user.photo) }} style={styles.avatar} />
-                ) : (
-                    <View style={[styles.avatarPlaceholder, { backgroundColor: colors.accent }]}>
-                        <Text style={styles.avatarInitial}>{item.user.username[0]}</Text>
+    const renderItem = ({ item }) => {
+        const isUnread = item.unreadCount > 0;
+        return (
+            <TouchableOpacity
+                style={[
+                    styles.conversationItem,
+                    {
+                        backgroundColor: isUnread ? colors.surface : colors.surfaceAlt,
+                        shadowColor: isDark ? '#000' : colors.accent,
+                        elevation: isDark ? 2 : 4,
+                    }
+                ]}
+                onPress={() => navigation.navigate('Conversation', { conversationUser: item.user })}
+            >
+                <View style={styles.avatarContainer}>
+                    {item.user.photo ? (
+                        <Image source={{ uri: proxifyImageUrl(item.user.photo) }} style={styles.avatar} />
+                    ) : (
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.accent + '20' }]}>
+                            <Text style={[styles.avatarInitial, { color: colors.accent }]}>{item.user.username[0].toUpperCase()}</Text>
+                        </View>
+                    )}
+                    {isUnread && (
+                        <View style={[styles.unreadBadge, { borderColor: isUnread ? colors.surface : colors.surfaceAlt }]}>
+                            <Text style={styles.unreadText}>{item.unreadCount}</Text>
+                        </View>
+                    )}
+                </View>
+                <View style={styles.contentContainer}>
+                    <View style={styles.headerRow}>
+                        <Text style={[styles.username, { color: colors.textPrimary }]} numberOfLines={1}>{item.user.username}</Text>
+                        <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
+                            {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
                     </View>
-                )}
-                {item.unreadCount > 0 && (
-                    <View style={styles.unreadBadge}>
-                        <Text style={styles.unreadText}>{item.unreadCount}</Text>
-                    </View>
-                )}
-            </View>
-            <View style={styles.contentContainer}>
-                <View style={styles.headerRow}>
-                    <Text style={[styles.username, { color: colors.textPrimary }]}>{item.user.username}</Text>
-                    <Text style={[styles.timestamp, { color: colors.textSecondary }]}>
-                        {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <Text style={[styles.lastMessage, { color: isUnread ? colors.textPrimary : colors.textSecondary, fontWeight: isUnread ? '600' : '400' }]} numberOfLines={1}>
+                        {item.lastMessage}
                     </Text>
                 </View>
-                <Text style={[styles.lastMessage, { color: item.unreadCount > 0 ? colors.textPrimary : colors.textSecondary }]} numberOfLines={1}>
-                    {item.lastMessage}
-                </Text>
-            </View>
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        );
+    };
 
     if (loading) {
         return (
@@ -108,11 +118,22 @@ const ChatListScreen = ({ navigation }) => {
 
     return (
         <View style={[styles.container, { backgroundColor: colors.bg }]}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Text style={{ fontSize: 24, color: colors.accent }}>←</Text>
+            <View style={[styles.header, {
+                backgroundColor: colors.surface,
+                borderBottomLeftRadius: 30,
+                borderBottomRightRadius: 30,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isDark ? 0.3 : 0.1,
+                shadowRadius: 10,
+                elevation: 5,
+                borderBottomWidth: isDark ? 1 : 0,
+                borderBottomColor: 'rgba(255,255,255,0.05)'
+            }]}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.accent + '15' }]}>
+                    <Text style={{ fontSize: 20, color: colors.accent }}>✕</Text>
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: colors.textPrimary }]}>Messages</Text>
+                <Text style={[styles.title, { color: isDark ? colors.text : colors.accent }]}>Messages</Text>
                 <View style={{ width: 40 }} />
             </View>
             <FlatList
@@ -121,11 +142,14 @@ const ChatListScreen = ({ navigation }) => {
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.list}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.accent]} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.accent]} tintColor={colors.accent} />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={{ color: colors.textSecondary }}>Aucune conversation pour le moment.</Text>
+                        <View style={[styles.emptyIconContainer, { backgroundColor: colors.accent + '10' }]}>
+                            <Text style={{ fontSize: 40 }}>💬</Text>
+                        </View>
+                        <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Aucune conversation pour le moment.</Text>
                     </View>
                 }
             />
@@ -141,86 +165,98 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 40,
-        paddingBottom: 16,
+        paddingHorizontal: 20,
+        paddingTop: 50,
+        paddingBottom: 20,
+        zIndex: 10,
     },
     title: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 22,
+        fontWeight: '800',
+        letterSpacing: 0.5,
     },
     backButton: {
-        padding: 8,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     list: {
-        paddingBottom: 20,
+        paddingTop: 20,
+        paddingBottom: 40,
     },
     conversationItem: {
         flexDirection: 'row',
         padding: 16,
-        marginHorizontal: 16,
-        marginVertical: 4,
-        borderRadius: 12,
+        marginHorizontal: 20,
+        marginVertical: 8,
+        borderRadius: 20,
         alignItems: 'center',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
     },
     avatarContainer: {
         position: 'relative',
     },
     avatar: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
     },
     avatarPlaceholder: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
     },
     avatarInitial: {
-        color: '#fff',
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
     },
     unreadBadge: {
         position: 'absolute',
         top: -2,
         right: -2,
-        backgroundColor: '#ff3b30',
-        borderRadius: 10,
-        minWidth: 20,
-        height: 20,
+        backgroundColor: '#FF3B30',
+        borderRadius: 12,
+        minWidth: 22,
+        height: 22,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#fff',
+        borderWidth: 3,
     },
     unreadText: {
         color: '#fff',
-        fontSize: 10,
-        fontWeight: 'bold',
+        fontSize: 11,
+        fontWeight: '800',
         paddingHorizontal: 4,
     },
     contentContainer: {
         flex: 1,
-        marginLeft: 12,
+        marginLeft: 15,
     },
     headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 6,
     },
     username: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 17,
+        fontWeight: '700',
+        flex: 1,
+        marginRight: 8,
     },
     timestamp: {
         fontSize: 12,
+        fontWeight: '500',
     },
     lastMessage: {
         fontSize: 14,
+        lineHeight: 18,
     },
     centered: {
         flex: 1,
@@ -228,8 +264,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyContainer: {
-        marginTop: 50,
+        marginTop: 100,
         alignItems: 'center',
+        paddingHorizontal: 40,
+    },
+    emptyIconContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    emptyText: {
+        fontSize: 16,
+        textAlign: 'center',
+        lineHeight: 24,
     }
 });
 

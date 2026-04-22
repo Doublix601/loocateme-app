@@ -23,7 +23,7 @@ import { listConversations, getConversationMessages, sendChatMessage, markConver
 
 const ConversationScreen = ({ route, navigation }) => {
     const { conversationUser } = route.params;
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [loading, setLoading] = useState(true);
@@ -159,17 +159,48 @@ const ConversationScreen = ({ route, navigation }) => {
         <KeyboardAvoidingView
             style={[styles.container, { backgroundColor: colors.bg }]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Text style={{ fontSize: 24, color: colors.accent }}>←</Text>
+            <View style={[styles.header, { 
+                backgroundColor: colors.surface,
+                borderBottomLeftRadius: 30,
+                borderBottomRightRadius: 30,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isDark ? 0.3 : 0.1,
+                shadowRadius: 10,
+                elevation: 5,
+                borderBottomWidth: isDark ? 1 : 0,
+                borderBottomColor: 'rgba(255,255,255,0.05)'
+            }]}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.accent + '15' }]}>
+                    <Text style={{ fontSize: 20, color: colors.accent }}>✕</Text>
                 </TouchableOpacity>
+                
                 <View style={styles.headerUser}>
-                    <Text style={[styles.headerName, { color: colors.textPrimary }]}>{conversationUser.username}</Text>
-                    {isTyping && <Text style={[styles.typingText, { color: colors.accent }]}>en train d'écrire...</Text>}
+                    <View style={styles.headerAvatarContainer}>
+                        {conversationUser.photo ? (
+                            <Image source={{ uri: proxifyImageUrl(conversationUser.photo) }} style={styles.headerAvatar} />
+                        ) : (
+                            <View style={[styles.headerAvatarPlaceholder, { backgroundColor: colors.accent + '20' }]}>
+                                <Text style={[styles.headerAvatarInitial, { color: colors.accent }]}>{conversationUser.username[0].toUpperCase()}</Text>
+                            </View>
+                        )}
+                        <View style={[styles.statusIndicator, { backgroundColor: '#4CD964', borderColor: colors.surface }]} />
+                    </View>
+                    <View style={styles.headerInfo}>
+                        <Text style={[styles.headerName, { color: colors.textPrimary }]} numberOfLines={1}>{conversationUser.username}</Text>
+                        {isTyping ? (
+                            <Text style={[styles.typingText, { color: colors.accent }]}>en train d'écrire...</Text>
+                        ) : (
+                            <Text style={[styles.statusText, { color: colors.textSecondary }]}>En ligne</Text>
+                        )}
+                    </View>
                 </View>
-                <View style={{ width: 40 }} />
+
+                <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: conversationUser.id || conversationUser._id })} style={[styles.backButton, { backgroundColor: colors.accent + '15' }]}>
+                    <Text style={{ fontSize: 20, color: colors.accent }}>👤</Text>
+                </TouchableOpacity>
             </View>
 
             <FlatList
@@ -212,29 +243,35 @@ const ConversationScreen = ({ route, navigation }) => {
                             setLoadingMore(false);
                         }
                     }}>
-                        <Text style={{ color: colors.accent }}>Charger plus</Text>
+                        <Text style={{ color: colors.accent, fontWeight: '700' }}>Charger plus de messages</Text>
                     </TouchableOpacity>
                 ) : null}
-                ListFooterComponent={loading ? <ActivityIndicator color={colors.accent} /> : null}
+                ListFooterComponent={loading ? <ActivityIndicator color={colors.accent} style={{ marginVertical: 20 }} /> : null}
             />
 
-            <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
-                <TouchableOpacity onPress={handlePickMedia} style={styles.attachButton}>
-                    <Text style={{ fontSize: 20 }}>📎</Text>
-                </TouchableOpacity>
-                <TextInput
-                    style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surfaceAlt }]}
-                    value={inputText}
-                    onChangeText={setInputText}
-                    placeholder="Écrivez un message..."
-                    placeholderTextColor={colors.textSecondary}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                    multiline
-                />
-                <TouchableOpacity onPress={handleSendMessage} style={styles.sendButton}>
-                    <Text style={{ fontSize: 20, color: colors.accent }}>🚀</Text>
-                </TouchableOpacity>
+            <View style={[styles.inputWrapper, { paddingBottom: Platform.OS === 'ios' ? 30 : 15 }]}>
+                <View style={[styles.inputContainer, { backgroundColor: colors.surface, shadowColor: isDark ? '#000' : colors.accent }]}>
+                    <TouchableOpacity onPress={handlePickMedia} style={[styles.attachButton, { backgroundColor: colors.accent + '15' }]}>
+                        <Text style={{ fontSize: 20 }}>📎</Text>
+                    </TouchableOpacity>
+                    <TextInput
+                        style={[styles.input, { color: colors.textPrimary, backgroundColor: colors.surfaceAlt }]}
+                        value={inputText}
+                        onChangeText={setInputText}
+                        placeholder="Message..."
+                        placeholderTextColor={colors.textSecondary}
+                        onFocus={handleInputFocus}
+                        onBlur={handleInputBlur}
+                        multiline
+                    />
+                    <TouchableOpacity 
+                        onPress={handleSendMessage} 
+                        style={[styles.sendButton, { backgroundColor: inputText.trim() ? colors.accent : colors.accent + '30' }]}
+                        disabled={!inputText.trim()}
+                    >
+                        <Text style={{ fontSize: 18, color: '#fff' }}>🚀</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </KeyboardAvoidingView>
     );
@@ -248,48 +285,116 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 40,
-        paddingBottom: 16,
-        borderBottomWidth: 0.5,
-        borderBottomColor: '#ccc',
+        paddingHorizontal: 20,
+        paddingTop: 50,
+        paddingBottom: 20,
+        zIndex: 10,
     },
     backButton: {
-        padding: 8,
-    },
-    headerUser: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    headerName: {
+    headerUser: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 10,
+    },
+    headerAvatarContainer: {
+        position: 'relative',
+        marginRight: 10,
+    },
+    headerAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+    },
+    headerAvatarPlaceholder: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    headerAvatarInitial: {
         fontSize: 18,
         fontWeight: 'bold',
     },
+    statusIndicator: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        borderWidth: 2,
+    },
+    headerInfo: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    headerName: {
+        fontSize: 16,
+        fontWeight: '800',
+    },
+    statusText: {
+        fontSize: 11,
+        fontWeight: '500',
+    },
     typingText: {
-        fontSize: 12,
+        fontSize: 11,
+        fontWeight: '600',
         fontStyle: 'italic',
     },
     messageList: {
-        paddingVertical: 16,
+        paddingVertical: 20,
+        paddingHorizontal: 10,
+    },
+    loadMore: {
+        alignItems: 'center',
+        padding: 10,
+        marginBottom: 10,
+    },
+    inputWrapper: {
+        paddingHorizontal: 15,
+        paddingTop: 10,
     },
     inputContainer: {
         flexDirection: 'row',
-        padding: 12,
-        alignItems: 'flex-end',
-        borderTopWidth: 1,
+        padding: 8,
+        alignItems: 'center',
+        borderRadius: 30,
+        elevation: 5,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
     },
     input: {
         flex: 1,
         borderRadius: 20,
-        paddingHorizontal: 16,
+        paddingHorizontal: 15,
         paddingVertical: 8,
-        maxHeight: 100,
+        maxHeight: 120,
         marginHorizontal: 8,
+        fontSize: 15,
     },
     sendButton: {
-        padding: 8,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     attachButton: {
-        padding: 8,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 });
 

@@ -1,27 +1,20 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder, AppState } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder, AppState, Platform } from 'react-native';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { getStatsOverview, getDetailedProfileViews, getMyUser } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
-import { subscribe } from '../components/EventBus';
+import { subscribe, publish } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
+import { usePremiumAccess } from '../hooks/usePremiumAccess';
 
 const { width, height } = Dimensions.get('window');
 
 export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { user } = useContext(UserContext);
-  const { flags } = useFeatureFlags();
-  // If premium is disabled globally, treat everyone as premium for stats access
-  const premiumEnabled = flags.premiumEnabled ?? false;
-  const statisticsEnabled = flags.statisticsEnabled ?? false;
-  const effectiveStatisticsEnabled = statisticsEnabled || premiumEnabled;
-  // Admin and moderator roles have premium access
-  const hasPremiumAccess = user?.isPremium || user?.role === 'admin' || user?.role === 'moderator';
-  // User has access if: stats are enabled AND (premium disabled OR user has premium access)
-  const hasAccess = effectiveStatisticsEnabled && (!premiumEnabled || hasPremiumAccess);
+  const { hasStatsAccess: hasAccess, premiumSystemEnabled: premiumEnabled, statisticsSystemEnabled: statisticsEnabled } = usePremiumAccess();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
@@ -96,8 +89,8 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
         const me = res?.user;
         if (cancelled) return;
         // Recheck access with fresh user data (admin/moderator also have premium access)
-        const freshHasPremiumAccess = me?.isPremium || me?.role === 'admin' || me?.role === 'moderator';
-        const freshHasAccess = (statisticsEnabled || premiumEnabled) && (!premiumEnabled || freshHasPremiumAccess);
+        const freshHasPremiumRight = me?.isPremium || me?.role === 'admin' || me?.role === 'moderator';
+        const freshHasAccess = (statisticsEnabled || premiumEnabled) && (!premiumEnabled || freshHasPremiumRight);
         if (freshHasAccess) {
           // trigger load paths by updating a local state dependency
           load();
@@ -156,60 +149,6 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     }
   }
 
-  // Vue paywall pour les comptes sans accès (stats désactivées ou premium requis)
-  if (!hasAccess) {
-    // If statistics are disabled globally, show a different message
-    const isStatsDisabled = !effectiveStatisticsEnabled;
-    return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-            <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: colors.accent }]} />
-          </TouchableOpacity>
-          <Text style={[styles.title, { color: colors.accent }]}>Statistiques</Text>
-          <View style={{ width: 28 }} />
-        </View>
-        <View style={styles.centerBox}>
-          <Image
-            source={require('../assets/appIcons/userProfile.png')}
-            style={{ width: 64, height: 64, tintColor: colors.accent, marginBottom: 16, opacity: 0.5 }}
-          />
-          {isStatsDisabled ? (
-            <>
-              <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Bientôt disponible 🚀</Text>
-              <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
-                Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux.
-              </Text>
-            </>
-          ) : (
-            <>
-              <Text style={[styles.paywallTitle, { color: colors.textPrimary }]}>Qui te stalke ? 👀</Text>
-              <Text style={[styles.paywallText, { color: colors.textSecondary }]}>
-                Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
-              </Text>
-              <TouchableOpacity
-                onPress={() => publish('ui:open_premium')}
-                style={[styles.paywallBtn, { backgroundColor: colors.accent }]}
-              >
-                <Text style={styles.paywallBtnText}>Découvrir mes visiteurs</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          <TouchableOpacity onPress={onBack} style={{ marginTop: 16 }}>
-            <Text style={{ color: colors.textMuted }}>Plus tard</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  useEffect(() => { loadDetailed(); }, []);
-
-  useEffect(() => {
-    // Reset visible count on refresh of the list
-    setVisibleCount(10);
-  }, [detailed.length]);
-
   function timeAgo(ts) {
     try {
       const now = Date.now();
@@ -235,109 +174,172 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     return Number(clicks[platform] ?? 0) || 0;
   };
 
+  useEffect(() => { if (hasAccess) loadDetailed(); }, [hasAccess]);
+
+  useEffect(() => {
+    // Reset visible count on refresh of the list
+    setVisibleCount(10);
+  }, [detailed.length]);
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: colors.accent }]} />
+    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity
+          style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
+          onPress={onBack}
+        >
+          <Image
+            source={require('../assets/appIcons/backArrow.png')}
+            style={[styles.backIcon, { tintColor: '#00c2cb' }]}
+          />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.accent }]}>Mes statistiques</Text>
-        <View style={{ width: 28 }} />
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Statistiques</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 24 }} />
-      ) : error ? (
-        <View style={{ padding: 16 }}>
-          <Text style={{ color: colors.errorText, textAlign: 'center' }}>{error}</Text>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          <View style={[styles.card, { backgroundColor: colors.surface }] }>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Vues de profil</Text>
-            <Text style={[styles.metric, { color: colors.accent }]}>{data?.views ?? 0}</Text>
-            <Text style={{ color: colors.textMuted }}>sur les 30 derniers jours</Text>
-          </View>
-
-          <View style={[styles.card, { backgroundColor: colors.surface }] }>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Clics par réseau</Text>
-            {supportedNetworks.map(({ key, label }) => (
-              <View key={key} style={styles.row}>
-                <View style={styles.rowLeft}>
-                  {socialMediaIcons[key] ? (
-                    <Image source={socialMediaIcons[key]} style={styles.smIcon} />
-                  ) : (
-                    <View style={[styles.smIcon, { backgroundColor: '#ccc', borderRadius: 8 }]} />
-                  )}
-                  <Text style={[styles.rowLabel, { color: colors.textPrimary }]}>{label}</Text>
-                </View>
-                <Text style={[styles.rowValue, { color: colors.textSecondary }]}>{getCountFor(key)}</Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Dernières visites</Text>
-            {detailedLoading ? (
-              <ActivityIndicator size="small" color={colors.accent} style={{ marginVertical: 8 }} />
-            ) : detailedError ? (
-              <Text style={{ color: colors.textMuted }}>{detailedError}</Text>
-            ) : detailed.length === 0 ? (
-              <Text style={{ color: colors.textMuted }}>Aucune visite récente</Text>
+      {!hasAccess ? (
+        <View style={styles.centerBox}>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 30, padding: 30, alignItems: 'center', width: '100%' }}>
+            <Image
+              source={require('../assets/appIcons/userProfile.png')}
+              style={{ width: 64, height: 64, tintColor: '#00c2cb', marginBottom: 20, opacity: 0.8 }}
+            />
+            {!effectiveStatisticsEnabled ? (
+              <>
+                <Text style={[styles.paywallTitle, { color: colors.text }]}>Bientôt disponible 🚀</Text>
+                <Text style={[styles.paywallText, { color: colors.text, opacity: 0.7 }]}>
+                  Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux.
+                </Text>
+              </>
             ) : (
               <>
-                {detailed.slice(0, visibleCount).map((it) => (
-                  <TouchableOpacity
-                    key={String(it.id)}
-                    style={styles.visitorRow}
-                    onPress={() => {
-                      if (!onOpenUserProfile || !it?.actor) return;
-                      // Map minimal user object expected by profile screen
-                      const socials = Array.isArray(it.actor?.socialNetworks)
-                        ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-                        : [];
-                      const coords = Array.isArray(it.actor?.location?.coordinates)
-                        ? it.actor.location.coordinates
-                        : null;
-                      const u = {
-                        _id: it.actor.id || it.actor._id,
-                        id: it.actor.id || it.actor._id,
-                        username: it.actor.username || it.actor.name || 'Utilisateur',
-                        firstName: '',
-                        lastName: '',
-                        customName: it.actor.name || '',
-                        photo: it.actor.profileImageUrl || null,
-                        bio: it.actor?.bio || '',
-                        socialMedias: socials,
-                        locationCoordinates: coords,
-                      };
-                      onOpenUserProfile(u);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    {it.actor?.profileImageUrl ? (
-                      <ImageWithPlaceholder uri={it.actor.profileImageUrl} style={styles.avatar} />
-                    ) : (
-                      <View style={[styles.avatar, styles.avatarPh]}>
-                        <Text style={{ color: '#fff', fontWeight: '700' }}>{(it.actor?.name?.[0] || 'U').toUpperCase()}</Text>
-                      </View>
-                    )}
-                    <View style={{ flex: 1, marginLeft: 10 }}>
-                      <Text style={{ color: colors.textPrimary, fontWeight: '600' }} numberOfLines={1}>
-                        {it.actor?.name || it.actor?.username || 'Utilisateur'}
-                      </Text>
-                      <Text style={{ color: colors.textSecondary, marginTop: 2 }}>{timeAgo(it.at)}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-                {visibleCount < detailed.length && (
-                  <TouchableOpacity onPress={() => setVisibleCount((c) => Math.min(c + 10, detailed.length))} style={styles.moreBtn}>
-                    <Text style={[styles.moreTxt, { color: colors.accent }]}>Afficher plus</Text>
-                  </TouchableOpacity>
-                )}
+                <Text style={[styles.paywallTitle, { color: colors.text }]}>Qui te stalke ? 👀</Text>
+                <Text style={[styles.paywallText, { color: colors.text, opacity: 0.7 }]}>
+                  Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
+                </Text>
+                <TouchableOpacity
+                  onPress={() => publish('ui:open_premium')}
+                  style={[styles.paywallBtn, { backgroundColor: '#00c2cb' }]}
+                >
+                  <Text style={styles.paywallBtnText}>Découvrir mes visiteurs</Text>
+                </TouchableOpacity>
               </>
             )}
+            <TouchableOpacity onPress={onBack} style={{ marginTop: 20 }}>
+              <Text style={{ color: colors.text, opacity: 0.5 }}>Plus tard</Text>
+            </TouchableOpacity>
           </View>
+        </View>
+      ) : (
+        <ScrollView 
+          contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
+          {loading ? (
+            <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
+          ) : error ? (
+            <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 20 }}>
+              <Text style={{ color: '#ff4444', textAlign: 'center' }}>{error}</Text>
+            </View>
+          ) : (
+            <>
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.cardTitle, { color: colors.text, opacity: 0.6 }]}>Vues de profil</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+                  <Text style={[styles.metric, { color: '#00c2cb' }]}>{data?.views ?? 0}</Text>
+                  <Text style={{ color: colors.text, opacity: 0.5, marginLeft: 10 }}>vues</Text>
+                </View>
+                <Text style={{ color: colors.text, opacity: 0.4, marginTop: 5, fontSize: 12 }}>sur les 30 derniers jours</Text>
+              </View>
+
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.cardTitle, { color: colors.text, opacity: 0.6, marginBottom: 15 }]}>Clics par réseau</Text>
+                {supportedNetworks.map(({ key, label }, index) => (
+                  <View key={key} style={[styles.row, index !== supportedNetworks.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+                    <View style={styles.rowLeft}>
+                      <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', justifyContent: 'center', alignItems: 'center' }}>
+                        {socialMediaIcons[key] ? (
+                          <Image source={socialMediaIcons[key]} style={styles.smIcon} />
+                        ) : (
+                          <View style={[styles.smIcon, { backgroundColor: '#ccc' }]} />
+                        )}
+                      </View>
+                      <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
+                    </View>
+                    <View style={{ backgroundColor: 'rgba(0,194,203,0.1)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10 }}>
+                        <Text style={[styles.rowValue, { color: '#00c2cb' }]}>{getCountFor(key)}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.cardTitle, { color: colors.text, opacity: 0.6, marginBottom: 15 }]}>Dernières visites</Text>
+                {detailedLoading ? (
+                  <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 20 }} />
+                ) : detailedError ? (
+                  <Text style={{ color: colors.text, opacity: 0.5, textAlign: 'center' }}>{detailedError}</Text>
+                ) : detailed.length === 0 ? (
+                  <Text style={{ color: colors.text, opacity: 0.5, textAlign: 'center' }}>Aucune visite récente</Text>
+                ) : (
+                  <>
+                    {detailed.slice(0, visibleCount).map((it, idx) => (
+                      <TouchableOpacity
+                        key={String(it.id)}
+                        style={[styles.visitorRow, idx !== Math.min(visibleCount, detailed.length) - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                        onPress={() => {
+                          if (!onOpenUserProfile || !it?.actor) return;
+                          const socials = Array.isArray(it.actor?.socialNetworks)
+                            ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+                            : [];
+                          const coords = Array.isArray(it.actor?.location?.coordinates)
+                            ? it.actor.location.coordinates
+                            : null;
+                          const u = {
+                            _id: it.actor.id || it.actor._id,
+                            id: it.actor.id || it.actor._id,
+                            username: it.actor.username || it.actor.name || 'Utilisateur',
+                            firstName: '',
+                            lastName: '',
+                            customName: it.actor.name || '',
+                            photo: it.actor.profileImageUrl || null,
+                            bio: it.actor?.bio || '',
+                            socialMedias: socials,
+                            locationCoordinates: coords,
+                          };
+                          onOpenUserProfile(u);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        {it.actor?.profileImageUrl ? (
+                          <ImageWithPlaceholder uri={it.actor.profileImageUrl} style={styles.avatar} />
+                        ) : (
+                          <View style={[styles.avatar, styles.avatarPh]}>
+                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>{(it.actor?.name?.[0] || 'U').toUpperCase()}</Text>
+                          </View>
+                        )}
+                        <View style={{ flex: 1, marginLeft: 15 }}>
+                          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
+                            {it.actor?.name || it.actor?.username || 'Utilisateur'}
+                          </Text>
+                          <Text style={{ color: colors.text, opacity: 0.5, marginTop: 2, fontSize: 13 }}>{timeAgo(it.at)}</Text>
+                        </View>
+                        <Image 
+                            source={require('../assets/appIcons/backArrow.png')} 
+                            style={{ width: 16, height: 16, tintColor: colors.text, opacity: 0.2, transform: [{ rotate: '180deg' }] }} 
+                        />
+                      </TouchableOpacity>
+                    ))}
+                    {visibleCount < detailed.length && (
+                      <TouchableOpacity onPress={() => setVisibleCount((c) => Math.min(c + 10, detailed.length))} style={styles.moreBtn}>
+                        <Text style={[styles.moreTxt, { color: '#00c2cb' }]}>Afficher plus</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
+              </View>
+            </>
+          )}
         </ScrollView>
       )}
     </View>
@@ -346,27 +348,83 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingTop: height * 0.02 },
-  backBtn: { padding: 8 },
-  backIcon: { width: 28, height: 28 },
-  title: { fontSize: Math.min(width * 0.07, 28), fontWeight: 'bold' },
-  // Tabs supprimés (on affiche uniquement les 30 derniers jours)
-  card: { borderRadius: 12, padding: 16, marginBottom: 16 },
-  cardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20, 
+    paddingBottom: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  backButtonCircular: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: { width: 24, height: 24 },
+  card: { 
+    borderRadius: 20, 
+    padding: 20, 
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+  },
+  cardTitle: { 
+    fontSize: 13, 
+    fontWeight: '700', 
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
   metric: { fontSize: 36, fontWeight: '800' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  smIcon: { width: 22, height: 22, marginRight: 10, borderRadius: 6 },
-  rowLabel: { fontSize: 16 },
-  rowValue: { fontSize: 16, fontWeight: '700' },
-  visitorRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#eee' },
+  row: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  rowLeft: { flexDirection: 'row', alignItems: 'center' },
+  smIcon: { width: 20, height: 20 },
+  rowLabel: { fontSize: 16, marginLeft: 12 },
+  rowValue: { fontSize: 15, fontWeight: '800' },
+  visitorRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    paddingVertical: 12,
+  },
+  avatar: { width: 48, height: 48, borderRadius: 24 },
   avatarPh: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#00c2cb' },
-  moreBtn: { paddingVertical: 10, alignItems: 'center' },
-  moreTxt: { fontWeight: '700' },
-  centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  paywallTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 12 },
-  paywallText: { fontSize: 16, textAlign: 'center', marginBottom: 24, lineHeight: 22 },
-  paywallBtn: { paddingVertical: 14, paddingHorizontal: 32, borderRadius: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  paywallBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  moreBtn: { paddingVertical: 15, alignItems: 'center', marginTop: 10 },
+  moreTxt: { fontWeight: '700', fontSize: 15 },
+  centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 25 },
+  paywallTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 15 },
+  paywallText: { fontSize: 16, textAlign: 'center', marginBottom: 25, lineHeight: 22 },
+  paywallBtn: { 
+    paddingVertical: 16, 
+    paddingHorizontal: 30, 
+    borderRadius: 15, 
+    elevation: 3, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 4 
+  },
+  paywallBtnText: { color: '#fff', fontSize: 17, fontWeight: '800' },
 });

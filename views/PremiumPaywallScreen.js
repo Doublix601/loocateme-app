@@ -14,7 +14,7 @@ const itemSkus = Platform.select({
 });
 
 export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [iapAvailable, setIapAvailable] = useState(false);
@@ -207,30 +207,45 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: colors.accent }]} />
+    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity
+          style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
+          onPress={onBack}
+        >
+          <Image
+            source={require('../assets/appIcons/backArrow.png')}
+            style={[styles.backIcon, { tintColor: '#00c2cb' }]}
+          />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.accent }]}>Passer en Premium</Text>
-        <View style={{ width: 28 }} />
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Passer en Premium</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.hero, { color: colors.textPrimary }]}>Débloque plus d’informations</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Accède aux détails des visiteurs de ton profil, reçois des notifications plus précises et suis tes statistiques plus finement.
+          <Text style={[styles.hero, { color: '#00c2cb' }]}>Débloquez plus d’informations</Text>
+          <Text style={[styles.subtitle, { color: colors.text, opacity: 0.7 }]}>
+            Accédez aux détails des visiteurs de votre profil, recevez des notifications précises et suivez vos statistiques finement.
           </Text>
           <View style={styles.bullets}>
-            <Text style={[styles.bullet, { color: colors.textPrimary }]}>• Détails des visites</Text>
-            <Text style={[styles.bullet, { color: colors.textPrimary }]}>• Notifications enrichies</Text>
-            <Text style={[styles.bullet, { color: colors.textPrimary }]}>• Statistiques avancées</Text>
+            <View style={styles.bulletRow}>
+                <Text style={{ fontSize: 18, marginRight: 10 }}>👀</Text>
+                <Text style={[styles.bullet, { color: colors.text }]}>Détails des visites</Text>
+            </View>
+            <View style={styles.bulletRow}>
+                <Text style={{ fontSize: 18, marginRight: 10 }}>🔔</Text>
+                <Text style={[styles.bullet, { color: colors.text }]}>Notifications enrichies</Text>
+            </View>
+            <View style={styles.bulletRow}>
+                <Text style={{ fontSize: 18, marginRight: 10 }}>📊</Text>
+                <Text style={[styles.bullet, { color: colors.text }]}>Statistiques avancées</Text>
+            </View>
           </View>
         </View>
 
         {!user?.premiumTrialEnd && (
-          <TouchableOpacity disabled={loading} onPress={handleStartTrial} style={[styles.cta, { backgroundColor: colors.accent, marginBottom: 20 }]}>
+          <TouchableOpacity disabled={loading} onPress={handleStartTrial} style={[styles.cta, { backgroundColor: '#00c2cb', marginBottom: 25 }]}>
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
@@ -244,29 +259,31 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
             key={p.productId}
             disabled={loading}
             onPress={() => requestSubscription(p.productId)}
-            style={[styles.productBtn, { borderColor: colors.accent, backgroundColor: colors.surface }]}
+            style={[styles.productBtn, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', backgroundColor: colors.surface }]}
           >
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <Text style={[styles.productTitle, { color: colors.textPrimary }]}>{p.title}</Text>
-              <Text style={[styles.productDesc, { color: colors.textSecondary }]}>{p.description}</Text>
+            <View style={{ flex: 1, marginRight: 10 }}>
+              <Text style={[styles.productTitle, { color: colors.text }]}>{p.title}</Text>
+              <Text style={[styles.productDesc, { color: colors.text, opacity: 0.5 }]}>{p.description}</Text>
             </View>
-            <Text style={[styles.productPrice, { color: colors.accent }]}>{p.localizedPrice}</Text>
+            <View style={{ backgroundColor: 'rgba(0,194,203,0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 12 }}>
+                <Text style={[styles.productPrice, { color: '#00c2cb' }]}>{p.localizedPrice}</Text>
+            </View>
           </TouchableOpacity>
         ))}
 
         {products.length === 0 && !loading && (
-          <View style={{ padding: 20, alignItems: 'center' }}>
+          <View style={{ padding: 20, alignItems: 'center', backgroundColor: colors.surface, borderRadius: 20 }}>
             {iapAvailable ? (
-              <Text style={{ textAlign: 'center', color: colors.textSecondary }}>
+              <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.5 }}>
                 Chargement des abonnements...
               </Text>
             ) : (
               <View>
-                <Text style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: 10 }}>
-                  Les achats intégrés ne sont pas disponibles dans cet environnement.
+                <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.7, marginBottom: 10, fontWeight: '600' }}>
+                  Achat intégré indisponible
                 </Text>
-                <Text style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 12 }}>
-                  (Note : Utilisez un build natif EAS pour tester les paiements réels)
+                <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.4, fontSize: 12 }}>
+                  Les achats ne sont pas supportés dans cet environnement (Expo Go / Simulateur).
                 </Text>
               </View>
             )}
@@ -279,27 +296,67 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingTop: height * 0.02 },
-  backBtn: { padding: 8 },
-  backIcon: { width: 28, height: 28 },
-  title: { fontSize: Math.min(width * 0.07, 28), fontWeight: 'bold' },
-  card: { borderRadius: 12, padding: 16, marginBottom: 16 },
-  hero: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
-  subtitle: { fontSize: 15 },
-  bullets: { marginTop: 12 },
-  bullet: { fontSize: 16, marginVertical: 4 },
-  cta: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
-  ctaText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    paddingHorizontal: 20, 
+    paddingBottom: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  backButtonCircular: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: { width: 24, height: 24 },
+  card: { 
+    borderRadius: 20, 
+    padding: 20, 
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+  },
+  hero: { fontSize: 24, fontWeight: '800', marginBottom: 12 },
+  subtitle: { fontSize: 16, lineHeight: 22, marginBottom: 20 },
+  bullets: { marginTop: 10 },
+  bulletRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+  bullet: { fontSize: 17, fontWeight: '600' },
+  cta: { borderRadius: 15, paddingVertical: 18, alignItems: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
+  ctaText: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: 1 },
   productBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
+    padding: 20,
+    borderRadius: 20,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
-  productTitle: { fontSize: 17, fontWeight: '700' },
-  productDesc: { fontSize: 13 },
+  productTitle: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
+  productDesc: { fontSize: 14, lineHeight: 18 },
   productPrice: { fontSize: 18, fontWeight: '800' },
 });

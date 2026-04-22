@@ -14,11 +14,11 @@ import {
     Alert,
     Platform,
     Pressable,
-    SafeAreaView,
     Linking,
     Share,
     KeyboardAvoidingView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
@@ -30,6 +30,7 @@ import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
+import { usePremiumAccess } from '../hooks/usePremiumAccess';
 
 const { width, height } = Dimensions.get('window');
 
@@ -60,10 +61,8 @@ const MyAccountScreen = ({
         },
     });
     const { user, updateUser } = useContext(UserContext);
+    const { isPremium, hasStatsAccess, premiumSystemEnabled } = usePremiumAccess();
     const { flags } = useFeatureFlags();
-    const premiumEnabled = flags?.premiumEnabled ?? false;
-    const statisticsEnabled = flags?.statisticsEnabled ?? false;
-    const effectiveStatisticsEnabled = statisticsEnabled || premiumEnabled;
     const warningsCount = user?.moderation?.warningsCount || 0;
     const [modalVisible, setModalVisible] = useState(false);
     const [editType, setEditType] = useState('');
@@ -172,8 +171,8 @@ const MyAccountScreen = ({
             const me = res?.user;
             const nowPremium = !!me?.isPremium;
             const nowRole = me?.role || user?.role || 'user';
-            const hasPremiumAccess = nowPremium || nowRole === 'admin' || nowRole === 'moderator';
-            const hasStatsAccess = effectiveStatisticsEnabled && (!premiumEnabled || hasPremiumAccess);
+            const nowHasPremiumRight = nowPremium || nowRole === 'admin' || nowRole === 'moderator';
+            const freshHasStatsAccess = (flags.statisticsEnabled || premiumSystemEnabled) && (!premiumSystemEnabled || nowHasPremiumRight);
             if (updateUser && me) {
                 updateUser({
                     ...user,
@@ -192,17 +191,13 @@ const MyAccountScreen = ({
                     privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
                 });
             }
-            if (hasStatsAccess) {
+            if (freshHasStatsAccess) {
                 onOpenStatistics && onOpenStatistics();
             } else {
                 onOpenPremiumPaywall && onOpenPremiumPaywall();
             }
         } catch (_) {
-            // Fallback to current context state
-            const premium = !!user?.isPremium;
-            const role = user?.role || 'user';
-            const hasPremiumAccess = premium || role === 'admin' || role === 'moderator';
-            const hasStatsAccess = effectiveStatisticsEnabled && (!premiumEnabled || hasPremiumAccess);
+            // Fallback to current hook state
             if (hasStatsAccess) onOpenStatistics && onOpenStatistics();
             else onOpenPremiumPaywall && onOpenPremiumPaywall();
         }
@@ -333,10 +328,10 @@ const MyAccountScreen = ({
             if (!me || !updateUser) return;
             updateUser({
                 ...user,
-                username: me.username || me.name || user.username || '',
-                firstName: typeof me.firstName === 'string' ? me.firstName : (user.firstName || ''),
-                lastName: typeof me.lastName === 'string' ? me.lastName : (user.lastName || ''),
-                customName: typeof me.customName === 'string' ? me.customName : (user.customName || ''),
+                firstName: typeof me.firstName === 'string' ? me.firstName : (user?.firstName || ''),
+                lastName: typeof me.lastName === 'string' ? me.lastName : (user?.lastName || ''),
+                customName: typeof me.customName === 'string' ? me.customName : (user?.customName || ''),
+                username: me.username || me.name || user?.username || '',
                 bio: typeof me.bio === 'string' ? me.bio : (user.bio || ''),
                 photo: me.profileImageUrl || user.photo || null,
                 socialMedia: Array.isArray(me.socialNetworks) ? mapNetworksToSocialMedia(me.socialNetworks) : (user.socialMedia || []),
@@ -894,7 +889,7 @@ const MyAccountScreen = ({
                                     activeOpacity={1}
                                 >
                                     <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>
-                                        {user.username}
+                                        {user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
                                     </Text>
                                     {/* Mesure invisible sur une ligne pour calculer la largeur exacte du nom */}
                                     <Text
@@ -905,13 +900,13 @@ const MyAccountScreen = ({
                                             if (w && Math.abs(w - measuredNameWidth) > 0.5) setMeasuredNameWidth(w);
                                         }}
                                     >
-                                        {user.username}
+                                        {user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                         {/* Traffic Light UI for Status */}
-                        <View style={styles.statusSelector}>
+                        <View style={[styles.statusSelector]}>
                             <TouchableOpacity
                                 style={[styles.statusCircle, { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.3 }]}
                                 onPress={() => handleUpdateStatus('red')}
@@ -926,7 +921,56 @@ const MyAccountScreen = ({
                             />
                         </View>
 
-                        <View style={styles.bioContainer}>
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            paddingHorizontal: 15,
+                            marginTop: 15,
+                            gap: 8
+                        }}>
+                            <TouchableOpacity
+                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
+                                onLongPress={() => handleEdit('firstName')}
+                                delayLongPress={300}
+                                activeOpacity={1}
+                            >
+                                <Text style={styles.identityLabel}>Prénom</Text>
+                                <Text style={[styles.identityValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                                    {user?.firstName || '—'}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
+                                onLongPress={() => handleEdit('lastName')}
+                                delayLongPress={300}
+                                activeOpacity={1}
+                            >
+                                <Text style={styles.identityLabel}>Nom</Text>
+                                <Text style={[styles.identityValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                                    {user?.lastName || '—'}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.identityCard, { flex: 1.5, backgroundColor: colors.surfaceAlt }]}
+                                onLongPress={() => handleEdit('customName')}
+                                delayLongPress={300}
+                                activeOpacity={1}
+                            >
+                                <Text style={styles.identityLabel}>Custom</Text>
+                                <Text style={[styles.identityValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                                    {user?.customName || '—'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
+                            <View style={styles.bioTitleContainer}>
+                                <Text style={[styles.label, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
+                                <Text style={{ marginLeft: 6, fontSize: 14 }}>🖋️</Text>
+                            </View>
                             <TouchableOpacity
                                 style={styles.bioTextContainer}
                                 onLongPress={() => handleEdit('bio')}
@@ -940,33 +984,23 @@ const MyAccountScreen = ({
                                         <Text
                                             style={[
                                                 styles.value,
-                                                { fontSize: bioFont, textAlign: 'center', color: isEmpty ? colors.textMuted : colors.textPrimary },
+                                                {
+                                                    fontSize: bioFont,
+                                                    textAlign: 'left',
+                                                    width: '100%',
+                                                    color: isEmpty ? colors.textMuted : colors.textPrimary,
+                                                    fontStyle: isEmpty ? 'italic' : 'normal',
+                                                    lineHeight: bioFont * 1.4
+                                                },
                                             ]}
                                         >
-                                            {isEmpty ? 'Maintenir pour ajouter une bio' : bioText}
+                                            {isEmpty ? 'Maintenir pour ajouter une bio...' : bioText}
                                         </Text>
                                     );
                                 })()}
                             </TouchableOpacity>
                         </View>
 
-                        {/* Section identité: prénom, nom, nom personnalisé */}
-                        <View style={{ marginTop: height * 0.02 }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
-                                <TouchableOpacity onLongPress={() => handleEdit('firstName')} delayLongPress={300} activeOpacity={1} style={{ padding: 8 }}>
-                                    <Text style={[styles.label]}>Prénom</Text>
-                                    <Text style={[styles.value, { color: colors.textPrimary }]}>{user.firstName || '—'}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onLongPress={() => handleEdit('lastName')} delayLongPress={300} activeOpacity={1} style={{ padding: 8 }}>
-                                    <Text style={[styles.label]}>Nom</Text>
-                                    <Text style={[styles.value, { color: colors.textPrimary }]}>{user.lastName || '—'}</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onLongPress={() => handleEdit('customName')} delayLongPress={300} activeOpacity={1} style={{ padding: 8 }}>
-                                    <Text style={[styles.label]}>Nom personnalisé</Text>
-                                    <Text style={[styles.value, { color: colors.textPrimary }]} numberOfLines={1} ellipsizeMode="tail">{user.customName || '—'}</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
 
                         {warningsCount > 0 && (
                             <TouchableOpacity
@@ -983,7 +1017,7 @@ const MyAccountScreen = ({
                         )}
 
                         {/* Boutons de partage entre la bio et les réseaux sociaux (icônes uniquement) */}
-                        <View style={styles.shareIconsRow}>
+                        <View style={[styles.shareIconsRow, { backgroundColor: isDark ? 'rgba(0, 194, 203, 0.1)' : 'rgba(0, 194, 203, 0.05)' }]}>
                             <TouchableOpacity
                                 style={styles.shareIconBtn}
                                 onPress={handleShareProfile}
@@ -1010,31 +1044,31 @@ const MyAccountScreen = ({
                     </View>
 
                     <View style={styles.socialMediaContainer}>
-                        <TouchableOpacity
-                            onPress={() => setShowSocialModal(true)}
-                            style={styles.socialMediaTile}>
-                            <Image
-                                source={require('../assets/socialMediaIcons/addSocialNetwork_logo.png')}
-                                style={[styles.socialMediaIcon, { width: iconSize, height: iconSize, tintColor: isDark ? '#fff' : undefined }]}
-                            />
-                        </TouchableOpacity>
-                        {socialLinks.map((social, index) => {
-                            const icon = social?.platform ? socialMediaIcons[social.platform] : undefined;
-                            if (!icon) return null;
-                            return (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={styles.socialMediaTile}
-                                    onPress={() => openSocial(social.platform, social.username || social.handle)}
-                                    onLongPress={() => handleSocialLongPress(social)}
-                                >
-                                    <Image
-                                        source={icon}
-                                        style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
-                                    />
-                                </TouchableOpacity>
-                            );
-                        })}
+                            <TouchableOpacity
+                                onPress={() => setShowSocialModal(true)}
+                                style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}>
+                                <Image
+                                    source={require('../assets/socialMediaIcons/addSocialNetwork_logo.png')}
+                                    style={[styles.socialMediaIcon, { width: iconSize, height: iconSize, tintColor: isDark ? colors.textPrimary : undefined }]}
+                                />
+                            </TouchableOpacity>
+                            {socialLinks.map((social, index) => {
+                                const icon = social?.platform ? socialMediaIcons[social.platform] : undefined;
+                                if (!icon) return null;
+                                return (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}
+                                        onPress={() => openSocial(social.platform, social.username || social.handle)}
+                                        onLongPress={() => handleSocialLongPress(social)}
+                                    >
+                                        <Image
+                                            source={icon}
+                                            style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
+                                        />
+                                    </TouchableOpacity>
+                                );
+                            })}
                     </View>
                 </View>
 
@@ -1046,12 +1080,25 @@ const MyAccountScreen = ({
                         <Pressable style={StyleSheet.absoluteFill} onPress={() => setModalVisible(false)} />
                         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
                             <Text style={styles.modalTitle}>
-                                Modifier {editType.charAt(0).toUpperCase() + editType.slice(1)}
+                                Modifier {
+                                    editType === 'firstName' ? 'le Prénom' :
+                                    editType === 'lastName' ? 'le Nom' :
+                                    editType === 'customName' ? 'le Nom personnalisé' :
+                                    editType === 'username' ? "le Nom d'utilisateur" :
+                                    editType === 'bio' ? 'la Bio' :
+                                    editType
+                                }
                             </Text>
                             <TextInput
                                 value={newValue}
                                 onChangeText={setNewValue}
-                                placeholder={editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" : 'Votre texte'}
+                                placeholder={
+                                    editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" :
+                                    editType === 'firstName' ? "Votre Prénom" :
+                                    editType === 'lastName' ? "Votre Nom" :
+                                    editType === 'customName' ? "Votre Nom personnalisé" :
+                                    'Votre texte'
+                                }
                                 placeholderTextColor={isDark ? '#999' : '#666'}
                                 style={[
                                     styles.modalInput,
@@ -1362,13 +1409,21 @@ const styles = StyleSheet.create({
     },
     bioContainer: {
         width: '100%',
-        marginTop: height * 0.02,
-        alignItems: 'center',
+        marginTop: height * 0.025,
+        padding: 16,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        elevation: 2,
     },
     bioTitleContainer: {
-        alignItems: 'flex-start',
-        justifyContent: 'center',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
         width: '100%',
+        marginBottom: 8,
     },
     bioTextContainer: {
         alignItems: 'center',
@@ -1419,16 +1474,19 @@ const styles = StyleSheet.create({
         marginBottom: height * 0.03,
     },
     imgUsernameSplitBox: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // Réduit pour éviter le chevauchement avec le bouton retour
-    width: '88%',
-    alignSelf: 'center',
-    paddingVertical: height * 0.02,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-  },
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '88%',
+        alignSelf: 'center',
+        paddingVertical: height * 0.02,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 3,
+    },
 
     userProfilePictureContainer: {
         alignItems: 'center',
@@ -1493,6 +1551,33 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: Math.min(width * 0.04, 16),
     },
+    identityCard: {
+        borderRadius: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 4,
+        minHeight: 70,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+        elevation: 1,
+    },
+    identityLabel: {
+        fontSize: 10,
+        color: '#00c2cb',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        fontWeight: '700',
+        marginBottom: 6,
+    },
+    identityValue: {
+        fontSize: 14,
+        fontWeight: '600',
+        textAlign: 'center',
+        width: '100%',
+    },
     socialMediaContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -1505,10 +1590,15 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         marginBottom: height * 0.02,
         marginHorizontal: width * 0.03,
-        padding: Math.max(6, width * 0.02),
+        padding: Math.max(8, width * 0.025),
         borderWidth: 0,
         borderColor: 'transparent',
-        borderRadius: 999,
+        borderRadius: 18,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 5,
+        elevation: 2,
     },
     socialMediaIcon: {
         width: Math.min(width * 0.2, 72),
@@ -1664,8 +1754,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 16,
-        marginTop: height * 0.02,
+        gap: 20,
+        marginTop: height * 0.03,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 20,
     },
     shareIconBtn: {
         width: Math.min(width * 0.14, 56),
@@ -1675,10 +1768,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 5,
+        elevation: 4,
     },
     shareIconEmoji: {
         fontSize: 22,

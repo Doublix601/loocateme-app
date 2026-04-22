@@ -7,13 +7,13 @@ import {
   View,
   ActivityIndicator,
   RefreshControl,
-  SafeAreaView,
   Image,
   ScrollView,
   Dimensions,
   PanResponder,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { getLocations, updateMyLocation } from '../components/ApiRequest';
 import { formatLocationType } from '../components/LocationUtils';
@@ -22,7 +22,7 @@ import { useTheme } from '../components/contexts/ThemeContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 
 const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeople, initialScrollOffset = 0, onScroll }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,7 +40,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         }}
       >
         <View style={styles.locationInfo}>
-          <Text style={[styles.locationName, { color: colors.text }]}>{item.name}</Text>
+          <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.text }]}>{item.name}</Text>
           <View style={styles.typeBadge}>
             <Text style={styles.typeText}>{formatLocationType(item.type)}</Text>
           </View>
@@ -50,23 +50,30 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
             </Text>
             <View style={styles.avatarStack}>
               {(item.activeUsers || []).map((u, index) => (
-                <View key={u._id} style={[styles.avatarWrapper, { marginLeft: index === 0 ? 0 : -10 }]}>
+                <View key={u._id} style={[styles.avatarWrapper, {
+                  marginLeft: index === 0 ? 0 : -12,
+                  borderColor: colors.surface,
+                  backgroundColor: isDark ? '#333' : '#eee'
+                }]}>
                   <ImageWithPlaceholder
                     uri={u.profileImageUrl}
                     style={styles.smallAvatar}
                   />
-                  <View style={[styles.statusDotSmall, { backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800' }]} />
+                  <View style={[styles.statusDotSmall, {
+                    backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
+                    borderColor: colors.surface
+                  }]} />
                 </View>
               ))}
             </View>
           </View>
         </View>
         <View style={styles.popularityContainer}>
-          <Text style={styles.popularityStars}>{getStars(item)}</Text>
+          <Text style={styles.popularityStars}>{getStars(item, isDark)}</Text>
         </View>
       </TouchableOpacity>
     ));
-  }, [colors, onSelectLocation, onScroll]);
+  }, [colors, isDark, onSelectLocation, onScroll]);
 
   const renderLocation = ({ item }) => <LocationItem item={item} />;
 
@@ -105,7 +112,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   }, [locations.length]);
 
 
-  const getStars = (item) => {
+  const getStars = (item, starIsDark) => {
     const starsCount = item?.stars || 0;
     const userCount = item?.userCount || 0;
 
@@ -122,7 +129,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     }
 
     // Default to 1 grey star for 0 stars
-    return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
+    return <Text style={{ color: starIsDark ? '#666' : '#ccc', fontSize: 18 }}>★</Text>;
   };
 
   const fetchNearbyLocations = async () => {
@@ -209,13 +216,27 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
 
   const renderHeader = () => (
-    <View style={styles.header}>
+    <View style={[
+      styles.header,
+      {
+        backgroundColor: colors.surface,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        elevation: isDark ? 0 : 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.3 : 0.1,
+        shadowRadius: 10,
+        borderBottomWidth: isDark ? 1 : 0,
+        borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent'
+      }
+    ]}>
       <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
           <Text style={{ fontSize: 24 }}>🔎</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onReturnToAccount}>
+        <TouchableOpacity onPress={onReturnToAccount} style={styles.headerProfileButton}>
           <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
         </TouchableOpacity>
       </View>
@@ -279,62 +300,79 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    paddingBottom: 20,
+    zIndex: 10,
   },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', flex: 1 },
+  headerTitle: { fontSize: 24, fontWeight: '800', flex: 1, letterSpacing: -0.5 },
   headerIcons: { flexDirection: 'row', alignItems: 'center' },
-  headerIconButton: { marginRight: 15 },
-  profileIcon: { width: 30, height: 30 },
-  listContent: { padding: 15 },
+  headerIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 194, 203, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10
+  },
+  headerProfileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 194, 203, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileIcon: { width: 24, height: 24 },
+  listContent: { padding: 20 },
   locationCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    marginBottom: 15,
-    borderRadius: 15,
+    padding: 16,
+    marginBottom: 16,
+    borderRadius: 20,
     elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
   locationInfo: { flex: 1 },
-  locationName: { fontSize: 20, fontWeight: 'bold', marginBottom: 5 },
+  locationName: { fontSize: 20, fontWeight: '800', marginBottom: 6, letterSpacing: -0.3 },
   typeBadge: {
-    backgroundColor: '#00c2cb',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 5,
+    backgroundColor: 'rgba(0, 194, 203, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
     alignSelf: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  typeText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-  activeUsersContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
-  usersCountText: { fontSize: 14, marginRight: 10 },
+  typeText: { color: '#00c2cb', fontWeight: '700', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
+  activeUsersContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  usersCountText: { fontSize: 13, marginRight: 10, fontWeight: '500' },
   avatarStack: { flexDirection: 'row', alignItems: 'center' },
   avatarWrapper: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'white',
-    backgroundColor: '#eee',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    overflow: 'hidden',
   },
-  smallAvatar: { width: '100%', height: '100%', borderRadius: 12 },
+  smallAvatar: { width: '100%', height: '100%' },
   statusDotSmall: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    borderWidth: 1,
-    borderColor: 'white',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
   },
-  popularityContainer: { alignItems: 'flex-end', marginLeft: 10 },
+  popularityContainer: { alignItems: 'flex-end', marginLeft: 12 },
   popularityStars: { fontSize: 18 },
-  emptyText: { textAlign: 'center', fontSize: 16 },
+  emptyText: { textAlign: 'center', fontSize: 16, fontWeight: '500' },
 });
 
 export default LocationListScreen;

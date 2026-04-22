@@ -7,9 +7,10 @@ import {
   ScrollView,
   Dimensions,
   Image,
-  SafeAreaView,
   PanResponder,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
@@ -19,8 +20,9 @@ const { width, height } = Dimensions.get('window');
 
 const WarningsScreen = ({ onBack }) => {
   const { user } = useContext(UserContext);
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { locale } = useLocale();
+
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -50,45 +52,57 @@ const WarningsScreen = ({ onBack }) => {
   }, [user]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={onBack}
-        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity
+          style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
+          onPress={onBack}
+        >
+          <Image
+            source={require('../assets/appIcons/backArrow.png')}
+            style={[styles.backIcon, { tintColor: '#00c2cb' }]}
+          />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Avertissements</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
-        <Image
-          source={require('../assets/appIcons/backArrow.png')}
-          style={[styles.backButtonImage, { tintColor: colors.accent }]}
-        />
-      </TouchableOpacity>
-
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { color: colors.accent }]}>Avertissements</Text>
-
-        <View style={[styles.infoCard, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
-          <Text style={[styles.infoText, { color: colors.textPrimary }]}>
-            Ce comportement peut entraîner un banissement temporaire ou définitif de l’application.
+        <View style={[styles.infoCard, { backgroundColor: 'rgba(0,194,203,0.1)', borderColor: isDark ? 'rgba(0,194,203,0.3)' : 'rgba(0,194,203,0.2)' }]}>
+          <Text style={[styles.infoText, { color: colors.text }]}>
+            Ce comportement peut entraîner un bannissement temporaire ou définitif de l’application.
           </Text>
         </View>
 
         {warnings.length === 0 ? (
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Aucun avertissement.</Text>
+          <View style={{ marginTop: 40, alignItems: 'center' }}>
+            <Text style={[styles.emptyText, { color: colors.text, opacity: 0.5 }]}>Aucun avertissement.</Text>
+          </View>
         ) : (
           warnings.map((entry, index) => (
-            <View key={`${entry.at.getTime()}_${index}`} style={[styles.warningCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Text style={[styles.warningLabel, { color: colors.textSecondary }]}>Type d’avertissement</Text>
-              <Text style={[styles.warningValue, { color: colors.textPrimary }]}>
-                {entry.type || 'Non précisé'}
-              </Text>
+            <View key={`${entry.at.getTime()}_${index}`} style={[styles.warningCard, { backgroundColor: colors.surface }]}>
+              <View style={{ marginBottom: 15 }}>
+                <Text style={[styles.warningLabel, { color: colors.text, opacity: 0.5 }]}>Type d’avertissement</Text>
+                <Text style={[styles.warningValue, { color: colors.text }]}>
+                    {entry.type || 'Non précisé'}
+                </Text>
+              </View>
 
-              <Text style={[styles.warningLabel, { color: colors.textSecondary }]}>Raison</Text>
-              <Text style={[styles.warningValue, { color: colors.textPrimary }]}>
-                {entry.reason || 'Non précisée'}
-              </Text>
+              <View style={{ marginBottom: 15 }}>
+                <Text style={[styles.warningLabel, { color: colors.text, opacity: 0.5 }]}>Raison</Text>
+                <Text style={[styles.warningValue, { color: colors.text, fontWeight: '500' }]}>
+                    {entry.reason || 'Non précisée'}
+                </Text>
+              </View>
 
-              <Text style={[styles.warningDate, { color: colors.textSecondary }]}>
-                {entry.at.toLocaleString(locale)}
-              </Text>
+              <View style={{ borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', paddingTop: 10 }}>
+                <Text style={[styles.warningDate, { color: colors.text, opacity: 0.4 }]}>
+                    {entry.at.toLocaleString(locale)}
+                </Text>
+              </View>
             </View>
           ))
         )}
@@ -101,60 +115,77 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    paddingHorizontal: width * 0.06,
-    paddingTop: height * 0.02,
-    paddingBottom: Math.max(24, height * 0.05),
-  },
-  backButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     zIndex: 10,
-    padding: 8,
   },
-  backButtonImage: {
-    width: 28,
-    height: 28,
-  },
-  title: {
-    fontSize: width * 0.08,
-    fontWeight: '700',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
     textAlign: 'center',
-    marginBottom: height * 0.02,
+  },
+  backButtonCircular: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: { width: 24, height: 24 },
+  content: {
+    padding: 20,
+    paddingBottom: 40,
   },
   infoCard: {
-    borderRadius: 10,
+    borderRadius: 20,
     borderWidth: 1,
-    padding: 12,
-    marginBottom: height * 0.02,
+    padding: 15,
+    marginBottom: 25,
   },
   infoText: {
-    fontSize: width * 0.042,
+    fontSize: 15,
     textAlign: 'center',
+    lineHeight: 20,
   },
   emptyText: {
-    fontSize: width * 0.045,
+    fontSize: 16,
     textAlign: 'center',
-    marginTop: height * 0.02,
   },
   warningCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 12,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
   warningLabel: {
-    fontSize: width * 0.04,
-    marginBottom: 4,
+    fontSize: 12,
+    marginBottom: 5,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   warningValue: {
-    fontSize: width * 0.046,
-    fontWeight: '600',
-    marginBottom: 8,
+    fontSize: 17,
+    fontWeight: '700',
   },
   warningDate: {
-    fontSize: width * 0.038,
+    fontSize: 13,
     textAlign: 'right',
   },
 });

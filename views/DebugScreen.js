@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput, Switch, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
@@ -8,7 +9,10 @@ import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { UserContext } from '../components/contexts/UserContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 
+import { useTheme } from '../components/contexts/ThemeContext';
+
 const DebugScreen = ({ onBack }) => {
+  const { colors, isDark } = useTheme();
   const { refresh: refreshFlags } = useFeatureFlags();
   const { locale } = useLocale();
   const { user: currentUser } = useContext(UserContext);
@@ -370,30 +374,39 @@ const DebugScreen = ({ onBack }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text style={styles.backTxt}>{'< Retour'}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity
+          style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
+          onPress={onBack}
+        >
+          <Image
+            source={require('../assets/appIcons/backArrow.png')}
+            style={[styles.backIcon, { tintColor: '#00c2cb' }]}
+          />
         </TouchableOpacity>
-        <Text style={styles.title}>Debug</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Debug</Text>
+        <TouchableOpacity onPress={() => { runAllApiUsers(); loadFlags(); }} style={{ padding: 8 }}>
+            <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Sync</Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
         {/* Feature Flags Section */}
-        <Text style={styles.sectionTitle}>Feature Flags (Global)</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Feature Flags (Global)</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
           {flagsLoading ? (
             <ActivityIndicator size="small" color="#00c2cb" />
           ) : flagsError ? (
             <Text style={{ color: '#f66' }}>{flagsError}</Text>
           ) : flags.length === 0 ? (
-            <Text style={{ color: '#9ab' }}>Aucun flag configuré</Text>
+            <Text style={{ color: colors.text, opacity: 0.5 }}>Aucun flag configuré</Text>
           ) : (
             flags.map((f) => (
-              <View key={f.key} style={styles.flagRow}>
+              <View key={f.key} style={[styles.flagRow, { borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.flagKey}>{f.key}</Text>
-                  {f.description ? <Text style={styles.flagDesc}>{f.description}</Text> : null}
+                  <Text style={[styles.flagKey, { color: colors.text }]}>{f.key}</Text>
+                  {f.description ? <Text style={[styles.flagDesc, { color: colors.text, opacity: 0.5 }]}>{f.description}</Text> : null}
                 </View>
                 <Switch
                   value={!!f.enabled}
@@ -404,24 +417,23 @@ const DebugScreen = ({ onBack }) => {
               </View>
             ))
           )}
-          <TouchableOpacity style={[styles.cmdBtn, { marginTop: 12 }]} onPress={loadFlags} disabled={flagsLoading}>
-            <Text style={styles.cmdTxt}>Rafraîchir les flags</Text>
+          <TouchableOpacity style={[styles.cmdBtn, { marginTop: 12, backgroundColor: 'rgba(0,194,203,0.1)', borderColor: 'transparent' }]} onPress={loadFlags} disabled={flagsLoading}>
+            <Text style={[styles.cmdTxt, { color: '#00c2cb' }]}>Rafraîchir les flags</Text>
           </TouchableOpacity>
         </View>
 
         {/* Test notifications locales */}
-        <Text style={styles.sectionTitle}>Test notifications locales</Text>
-        <View style={styles.card}>
-          <LabeledInput label="Titre" value={locTitle} onChangeText={setLocTitle} placeholder="Titre" />
-          <LabeledInput label="Message" value={locBody} onChangeText={setLocBody} placeholder="Texte de la notification" />
-          <LabeledInput label="Deep link" value={locDeepLink} onChangeText={setLocDeepLink} placeholder="ex: loocate://home" />
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Test notifications locales</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <LabeledInput label="Titre" value={locTitle} onChangeText={setLocTitle} placeholder="Titre" colors={colors} isDark={isDark} />
+          <LabeledInput label="Message" value={locBody} onChangeText={setLocBody} placeholder="Texte de la notification" colors={colors} isDark={isDark} />
+          <LabeledInput label="Deep link" value={locDeepLink} onChangeText={setLocDeepLink} placeholder="ex: loocate://home" colors={colors} isDark={isDark} />
           <View style={{ flexDirection: 'row' }}>
             <View style={{ width: 140 }}>
-              <LabeledInput label="Délai (s)" value={String(locDelaySec)} onChangeText={setLocDelaySec} placeholder="0" keyboardType="numeric" />
+              <LabeledInput label="Délai (s)" value={String(locDelaySec)} onChangeText={setLocDelaySec} placeholder="0" keyboardType="numeric" colors={colors} isDark={isDark} />
             </View>
-            <View style={{ flex: 1 }} />
           </View>
-          <TouchableOpacity style={[styles.cmdBtn, sendingLocal ? styles.btnDisabled : null]} onPress={onSendLocalNotification} disabled={sendingLocal}>
+          <TouchableOpacity style={[styles.cmdBtn, sendingLocal ? styles.btnDisabled : null, { backgroundColor: '#00c2cb', borderColor: 'transparent' }]} onPress={onSendLocalNotification} disabled={sendingLocal}>
             <Text style={styles.cmdTxt}>
               {sendingLocal
                 ? 'Envoi…'
@@ -431,96 +443,106 @@ const DebugScreen = ({ onBack }) => {
             </Text>
           </TouchableOpacity>
         </View>
-        {/* Test notifications */}
-        <Text style={styles.sectionTitle}>Expo Push Token</Text>
-        <View style={styles.card}>
-          <Text style={{ fontSize: 12, color: '#666', marginBottom: 4 }}>Token actuel :</Text>
+
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Expo Push Token</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={{ fontSize: 12, color: colors.text, opacity: 0.5, marginBottom: 4 }}>Token actuel :</Text>
           <TextInput
-            style={[styles.input, { height: 'auto', minHeight: 40, fontSize: 11 }]}
+            style={[styles.input, { height: 'auto', minHeight: 40, fontSize: 11, color: colors.text, backgroundColor: colors.background, padding: 8, borderRadius: 8 }]}
             value={currentPushToken}
             multiline
             editable={false}
           />
           <TouchableOpacity
-            style={[styles.cmdBtn, registering ? styles.btnDisabled : null, { marginTop: 10, backgroundColor: '#4a90e2' }]}
+            style={[styles.cmdBtn, registering ? styles.btnDisabled : null, { marginTop: 10, backgroundColor: '#4a90e2', borderColor: 'transparent' }]}
             onPress={onForceRegister}
             disabled={registering}
           >
-            <ActivityIndicator animating={registering} size="small" color="#fff" style={{ position: 'absolute', left: 15 }} />
+            {registering && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 10 }} />}
             <Text style={styles.cmdTxt}>Forcer l'envoi au serveur</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Test notifications */}
-        <Text style={styles.sectionTitle}>Test notifications (push)</Text>
-        <View style={styles.card}>
-          <LabeledInput label="Titre" value={pushTitle} onChangeText={setPushTitle} placeholder="Titre" />
-          <LabeledInput label="Message" value={pushBody} onChangeText={setPushBody} placeholder="Texte du push" />
-          <LabeledInput label="Deep link" value={pushDeepLink} onChangeText={setPushDeepLink} placeholder="ex: loocate://home" />
-          <LabeledInput label="Tokens (CSV)" value={pushTokens} onChangeText={setPushTokens} placeholder="token1,token2" />
-          <LabeledInput label="User IDs (CSV)" value={pushUserIds} onChangeText={setPushUserIds} placeholder="id1,id2" />
-          <LabeledInput label="Image URL" value={pushImageUrl} onChangeText={setPushImageUrl} placeholder="https://..." />
-          <View style={{ flexDirection: 'row' }}>
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <LabeledInput label="Son" value={pushSound} onChangeText={setPushSound} placeholder="default" />
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Test notifications (push)</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <LabeledInput label="Titre" value={pushTitle} onChangeText={setPushTitle} placeholder="Titre" colors={colors} isDark={isDark} />
+          <LabeledInput label="Message" value={pushBody} onChangeText={setPushBody} placeholder="Texte du push" colors={colors} isDark={isDark} />
+          <LabeledInput label="Deep link" value={pushDeepLink} onChangeText={setPushDeepLink} placeholder="ex: loocate://home" colors={colors} isDark={isDark} />
+          <LabeledInput label="Tokens (CSV)" value={pushTokens} onChangeText={setPushTokens} placeholder="token1,token2" colors={colors} isDark={isDark} />
+          <LabeledInput label="User IDs (CSV)" value={pushUserIds} onChangeText={setPushUserIds} placeholder="id1,id2" colors={colors} isDark={isDark} />
+          <LabeledInput label="Image URL" value={pushImageUrl} onChangeText={setPushImageUrl} placeholder="https://..." colors={colors} isDark={isDark} />
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <LabeledInput label="Son" value={pushSound} onChangeText={setPushSound} placeholder="default" colors={colors} isDark={isDark} />
             </View>
             <View style={{ width: 120 }}>
-              <LabeledInput label="Badge (iOS)" value={String(pushBadge)} onChangeText={setPushBadge} placeholder="ex: 1" keyboardType="numeric" />
+              <LabeledInput label="Badge" value={String(pushBadge)} onChangeText={setPushBadge} placeholder="ex: 1" keyboardType="numeric" colors={colors} isDark={isDark} />
             </View>
           </View>
-          <View style={{ flexDirection: 'row' }}>
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <LabeledInput label="Channel (Android)" value={pushChannelId} onChangeText={setPushChannelId} placeholder="default" />
+
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <LabeledInput label="Channel" value={pushChannelId} onChangeText={setPushChannelId} placeholder="default" colors={colors} isDark={isDark} />
             </View>
             <View style={{ flex: 1 }}>
-              <LabeledInput label="Priorité" value={pushPriority} onChangeText={setPushPriority} placeholder="high|normal" />
+              <LabeledInput label="Priorité" value={pushPriority} onChangeText={setPushPriority} placeholder="high|normal" colors={colors} isDark={isDark} />
             </View>
           </View>
-          <LabeledInput label="Collapse key" value={pushCollapseKey} onChangeText={setPushCollapseKey} placeholder="clé de regroupement" />
-          <LabeledTextArea label="Data JSON (optionnel)" value={pushData} onChangeText={setPushData} placeholder='{"kind":"demo"}' />
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-            <TouchableOpacity onPress={() => setPushMutable(v => !v)} style={[styles.smallBtn, styles.toggleBtn, pushMutable ? styles.toggleOn : styles.toggleOff]}>
-              <Text style={styles.smallBtnTxt}>mutable-content: {pushMutable ? 'ON' : 'OFF'}</Text>
+
+          <LabeledInput label="Collapse key" value={pushCollapseKey} onChangeText={setPushCollapseKey} placeholder="clé de regroupement" colors={colors} isDark={isDark} />
+          <LabeledTextArea label="Data JSON (optionnel)" value={pushData} onChangeText={setPushData} placeholder='{"kind":"demo"}' colors={colors} isDark={isDark} />
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 10 }}>
+            <TouchableOpacity onPress={() => setPushMutable(v => !v)} style={[styles.smallBtn, { flex: 1, backgroundColor: pushMutable ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}>
+              <Text style={styles.smallBtnTxt}>Mutable: {pushMutable ? 'ON' : 'OFF'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setPushContentAvail(v => !v)} style={[styles.smallBtn, styles.toggleBtn, pushContentAvail ? styles.toggleOn : styles.toggleOff]}>
-              <Text style={styles.smallBtnTxt}>content-available: {pushContentAvail ? 'ON' : 'OFF'}</Text>
+            <TouchableOpacity onPress={() => setPushContentAvail(v => !v)} style={[styles.smallBtn, { flex: 1, backgroundColor: pushContentAvail ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}>
+              <Text style={styles.smallBtnTxt}>Avail: {pushContentAvail ? 'ON' : 'OFF'}</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={[styles.cmdBtn, sendingPush ? styles.btnDisabled : null]} onPress={onSendPush} disabled={sendingPush}>
+
+          <TouchableOpacity style={[styles.cmdBtn, sendingPush ? styles.btnDisabled : null, { backgroundColor: '#00c2cb', borderColor: 'transparent', marginTop: 15 }]} onPress={onSendPush} disabled={sendingPush}>
             <Text style={styles.cmdTxt}>{sendingPush ? 'Envoi…' : 'Envoyer la notification'}</Text>
           </TouchableOpacity>
+
           {pushResponse && (
-            <View style={styles.resultBox}>
-              <Text style={styles.resultTitle}>Réponse envoi</Text>
-              <Text selectable style={styles.resultText}>{JSON.stringify(pushResponse, null, 2)}</Text>
+            <View style={[styles.resultBox, { backgroundColor: colors.background, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+              <Text style={[styles.resultTitle, { color: colors.text }]}>Réponse envoi</Text>
+              <Text selectable style={[styles.resultText, { color: colors.text }]}>{JSON.stringify(pushResponse, null, 2)}</Text>
             </View>
           )}
         </View>
-        {/* Recherche utilisateur */}
-        <Text style={styles.sectionTitle}>Recherche utilisateur (debug)</Text>
-        <View style={styles.searchBar}>
-          <Text style={{ color: '#cde', marginRight: 8 }}>🔎</Text>
+
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Recherche utilisateur (debug)</Text>
+        <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+          <Text style={{ marginRight: 10 }}>🔎</Text>
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Nom, prénom, username..."
-            placeholderTextColor="#7a8a99"
-            style={styles.input}
+            placeholderTextColor={isDark ? '#888' : '#999'}
+            style={[styles.input, { color: colors.text }]}
           />
         </View>
+
         {searching ? (
-          <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 8 }} />
+          <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 15 }} />
         ) : (
           results.length > 0 && (
-            <View style={styles.resultsBox}>
-              {results.map((u) => (
-                <TouchableOpacity key={String(u._id || u.id)} style={styles.resultRow} onPress={() => setSelectedUser(u)}>
-                  <Text style={styles.resultName} numberOfLines={1}>
+            <View style={[styles.resultsBox, { backgroundColor: colors.surface, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+              {results.map((u, idx) => (
+                <TouchableOpacity
+                    key={String(u._id || u.id)}
+                    style={[styles.resultRow, idx !== results.length - 1 && { borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                    onPress={() => setSelectedUser(u)}
+                >
+                  <Text style={[styles.resultName, { color: colors.text }]} numberOfLines={1}>
                     {(u.username || u.customName || u.firstName || u.email || 'Utilisateur')}
                   </Text>
-                  <Text style={[styles.badge, u.isPremium ? styles.badgePrem : styles.badgeFree]}>
-                    {u.isPremium ? 'Premium' : 'Free'}
-                  </Text>
+                  <View style={[styles.badge, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]}>
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{u.isPremium ? 'Premium' : 'Free'}</Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -528,11 +550,12 @@ const DebugScreen = ({ onBack }) => {
         )}
 
         {selectedUser && (
-          <View style={styles.selectedBox}>
-            <Text style={styles.selectedTitle}>Utilisateur sélectionné</Text>
-            <Text style={styles.selectedName} numberOfLines={1}>
+          <View style={[styles.selectedBox, { backgroundColor: colors.surface, borderColor: '#00c2cb' }]}>
+            <Text style={[styles.selectedTitle, { color: colors.text, opacity: 0.5 }]}>Utilisateur sélectionné</Text>
+            <Text style={[styles.selectedName, { color: colors.text }]} numberOfLines={1}>
               {(selectedUser.username || selectedUser.customName || selectedUser.firstName || selectedUser.email || 'Utilisateur')}
             </Text>
+
             {(() => {
               const mod = selectedUser.moderation || {};
               const bannedPermanent = !!mod.bannedPermanent;
@@ -545,12 +568,12 @@ const DebugScreen = ({ onBack }) => {
                   ? `Ban jusqu’au ${bannedUntil.toLocaleString(locale)}`
                   : 'Non banni';
               return (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-                  <Text style={[styles.badge, isBanned ? styles.badgeBanActive : styles.badgeBanInactive]}>
-                    {banLabel}
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>
+                  <View style={[styles.badge, { backgroundColor: isBanned ? '#ff4d4d' : 'rgba(0,0,0,0.1)' }]}>
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{banLabel}</Text>
+                  </View>
                   <TouchableOpacity
-                    style={[styles.smallBtn, styles.btnUnban, { marginLeft: 8 }, !isBanned ? styles.btnDisabled : null]}
+                    style={[styles.smallBtn, { backgroundColor: '#16a085' }, !isBanned && { opacity: 0.3 }]}
                     onPress={() => handleUnban(selectedUser._id || selectedUser.id)}
                     disabled={!isBanned}
                   >
@@ -559,150 +582,160 @@ const DebugScreen = ({ onBack }) => {
                 </View>
               );
             })()}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-              <Text style={[styles.badge, selectedUser.isPremium ? styles.badgePrem : styles.badgeFree]}>
-                {selectedUser.isPremium ? 'Premium' : 'Free'}
-              </Text>
-              <TouchableOpacity style={[styles.smallBtn, styles.btnPrem, { marginLeft: 8 }]} onPress={() => togglePremium(selectedUser._id || selectedUser.id, true)}>
-                <Text style={styles.smallBtnTxt}>Premium</Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>
+              <View style={[styles.badge, { backgroundColor: selectedUser.isPremium ? '#2ecc71' : '#3498db' }]}>
+                <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{selectedUser.isPremium ? 'Premium' : 'Free'}</Text>
+              </View>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#2ecc71' }]} onPress={() => togglePremium(selectedUser._id || selectedUser.id, true)}>
+                <Text style={styles.smallBtnTxt}>Set Premium</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.smallBtn, styles.btnFree, { marginLeft: 8 }]} onPress={() => togglePremium(selectedUser._id || selectedUser.id, false)}>
-                <Text style={styles.smallBtnTxt}>Free</Text>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#3498db' }]} onPress={() => togglePremium(selectedUser._id || selectedUser.id, false)}>
+                <Text style={styles.smallBtnTxt}>Set Free</Text>
               </TouchableOpacity>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-              <Text style={[styles.badge, selectedUser.role === 'admin' ? styles.badgeAdmin : selectedUser.role === 'moderator' ? styles.badgeMod : styles.badgeUser]}>
-                {selectedUser.role || 'user'}
-              </Text>
-              <TouchableOpacity style={[styles.smallBtn, styles.btnAdmin, { marginLeft: 8 }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'admin')}>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>
+              <View style={[styles.badge, { backgroundColor: '#e67e22' }]}>
+                <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{selectedUser.role || 'user'}</Text>
+              </View>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#c0392b' }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'admin')}>
                 <Text style={styles.smallBtnTxt}>Admin</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.smallBtn, styles.btnMod, { marginLeft: 8 }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'moderator')}>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#8e44ad' }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'moderator')}>
                 <Text style={styles.smallBtnTxt}>Mod</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.smallBtn, styles.btnUser, { marginLeft: 8 }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'user')}>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#7f8c8d' }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'user')}>
                 <Text style={styles.smallBtnTxt}>User</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        <Text style={styles.sectionTitle}>Commandes</Text>
-        <TouchableOpacity style={styles.cmdBtn} onPress={runAllApiUsers} disabled={loading}>
-          <Text style={styles.cmdTxt}>All API users</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 25 }]}>Actions Globales</Text>
+        <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#00c2cb', borderColor: 'transparent' }]} onPress={runAllApiUsers} disabled={loading}>
+          <Text style={styles.cmdTxt}>Lister tous les utilisateurs (API)</Text>
         </TouchableOpacity>
 
         {loading && (
-          <View style={{ paddingVertical: 16 }}>
-            <ActivityIndicator size="small" color="#00c2cb" />
-          </View>
+          <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 15 }} />
         )}
 
-        {/* Liste des utilisateurs avec actions Premium/Free */}
         {users.length > 0 && (
-          <View style={styles.usersBox}>
-            {users.map((u) => (
-              <View key={String(u._id || u.id)} style={styles.userRow}>
-                <Text style={styles.userName} numberOfLines={1}>
+          <View style={[styles.usersBox, { backgroundColor: colors.surface, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+            {users.slice(0, 20).map((u, idx) => (
+              <View key={String(u._id || u.id)} style={[styles.userRow, idx !== Math.min(users.length, 20) - 1 && { borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderBottomWidth: 1 }]}>
+                <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1}>
                   {u.username || u.customName || u.firstName || u.email || 'Utilisateur'}
                 </Text>
-                <Text style={[styles.badge, u.isPremium ? styles.badgePrem : styles.badgeFree]}>
-                  {u.isPremium ? 'Premium' : 'Free'}
-                </Text>
-                <TouchableOpacity style={[styles.smallBtn, styles.btnPrem]}
-                                  onPress={() => togglePremium(u._id || u.id, true)}>
-                  <Text style={styles.smallBtnTxt}>Premium</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.smallBtn, styles.btnFree]}
-                                  onPress={() => togglePremium(u._id || u.id, false)}>
-                  <Text style={styles.smallBtnTxt}>Free</Text>
+                <TouchableOpacity style={[styles.smallBtn, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]} onPress={() => togglePremium(u._id || u.id, !u.isPremium)}>
+                  <Text style={styles.smallBtnTxt}>{u.isPremium ? 'Premium' : 'Free'}</Text>
                 </TouchableOpacity>
               </View>
             ))}
+            {users.length > 20 && <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.3, padding: 10 }}>Affichage limité aux 20 premiers</Text>}
           </View>
         )}
 
         {result && (
-          <View style={styles.resultBox}>
-            <Text style={styles.resultTitle}>Résultat</Text>
+          <View style={[styles.resultBox, { backgroundColor: colors.background, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+            <Text style={[styles.resultTitle, { color: colors.text }]}>Dernier résultat JSON</Text>
             {typeof result.total !== 'undefined' && (
-              <Text style={styles.resultMeta}>Total: {String(result.total)}</Text>
+              <Text style={{ color: colors.text, opacity: 0.5, marginBottom: 5 }}>Total items: {result.total}</Text>
             )}
-            <Text selectable style={styles.resultText}>
-              {JSON.stringify(result, null, 2)}
-            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <Text selectable style={[styles.resultText, { color: colors.text }]}>
+                    {JSON.stringify(result, null, 2)}
+                </Text>
+            </ScrollView>
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0b1014' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1f2a34' },
-  backBtn: { paddingRight: 12, paddingVertical: 4 },
-  backTxt: { color: '#9ab', fontSize: 16 },
-  title: { color: '#fff', fontSize: 20, fontWeight: '600' },
-  content: { padding: 16 },
-  sectionTitle: { color: '#cde', fontSize: 16, marginBottom: 8 },
-  card: { backgroundColor: '#0f1418', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#1e2d39', marginBottom: 12 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#1e2d39', backgroundColor: '#0f1418', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
-  input: { flex: 1, color: '#cde', fontSize: 16 },
-  resultsBox: { backgroundColor: '#0f1418', borderRadius: 8, marginTop: 8, borderWidth: 1, borderColor: '#1e2d39' },
-  resultRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 10, borderBottomWidth: 1, borderBottomColor: '#14212b' },
-  resultName: { color: '#cde', flex: 1, marginRight: 8 },
-  selectedBox: { backgroundColor: '#0f1418', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#1e2d39', marginTop: 8 },
-  selectedTitle: { color: '#9ab', marginBottom: 4, fontWeight: '600' },
-  selectedName: { color: '#cde', fontSize: 16 },
-  cmdBtn: { backgroundColor: '#14212b', padding: 12, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: '#1e2d39' },
-  cmdTxt: { color: '#fff', fontSize: 16 },
-  btnDisabled: { opacity: 0.6 },
-  resultBox: { backgroundColor: '#0f1418', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#1e2d39', marginTop: 12 },
-  resultTitle: { color: '#9ab', marginBottom: 4, fontWeight: '600' },
-  resultMeta: { color: '#9ab', marginBottom: 8 },
-  resultText: { color: '#cde', fontFamily: Platform?.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 12 },
-  usersBox: { backgroundColor: '#0f1418', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#1e2d39', marginTop: 12 },
-  userRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
-  userName: { color: '#cde', flex: 1, marginRight: 8 },
-  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, marginRight: 8, fontSize: 12 },
-  badgePrem: { backgroundColor: '#2d4', color: '#041' },
-  badgeFree: { backgroundColor: '#246', color: '#cde' },
-  smallBtn: { paddingHorizontal: 8, paddingVertical: 6, borderRadius: 6, marginLeft: 6 },
-  btnPrem: { backgroundColor: '#1e7f3b' },
-  btnFree: { backgroundColor: '#7f1e1e' },
-  smallBtnTxt: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  toggleBtn: { borderWidth: 1, borderColor: '#1e2d39', marginRight: 8 },
-  toggleOn: { backgroundColor: '#1d2f24' },
-  toggleOff: { backgroundColor: '#2f1d1d' },
-  // Feature flags styles
-  flagRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1e2d39' },
-  flagKey: { color: '#cde', fontSize: 16, fontWeight: '600' },
-  flagDesc: { color: '#7a8a99', fontSize: 12, marginTop: 2 },
-  // Role badges
-  badgeAdmin: { backgroundColor: '#e74c3c', color: '#fff' },
-  badgeMod: { backgroundColor: '#9b59b6', color: '#fff' },
-  badgeUser: { backgroundColor: '#3498db', color: '#fff' },
-  badgeBanActive: { backgroundColor: '#ff4d4d', color: '#fff' },
-  badgeBanInactive: { backgroundColor: '#1f2a34', color: '#9ab' },
-  btnAdmin: { backgroundColor: '#c0392b' },
-  btnMod: { backgroundColor: '#8e44ad' },
-  btnUser: { backgroundColor: '#2980b9' },
-  btnUnban: { backgroundColor: '#16a085' },
+  container: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    zIndex: 10,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  backButtonCircular: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: { width: 24, height: 24 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', marginTop: 25, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.6 },
+  card: { borderRadius: 20, padding: 20, marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
+  flagRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
+  flagKey: { fontSize: 16, fontWeight: '700' },
+  flagDesc: { fontSize: 12, marginTop: 2 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 15, paddingHorizontal: 15, paddingVertical: 10 },
+  input: { flex: 1, fontSize: 16 },
+  resultsBox: { borderRadius: 15, marginTop: 10, borderWidth: 1, overflow: 'hidden' },
+  resultRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 15, borderBottomWidth: 1 },
+  resultName: { flex: 1, fontWeight: '600' },
+  selectedBox: { borderRadius: 20, padding: 20, borderWidth: 2, marginTop: 10 },
+  selectedTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', marginBottom: 5 },
+  selectedName: { fontSize: 18, fontWeight: '800', marginBottom: 10 },
+  cmdBtn: { padding: 16, borderRadius: 15, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)', marginBottom: 10, flexDirection: 'row', justifyContent: 'center' },
+  cmdTxt: { fontWeight: '700', fontSize: 15, color: '#fff' },
+  btnDisabled: { opacity: 0.5 },
+  resultBox: { borderRadius: 15, padding: 15, borderWidth: 1, marginTop: 15 },
+  resultTitle: { fontWeight: '800', marginBottom: 8 },
+  resultText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 11 },
+  usersBox: { borderRadius: 15, padding: 10, borderWidth: 1, marginTop: 10 },
+  userRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 5 },
+  userName: { flex: 1, fontSize: 14, fontWeight: '600' },
+  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  smallBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  smallBtnTxt: { color: '#fff', fontSize: 12, fontWeight: '800' },
 });
 
-// Entrées réutilisables
-const LabeledInput = ({ label, ...props }) => (
-  <View style={{ marginBottom: 8 }}>
-    <Text style={{ color: '#9ab', marginBottom: 4 }}>{label}</Text>
-    <TextInput {...props} style={[{ borderWidth: 1, borderColor: '#1e2d39', backgroundColor: '#0f1418', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#cde', fontSize: 16 }]} placeholderTextColor="#7a8a99" />
+// Helper Components
+const LabeledInput = ({ label, colors, isDark, ...props }) => (
+  <View style={{ marginBottom: 15 }}>
+    <Text style={{ color: colors.text, opacity: 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
+    <TextInput
+        {...props}
+        style={[{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: colors.text, fontSize: 15 }]}
+        placeholderTextColor={isDark ? '#555' : '#ccc'}
+    />
   </View>
 );
 
-const LabeledTextArea = ({ label, ...props }) => (
-  <View style={{ marginBottom: 8 }}>
-    <Text style={{ color: '#9ab', marginBottom: 4 }}>{label}</Text>
-    <TextInput {...props} multiline numberOfLines={4} style={[{ minHeight: 80, textAlignVertical: 'top', borderWidth: 1, borderColor: '#1e2d39', backgroundColor: '#0f1418', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, color: '#cde', fontSize: 16 }]} placeholderTextColor="#7a8a99" />
+const LabeledTextArea = ({ label, colors, isDark, ...props }) => (
+  <View style={{ marginBottom: 15 }}>
+    <Text style={{ color: colors.text, opacity: 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
+    <TextInput
+        {...props}
+        multiline
+        numberOfLines={4}
+        style={[{ minHeight: 80, textAlignVertical: 'top', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: colors.text, fontSize: 15 }]}
+        placeholderTextColor={isDark ? '#555' : '#ccc'}
+    />
   </View>
 );
 

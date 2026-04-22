@@ -5,10 +5,10 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateMyLocation, setVisibility } from './ApiRequest';
 
-const TASK_NAME = 'BG_LOCATION_UPDATE';
+const TASK_NAME = 'HEARTBEAT_TASK';
 const STORAGE_START_KEY = 'bg_loc_start_ts';
 const STORAGE_AUTO_INVISIBLE_KEY = 'bg_loc_auto_invisible';
-const ONE_HOUR_MS = 60 * 60 * 1000;
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 let taskDefined = false;
 
@@ -53,7 +53,8 @@ function defineTaskOnce() {
       if (typeof lat !== 'number' || typeof lon !== 'number') return;
 
       try {
-        await updateMyLocation({ lat, lon });
+        const { post } = await import('./ApiRequest');
+        await post('/user/heartbeat', { lat, lon });
       } catch (e) {
         // Swallow errors; task will run again later
       }
@@ -84,13 +85,13 @@ export async function startBackgroundLocationForSixHours() {
 
       await Location.startLocationUpdatesAsync(TASK_NAME, {
         accuracy: Location.Accuracy.Balanced,
-        timeInterval: ONE_HOUR_MS,
+        timeInterval: FIVE_MINUTES_MS,
         // Minimal movement to reduce battery
         distanceInterval: 100,
         // Android foreground service notification while in background
         foregroundService: {
           notificationTitle: 'LoocateMe',
-          notificationBody: 'Partage de position actif (6h)',
+          notificationBody: 'Partage de position actif',
           notificationColor: '#00c2cb',
         },
         pausesUpdatesAutomatically: true,

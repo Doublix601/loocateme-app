@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, PanResponder, Platform } from 'react-native';
 import { searchUsers, trackUserSearch } from '../components/ApiRequest';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -117,11 +117,11 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
     return `${(dist / 1000).toFixed(1)}km`;
   };
 
-  const renderRow = ({ item }) => {
+  const renderRow = ({ item, index }) => {
     const isLocation = item._type === 'location';
     return (
       <TouchableOpacity
-        style={styles.row}
+        style={[styles.row, { backgroundColor: colors.surface }, index === results.length - 1 && { marginBottom: 0 }]}
         onPress={() => {
           if (isLocation) {
             onSelectLocation && onSelectLocation(item);
@@ -144,13 +144,17 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
           )
         )}
         <View style={styles.rowContent}>
-          <Text style={[styles.rowText, { color: colors.textPrimary }]} numberOfLines={1}>{getDisplayName(item)}</Text>
+          <Text style={[styles.rowText, { color: colors.text }]} numberOfLines={1}>{getDisplayName(item)}</Text>
           {isLocation && (
-            <Text style={{ color: colors.textMuted, fontSize: 12, marginLeft: 12 }}>
+            <Text style={{ color: colors.text, opacity: 0.5, fontSize: 12, marginLeft: 12, marginTop: 2 }}>
               {item.city}{item.city && item.distance ? ' • ' : ''}{formatDistance(item.distance)}
             </Text>
           )}
         </View>
+        <Image
+            source={require('../assets/appIcons/backArrow.png')}
+            style={{ width: 16, height: 16, tintColor: colors.text, opacity: 0.2, transform: [{ rotate: '180deg' }] }}
+        />
       </TouchableOpacity>
     );
   };
@@ -160,57 +164,83 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
   const showInfoMsg = !loading && results.length === 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onClose} style={{ padding: 8 }}>
-          <Text style={{ fontSize: 18, color: colors.textPrimary }}>✖</Text>
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.accent }]}>Recherche</Text>
-        <View style={{ width: 28 }} />
-      </View>
-      <View style={[styles.searchBar, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-        <Text style={{ marginRight: 8 }}>🔎</Text>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Rechercher"
-          placeholderTextColor={isDark ? '#999' : '#666'}
-          style={[styles.input, { color: colors.textPrimary }]}
-          autoFocus
-        />
-      </View>
-      <View style={styles.filters}>
+    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
-          style={[styles.filterBtn, includeUsers && { backgroundColor: colors.accent, borderColor: colors.accent }]}
-          onPress={() => toggleFilter('users')}
+          style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
+          onPress={onClose}
         >
-          <Text style={[styles.filterText, includeUsers && { color: '#fff' }, { color: colors.textPrimary }]}>Utilisateur</Text>
+          <Text style={{ fontSize: 18, color: '#00c2cb', fontWeight: 'bold' }}>✖</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterBtn, includeLocations && { backgroundColor: colors.accent, borderColor: colors.accent }]}
-          onPress={() => toggleFilter('locations')}
-        >
-          <Text style={[styles.filterText, includeLocations && { color: '#fff' }, { color: colors.textPrimary }]}>Lieu</Text>
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Recherche</Text>
+        <View style={{ width: 40 }} />
       </View>
-      {showInfoMsg && (
-        <View style={{ paddingVertical: 8 }}>
-          <Text style={{ textAlign: 'center', color: colors.textMuted }}>
-            {qTrim.length < minChars
-              ? 'Tape au moins 2 lettres pour lancer la recherche'
-              : 'Aucun résultat. Affine ta recherche pour trouver ce que tu recherches'}
-          </Text>
+
+      <View style={{ paddingHorizontal: 20 }}>
+        <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+          <Text style={{ marginRight: 10, fontSize: 18 }}>🔎</Text>
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Nom d'utilisateur, lieu..."
+            placeholderTextColor={isDark ? '#888' : '#999'}
+            style={[styles.input, { color: colors.text }]}
+            autoFocus
+          />
+          {query.length > 0 && (
+              <TouchableOpacity onPress={() => setQuery('')}>
+                  <Text style={{ color: colors.text, opacity: 0.3, fontSize: 18 }}>ⓧ</Text>
+              </TouchableOpacity>
+          )}
         </View>
-      )}
+
+        <View style={styles.filters}>
+          <TouchableOpacity
+            style={[
+              styles.filterBtn,
+              {
+                backgroundColor: includeUsers ? '#00c2cb' : colors.surface,
+                borderColor: includeUsers ? '#00c2cb' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)')
+              }
+            ]}
+            onPress={() => toggleFilter('users')}
+          >
+            <Text style={[styles.filterText, { color: includeUsers ? '#fff' : colors.text }]}>Utilisateurs</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.filterBtn,
+              {
+                backgroundColor: includeLocations ? '#00c2cb' : colors.surface,
+                borderColor: includeLocations ? '#00c2cb' : (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)')
+              }
+            ]}
+            onPress={() => toggleFilter('locations')}
+          >
+            <Text style={[styles.filterText, { color: includeLocations ? '#fff' : colors.text }]}>Lieux</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {loading ? (
-        <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 30 }} />
       ) : (
         <FlatList
           data={results}
           keyExtractor={(it, i) => String(it._id || it.id || i)}
           renderItem={renderRow}
-          contentContainerStyle={{ paddingBottom: 24 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 }}
+          ListHeaderComponent={showInfoMsg ? (
+            <View style={{ marginTop: 40, paddingHorizontal: 40 }}>
+              <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.5, lineHeight: 22 }}>
+                {qTrim.length < minChars
+                  ? 'Tape au moins 2 lettres pour lancer la recherche'
+                  : 'Aucun résultat trouvé pour cette recherche.'}
+              </Text>
+            </View>
+          ) : null}
           ListEmptyComponent={null}
+          showsVerticalScrollIndicator={false}
         />
       )}
     </View>
@@ -218,17 +248,78 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: width * 0.05, paddingTop: height * 0.02 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  title: { fontSize: width * 0.07, fontWeight: 'bold', color: '#00c2cb' },
-  searchBar: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#ccc', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginTop: 12 },
-  input: { flex: 1, fontSize: 16, color: '#333' },
-  filters: { flexDirection: 'row', marginTop: 12, marginBottom: 8 },
-  filterBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#ccc', marginRight: 8 },
-  filterText: { fontSize: 14 },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  container: { flex: 1 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  backButtonCircular: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderRadius: 15,
+      paddingHorizontal: 15,
+      paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 5,
+  },
+  input: { flex: 1, fontSize: 16 },
+  filters: { flexDirection: 'row', marginTop: 15, marginBottom: 10 },
+  filterBtn: {
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+      borderRadius: 20,
+      borderWidth: 1,
+      marginRight: 10,
+      elevation: 1,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+  },
+  filterText: { fontSize: 14, fontWeight: '600' },
+  row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 20,
+      marginBottom: 12,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 5,
+  },
   rowContent: { flex: 1, justifyContent: 'center' },
-  rowText: { marginLeft: 12, fontSize: 16, color: '#333' },
+  rowText: { marginLeft: 15, fontSize: 16, fontWeight: '600' },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#eee' },
   avatarPh: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#00c2cb' },
 });

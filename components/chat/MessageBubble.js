@@ -45,18 +45,27 @@ const MessageBubble = ({ message, isMe, recipientAvatar, showReadReceipt }) => {
             <View style={[
                 styles.bubble,
                 { backgroundColor: isMe ? colors.accent : colors.surfaceAlt },
-                isMe ? styles.myBubble : styles.theirBubble
+                isMe ? styles.myBubble : styles.theirBubble,
+                {
+                    shadowColor: isMe ? colors.accent : '#000',
+                    elevation: 2,
+                }
             ]}>
                 {renderContent()}
-                <Text style={[styles.timestamp, { color: isMe ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>
-                    {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-            </View>
-            {showReadReceipt && isMe && recipientAvatar && (
-                <View style={styles.readReceiptContainer}>
-                    <Image source={{ uri: proxifyImageUrl(recipientAvatar) }} style={styles.readReceiptAvatar} />
+                <View style={styles.bubbleFooter}>
+                    <Text style={[styles.timestamp, { color: isMe ? 'rgba(255,255,255,0.7)' : colors.textSecondary }]}>
+                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                    {showReadReceipt && isMe && recipientAvatar && (
+                        <View style={styles.readReceiptContainer}>
+                            <Image
+                                source={{ uri: proxifyImageUrl(recipientAvatar) }}
+                                style={[styles.readReceiptAvatar, { borderColor: colors.accent }]}
+                            />
+                        </View>
+                    )}
                 </View>
-            )}
+            </View>
         </View>
     );
 };
@@ -65,7 +74,7 @@ const styles = StyleSheet.create({
     container: {
         width: '100%',
         marginVertical: 4,
-        paddingHorizontal: 12,
+        paddingHorizontal: 15,
     },
     myContainer: {
         alignItems: 'flex-end',
@@ -76,7 +85,10 @@ const styles = StyleSheet.create({
     bubble: {
         padding: 12,
         borderRadius: 20,
-        maxWidth: width * 0.75,
+        maxWidth: width * 0.8,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     myBubble: {
         borderBottomRightRadius: 4,
@@ -85,17 +97,23 @@ const styles = StyleSheet.create({
         borderBottomLeftRadius: 4,
     },
     text: {
-        fontSize: 16,
+        fontSize: 15,
+        lineHeight: 22,
+    },
+    bubbleFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        marginTop: 4,
     },
     timestamp: {
         fontSize: 10,
-        marginTop: 4,
-        alignSelf: 'flex-end',
+        fontWeight: '500',
     },
     mediaContent: {
-        width: width * 0.6,
-        height: width * 0.6,
-        borderRadius: 12,
+        width: width * 0.65,
+        height: width * 0.65,
+        borderRadius: 18,
         marginBottom: 4,
     },
     videoPlaceholder: {
@@ -113,12 +131,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     readReceiptContainer: {
-        marginTop: 2,
+        marginLeft: 4,
     },
     readReceiptAvatar: {
         width: 14,
         height: 14,
         borderRadius: 7,
+        borderWidth: 1,
     },
 });
 

@@ -8,7 +8,6 @@ import {
   ScrollView,
   Dimensions,
   PanResponder,
-  SafeAreaView,
   Linking,
   Alert,
   Modal,
@@ -19,6 +18,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { proxifyImageUrl } from '../components/ServerUtils';
@@ -45,7 +45,6 @@ const REPORT_CATEGORIES = [
 
 const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons, onOpenMessages, onOpenConversation }) => {
   const { user: currentUser } = React.useContext(UserContext);
-  const { colors } = useTheme();
   const [actionMenuVisible, setActionMenuVisible] = React.useState(false);
   const [reportVisible, setReportVisible] = React.useState(false);
   const [reportCategory, setReportCategory] = React.useState('harassment');
@@ -54,6 +53,20 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const [reportSubmitting, setReportSubmitting] = React.useState(false);
   const [followStatus, setFollowStatus] = React.useState('none'); // 'none' | 'pending' | 'accepted'
   const [followLoading, setFollowLoading] = React.useState(false);
+  const { isDark, colors } = useTheme();
+  const [measuredNameWidth, setMeasuredNameWidth] = React.useState(0);
+  const SAFE_LEFT_FOR_BACK = 56;
+  const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
+  const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
+  const extraSlack = Math.max(10, Math.round(width * 0.025));
+  const minBoxWidth = Math.min(maxBoxWidth, Math.round(width * 0.92));
+  const desiredBoxWidth = Math.max(
+    minBoxWidth,
+    Math.min(
+      maxBoxWidth,
+      Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack
+    )
+  );
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -118,21 +131,6 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     return v;
   };
 
-  // Mesure dynamique de la largeur du nom pour adapter la box image+nom
-  const [measuredNameWidth, setMeasuredNameWidth] = React.useState(0);
-  const SAFE_LEFT_FOR_BACK = 56; // espace minimum pour le bouton retour
-  const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
-  const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
-  // Légère marge supplémentaire pour éviter un rendu trop serré autour de l'image et du nom
-  const extraSlack = Math.max(10, Math.round(width * 0.025));
-  const minBoxWidth = Math.min(maxBoxWidth, Math.round(width * 0.92));
-  const desiredBoxWidth = Math.max(
-    minBoxWidth,
-    Math.min(
-      maxBoxWidth,
-      Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack
-    )
-  );
 
   // Track a profile view when this screen mounts or when the viewed user changes
   React.useEffect(() => {
@@ -263,15 +261,8 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   }, []);
 
   const displayName = React.useMemo(() => {
-    const first = (user?.firstName || '').trim();
-    const last = (user?.lastName || '').trim();
-    const custom = (user?.customName || '').trim();
-    const hasFull = first && last;
-    const full = hasFull ? `${first} ${last}`.trim() : '';
-    const fallback = user?.username || user?.name || (user?.email ? String(user.email).split('@')[0] : '') || 'Utilisateur';
-    if (displayPref === 'custom') return custom || full || fallback;
-    return full || custom || fallback;
-  }, [user, displayPref]);
+    return user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username) || user?.name || (user?.email ? String(user.email).split('@')[0] : '') || 'Utilisateur';
+  }, [user]);
 
   // Compute distance on the fly if not provided (e.g., when coming from search)
   const [computedDistance, setComputedDistance] = React.useState(null);
@@ -482,7 +473,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         )}
       </TouchableOpacity>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.06, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
 
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
@@ -521,23 +512,38 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
               </View>
             </View>
 
-            {(user?.bio ?? '').trim().length > 0 ? (
-              <View style={styles.bioContainer}>
-                <View style={styles.bioTextContainer}>
-                  <Text
-                    style={[
-                      styles.value,
-                      { fontSize: bioFont, textAlign: 'center', color: colors.textPrimary },
-                    ]}
-                  >
-                    {user.bio}
-                  </Text>
-                </View>
+            <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
+              <View style={styles.bioTitleContainer}>
+                <Text style={[styles.label, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
               </View>
-            ) : null}
+              <View style={styles.bioTextContainer}>
+                {(() => {
+                  const bioText = String(user?.bio || '').trim();
+                  const isEmpty = bioText.length === 0;
+                  return (
+                    <Text
+                      style={[
+                        styles.value,
+                        {
+                          fontSize: bioFont,
+                          textAlign: 'left',
+                          width: '100%',
+                          color: isEmpty ? colors.textMuted : colors.textPrimary,
+                          fontStyle: isEmpty ? 'italic' : 'normal',
+                          lineHeight: bioFont * 1.4
+                        },
+                      ]}
+                    >
+                      {isEmpty ? 'Aucune bio renseignée.' : bioText}
+                    </Text>
+                  );
+                })()}
+              </View>
+            </View>
+
 
             {currentUser?.isVisible !== false && user.updatedAt && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.015 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.025 }}>
                 <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
                   <Text style={[styles.distanceText, { color: colors.accent }]}>{formatLastSeen(user.updatedAt)}</Text>
                 </View>
@@ -579,7 +585,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                   return (
                     <TouchableOpacity
                       key={index}
-                      style={styles.socialMediaTile}
+                      style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}
                       onPress={() => {
                         // Support de plusieurs schémas: username | handle | link | identifier
                         const handle = social.username || social.handle || social.link || social.identifier || '';
@@ -712,60 +718,49 @@ const styles = StyleSheet.create({
   userInfoContainer: {
     marginBottom: height * 0.04,
   },
-  usernameTitleContainer: {
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  usernameTextContainer: {
-    alignItems: 'flex-start',
-    width: '100%',
-  },
   bioContainer: {
     width: '100%',
-    marginTop: height * 0.02,
-    alignItems: 'center',
+    marginTop: height * 0.025,
+    padding: 15,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   bioTitleContainer: {
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   bioTextContainer: {
-    alignItems: 'center',
     width: '100%',
   },
   profileHeader: {
-    flexDirection: width > 600 ? 'row' : 'column',
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    width: '100%',
     marginBottom: height * 0.03,
   },
   imgUsernameSplitBox: {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    // Réduit pour éviter le chevauchement avec le bouton retour
-    width: '88%',
+    width: '100%',
     alignSelf: 'center',
-    paddingVertical: height * 0.02,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
+    paddingVertical: height * 0.03,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
-
   userProfilePictureContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingLeft: width > 600 ? width * 0.05 : width * 0.03,
-    marginBottom: width > 600 ? 0 : height * 0.02,
-    marginRight: width > 600 ? 20 : 15,
-  },
-
-  usernameContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: height * 0.01,
+    marginBottom: height * 0.02,
   },
   usernameUnderPhoto: {
     marginTop: 8,
@@ -778,14 +773,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 4,
+    marginTop: 12,
   },
   statusCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginHorizontal: 8,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginHorizontal: 6,
   },
   profileImage: {
     width: Math.min(width * 0.4, 160),
@@ -805,10 +799,6 @@ const styles = StyleSheet.create({
     height: Math.min(width * 0.18, 72),
     tintColor: '#fff',
   },
-  userInfoText: {
-    marginLeft: width > 600 ? width * 0.05 : 0,
-    alignItems: width > 600 ? 'flex-start' : 'center',
-  },
   label: {
     fontSize: Math.min(width * 0.045, 18),
     color: '#00c2cb',
@@ -818,38 +808,52 @@ const styles = StyleSheet.create({
     fontSize: Math.min(width * 0.04, 16),
     color: '#3f4a4b',
   },
-  editButton: {
-    backgroundColor: '#00c2cb',
-    paddingVertical: height * 0.01,
-    paddingHorizontal: width * 0.05,
-    borderRadius: 10,
-    marginTop: height * 0.01,
+  identityCard: {
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    minHeight: 70,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  editButtonText: {
-    color: '#fff',
-    fontSize: Math.min(width * 0.04, 16),
+  identityLabel: {
+    fontSize: 10,
+    color: '#00c2cb',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  identityValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    width: '100%',
   },
   socialMediaContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 14,
-  },
-  orangeStatusText: {
-    fontSize: 16,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-    marginTop: 10,
-    fontStyle: 'italic',
+    marginTop: 20,
   },
   socialMediaTile: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: height * 0.02,
     marginHorizontal: width * 0.03,
-    padding: Math.max(6, width * 0.02),
-    borderRadius: 999,
+    padding: Math.max(8, width * 0.025),
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 2,
   },
   socialMediaIcon: {
     width: Math.min(width * 0.2, 72),

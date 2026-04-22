@@ -8,10 +8,11 @@ import {
   TouchableOpacity,
   Linking,
   ActivityIndicator,
-  SafeAreaView,
   RefreshControl,
   PanResponder,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { getLocationById } from '../components/ApiRequest';
 import { formatLocationType } from '../components/LocationUtils';
@@ -19,7 +20,7 @@ import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 
 const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, socialMediaIcons }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState(null);
@@ -75,7 +76,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     Linking.openURL(url);
   };
 
-  const getStars = (item) => {
+  const getStars = (item, starIsDark) => {
     const starsCount = item?.stars || 0;
     const userCount = item?.userCount || 0;
 
@@ -92,7 +93,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     }
 
     // Default to 1 grey star for 0 stars
-    return <Text style={{ color: '#ccc', fontSize: 18 }}>★</Text>;
+    return <Text style={{ color: starIsDark ? '#666' : '#ccc', fontSize: 18 }}>★</Text>;
   };
 
   const renderUser = ({ item }) => {
@@ -114,7 +115,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
             <Text style={[styles.username, { color: colors.text }]}>
               {item.customName || item.username}
             </Text>
-            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+            <View style={[styles.statusDot, { backgroundColor: statusColor, borderColor: colors.surface }]} />
           </View>
           {!isOrangeOrRed && item.bio ? (
             <Text style={[styles.userBio, { color: colors.textSecondary }]} numberOfLines={1}>
@@ -147,11 +148,17 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
-      <View style={styles.header}>
+      <View style={[styles.header, {
+        backgroundColor: colors.surface,
+        elevation: isDark ? 0 : 5,
+        shadowOpacity: isDark ? 0.3 : 0.1,
+        borderBottomWidth: isDark ? 1 : 0,
+        borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent'
+      }]}>
         <TouchableOpacity onPress={onReturnToList} style={styles.backButton}>
-          <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: colors.text }]} />
+          <Image source={require('../assets/appIcons/backArrow.png')} style={[styles.backIcon, { tintColor: '#00c2cb' }]} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: '#00c2cb', fontSize: 24 }]} numberOfLines={1}>{location.name}</Text>
+        <Text style={[styles.headerTitle, { color: '#00c2cb' }]} numberOfLines={1}>{location.name}</Text>
       </View>
 
       <FlatList
@@ -165,18 +172,22 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#00c2cb"]}
+            progressViewOffset={10}
           />
         }
         ListHeaderComponent={
-          <View style={styles.locationInfo}>
+          <View style={styles.locationHeaderInfo}>
             <View style={styles.typeBadge}>
               <Text style={styles.typeText}>{formatLocationType(location.type)}</Text>
             </View>
 
             <View style={styles.popularityRow}>
-              <Text style={[styles.popularityScore, { color: colors.textSecondary }]}>
-                Popularité : {getStars(location)}
-              </Text>
+              <View>
+                <Text style={[styles.popularityLabel, { color: colors.textSecondary }]}>Popularité</Text>
+                <Text style={styles.popularityStars}>
+                  {getStars(location, isDark)}
+                </Text>
+              </View>
 
               <TouchableOpacity style={styles.goButtonRound} onPress={handleGoToLocation}>
                 <Text style={styles.goEmoji}>📍</Text>
@@ -189,7 +200,6 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Personne n'est ici pour le moment</Text>
         }
-        contentContainerStyle={[styles.listContent, { flexGrow: 1 }]}
       />
     </SafeAreaView>
   );
@@ -202,35 +212,50 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    paddingBottom: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    zIndex: 10,
   },
-  backButton: { marginRight: 15 },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 194, 203, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15
+  },
   backIcon: { width: 24, height: 24 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', flex: 1 },
-  locationInfo: { padding: 20 },
+  headerTitle: { fontSize: 24, fontWeight: '800', flex: 1, letterSpacing: -0.5 },
+  locationHeaderInfo: { padding: 25 },
   typeBadge: {
-    backgroundColor: '#00c2cb',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 5,
+    backgroundColor: 'rgba(0, 194, 203, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
     alignSelf: 'flex-start',
-    marginBottom: 10,
+    marginBottom: 15,
   },
-  typeText: { color: 'white', fontWeight: 'bold', fontSize: 14 },
+  typeText: { color: '#00c2cb', fontWeight: '700', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   popularityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 30,
   },
-  popularityScore: { fontSize: 20, fontWeight: 'bold' },
+  popularityLabel: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  popularityStars: { fontSize: 20 },
   goButtonRound: {
     backgroundColor: '#00c2cb',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -239,29 +264,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  goEmoji: { fontSize: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
-  listContent: { paddingBottom: 20 },
+  goEmoji: { fontSize: 28 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', marginBottom: 15, letterSpacing: -0.3 },
+  listContent: { paddingBottom: 30 },
   userCard: {
     flexDirection: 'row',
-    padding: 15,
-    marginHorizontal: 15,
-    marginBottom: 10,
-    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    borderRadius: 20,
     alignItems: 'center',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
-  userPhoto: { width: 50, height: 50, borderRadius: 25 },
-  userInfo: { flex: 1, marginLeft: 15 },
+  userPhoto: { width: 56, height: 56, borderRadius: 28 },
+  userInfo: { flex: 1, marginLeft: 16 },
   usernameRow: { flexDirection: 'row', alignItems: 'center' },
-  username: { fontSize: 18, fontWeight: 'bold', marginRight: 8 },
-  statusDot: { width: 10, height: 10, borderRadius: 5 },
-  userBio: { fontSize: 16, marginTop: 2 },
-  emptyText: { textAlign: 'center', marginTop: 50 },
+  username: { fontSize: 18, fontWeight: '800', marginRight: 8, letterSpacing: -0.3 },
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+  },
+  userBio: { fontSize: 14, marginTop: 4, fontWeight: '500' },
+  emptyText: { textAlign: 'center', marginTop: 50, fontSize: 16, fontWeight: '500' },
 });
 
 export default LocationScreen;

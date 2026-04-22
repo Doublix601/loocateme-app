@@ -13,6 +13,7 @@ import {
   Modal,
   ActivityIndicator,
   TextInput,
+  Platform,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -227,7 +228,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
     try {
       setRevokeWorking(true);
       await deleteMyAccount({ password: revokePassword });
-      try { await apiLogout(); } catch (_) {}
       setRevokeVisible(false);
       setRevokePassword('');
       onLogout && onLogout();
@@ -270,127 +270,150 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={saveAndReturn}
-        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-      >
-        <Image
-          source={require('../assets/appIcons/backArrow.png')}
-          style={styles.backButtonImage}
-        />
-      </TouchableOpacity>
-      <Text style={styles.title}>Paramètres</Text>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity
+          style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
+          onPress={saveAndReturn}
+          hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+        >
+          <Image
+            source={require('../assets/appIcons/backArrow.png')}
+            style={styles.backButtonImage}
+          />
+        </TouchableOpacity>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Paramètres</Text>
+        <View style={{ width: 44 }} />
+      </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Général</Text>
-        <View style={styles.optionContainer}>
-          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Être visible</Text>
-          <Switch
-            value={isVisible}
-            onValueChange={toggleVisibility}
-            trackColor={{ false: '#ccc', true: '#00c2cb' }}
-            thumbColor={isVisible ? '#00c2cb' : '#f4f3f4'}
-          />
-        </View>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={styles.sectionTitle}>GÉNÉRAL</Text>
+          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Être visible</Text>
+            <Switch
+              value={isVisible}
+              onValueChange={toggleVisibility}
+              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+              thumbColor={isVisible ? '#fff' : '#f4f3f4'}
+            />
+          </View>
 
-        <View style={styles.optionContainer}>
-          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Nom affiché (tap pour changer): {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}</Text>
-          <TouchableOpacity onPress={toggleDisplayNameMode} style={styles.smallPill}>
-            <Text style={styles.smallPillText}>{displayNameMode === 'full' ? 'Prénom Nom' : 'Custom'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={[styles.sectionTitle, { marginTop: 8 }]}>Apparence</Text>
-        <View style={[styles.optionContainer, { borderBottomWidth: 0, paddingVertical: 10 }]}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity onPress={() => setThemeMode('light')} style={[styles.smallPill, themeMode === 'light' && { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent }]}>
-              <Text style={[styles.smallPillText]}>Clair</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setThemeMode('dark')} style={[styles.smallPill, themeMode === 'dark' && { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent }]}>
-              <Text style={[styles.smallPillText]}>Sombre</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setThemeMode('system')} style={[styles.smallPill, themeMode === 'system' && { backgroundColor: colors.accentSoft, borderWidth: 1, borderColor: colors.accent }]}>
-              <Text style={[styles.smallPillText]}>Automatique</Text>
+          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode d'affichage</Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary }}>{displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}</Text>
+            </View>
+            <TouchableOpacity onPress={toggleDisplayNameMode} style={[styles.smallPill, { backgroundColor: colors.bg }]}>
+              <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>{displayNameMode === 'full' ? 'Classique' : 'Custom'}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={async () => { try { await (onLogout && onLogout()); } catch(_) {} }}>
-          <Text style={styles.logoutText}>Déconnexion</Text>
-        </TouchableOpacity>
-
-        <Text style={[styles.sectionTitle, { marginTop: height * 0.04 }]}>Confidentialité & RGPD</Text>
-        <TouchableOpacity style={styles.linkRow} onPress={openPolicy}>
-          <Text style={styles.linkRowText}>Politique de confidentialité</Text>
-        </TouchableOpacity>
-
-        <View style={styles.optionContainer}>
-          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Consentement donné</Text>
-          <Switch
-            value={consentAccepted}
-            onValueChange={handleToggleConsent}
-            trackColor={{ false: '#ccc', true: '#00c2cb' }}
-            thumbColor={consentAccepted ? '#00c2cb' : '#f4f3f4'}
-          />
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={styles.sectionTitle}>APPARENCE</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
+            <TouchableOpacity onPress={() => setThemeMode('light')} style={[styles.themePill, themeMode === 'light' && { backgroundColor: '#00c2cb' }]}>
+              <Text style={[styles.themePillText, { color: themeMode === 'light' ? '#fff' : colors.textSecondary }]}>Clair</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setThemeMode('dark')} style={[styles.themePill, themeMode === 'dark' && { backgroundColor: '#00c2cb' }]}>
+              <Text style={[styles.themePillText, { color: themeMode === 'dark' ? '#fff' : colors.textSecondary }]}>Sombre</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setThemeMode('system')} style={[styles.themePill, themeMode === 'system' && { backgroundColor: '#00c2cb' }]}>
+              <Text style={[styles.themePillText, { color: themeMode === 'system' ? '#fff' : colors.textSecondary }]}>Auto</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        <View style={styles.optionContainer}>
-          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Partage analytics</Text>
-          <Switch
-            value={analytics}
-            onValueChange={handleToggleAnalytics}
-            trackColor={{ false: '#ccc', true: '#00c2cb' }}
-            thumbColor={analytics ? '#00c2cb' : '#f4f3f4'}
-          />
-        </View>
-        <View style={styles.optionContainer}>
-          <Text style={[styles.optionText, { color: colors.textPrimary }]}>Communication marketing</Text>
-          <Switch
-            value={marketing}
-            onValueChange={handleToggleMarketing}
-            trackColor={{ false: '#ccc', true: '#00c2cb' }}
-            thumbColor={marketing ? '#00c2cb' : '#f4f3f4'}
-          />
+
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={styles.sectionTitle}>CONFIDENTIALITÉ & RGPD</Text>
+          <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={openPolicy}>
+            <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Politique de confidentialité</Text>
+          </TouchableOpacity>
+
+          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Consentement</Text>
+            <Switch
+              value={consentAccepted}
+              onValueChange={handleToggleConsent}
+              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+              thumbColor={consentAccepted ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Analytics</Text>
+            <Switch
+              value={analytics}
+              onValueChange={handleToggleAnalytics}
+              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+              thumbColor={analytics ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Marketing</Text>
+            <Switch
+              value={marketing}
+              onValueChange={handleToggleMarketing}
+              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+              thumbColor={marketing ? '#fff' : '#f4f3f4'}
+            />
+          </View>
         </View>
 
         {['admin', 'moderator'].includes(user?.role) && (
-          <>
-            <Text style={[styles.sectionTitle, { marginTop: height * 0.04 }]}>Modération</Text>
-            <TouchableOpacity style={styles.linkRow} onPress={onOpenModerator}>
-              <Text style={styles.linkRowText}>Signalements</Text>
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+            <Text style={styles.sectionTitle}>MODÉRATION</Text>
+            <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={onOpenModerator}>
+              <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Signalements</Text>
             </TouchableOpacity>
             {user?.role === 'admin' && (
-              <>
-                <Text style={[styles.sectionTitle, { marginTop: height * 0.02 }]}>Développeur</Text>
-                <TouchableOpacity style={styles.linkRow} onPress={onOpenDebug}>
-                  <Text style={styles.linkRowText}>Debug</Text>
-                </TouchableOpacity>
-              </>
+              <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={onOpenDebug}>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Debug Console</Text>
+              </TouchableOpacity>
             )}
-          </>
+          </View>
         )}
 
-        <TouchableOpacity style={[styles.primaryButton, { marginTop: height * 0.02 }]} onPress={handleExport}>
-          <Text style={styles.primaryButtonText}>Exporter mes données</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.primaryButton, styles.dangerButton]} onPress={handleDelete}>
-          <Text style={styles.dangerButtonText}>Supprimer mon compte</Text>
-        </TouchableOpacity>
+        <View style={{ gap: 12, marginTop: 20 }}>
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.surface }]} onPress={handleExport}>
+            <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>Exporter mes données</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(255,77,77,0.1)' : '#ffe6e6' }]} onPress={handleDelete}>
+            <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>Supprimer mon compte</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]} 
+            onPress={async () => { try { await (onLogout && onLogout()); } catch(_) {} }}
+          >
+            <Text style={styles.logoutText}>Déconnexion</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 12, marginTop: 30, marginBottom: 20 }}>
+          LoocateMe v1.0.0 (39)
+        </Text>
       </ScrollView>
 
       <Modal visible={policyModalVisible} animationType="slide" onRequestClose={() => setPolicyModalVisible(false)}>
-        <View style={[styles.modalContainer, { backgroundColor: colors.surface }] }>
-          <TouchableOpacity style={styles.modalClose} onPress={() => setPolicyModalVisible(false)}>
-            <Text style={[styles.modalCloseText, { color: colors.textPrimary }]}>Fermer</Text>
-          </TouchableOpacity>
-          <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Politique de confidentialité</Text>
-          {policyLoading ? (
-            <ActivityIndicator size="large" color="#00c2cb" />
-          ) : (
-            <ScrollView>
-              <Text style={[styles.policyText, { color: colors.textSecondary }]}>{policyText}</Text>
-            </ScrollView>
-          )}
+        <View style={[styles.modalContainer, { backgroundColor: colors.bg }] }>
+          <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setPolicyModalVisible(false)}>
+              <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Fermer</Text>
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
+            <View style={{ width: 60 }} />
+          </View>
+          
+          <View style={styles.modalContent}>
+            {policyLoading ? (
+              <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <Text style={[styles.policyText, { color: colors.textSecondary }]}>{policyText}</Text>
+              </ScrollView>
+            )}
+          </View>
         </View>
       </Modal>
 
@@ -426,139 +449,160 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: width * 0.05,
     backgroundColor: '#fff',
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    paddingBottom: 25,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    zIndex: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
   content: {
+    padding: 20,
     paddingBottom: height * 0.1,
   },
   backButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    zIndex: 10,
-    padding: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backButtonImage: {
-    width: 28,
-    height: 28,
+    width: 24,
+    height: 24,
     tintColor: '#00c2cb',
   },
   title: {
-    fontSize: width * 0.08,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '800',
     textAlign: 'center',
-    marginVertical: height * 0.05,
-    color: '#00c2cb',
+  },
+  card: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
   },
   sectionTitle: {
-    fontSize: width * 0.06,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '800',
     color: '#00c2cb',
-    marginBottom: 6,
+    marginBottom: 15,
+    letterSpacing: 1.5,
   },
   optionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   optionText: {
-    fontSize: width * 0.05,
-    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  smallPill: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  smallPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  themePill: {
     flex: 1,
-    flexShrink: 1,
-    paddingRight: 8,
+    marginHorizontal: 4,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,194,203,0.05)',
+  },
+  themePillText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   linkRow: {
-    paddingVertical: 14,
+    paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   linkRowText: {
-    fontSize: width * 0.05,
-    color: '#007aff',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  rowButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  actionButton: {
+    paddingVertical: 16,
+    borderRadius: 15,
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginTop: height * 0.015,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
-  primaryButton: {
-    backgroundColor: '#00c2cb',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexGrow: 1,
-    minWidth: '48%',
-    marginVertical: 6,
-  },
-  primaryButtonText: {
-    color: '#fff',
+  actionButtonText: {
     fontWeight: '700',
-    fontSize: width * 0.045,
-  },
-  secondaryButton: {
-    backgroundColor: '#e0f7f9',
-  },
-  secondaryButtonText: {
-    color: '#00c2cb',
-    fontWeight: '700',
-    fontSize: width * 0.045,
-  },
-  dangerButton: {
-    backgroundColor: '#ffe6e6',
-    marginTop: height * 0.015,
-  },
-  dangerButtonText: {
-    color: '#ff4d4d',
-    fontWeight: '700',
-    fontSize: width * 0.045,
+    fontSize: 16,
   },
   logoutButton: {
-    marginTop: height * 0.02,
-    backgroundColor: '#ff4d4d',
-    paddingVertical: 15,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 15,
     alignItems: 'center',
+    elevation: 3,
+    shadowColor: '#ff4d4d',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   logoutText: {
-    fontSize: width * 0.05,
+    fontSize: 16,
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '800',
   },
   modalContainer: {
     flex: 1,
-    paddingTop: 40,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
   },
-  modalClose: {
-    alignSelf: 'flex-end',
-    padding: 8,
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
-  modalCloseText: {
-    color: '#007aff',
-    fontWeight: '600',
+  modalCloseButton: {
+    width: 60,
   },
   modalTitle: {
-    fontSize: width * 0.07,
-    color: '#00c2cb',
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
+    flex: 1,
     textAlign: 'center',
-    marginVertical: 12,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
   },
   policyText: {
-    fontSize: width * 0.045,
-    color: '#333',
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 24,
   },
   revokeBackdrop: {
     flex: 1,
