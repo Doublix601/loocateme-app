@@ -28,14 +28,16 @@ export function usePresence(isEnabled) {
         });
 
         if (pos?.coords) {
+          const startTime = Date.now();
           await post('/user/heartbeat', {
             lat: pos.coords.latitude,
             lon: pos.coords.longitude,
           });
-          console.log('[usePresence] Foreground heartbeat sent');
+          const duration = Date.now() - startTime;
+          console.log(`[usePresence] Foreground heartbeat sent successfully in ${duration}ms`);
         }
       } catch (err) {
-        console.warn('[usePresence] Heartbeat failed:', err);
+        console.warn('[usePresence] Heartbeat failed:', err.message || err);
       }
     };
 
