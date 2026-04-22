@@ -25,6 +25,7 @@ import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { LocationSyncService } from './services/LocationSyncService';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
+import { usePresence } from './hooks/usePresence';
 import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken, logout as apiLogout } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 
@@ -93,6 +94,8 @@ function AppInner() {
   const appState = useRef(AppState.currentState);
   const { colors } = useTheme();
   const { user: appUser, updateUser } = useContext(UserContext);
+
+  usePresence(!!appUser);
 
   const transitionX = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get('window');
