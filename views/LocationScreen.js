@@ -249,7 +249,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
                     ? `Expire dans ${Math.max(0, Math.ceil((boostUntil - new Date()) / (60 * 1000)))} min.`
                     : boostBalance > 0
                       ? `Vous avez ${boostBalance} boost${boostBalance > 1 ? 's' : ''} disponible${boostBalance > 1 ? 's' : ''}.`
-                      : 'Devenez 3x plus visible sur ce lieu pendant 1h.'}
+                      : 'Devenez 3x plus visible sur ce lieu pendant 30 min.'}
                 </Text>
               </View>
               <View style={[styles.boostBadge, isBoosted && { backgroundColor: '#FFD700' }]}>
