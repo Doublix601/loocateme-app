@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { getLocationById } from '../components/ApiRequest';
+import { subscribe } from '../components/EventBus';
 import { formatLocationType } from '../components/LocationUtils';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
@@ -42,6 +43,15 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
 
   useEffect(() => {
     fetchLocationDetails();
+
+    // Refresh automatically on any mutation related to users or location
+    const unsub = subscribe('api:mutation', ({ path }) => {
+      if (path.includes('/user/') || path.includes('/profile') || path.includes('/settings')) {
+        fetchLocationDetails(true);
+      }
+    });
+
+    return () => unsub();
   }, [locationId]);
 
   const fetchLocationDetails = async (isRefreshing = false) => {

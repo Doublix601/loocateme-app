@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Appearance } from 'react-native';
+import { Appearance, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const THEME_MODE_KEY = 'loocateme_theme_mode'; // 'light' | 'dark' | 'system'
@@ -39,7 +39,7 @@ const ThemeContext = createContext({
 export function ThemeProvider({ children }) {
   // Default to system to honor device preference out of the box
   const [mode, setModeState] = useState('system');
-  const [systemScheme, setSystemScheme] = useState(Appearance.getColorScheme?.() || 'light');
+  const systemScheme = useColorScheme() || 'light';
 
   useEffect(() => {
     (async () => {
@@ -55,12 +55,6 @@ export function ThemeProvider({ children }) {
         setModeState('system');
       }
     })();
-    const sub = Appearance.addChangeListener?.(({ colorScheme }) => {
-      setSystemScheme(colorScheme || 'light');
-    });
-    return () => {
-      try { sub && sub.remove && sub.remove(); } catch (_) {}
-    };
   }, []);
 
   const setMode = async (next) => {

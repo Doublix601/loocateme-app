@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { getLocations, updateMyLocation } from '../components/ApiRequest';
+import { subscribe } from '../components/EventBus';
 import { formatLocationType } from '../components/LocationUtils';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -101,6 +102,16 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
   useEffect(() => {
     fetchNearbyLocations();
+
+    // Listen for mutations that should trigger a refresh
+    const unsub = subscribe('api:mutation', ({ path }) => {
+      // Refresh if the user updated their location or heartbeat
+      if (path.includes('/user/location') || path.includes('/user/heartbeat')) {
+        fetchNearbyLocations();
+      }
+    });
+
+    return () => unsub();
   }, []);
 
   useEffect(() => {

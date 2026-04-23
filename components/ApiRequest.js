@@ -122,6 +122,17 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
     }
 
     const isGet = String(method).toUpperCase() === 'GET';
+    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(method).toUpperCase());
+    
+    // Auto-invalidate cache on mutation
+    if (isMutation) {
+        try { 
+            apiCache.clear(); 
+            // Also notify the UI that data has likely changed
+            publish('api:mutation', { path, method });
+        } catch (_) {}
+    }
+
     const cacheKey = `${String(method).toUpperCase()}:${url}`;
     const inflightKey = `${cacheKey}|${cacheMode}`;
 
@@ -191,6 +202,13 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
             // If network error, try protocol fallback (http <-> https) for same host once
             try {
                 const u = new URL(url);
+                // Disable fallback for local development (IP addresses or localhost)
+                const isLocal = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || /^192\.168\./.test(u.hostname);
+                
+                if (isLocal) {
+                    throw networkErr; // Skip fallback
+                }
+
                 const toggledProtocol = u.protocol === 'http:' ? 'https:' : 'http:';
                 const fallbackUrl = `${toggledProtocol}//${u.host}${u.pathname}${u.search}${u.hash}`;
                 console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });

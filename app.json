@@ -6,7 +6,7 @@
     "runtimeVersion": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/appIcons/AppIcon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "scheme": "loocateme",
     "newArchEnabled": false,
     "updates": {
