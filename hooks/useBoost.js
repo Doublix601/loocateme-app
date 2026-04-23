@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import Purchases from 'react-native-purchases';
-import { api } from '../components/ApiRequest';
+import * as api from '../components/ApiRequest';
 import { usePremiumAccess } from './usePremiumAccess';
 
 export function useBoost() {
@@ -96,7 +96,7 @@ export function useBoost() {
         if (res?.user && updateUser) {
           updateUser(res.user);
         }
-        Alert.alert('Activé !', 'Votre profil est maintenant boosté pour 1 heure.');
+        Alert.alert('Activé !', 'Votre profil est maintenant boosté pour 30 minutes.');
       } catch (e) {
         console.error('[useBoost] Activation Error:', e);
         Alert.alert('Erreur', e.response?.data?.message || 'Impossible d\'activer le boost.');
