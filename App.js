@@ -78,7 +78,9 @@ const mapProfileUser = (u = {}) => {
   };
 };
 
-function AppInner() {
+function AppInner({ purchasesReady }) {
+  const { user: appUser, updateUser } = useContext(UserContext);
+  const { colors } = useTheme();
   const [currentScreen, setCurrentScreen] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedLocationId, setSelectedLocationId] = useState(null);
@@ -88,18 +90,9 @@ function AppInner() {
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState(null);
-  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
-  const hasShownLocationModal = useRef(false);
-  // Chat désactivé
-  const appState = useRef(AppState.currentState);
-  const { colors } = useTheme();
-  const { user: appUser, updateUser } = useContext(UserContext);
-
-  usePresence(!!appUser);
-
   const transitionX = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get('window');
-  const prevScreenRef = useRef('Login');
+  const prevScreenRef = useRef(null);
 
   const socialMediaIcons = {
     facebook: require('./assets/socialMediaIcons/fb_logo.png'),
@@ -109,23 +102,12 @@ function AppInner() {
     tiktok: require('./assets/socialMediaIcons/tiktok_logo.png'),
     snapchat: require('./assets/socialMediaIcons/snapchat_logo.png'),
     youtube: require('./assets/socialMediaIcons/yt_logo.png'),
+    addSocialNetwork: require('./assets/socialMediaIcons/addSocialNetwork_logo.png'),
   };
 
-  useEffect(() => {
-    const initPurchases = async () => {
-      try {
-        if (Platform.OS === 'ios') {
-          await Purchases.configure({ apiKey: 'goog_EXAMPLE_REVENUECAT_API_KEY' }); // TO BE UPDATED WITH REAL KEY
-        } else {
-          await Purchases.configure({ apiKey: 'goog_EXAMPLE_REVENUECAT_API_KEY' }); // TO BE UPDATED WITH REAL KEY
-        }
-        console.log('[App] RevenueCat initialized');
-      } catch (e) {
-        console.error('[App] RevenueCat initialization failed', e);
-      }
-    };
-    initPurchases();
-  }, []);
+  const appState = useRef(AppState.currentState);
+  const hasShownLocationModal = useRef(false);
+  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
 
   useEffect(() => {
     const preload = async () => {
@@ -291,7 +273,10 @@ function AppInner() {
       try {
         const res = await getUserById(pendingProfileId);
         const u = res?.user;
-        if (!u) return;
+        if (!u) {
+          setPendingProfileId(null);
+          return;
+        }
         setSelectedUser(mapProfileUser(u));
         setProfileReturnTo('LocationList');
         setCurrentScreen('UserProfile');
@@ -562,12 +547,43 @@ export default function App() {
   return (
     <ThemeProvider>
       <LocalizationProvider>
-        <FeatureFlagsProvider>
-          <UserProvider>
-            <AppInner />
-          </UserProvider>
-        </FeatureFlagsProvider>
+        <AppWithReadyStatus />
       </LocalizationProvider>
     </ThemeProvider>
+  );
+}
+
+function AppWithReadyStatus() {
+  const [purchasesReady, setPurchasesReady] = useState(false);
+
+  useEffect(() => {
+    const initPurchases = async () => {
+      try {
+        const apiKey = Platform.select({
+          ios: 'appl_EXAMPLE_REVENUECAT_API_KEY', // TO BE UPDATED
+          android: 'goog_EXAMPLE_REVENUECAT_API_KEY' // TO BE UPDATED
+        });
+
+        // Use a test API key for Expo Go or development environments
+        // See: https://rev.cat/sdk-test-store
+        const finalApiKey = __DEV__ ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey; // Test Store API Key
+
+        await Purchases.configure({ apiKey: finalApiKey });
+        setPurchasesReady(true);
+        console.log('[App] RevenueCat initialized');
+      } catch (e) {
+        console.error('[App] RevenueCat initialization failed', e);
+        setPurchasesReady(true);
+      }
+    };
+    initPurchases();
+  }, []);
+
+  return (
+    <FeatureFlagsProvider ready={purchasesReady}>
+      <UserProvider>
+        <AppInner purchasesReady={purchasesReady} />
+      </UserProvider>
+    </FeatureFlagsProvider>
   );
 }

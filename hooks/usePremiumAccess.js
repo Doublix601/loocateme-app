@@ -1,12 +1,13 @@
 import { useContext } from 'react';
 import { UserContext } from '../components/contexts/UserContext';
-import { usePremiumEnabled, useStatisticsEnabled, useBoostEnabled } from '../components/contexts/FeatureFlagsContext';
+import { usePremiumEnabled, useStatisticsEnabled, useBoostEnabled, useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 
 /**
  * Hook centralisé pour gérer l'accès aux fonctionnalités Premium et Statistiques de LoocateMe.
  */
 export function usePremiumAccess() {
-  const { user } = useContext(UserContext);
+  const { user, updateUser } = useContext(UserContext);
+  const { purchasesReady } = useFeatureFlags();
   const premiumSystemEnabled = usePremiumEnabled();
   const statisticsSystemEnabled = useStatisticsEnabled();
   const boostSystemEnabled = useBoostEnabled();
@@ -43,6 +44,8 @@ export function usePremiumAccess() {
     hasPremiumRight,                    // A le droit d'être premium
     boostBalance: user?.boostBalance || 0,
     boostUntil: user?.boostUntil ? new Date(user.boostUntil) : null,
-    isBoosted: user?.boostUntil && new Date(user.boostUntil) > new Date()
+    isBoosted: user?.boostUntil && new Date(user.boostUntil) > new Date(),
+    purchasesReady,
+    updateUser
   };
 }
