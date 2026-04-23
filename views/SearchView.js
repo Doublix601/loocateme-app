@@ -10,7 +10,7 @@ const { width, height } = Dimensions.get('window');
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode';
 
-export default function UserSearchView({ onClose, onSelectUser, onSelectLocation, userLocation }) {
+export default function SearchView({ onClose, onSelectUser, onSelectLocation, userLocation }) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
@@ -144,16 +144,16 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
           )
         )}
         <View style={styles.rowContent}>
-          <Text style={[styles.rowText, { color: colors.text }]} numberOfLines={1}>{getDisplayName(item)}</Text>
+          <Text style={[styles.rowText, { color: isDark ? '#fff' : colors.text }]} numberOfLines={1}>{getDisplayName(item)}</Text>
           {isLocation && (
-            <Text style={{ color: colors.text, opacity: 0.5, fontSize: 12, marginLeft: 12, marginTop: 2 }}>
+            <Text style={{ color: isDark ? '#eee' : colors.text, opacity: isDark ? 0.7 : 0.5, fontSize: 12, marginLeft: 12, marginTop: 2 }}>
               {item.city}{item.city && item.distance ? ' • ' : ''}{formatDistance(item.distance)}
             </Text>
           )}
         </View>
         <Image
             source={require('../assets/appIcons/backArrow.png')}
-            style={{ width: 16, height: 16, tintColor: colors.text, opacity: 0.2, transform: [{ rotate: '180deg' }] }}
+            style={{ width: 16, height: 16, tintColor: isDark ? '#fff' : colors.text, opacity: 0.2, transform: [{ rotate: '180deg' }] }}
         />
       </TouchableOpacity>
     );
@@ -172,7 +172,7 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
         >
           <Text style={{ fontSize: 18, color: '#00c2cb', fontWeight: 'bold' }}>✖</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Recherche</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Recherche</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -183,13 +183,13 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
             value={query}
             onChangeText={setQuery}
             placeholder="Nom d'utilisateur, lieu..."
-            placeholderTextColor={isDark ? '#888' : '#999'}
-            style={[styles.input, { color: colors.text }]}
+            placeholderTextColor={isDark ? '#aaa' : '#999'}
+            style={[styles.input, { color: isDark ? '#fff' : colors.text }]}
             autoFocus
           />
           {query.length > 0 && (
               <TouchableOpacity onPress={() => setQuery('')}>
-                  <Text style={{ color: colors.text, opacity: 0.3, fontSize: 18 }}>ⓧ</Text>
+                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.3, fontSize: 18 }}>ⓧ</Text>
               </TouchableOpacity>
           )}
         </View>
@@ -232,7 +232,7 @@ export default function UserSearchView({ onClose, onSelectUser, onSelectLocation
           contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 }}
           ListHeaderComponent={showInfoMsg ? (
             <View style={{ marginTop: 40, paddingHorizontal: 40 }}>
-              <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.5, lineHeight: 22 }}>
+              <Text style={{ textAlign: 'center', color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.7 : 0.5, lineHeight: 22 }}>
                 {qTrim.length < minChars
                   ? 'Tape au moins 2 lettres pour lancer la recherche'
                   : 'Aucun résultat trouvé pour cette recherche.'}

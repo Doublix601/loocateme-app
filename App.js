@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
@@ -11,13 +11,14 @@ import LocationListScreen from './views/LocationListScreen';
 import LocationScreen from './views/LocationScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
-import UserSearchView from './views/UserSearchView';
+import SearchView from './views/SearchView';
 import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
 import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import ModeratorScreen from './views/ModeratorScreen';
 import WarningsScreen from './views/WarningsScreen';
+import Purchases from 'react-native-purchases';
 import LocationPermissionModal from './components/LocationPermissionModal';
 // Chat screens supprimés (fonctionnalité de chat désactivée)
 import { UserProvider, UserContext } from './components/contexts/UserContext';
@@ -44,7 +45,6 @@ const mapBackendUser = (u = {}) => {
     photo: u.profileImageUrl || u.photo || null,
     socialMedias,
     socialMedia: socialMedias,
-    isVisible: u.isVisible !== false,
     isPremium: !!u.isPremium,
     role: u.role || 'user',
     status: u.status || 'green',
@@ -78,7 +78,9 @@ const mapProfileUser = (u = {}) => {
   };
 };
 
-function AppInner() {
+function AppInner({ purchasesReady }) {
+  const { user: appUser, updateUser } = useContext(UserContext);
+  const { colors } = useTheme();
   const [currentScreen, setCurrentScreen] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedLocationId, setSelectedLocationId] = useState(null);
@@ -88,18 +90,9 @@ function AppInner() {
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [pendingProfileId, setPendingProfileId] = useState(null);
-  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
-  const hasShownLocationModal = useRef(false);
-  // Chat désactivé
-  const appState = useRef(AppState.currentState);
-  const { colors } = useTheme();
-  const { user: appUser, updateUser } = useContext(UserContext);
-
-  usePresence(!!appUser);
-
   const transitionX = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get('window');
-  const prevScreenRef = useRef('Login');
+  const prevScreenRef = useRef(null);
 
   const socialMediaIcons = {
     facebook: require('./assets/socialMediaIcons/fb_logo.png'),
@@ -109,7 +102,12 @@ function AppInner() {
     tiktok: require('./assets/socialMediaIcons/tiktok_logo.png'),
     snapchat: require('./assets/socialMediaIcons/snapchat_logo.png'),
     youtube: require('./assets/socialMediaIcons/yt_logo.png'),
+    addSocialNetwork: require('./assets/socialMediaIcons/addSocialNetwork_logo.png'),
   };
+
+  const appState = useRef(AppState.currentState);
+  const hasShownLocationModal = useRef(false);
+  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
 
   useEffect(() => {
     const preload = async () => {
@@ -275,7 +273,10 @@ function AppInner() {
       try {
         const res = await getUserById(pendingProfileId);
         const u = res?.user;
-        if (!u) return;
+        if (!u) {
+          setPendingProfileId(null);
+          return;
+        }
         setSelectedUser(mapProfileUser(u));
         setProfileReturnTo('LocationList');
         setCurrentScreen('UserProfile');
@@ -434,7 +435,7 @@ function AppInner() {
       break;
     case 'UserSearch':
       screenToShow = (
-        <UserSearchView
+        <SearchView
           onClose={() => setCurrentScreen('LocationList')}
           onSelectUser={(u) => handleSelectUser(u, 'LocationList')}
           onSelectLocation={handleSelectLocation}
@@ -456,6 +457,7 @@ function AppInner() {
           socialMediaIcons={socialMediaIcons}
           onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
           onOpenConversation={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
+          onOpenPremium={() => setCurrentScreen('PremiumPaywall')}
         />
       );
       break;
@@ -545,12 +547,43 @@ export default function App() {
   return (
     <ThemeProvider>
       <LocalizationProvider>
-        <FeatureFlagsProvider>
-          <UserProvider>
-            <AppInner />
-          </UserProvider>
-        </FeatureFlagsProvider>
+        <AppWithReadyStatus />
       </LocalizationProvider>
     </ThemeProvider>
+  );
+}
+
+function AppWithReadyStatus() {
+  const [purchasesReady, setPurchasesReady] = useState(false);
+
+  useEffect(() => {
+    const initPurchases = async () => {
+      try {
+        const apiKey = Platform.select({
+          ios: 'appl_EXAMPLE_REVENUECAT_API_KEY', // TO BE UPDATED
+          android: 'goog_EXAMPLE_REVENUECAT_API_KEY' // TO BE UPDATED
+        });
+
+        // Use a test API key for Expo Go or development environments
+        // See: https://rev.cat/sdk-test-store
+        const finalApiKey = __DEV__ ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey; // Test Store API Key
+
+        await Purchases.configure({ apiKey: finalApiKey });
+        setPurchasesReady(true);
+        console.log('[App] RevenueCat initialized');
+      } catch (e) {
+        console.error('[App] RevenueCat initialization failed', e);
+        setPurchasesReady(true);
+      }
+    };
+    initPurchases();
+  }, []);
+
+  return (
+    <FeatureFlagsProvider ready={purchasesReady}>
+      <UserProvider>
+        <AppInner purchasesReady={purchasesReady} />
+      </UserProvider>
+    </FeatureFlagsProvider>
   );
 }

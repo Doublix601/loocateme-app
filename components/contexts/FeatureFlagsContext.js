@@ -4,11 +4,12 @@ import { getFeatureFlags } from '../ApiRequest';
 const FeatureFlagsContext = createContext({
   flags: {},
   loading: true,
+  purchasesReady: false,
   error: null,
   refresh: () => {},
 });
 
-export function FeatureFlagsProvider({ children }) {
+export function FeatureFlagsProvider({ children, ready = false }) {
   const [flags, setFlags] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +35,7 @@ export function FeatureFlagsProvider({ children }) {
   }, [refresh]);
 
   return (
-    <FeatureFlagsContext.Provider value={{ flags, loading, error, refresh }}>
+    <FeatureFlagsContext.Provider value={{ flags, loading, purchasesReady: ready, error, refresh }}>
       {children}
     </FeatureFlagsContext.Provider>
   );
@@ -53,4 +54,9 @@ export function usePremiumEnabled() {
 export function useStatisticsEnabled() {
   const { flags } = useFeatureFlags();
   return flags.statisticsEnabled ?? false;
+}
+
+export function useBoostEnabled() {
+  const { flags } = useFeatureFlags();
+  return flags.boostEnabled ?? true; // Par défaut actif si pas spécifié
 }

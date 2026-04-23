@@ -61,7 +61,7 @@ const MyAccountScreen = ({
         },
     });
     const { user, updateUser } = useContext(UserContext);
-    const { isPremium, hasStatsAccess, premiumSystemEnabled } = usePremiumAccess();
+    const { isPremium, hasStatsAccess, premiumSystemEnabled, effectiveStatisticsEnabled } = usePremiumAccess();
     const { flags } = useFeatureFlags();
     const warningsCount = user?.moderation?.warningsCount || 0;
     const [modalVisible, setModalVisible] = useState(false);
@@ -73,6 +73,7 @@ const MyAccountScreen = ({
     const [toastVisible, setToastVisible] = useState(false);
     const [myUserId, setMyUserId] = useState('');
     const [refreshing, setRefreshing] = useState(false);
+    const [measuredNameWidth, setMeasuredNameWidth] = useState(0);
 
     // Dynamically scale UI based on number of social networks to best fill the page without scrolling
     const socialCountForScale = Array.isArray(user?.socialMedia) ? user.socialMedia.length : 0;
@@ -98,7 +99,11 @@ const MyAccountScreen = ({
     const [socialModalVisible, setSocialModalVisible] = useState(false);
 
     // Mesure dynamique de la largeur du nom pour adapter la box image+nom
-    const [measuredNameWidth, setMeasuredNameWidth] = useState(0);
+    const valueStyle = { color: isDark ? '#fff' : '#3f4a4b' };
+    const labelStyle = { color: '#00c2cb' };
+    const textPrimaryStyle = { color: isDark ? '#fff' : colors.textPrimary };
+    const textSecondaryStyle = { color: isDark ? '#eee' : colors.textSecondary };
+    const subTextStyle = { color: isDark ? 'rgba(255,255,255,0.9)' : colors.textSecondary };
     const SAFE_LEFT_FOR_BACK = 56; // espace minimum à gauche pour le bouton retour (padding+icône)
     const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
     const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
@@ -145,7 +150,6 @@ const MyAccountScreen = ({
                         bio: typeof me.bio === 'string' ? me.bio : (user?.bio || ''),
                         photo: me.profileImageUrl || user?.photo || null,
                         socialMedia: mappedSocial,
-                        isVisible: me.isVisible !== false,
                         isPremium: !!me.isPremium,
                         role: me.role || user?.role || 'user',
                         premiumTrialEnd: me.premiumTrialEnd || null,
@@ -165,6 +169,14 @@ const MyAccountScreen = ({
     }, []);
 
     const handleOpenStats = async () => {
+        if (!effectiveStatisticsEnabled) {
+            Alert.alert(
+                "Bientôt disponible 🚀",
+                "Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux."
+            );
+            return;
+        }
+
         try {
             // One-shot re-sync from server to avoid stale context after plan change
             const res = await getMyUser();
@@ -183,7 +195,6 @@ const MyAccountScreen = ({
                     bio: typeof me.bio === 'string' ? me.bio : (user?.bio || ''),
                     photo: me.profileImageUrl || user?.photo || null,
                     socialMedia: Array.isArray(me.socialNetworks) ? mapNetworksToSocialMedia(me.socialNetworks) : (user?.socialMedia || []),
-                    isVisible: me.isVisible !== false,
                     isPremium: nowPremium,
                     role: me.role || user?.role || 'user',
                     premiumTrialEnd: me.premiumTrialEnd || null,
@@ -335,7 +346,6 @@ const MyAccountScreen = ({
                 bio: typeof me.bio === 'string' ? me.bio : (user.bio || ''),
                 photo: me.profileImageUrl || user.photo || null,
                 socialMedia: Array.isArray(me.socialNetworks) ? mapNetworksToSocialMedia(me.socialNetworks) : (user.socialMedia || []),
-                isVisible: me.isVisible !== false,
                 isPremium: !!me.isPremium,
                 role: me.role || user?.role || 'user',
                 premiumTrialEnd: me.premiumTrialEnd || null,
@@ -888,7 +898,7 @@ const MyAccountScreen = ({
                                     delayLongPress={300}
                                     activeOpacity={1}
                                 >
-                                    <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>
+                                    <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }, textPrimaryStyle]}>
                                         {user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
                                     </Text>
                                     {/* Mesure invisible sur une ligne pour calculer la largeur exacte du nom */}
@@ -935,8 +945,8 @@ const MyAccountScreen = ({
                                 delayLongPress={300}
                                 activeOpacity={1}
                             >
-                                <Text style={styles.identityLabel}>Prénom</Text>
-                                <Text style={[styles.identityValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                                <Text style={[styles.identityLabel, labelStyle]}>Prénom</Text>
+                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
                                     {user?.firstName || '—'}
                                 </Text>
                             </TouchableOpacity>
@@ -947,8 +957,8 @@ const MyAccountScreen = ({
                                 delayLongPress={300}
                                 activeOpacity={1}
                             >
-                                <Text style={styles.identityLabel}>Nom</Text>
-                                <Text style={[styles.identityValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                                <Text style={[styles.identityLabel, labelStyle]}>Nom</Text>
+                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
                                     {user?.lastName || '—'}
                                 </Text>
                             </TouchableOpacity>
@@ -959,8 +969,8 @@ const MyAccountScreen = ({
                                 delayLongPress={300}
                                 activeOpacity={1}
                             >
-                                <Text style={styles.identityLabel}>Custom</Text>
-                                <Text style={[styles.identityValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                                <Text style={[styles.identityLabel, labelStyle]}>Custom</Text>
+                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
                                     {user?.customName || '—'}
                                 </Text>
                             </TouchableOpacity>
@@ -968,7 +978,7 @@ const MyAccountScreen = ({
 
                         <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
                             <View style={styles.bioTitleContainer}>
-                                <Text style={[styles.label, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
+                                <Text style={[styles.label, labelStyle, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
                                 <Text style={{ marginLeft: 6, fontSize: 14 }}>🖋️</Text>
                             </View>
                             <TouchableOpacity
@@ -984,11 +994,12 @@ const MyAccountScreen = ({
                                         <Text
                                             style={[
                                                 styles.value,
+                                                textPrimaryStyle,
                                                 {
                                                     fontSize: bioFont,
                                                     textAlign: 'left',
                                                     width: '100%',
-                                                    color: isEmpty ? colors.textMuted : colors.textPrimary,
+                                                    color: isEmpty ? colors.textMuted : (isDark ? '#fff' : colors.textPrimary),
                                                     fontStyle: isEmpty ? 'italic' : 'normal',
                                                     lineHeight: bioFont * 1.4
                                                 },
@@ -1079,7 +1090,7 @@ const MyAccountScreen = ({
                         <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
                         <Pressable style={StyleSheet.absoluteFill} onPress={() => setModalVisible(false)} />
                         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-                            <Text style={styles.modalTitle}>
+                            <Text style={[styles.modalTitle, textPrimaryStyle]}>
                                 Modifier {
                                     editType === 'firstName' ? 'le Prénom' :
                                     editType === 'lastName' ? 'le Nom' :
@@ -1114,12 +1125,12 @@ const MyAccountScreen = ({
                                 <Text style={styles.modalHint}>Format requis: ^[A-Z][a-z]+$ (exemple: Arnaud)</Text>
                             ) : null}
                             <TouchableOpacity onPress={handleSave} style={styles.modalButton}>
-                                <Text style={styles.modalButtonText}>Enregistrer</Text>
+                                <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>Enregistrer</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => setModalVisible(false)}
                                 style={styles.modalButton}>
-                                <Text style={styles.modalButtonText}>Annuler</Text>
+                                <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>Annuler</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -1141,7 +1152,7 @@ const MyAccountScreen = ({
                                         style={styles.modalBackButtonImage}
                                     />
                                 </TouchableOpacity>
-                                <Text style={styles.modalTitle}>Ajouter un réseau</Text>
+                                <Text style={[styles.modalTitle, textPrimaryStyle]}>Ajouter un réseau</Text>
                                 <ScrollView
                                     ref={addSocialScrollRef}
                                     keyboardShouldPersistTaps="handled"
@@ -1538,7 +1549,6 @@ const styles = StyleSheet.create({
     },
     value: {
         fontSize: Math.min(width * 0.04, 16),
-        color: '#3f4a4b',
     },
     editButton: {
         backgroundColor: '#00c2cb',
@@ -1691,9 +1701,10 @@ const styles = StyleSheet.create({
     },
     modalHint: {
         fontSize: 12,
-        color: '#666',
+        color: '#fff',
         alignSelf: 'flex-start',
         marginBottom: height * 0.01,
+        opacity: 0.7,
     },
     deleteButton: {
         backgroundColor: '#f44336',
@@ -1824,8 +1835,9 @@ const styles = StyleSheet.create({
     },
     qrHint: {
         marginTop: 10,
-        color: '#555',
+        color: '#fff',
         textAlign: 'center',
+        opacity: 0.8,
     },
     returnToListButton: {
         backgroundColor: '#00c2cb',

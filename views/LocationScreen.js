@@ -19,9 +19,14 @@ import { subscribe } from '../components/EventBus';
 import { formatLocationType } from '../components/LocationUtils';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
+import { useFeatureGate } from '../hooks/useFeatureGate';
+import { useBoost } from '../hooks/useBoost';
+import { Alert } from 'react-native';
 
 const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, socialMediaIcons }) => {
   const { colors, isDark } = useTheme();
+  const { checkAccess, isPremium } = useFeatureGate();
+  const { activateBoost, isBoosted, boostUntil, boostBalance, loading: boostLoading } = useBoost();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState(null);
@@ -45,7 +50,8 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     fetchLocationDetails();
 
     // Refresh automatically on any mutation related to users or location
-    const unsub = subscribe('api:mutation', ({ path }) => {
+    const unsub = subscribe('api:mutation', (payload) => {
+      const path = payload?.path || '';
       if (path.includes('/user/') || path.includes('/profile') || path.includes('/settings')) {
         fetchLocationDetails(true);
       }
@@ -86,6 +92,13 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     Linking.openURL(url);
   };
 
+  const handleBoost = () => {
+    if (isBoosted) return; // Prevent multiple clicks
+    if (checkAccess('boost')) {
+      activateBoost();
+    }
+  };
+
   const getStars = (item, starIsDark) => {
     const starsCount = item?.stars || 0;
     const userCount = item?.userCount || 0;
@@ -103,16 +116,21 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     }
 
     // Default to 1 grey star for 0 stars
-    return <Text style={{ color: starIsDark ? '#666' : '#ccc', fontSize: 18 }}>★</Text>;
+    return <Text style={{ color: starIsDark ? '#FFFFFF' : '#ccc', opacity: starIsDark ? 0.3 : 1, fontSize: 18 }}>★</Text>;
   };
 
   const renderUser = ({ item }) => {
     const statusColor = item.status === 'green' ? '#4CAF50' : item.status === 'orange' ? '#FF9800' : '#F44336';
     const isOrangeOrRed = item.status === 'orange' || item.status === 'red';
+    const isUserBoosted = item.boostUntil && new Date(item.boostUntil) > new Date();
 
     return (
       <TouchableOpacity
-        style={[styles.userCard, { backgroundColor: colors.surface }]}
+        style={[
+          styles.userCard,
+          { backgroundColor: colors.surface },
+          isUserBoosted && { borderColor: '#FFD700', borderWidth: 2, shadowColor: '#FFD700', shadowOpacity: 0.8, shadowRadius: 10, elevation: 5 }
+        ]}
         onPress={() => onSelectUser(item)}
       >
         <ImageWithPlaceholder
@@ -122,13 +140,14 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         />
         <View style={styles.userInfo}>
           <View style={styles.usernameRow}>
-            <Text style={[styles.username, { color: colors.text }]}>
+            <Text style={[styles.username, { color: isDark ? '#fff' : colors.text }]}>
               {item.customName || item.username}
             </Text>
+            {isUserBoosted && <Text style={{ marginLeft: 4 }}>⚡</Text>}
             <View style={[styles.statusDot, { backgroundColor: statusColor, borderColor: colors.surface }]} />
           </View>
           {!isOrangeOrRed && item.bio ? (
-            <Text style={[styles.userBio, { color: colors.textSecondary }]} numberOfLines={1}>
+            <Text style={[styles.userBio, { color: isDark ? '#ddd' : colors.textSecondary }]} numberOfLines={1}>
               {item.bio}
             </Text>
           ) : null}
@@ -148,9 +167,9 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
   if (!location) {
     return (
       <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.text }}>Lieu non trouvé</Text>
-        <TouchableOpacity onPress={onReturnToList}>
-          <Text style={{ color: '#00c2cb', marginTop: 10 }}>Retour</Text>
+        <Text style={{ color: isDark ? '#fff' : colors.text, fontSize: 16, fontWeight: '600' }}>Lieu non trouvé</Text>
+        <TouchableOpacity onPress={onReturnToList} style={styles.errorBackButton}>
+          <Text style={{ color: '#00c2cb', fontWeight: '700', fontSize: 16 }}>Retour</Text>
         </TouchableOpacity>
       </View>
     );
@@ -187,24 +206,60 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         }
         ListHeaderComponent={
           <View style={styles.locationHeaderInfo}>
-            <View style={styles.typeBadge}>
-              <Text style={styles.typeText}>{formatLocationType(location.type)}</Text>
+            <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
+              <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(location.type)}</Text>
             </View>
 
             <View style={styles.popularityRow}>
               <View>
-                <Text style={[styles.popularityLabel, { color: colors.textSecondary }]}>Popularité</Text>
+                <Text style={[styles.popularityLabel, { color: isDark ? '#fff' : colors.textSecondary }]}>Popularité</Text>
                 <Text style={styles.popularityStars}>
                   {getStars(location, isDark)}
                 </Text>
               </View>
 
               <TouchableOpacity style={styles.goButtonRound} onPress={handleGoToLocation}>
-                <Text style={styles.goEmoji}>📍</Text>
+                <Text style={[styles.goEmoji, { color: '#fff' }]}>📍</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Utilisateurs sur place</Text>
+            <TouchableOpacity
+              style={[
+                styles.boostCard,
+                {
+                  backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(255,215,0,0.05)',
+                  borderColor: '#FFD700',
+                  opacity: isBoosted ? 0.8 : 1
+                }
+              ]}
+              onPress={handleBoost}
+              disabled={isBoosted || boostLoading}
+            >
+              <View style={styles.boostInfo}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={[styles.boostTitle, { color: colors.text }]}>
+                    {isBoosted ? '⚡ Boost actif !' : '🔥 Boostez votre profil !'}
+                  </Text>
+                  {boostLoading && (
+                    <ActivityIndicator size="small" color="#FFD700" style={{ marginLeft: 10 }} />
+                  )}
+                </View>
+                <Text style={[styles.boostSubtitle, { color: colors.textSecondary }]}>
+                  {isBoosted
+                    ? `Expire dans ${Math.max(0, Math.ceil((boostUntil - new Date()) / (60 * 1000)))} min.`
+                    : boostBalance > 0
+                      ? `Vous avez ${boostBalance} boost${boostBalance > 1 ? 's' : ''} disponible${boostBalance > 1 ? 's' : ''}.`
+                      : 'Devenez 3x plus visible sur ce lieu pendant 30 min.'}
+                </Text>
+              </View>
+              <View style={[styles.boostBadge, isBoosted && { backgroundColor: '#FFD700' }]}>
+                <Text style={[styles.boostBadgeText, isBoosted && { color: '#000' }]}>
+                  {isBoosted ? 'ACTIF' : 'BOOST'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : colors.text }]}>Utilisateurs sur place</Text>
           </View>
         }
         ListEmptyComponent={
@@ -252,14 +307,18 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 15,
   },
+  typeBadgeDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
   typeText: { color: '#00c2cb', fontWeight: '700', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  typeTextDark: { color: '#fff' },
   popularityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 30,
   },
-  popularityLabel: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  popularityLabel: { fontSize: 14, fontWeight: '800', marginBottom: 4 },
   popularityStars: { fontSize: 20 },
   goButtonRound: {
     backgroundColor: '#00c2cb',
@@ -275,6 +334,29 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   goEmoji: { fontSize: 28 },
+  boostCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 2,
+    marginBottom: 25,
+    elevation: 3,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  boostInfo: { flex: 1 },
+  boostTitle: { fontSize: 16, fontWeight: '800', marginBottom: 2 },
+  boostSubtitle: { fontSize: 12, fontWeight: '500' },
+  boostBadge: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  boostBadgeText: { fontSize: 10, fontWeight: '900', color: '#000' },
   sectionTitle: { fontSize: 20, fontWeight: '800', marginBottom: 15, letterSpacing: -0.3 },
   listContent: { paddingBottom: 30 },
   userCard: {
@@ -289,6 +371,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
+  },
+  errorBackButton: {
+    marginTop: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(0, 194, 203, 0.1)',
+    borderRadius: 15
   },
   userPhoto: { width: 56, height: 56, borderRadius: 28 },
   userInfo: { flex: 1, marginLeft: 16 },

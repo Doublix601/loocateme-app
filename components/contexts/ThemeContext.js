@@ -40,6 +40,24 @@ export function ThemeProvider({ children }) {
   // Default to system to honor device preference out of the box
   const [mode, setModeState] = useState('system');
   const systemScheme = useColorScheme() || 'light';
+  const [internalSystemScheme, setInternalSystemScheme] = useState(systemScheme);
+
+  useEffect(() => {
+    // Debug log for Android theme detection
+    console.log(`[ThemeContext] Initial system scheme: ${systemScheme}`);
+    setInternalSystemScheme(systemScheme);
+  }, [systemScheme]);
+
+  useEffect(() => {
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      console.log(`[ThemeContext] Appearance changed: ${colorScheme}`);
+      if (colorScheme) {
+        setInternalSystemScheme(colorScheme);
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -63,7 +81,7 @@ export function ThemeProvider({ children }) {
     try { await AsyncStorage.setItem(THEME_MODE_KEY, value); } catch (_) {}
   };
 
-  const isDark = (mode === 'system' ? systemScheme === 'dark' : mode === 'dark');
+  const isDark = (mode === 'system' ? internalSystemScheme === 'dark' : mode === 'dark');
   const colors = isDark ? darkPalette : lightPalette;
 
   const value = useMemo(() => ({ mode, setMode, colors, isDark }), [mode, isDark]);

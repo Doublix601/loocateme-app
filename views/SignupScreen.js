@@ -11,7 +11,6 @@ const mapBackendUser = (u = {}) => ({
     bio: u.bio || '',
     photo: u.profileImageUrl || null,
     socialMedia: Array.isArray(u.socialNetworks) ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : [],
-    isVisible: u.isVisible !== false,
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
 });
@@ -222,7 +221,7 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.link} onPress={onLogin}>
-                            <Text style={[styles.linkText, { color: colors.textSecondary }]}>Déjà un compte ? <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Se connecter</Text></Text>
+                            <Text style={[styles.linkText, { color: isDark ? '#fff' : colors.textSecondary }]}>Déjà un compte ? <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Se connecter</Text></Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>

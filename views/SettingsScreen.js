@@ -36,7 +36,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
   const isDark = themeMode === 'dark';
-  const [isVisible, setIsVisible] = useState(user?.isVisible ?? true);
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
 
@@ -48,6 +47,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   const [consentVersion, setConsentVersion] = useState(user?.consent?.version || 'v1');
   const [analytics, setAnalytics] = useState(!!user?.privacyPreferences?.analytics);
   const [marketing, setMarketing] = useState(!!user?.privacyPreferences?.marketing);
+  const [doNotSell, setDoNotSell] = useState(!!user?.privacyPreferences?.doNotSell);
 
   // Revocation (delete account) modal state
   const [revokeVisible, setRevokeVisible] = useState(false);
@@ -61,6 +61,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
       setConsentVersion(user?.consent?.version || 'v1');
       setAnalytics(!!user?.privacyPreferences?.analytics);
       setMarketing(!!user?.privacyPreferences?.marketing);
+      setDoNotSell(!!user?.privacyPreferences?.doNotSell);
     } catch (_) {}
   }, [user]);
 
@@ -83,24 +84,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   };
 
   const saveAndReturn = async () => {
-    try {
-      setSaving(true);
-      await apiSetVisibility(isVisible);
-      if (updateUser) {
-        updateUser({ ...user, isVisible });
-      }
-      // Start or stop background location according to new visibility
-      try {
-        if (isVisible) await startBackgroundLocationForOneHour();
-        else await stopBackgroundLocation();
-      } catch (_) {}
-      onReturnToAccount && onReturnToAccount();
-    } catch (e) {
-      console.error('[SettingsScreen] Save visibility error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
-      Alert.alert('Erreur', e?.message || 'Impossible de sauvegarder le paramètre');
-    } finally {
-      setSaving(false);
-    }
+    onReturnToAccount && onReturnToAccount();
   };
 
   const panResponder = PanResponder.create({
@@ -118,8 +102,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
     },
   });
 
-  const toggleVisibility = () => setIsVisible((prevState) => !prevState);
-
   const openPolicy = async () => {
     try {
       setPolicyLoading(true);
@@ -134,13 +116,13 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
     }
   };
 
-  const persistConsentQuietly = async ({ accepted, analytics: analyticsValue, marketing: marketingValue }) => {
+  const persistConsentQuietly = async ({ accepted, analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue }) => {
     try {
-      const res = await updateConsent({ accepted, version: consentVersion, analytics: analyticsValue, marketing: marketingValue });
+      const res = await updateConsent({ accepted, version: consentVersion, analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue });
       const updatedUser = res?.user ? res.user : {
         ...user,
         consent: { accepted, version: consentVersion, consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null },
-        privacyPreferences: { analytics: analyticsValue, marketing: marketingValue },
+        privacyPreferences: { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
       };
       if (updateUser) {
         updateUser({
@@ -149,9 +131,8 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
           bio: user?.bio ?? updatedUser.bio ?? '',
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
           socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
-          isVisible: user?.isVisible ?? (updatedUser.isVisible !== false),
           consent: updatedUser.consent || { accepted, version: consentVersion },
-          privacyPreferences: updatedUser.privacyPreferences || { analytics: analyticsValue, marketing: marketingValue },
+          privacyPreferences: updatedUser.privacyPreferences || { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
         });
       }
     } catch (e) {
@@ -169,26 +150,31 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
     }
     // If checking consent on, just persist quietly
     setConsentAccepted(true);
-    await persistConsentQuietly({ accepted: true, analytics, marketing });
+    await persistConsentQuietly({ accepted: true, analytics, marketing, doNotSell });
   };
 
   const handleToggleAnalytics = async (v) => {
     setAnalytics(v);
-    await persistConsentQuietly({ accepted: consentAccepted, analytics: v, marketing });
+    await persistConsentQuietly({ accepted: consentAccepted, analytics: v, marketing, doNotSell });
   };
 
   const handleToggleMarketing = async (v) => {
     setMarketing(v);
-    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing: v });
+    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing: v, doNotSell });
+  };
+
+  const handleToggleDoNotSell = async (v) => {
+    setDoNotSell(v);
+    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing, doNotSell: v });
   };
 
   const saveConsent = async (accepted) => {
     try {
-      const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing });
+      const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing, doNotSell });
       const updatedUser = res?.user ? res.user : {
         ...user,
         consent: { accepted, version: consentVersion, consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null },
-        privacyPreferences: { analytics, marketing },
+        privacyPreferences: { analytics, marketing, doNotSell },
       };
       if (updateUser) {
         updateUser({
@@ -197,9 +183,8 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
           bio: user?.bio ?? updatedUser.bio ?? '',
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
           socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
-          isVisible: user?.isVisible ?? (updatedUser.isVisible !== false),
           consent: updatedUser.consent || { accepted, version: consentVersion },
-          privacyPreferences: updatedUser.privacyPreferences || { analytics, marketing },
+          privacyPreferences: updatedUser.privacyPreferences || { analytics, marketing, doNotSell },
         });
       }
       setConsentAccepted(accepted);
@@ -288,15 +273,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={styles.sectionTitle}>GÉNÉRAL</Text>
-          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Être visible</Text>
-            <Switch
-              value={isVisible}
-              onValueChange={toggleVisibility}
-              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-              thumbColor={isVisible ? '#fff' : '#f4f3f4'}
-            />
-          </View>
 
           <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
             <View style={{ flex: 1 }}>
@@ -348,13 +324,25 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
               thumbColor={analytics ? '#fff' : '#f4f3f4'}
             />
           </View>
-          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
             <Text style={[styles.optionText, { color: colors.textPrimary }]}>Marketing</Text>
             <Switch
               value={marketing}
               onValueChange={handleToggleMarketing}
               trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
               thumbColor={marketing ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.optionText, { color: colors.textPrimary }]}>Vente de données (CCPA)</Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary }}>Ne pas vendre mes informations personnelles</Text>
+            </View>
+            <Switch
+              value={doNotSell}
+              onValueChange={handleToggleDoNotSell}
+              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+              thumbColor={doNotSell ? '#fff' : '#f4f3f4'}
             />
           </View>
         </View>
@@ -382,8 +370,8 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
             <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>Supprimer mon compte</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]} 
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]}
             onPress={async () => { try { await (onLogout && onLogout()); } catch(_) {} }}
           >
             <Text style={styles.logoutText}>Déconnexion</Text>
@@ -404,7 +392,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
             <View style={{ width: 60 }} />
           </View>
-          
+
           <View style={styles.modalContent}>
             {policyLoading ? (
               <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
@@ -422,9 +410,9 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
         <View style={[styles.revokeBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
           <View style={[styles.revokeCard, { backgroundColor: colors.surface, borderColor: colors.border }] }>
             <Text style={[styles.revokeTitle, { color: colors.textPrimary }]}>Suppression du compte</Text>
-            <Text style={[styles.revokeDesc, { color: colors.textSecondary }]}>Pour confirmer, entrez votre mot de passe. Cette action est irréversible.</Text>
+            <Text style={[styles.revokeDesc, { color: isDark ? '#fff' : colors.textSecondary }]}>Pour confirmer, entrez votre mot de passe. Cette action est irréversible.</Text>
             <TextInput
-              style={[styles.revokeInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
+              style={[styles.revokeInput, { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
               placeholder="Mot de passe"
               placeholderTextColor={isDark ? '#999' : '#666'}
               secureTextEntry
@@ -621,15 +609,16 @@ const styles = StyleSheet.create({
   revokeTitle: {
     fontSize: width * 0.06,
     fontWeight: '700',
-    color: '#e03131',
+    color: '#ff4d4d',
     textAlign: 'center',
     marginBottom: 8,
   },
   revokeDesc: {
     fontSize: width * 0.04,
-    color: '#444',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 12,
+    opacity: 0.8,
   },
   revokeInput: {
     borderWidth: 1,
@@ -638,7 +627,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
-    color: '#222',
+    color: '#fff',
     backgroundColor: '#f8f9fa',
   },
   revokeButtons: {
