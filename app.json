@@ -59,7 +59,6 @@
       ]
     },
     "plugins": [
-      "react-native-iap",
       "expo-asset",
       "expo-font",
       [
