@@ -4,98 +4,14 @@ import { useTheme } from '../components/contexts/ThemeContext';
 import { getMyUser, startPremiumTrial, verifyPurchase } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
-import * as IAP from 'react-native-iap';
+import { usePurchase } from '../hooks/usePurchase';
 
 const { width, height } = Dimensions.get('window');
 
-const itemSkus = Platform.select({
-  ios: ['com.loocateme.premium.monthly', 'com.loocateme.premium.yearly'],
-  android: ['com.loocateme.premium.monthly', 'com.loocateme.premium.yearly'],
-});
-
 export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
   const { colors, isDark } = useTheme();
-  const [loading, setLoading] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [iapAvailable, setIapAvailable] = useState(false);
   const { user, updateUser } = useContext(UserContext);
-
-  // Initialisation IAP
-  useEffect(() => {
-    let purchaseUpdateSubscription;
-    let purchaseErrorSubscription;
-    let isMounted = true;
-
-    const initIAP = async () => {
-      try {
-        console.log('[IAP] Initializing connection...');
-        const connected = await IAP.initConnection();
-        console.log('[IAP] Connected:', connected);
-
-        if (!connected) {
-          console.warn('[IAP] initConnection returned false');
-          return;
-        }
-
-        if (isMounted) setIapAvailable(true);
-
-        if (Platform.OS === 'android') {
-          await IAP.flushFailedPurchasesCachedAsPendingAndroid();
-        }
-        const getProducts = await IAP.getSubscriptions({ skus: itemSkus });
-        console.log('[IAP] Subscriptions found:', getProducts.length);
-        if (isMounted) setProducts(getProducts);
-
-        purchaseUpdateSubscription = IAP.purchaseUpdatedListener(async (purchase) => {
-          const receipt = purchase.transactionReceipt;
-          if (receipt) {
-            try {
-              if (isMounted) setLoading(true);
-              const res = await verifyPurchase({
-                platform: Platform.OS,
-                receipt: receipt,
-                productId: purchase.productId,
-                packageName: Platform.OS === 'android' ? purchase.packageNameAndroid : undefined,
-              });
-              if (res.success) {
-                await IAP.finishTransaction({ purchase, isConsumable: false });
-                Alert.alert('Succès', 'Votre abonnement est activé !');
-                const userRes = await getMyUser();
-                if (updateUser && isMounted) updateUser(userRes.user);
-              }
-            } catch (err) {
-              console.error('[IAP] Verification error', err);
-              Alert.alert('Erreur', 'Impossible de valider votre achat auprès du serveur.');
-            } finally {
-              if (isMounted) setLoading(false);
-            }
-          }
-        });
-
-        purchaseErrorSubscription = IAP.purchaseErrorListener((error) => {
-          console.warn('[IAP] purchaseErrorListener', error);
-          if (error.code !== 'E_USER_CANCELLED') {
-            Alert.alert('Erreur de paiement', error.message);
-          }
-        });
-      } catch (err) {
-        console.warn('[IAP] init error', err.code, err.message);
-        // E_IAP_NOT_AVAILABLE is common in Expo Go / Emulators without Store
-        if (err.code === 'E_IAP_NOT_AVAILABLE') {
-          console.info('[IAP] Native IAP not available. This is expected in Expo Go or emulators without store support.');
-        }
-      }
-    };
-
-    initIAP();
-
-    return () => {
-      isMounted = false;
-      if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
-      if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
-      IAP.endConnection();
-    };
-  }, []);
+  const { offerings, loading, purchasePackage } = usePurchase();
 
   // Si l'utilisateur est déjà Premium, rediriger directement
   useEffect(() => {
@@ -192,17 +108,14 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
     }
   };
 
-  const requestSubscription = async (sku) => {
-    try {
-      setLoading(true);
-      await IAP.requestSubscription({ sku });
-    } catch (err) {
-      console.warn(err.code, err.message);
-      if (err.code !== 'E_USER_CANCELLED') {
-        Alert.alert('Erreur', err.message);
-      }
-    } finally {
-      setLoading(false);
+  const handlePurchase = async (pkg) => {
+    const res = await purchasePackage(pkg);
+    if (res.success) {
+      Alert.alert('Succès', 'Votre achat a été validé !');
+      const userRes = await getMyUser();
+      if (updateUser) updateUser(userRes.user);
+      if (onAlreadyPremium) onAlreadyPremium();
+      else if (onBack) onBack();
     }
   };
 
@@ -254,39 +167,33 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
           </TouchableOpacity>
         )}
 
-        {products.map((p) => (
+        {offerings?.availablePackages?.map((p) => (
           <TouchableOpacity
-            key={p.productId}
+            key={p.identifier}
             disabled={loading}
-            onPress={() => requestSubscription(p.productId)}
+            onPress={() => handlePurchase(p)}
             style={[styles.productBtn, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', backgroundColor: colors.surface }]}
           >
             <View style={{ flex: 1, marginRight: 10 }}>
-              <Text style={[styles.productTitle, { color: colors.text }]}>{p.title}</Text>
-              <Text style={[styles.productDesc, { color: colors.text, opacity: 0.5 }]}>{p.description}</Text>
+              <Text style={[styles.productTitle, { color: colors.text }]}>{p.product.title}</Text>
+              <Text style={[styles.productDesc, { color: colors.text, opacity: 0.5 }]}>{p.product.description}</Text>
             </View>
             <View style={{ backgroundColor: 'rgba(0,194,203,0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 12 }}>
-                <Text style={[styles.productPrice, { color: '#00c2cb' }]}>{p.localizedPrice}</Text>
+                <Text style={[styles.productPrice, { color: '#00c2cb' }]}>{p.product.priceString}</Text>
             </View>
           </TouchableOpacity>
         ))}
 
-        {products.length === 0 && !loading && (
+        {(!offerings || offerings.availablePackages.length === 0) && !loading && (
           <View style={{ padding: 20, alignItems: 'center', backgroundColor: colors.surface, borderRadius: 20 }}>
-            {iapAvailable ? (
-              <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.5 }}>
-                Chargement des abonnements...
+            <View>
+              <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.7, marginBottom: 10, fontWeight: '600' }}>
+                Chargement des offres...
               </Text>
-            ) : (
-              <View>
-                <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.7, marginBottom: 10, fontWeight: '600' }}>
-                  Achat intégré indisponible
-                </Text>
-                <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.4, fontSize: 12 }}>
-                  Les achats ne sont pas supportés dans cet environnement (Expo Go / Simulateur).
-                </Text>
-              </View>
-            )}
+              <Text style={{ textAlign: 'center', color: colors.text, opacity: 0.4, fontSize: 12 }}>
+                Assurez-vous d'être sur un appareil réel pour voir les abonnements.
+              </Text>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -296,11 +203,11 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    paddingHorizontal: 20, 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
     paddingBottom: 20,
     paddingTop: Platform.OS === 'android' ? 40 : 10,
     borderBottomLeftRadius: 30,
@@ -325,9 +232,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backIcon: { width: 24, height: 24 },
-  card: { 
-    borderRadius: 20, 
-    padding: 20, 
+  card: {
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 20,
     elevation: 2,
     shadowColor: '#000',

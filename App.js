@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
@@ -18,6 +18,7 @@ import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
 import ModeratorScreen from './views/ModeratorScreen';
 import WarningsScreen from './views/WarningsScreen';
+import Purchases from 'react-native-purchases';
 import LocationPermissionModal from './components/LocationPermissionModal';
 // Chat screens supprimés (fonctionnalité de chat désactivée)
 import { UserProvider, UserContext } from './components/contexts/UserContext';
@@ -109,6 +110,22 @@ function AppInner() {
     snapchat: require('./assets/socialMediaIcons/snapchat_logo.png'),
     youtube: require('./assets/socialMediaIcons/yt_logo.png'),
   };
+
+  useEffect(() => {
+    const initPurchases = async () => {
+      try {
+        if (Platform.OS === 'ios') {
+          await Purchases.configure({ apiKey: 'goog_EXAMPLE_REVENUECAT_API_KEY' }); // TO BE UPDATED WITH REAL KEY
+        } else {
+          await Purchases.configure({ apiKey: 'goog_EXAMPLE_REVENUECAT_API_KEY' }); // TO BE UPDATED WITH REAL KEY
+        }
+        console.log('[App] RevenueCat initialized');
+      } catch (e) {
+        console.error('[App] RevenueCat initialization failed', e);
+      }
+    };
+    initPurchases();
+  }, []);
 
   useEffect(() => {
     const preload = async () => {
@@ -455,6 +472,7 @@ function AppInner() {
           socialMediaIcons={socialMediaIcons}
           onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
           onOpenConversation={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
+          onOpenPremium={() => setCurrentScreen('PremiumPaywall')}
         />
       );
       break;

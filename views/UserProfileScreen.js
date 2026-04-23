@@ -43,7 +43,10 @@ const REPORT_CATEGORIES = [
   { value: 'other', label: 'Autre' },
 ];
 
-const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons, onOpenMessages, onOpenConversation }) => {
+const UPSELL_COUNTER_KEY = 'premium_upsell_counter';
+const UPSELL_THRESHOLD = 5;
+
+const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons, onOpenMessages, onOpenConversation, onOpenPremium }) => {
   const { user: currentUser } = React.useContext(UserContext);
   const [actionMenuVisible, setActionMenuVisible] = React.useState(false);
   const [reportVisible, setReportVisible] = React.useState(false);
@@ -143,6 +146,30 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     if (myId && String(myId) === String(targetId)) return; // don't track self
     (async () => {
       try { await trackProfileView(String(targetId)); } catch (_) {}
+
+      // Premium Upsell Logic
+      try {
+        if (!currentUser?.isPremium) {
+          const countStr = await AsyncStorage.getItem(UPSELL_COUNTER_KEY);
+          let count = parseInt(countStr || '0', 10);
+          count += 1;
+          if (count >= UPSELL_THRESHOLD) {
+            await AsyncStorage.setItem(UPSELL_COUNTER_KEY, '0');
+            Alert.alert(
+              '🔥 Passez Premium !',
+              'Vous avez consulté plusieurs profils. Passez Premium pour voir qui a visité VOTRE profil et débloquer de nombreuses autres fonctionnalités !',
+              [
+                { text: 'Plus tard', style: 'cancel' },
+                { text: 'Voir l’offre', onPress: () => onOpenPremium && onOpenPremium() }
+              ]
+            );
+          } else {
+            await AsyncStorage.setItem(UPSELL_COUNTER_KEY, String(count));
+          }
+        }
+      } catch (e) {
+        console.error('[UserProfile] Upsell logic error:', e);
+      }
     })();
   }, [user?._id, user?.id]);
 

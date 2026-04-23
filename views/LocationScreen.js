@@ -19,9 +19,11 @@ import { subscribe } from '../components/EventBus';
 import { formatLocationType } from '../components/LocationUtils';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
+import { useFeatureGate } from '../hooks/useFeatureGate';
 
 const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, socialMediaIcons }) => {
   const { colors, isDark } = useTheme();
+  const { checkAccess, isPremium } = useFeatureGate();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState(null);
@@ -85,6 +87,12 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     const [lon, lat] = location.location.coordinates;
     const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
     Linking.openURL(url);
+  };
+
+  const handleBoost = () => {
+    if (checkAccess('boost')) {
+      Alert.alert('Boost Activé', 'Votre profil est maintenant boosté sur ce lieu !');
+    }
   };
 
   const getStars = (item, starIsDark) => {
@@ -205,6 +213,19 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
               </TouchableOpacity>
             </View>
 
+            <TouchableOpacity
+              style={[styles.boostCard, { backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(255,215,0,0.05)', borderColor: '#FFD700' }]}
+              onPress={handleBoost}
+            >
+              <View style={styles.boostInfo}>
+                <Text style={[styles.boostTitle, { color: colors.text }]}>🔥 Boostez votre profil !</Text>
+                <Text style={[styles.boostSubtitle, { color: colors.textSecondary }]}>Devenez 3x plus visible sur ce lieu pendant 2h.</Text>
+              </View>
+              <View style={styles.boostBadge}>
+                <Text style={styles.boostBadgeText}>BOOST</Text>
+              </View>
+            </TouchableOpacity>
+
             <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : colors.text }]}>Utilisateurs sur place</Text>
           </View>
         }
@@ -280,6 +301,29 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   goEmoji: { fontSize: 28 },
+  boostCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 2,
+    marginBottom: 25,
+    elevation: 3,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  boostInfo: { flex: 1 },
+  boostTitle: { fontSize: 16, fontWeight: '800', marginBottom: 2 },
+  boostSubtitle: { fontSize: 12, fontWeight: '500' },
+  boostBadge: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  boostBadgeText: { fontSize: 10, fontWeight: '900', color: '#000' },
   sectionTitle: { fontSize: 20, fontWeight: '800', marginBottom: 15, letterSpacing: -0.3 },
   listContent: { paddingBottom: 30 },
   userCard: {
