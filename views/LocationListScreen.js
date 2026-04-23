@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useMemo, useRef } from 'react';
 import {
   FlatList,
   Text,
@@ -18,70 +18,144 @@ import * as Location from 'expo-location';
 import { getLocations, updateMyLocation } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { formatLocationType } from '../components/LocationUtils';
+import { calculateDistance, formatDistance } from '../components/ServerUtils';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
+import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
 
 const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeople, initialScrollOffset = 0, onScroll }) => {
   const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [userCoords, setUserCoords] = useState(null);
   const { user: currentUser } = useContext(UserContext);
-  const flatListRef = React.useRef(null);
-  const currentScrollOffset = React.useRef(0);
+  const flatListRef = useRef(null);
+  const currentScrollOffset = useRef(0);
 
-  const LocationItem = React.useMemo(() => {
-    return React.memo(({ item }) => (
-      <TouchableOpacity
-        style={[styles.locationCard, { backgroundColor: colors.surface }]}
-        onPress={() => {
-          onScroll && onScroll(currentScrollOffset.current);
-          onSelectLocation({ ...item });
-        }}
-      >
-        <View style={styles.locationInfo}>
-          <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.text }]}>{item.name}</Text>
-          <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
-            <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
-          </View>
-          <View style={styles.activeUsersContainer}>
-            <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
-              {item.userCount || 0} utilisateur{(item.userCount || 0) > 1 ? 's' : ''} dans ce lieu
-            </Text>
-            <View style={styles.avatarStack}>
-              {(item.activeUsers || []).map((u, index) => {
-                const isUserBoosted = u.boostUntil && new Date(u.boostUntil) > new Date();
-                const isGhost = u.location && u.location.updatedAt && new Date(u.location.updatedAt) < new Date(Date.now() - 5 * 60 * 1000) && isUserBoosted;
-                
-                return (
-                  <View key={u._id} style={[styles.avatarWrapper, {
-                    marginLeft: index === 0 ? 0 : -12,
-                    borderColor: isUserBoosted ? '#FFD700' : colors.surface,
-                    backgroundColor: isDark ? '#333' : '#eee',
-                    opacity: isGhost ? 0.6 : 1,
-                    borderWidth: isUserBoosted ? 1.5 : 1
-                  }]}>
-                    <ImageWithPlaceholder
-                      uri={u.profileImageUrl}
-                      style={styles.smallAvatar}
-                    />
-                    <View style={[styles.statusDotSmall, {
-                      backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
-                      borderColor: colors.surface
-                    }]} />
-                  </View>
-                );
-              })}
+  // Watch for location updates to keep distances accurate
+  useEffect(() => {
+    let subscription;
+    const startWatching = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 10, // Update every 10 meters
+        },
+        (location) => {
+          setUserCoords({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+        }
+      );
+    };
+
+    startWatching();
+    return () => {
+      if (subscription) subscription.remove();
+    };
+  }, []);
+
+  const locationsWithDistance = useMemo(() => {
+    if (!userCoords) return locations;
+
+    return locations.map(loc => {
+      const distance = calculateDistance(
+        userCoords.latitude,
+        userCoords.longitude,
+        loc.location.coordinates[1],
+        loc.location.coordinates[0]
+      );
+      return { ...loc, distance };
+    }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  }, [locations, userCoords]);
+
+  const LocationItem = useMemo(() => {
+    return React.memo(({ item }) => {
+      const isUserHere = item._id === currentUser?.currentPoiId;
+
+      const Content = (
+        <TouchableOpacity
+          style={[
+            styles.locationCard,
+            { backgroundColor: colors.surface, marginBottom: isUserHere ? 0 : 16 }
+          ]}
+          onPress={() => {
+            onScroll && onScroll(currentScrollOffset.current);
+            onSelectLocation({ ...item });
+          }}
+        >
+          <View style={styles.locationInfo}>
+            <View style={styles.locationHeaderRow}>
+              <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.text }]}>{item.name}</Text>
+              {isUserHere ? (
+                <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>
+                  Actuellement ici
+                </Text>
+              ) : (
+                item.distance !== undefined && (
+                  <Text style={[styles.distanceText, { color: colors.textSecondary }]}>
+                    {formatDistance(item.distance)}
+                  </Text>
+                )
+              )}
+            </View>
+            <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
+              <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
+            </View>
+            <View style={styles.activeUsersContainer}>
+              <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
+                {item.userCount || 0} utilisateur{(item.userCount || 0) > 1 ? 's' : ''} dans ce lieu
+              </Text>
+              <View style={styles.avatarStack}>
+                {(item.activeUsers || []).map((u, index) => {
+                  const isUserBoosted = u.boostUntil && new Date(u.boostUntil) > new Date();
+                  const isGhost = u.location && u.location.updatedAt && new Date(u.location.updatedAt) < new Date(Date.now() - 5 * 60 * 1000) && isUserBoosted;
+
+                  return (
+                    <View key={u._id} style={[styles.avatarWrapper, {
+                      marginLeft: index === 0 ? 0 : -12,
+                      borderColor: isUserBoosted ? '#FFD700' : colors.surface,
+                      backgroundColor: isDark ? '#333' : '#eee',
+                      opacity: isGhost ? 0.6 : 1,
+                      borderWidth: isUserBoosted ? 1.5 : 1
+                    }]}>
+                      <ImageWithPlaceholder
+                        uri={u.profileImageUrl}
+                        style={styles.smallAvatar}
+                      />
+                      <View style={[styles.statusDotSmall, {
+                        backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
+                        borderColor: colors.surface
+                      }]} />
+                    </View>
+                  );
+                })}
+              </View>
             </View>
           </View>
-        </View>
-        <View style={styles.popularityContainer}>
-          <Text style={styles.popularityStars}>{getStars(item, isDark)}</Text>
-        </View>
-      </TouchableOpacity>
-    ));
-  }, [colors, isDark, onSelectLocation, onScroll]);
+          <View style={styles.popularityContainer}>
+            <Text style={styles.popularityStars}>{getStars(item, isDark)}</Text>
+          </View>
+        </TouchableOpacity>
+      );
+
+      if (isUserHere) {
+        return (
+          <AnimatedGradientBorder borderRadius={12}>
+            {Content}
+          </AnimatedGradientBorder>
+        );
+      }
+
+      return Content;
+    });
+  }, [colors, isDark, onSelectLocation, onScroll, currentUser?.currentPoiId]);
 
   const renderLocation = ({ item }) => <LocationItem item={item} />;
 
@@ -280,7 +354,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       ) : (
         <FlatList
           ref={flatListRef}
-          data={locations}
+          data={locationsWithDistance}
           keyExtractor={(item) => item._id}
           renderItem={renderLocation}
           onScroll={(event) => {
@@ -358,7 +432,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   locationInfo: { flex: 1 },
-  locationName: { fontSize: 20, fontWeight: '800', marginBottom: 6, letterSpacing: -0.3 },
+  locationHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  locationName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3, flex: 1, marginRight: 8 },
+  distanceText: { fontSize: 13, fontWeight: '600' },
   typeBadge: {
     backgroundColor: 'rgba(0, 194, 203, 0.15)',
     paddingHorizontal: 10,

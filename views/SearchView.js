@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, PanResponder, Platform } from 'react-native';
 import { searchUsers, trackUserSearch } from '../components/ApiRequest';
-import { proxifyImageUrl } from '../components/ServerUtils';
+import { proxifyImageUrl, formatDistance as sharedFormatDistance } from '../components/ServerUtils';
 import { useTheme } from '../components/contexts/ThemeContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -111,17 +111,17 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
     return full || custom || item.username || 'Utilisateur';
   };
 
-  const formatDistance = (dist) => {
-    if (dist === undefined || dist === null) return '';
-    if (dist < 1000) return `${Math.round(dist)}m`;
-    return `${(dist / 1000).toFixed(1)}km`;
-  };
 
   const renderRow = ({ item, index }) => {
     const isLocation = item._type === 'location';
     return (
-      <TouchableOpacity
-        style={[styles.row, { backgroundColor: colors.surface }, index === results.length - 1 && { marginBottom: 0 }]}
+        <TouchableOpacity
+        style={[
+          styles.row,
+          { backgroundColor: colors.surface },
+          index === results.length - 1 && { marginBottom: 0 },
+          item.isGhost && { opacity: 0.6 }
+        ]}
         onPress={() => {
           if (isLocation) {
             onSelectLocation && onSelectLocation(item);
@@ -135,19 +135,34 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
             <Text style={{ fontSize: 20 }}>📍</Text>
           </View>
         ) : (
-          item.photo ? (
-            <ImageWithPlaceholder uri={item.photo} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPh]}>
-              <Text style={{ color: '#fff', fontWeight: '700' }}>{(getDisplayName(item)[0] || 'U').toUpperCase()}</Text>
-            </View>
-          )
+          <View style={styles.avatarContainer}>
+            {item.photo ? (
+              <ImageWithPlaceholder uri={item.photo} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.avatarPh]}>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>{(getDisplayName(item)[0] || 'U').toUpperCase()}</Text>
+              </View>
+            )}
+            {item.isGhost && (
+              <View style={styles.ghostBadge}>
+                <Text style={{ fontSize: 10 }}>👻</Text>
+              </View>
+            )}
+          </View>
         )}
         <View style={styles.rowContent}>
-          <Text style={[styles.rowText, { color: isDark ? '#fff' : colors.text }]} numberOfLines={1}>{getDisplayName(item)}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={[styles.rowText, { color: isDark ? '#fff' : colors.text }]} numberOfLines={1}>{getDisplayName(item)}</Text>
+            {item.isGhost && <Text style={{ marginLeft: 6, fontSize: 12 }}>👻</Text>}
+          </View>
           {isLocation && (
-            <Text style={{ color: isDark ? '#eee' : colors.text, opacity: isDark ? 0.7 : 0.5, fontSize: 12, marginLeft: 12, marginTop: 2 }}>
-              {item.city}{item.city && item.distance ? ' • ' : ''}{formatDistance(item.distance)}
+            <Text style={{ color: isDark ? '#eee' : colors.text, opacity: isDark ? 0.7 : 0.5, fontSize: 12, marginLeft: 15, marginTop: 2 }}>
+              {item.city}{item.city && item.distance ? ' • ' : ''}{sharedFormatDistance(item.distance)}
+            </Text>
+          )}
+          {!isLocation && item.isGhost && (
+            <Text style={{ color: isDark ? '#aaa' : colors.text, opacity: 0.7, fontSize: 11, marginLeft: 15, marginTop: 2, fontStyle: 'italic' }}>
+              N'est plus sur place
             </Text>
           )}
         </View>
@@ -317,6 +332,23 @@ const styles = StyleSheet.create({
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.05,
       shadowRadius: 5,
+  },
+  avatarContainer: { position: 'relative' },
+  ghostBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    width: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
   },
   rowContent: { flex: 1, justifyContent: 'center' },
   rowText: { marginLeft: 15, fontSize: 16, fontWeight: '600' },

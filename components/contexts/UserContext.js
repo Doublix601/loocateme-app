@@ -19,6 +19,7 @@ function mapBackendUser(u = {}) {
       : [],
     // Premium flag from backend; free if falsy
     isPremium: !!u.isPremium,
+    currentPoiId: u.currentPoiId || null,
     // User role: 'user', 'moderator', or 'admin'
     role: u.role || 'user',
     // Include GDPR consent and privacy preferences if present
@@ -42,6 +43,7 @@ export const UserProvider = ({ children }) => {
     photo: null,
     socialMedia: [],
     isPremium: false,
+    currentPoiId: null,
     role: 'user',
     status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
@@ -103,6 +105,7 @@ export const UserProvider = ({ children }) => {
         photo: null,
         socialMedia: [],
         isPremium: false,
+        currentPoiId: null,
         role: 'user',
         status: 'green',
         consent: { accepted: false, version: '', consentAt: null },

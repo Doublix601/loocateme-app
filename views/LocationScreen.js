@@ -23,14 +23,13 @@ import { useFeatureGate } from '../hooks/useFeatureGate';
 import { useBoost } from '../hooks/useBoost';
 import { Alert } from 'react-native';
 
+import { useLocationData } from '../hooks/useLocationData';
+
 const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, socialMediaIcons }) => {
   const { colors, isDark } = useTheme();
   const { checkAccess, isPremium } = useFeatureGate();
   const { activateBoost, isBoosted, boostUntil, boostBalance, loading: boostLoading } = useBoost();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [location, setLocation] = useState(null);
-  const [users, setUsers] = useState([]);
+  const { location, users, loading, refreshing, refresh } = useLocationData(locationId);
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -45,45 +44,6 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
       },
     })
   ).current;
-
-  useEffect(() => {
-    fetchLocationDetails();
-
-    // Refresh automatically on any mutation related to users or location
-    const unsub = subscribe('api:mutation', (payload) => {
-      const path = payload?.path || '';
-      if (path.includes('/user/') || path.includes('/profile') || path.includes('/settings')) {
-        fetchLocationDetails(true);
-      }
-    });
-
-    return () => unsub();
-  }, [locationId]);
-
-  const fetchLocationDetails = async (isRefreshing = false) => {
-    try {
-      if (!isRefreshing) setLoading(true);
-      const res = await getLocationById(locationId);
-      if (res && res.location) {
-        const loc = res.location;
-        const userCount = res.users?.length || 0;
-        const stars = typeof loc.stars === 'number' ? loc.stars : parseInt(loc.stars, 10) || 0;
-
-        setLocation({ ...loc, stars, userCount });
-        setUsers(res.users || []);
-      }
-    } catch (e) {
-      console.error('Error fetching location details:', e);
-    } finally {
-      if (!isRefreshing) setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchLocationDetails(true);
-    setRefreshing(false);
-  };
 
   const handleGoToLocation = () => {
     if (!location || !location.location?.coordinates) return;
@@ -205,7 +165,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={refresh}
             colors={["#00c2cb"]}
             progressViewOffset={10}
           />
