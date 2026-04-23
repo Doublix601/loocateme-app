@@ -54,3 +54,8 @@ export function useStatisticsEnabled() {
   const { flags } = useFeatureFlags();
   return flags.statisticsEnabled ?? false;
 }
+
+export function useBoostEnabled() {
+  const { flags } = useFeatureFlags();
+  return flags.boostEnabled ?? true; // Par défaut actif si pas spécifié
+}

@@ -26,7 +26,7 @@ import { Alert } from 'react-native';
 const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, socialMediaIcons }) => {
   const { colors, isDark } = useTheme();
   const { checkAccess, isPremium } = useFeatureGate();
-  const { activateBoost, isBoosted, boostBalance, loading: boostLoading } = useBoost();
+  const { activateBoost, isBoosted, boostUntil, boostBalance, loading: boostLoading } = useBoost();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState(null);
@@ -93,6 +93,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
   };
 
   const handleBoost = () => {
+    if (isBoosted) return; // Prevent multiple clicks
     if (checkAccess('boost')) {
       activateBoost();
     }
@@ -223,15 +224,38 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
             </View>
 
             <TouchableOpacity
-              style={[styles.boostCard, { backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(255,215,0,0.05)', borderColor: '#FFD700' }]}
+              style={[
+                styles.boostCard,
+                {
+                  backgroundColor: isDark ? 'rgba(255,215,0,0.1)' : 'rgba(255,215,0,0.05)',
+                  borderColor: '#FFD700',
+                  opacity: isBoosted ? 0.8 : 1
+                }
+              ]}
               onPress={handleBoost}
+              disabled={isBoosted || boostLoading}
             >
               <View style={styles.boostInfo}>
-                <Text style={[styles.boostTitle, { color: colors.text }]}>🔥 Boostez votre profil !</Text>
-                <Text style={[styles.boostSubtitle, { color: colors.textSecondary }]}>Devenez 3x plus visible sur ce lieu pendant 2h.</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={[styles.boostTitle, { color: colors.text }]}>
+                    {isBoosted ? '⚡ Boost actif !' : '🔥 Boostez votre profil !'}
+                  </Text>
+                  {boostLoading && (
+                    <ActivityIndicator size="small" color="#FFD700" style={{ marginLeft: 10 }} />
+                  )}
+                </View>
+                <Text style={[styles.boostSubtitle, { color: colors.textSecondary }]}>
+                  {isBoosted
+                    ? `Expire dans ${Math.max(0, Math.ceil((boostUntil - new Date()) / (60 * 1000)))} min.`
+                    : boostBalance > 0
+                      ? `Vous avez ${boostBalance} boost${boostBalance > 1 ? 's' : ''} disponible${boostBalance > 1 ? 's' : ''}.`
+                      : 'Devenez 3x plus visible sur ce lieu pendant 1h.'}
+                </Text>
               </View>
-              <View style={styles.boostBadge}>
-                <Text style={styles.boostBadgeText}>BOOST</Text>
+              <View style={[styles.boostBadge, isBoosted && { backgroundColor: '#FFD700' }]}>
+                <Text style={[styles.boostBadgeText, isBoosted && { color: '#000' }]}>
+                  {isBoosted ? 'ACTIF' : 'BOOST'}
+                </Text>
               </View>
             </TouchableOpacity>
 

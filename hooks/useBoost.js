@@ -6,14 +6,13 @@ import { usePremiumAccess } from './usePremiumAccess';
 
 export function useBoost() {
   const [loading, setLoading] = useState(false);
-  const { boostBalance, isBoosted, boostUntil } = usePremiumAccess();
+  const { boostBalance, isBoosted, boostUntil, isPremium } = usePremiumAccess();
 
   const purchaseBoost = useCallback(async () => {
     setLoading(true);
     try {
       const offerings = await Purchases.getOfferings();
       if (offerings.current && offerings.current.availablePackages.length > 0) {
-        // Supposons que le package boost est identifiable par son identifiant produit
         const boostPackage = offerings.current.availablePackages.find(
           pkg => pkg.product.identifier === 'com.loocateme.boost.single'
         );
@@ -23,9 +22,8 @@ export function useBoost() {
         }
 
         await Purchases.purchasePackage(boostPackage);
-        // Le webhook s'occupera de mettre à jour la DB, mais on peut rafraîchir le profil
-        await api.get('/user/me'); 
-        Alert.alert('Succès', 'Votre boost a été acheté !');
+        // Le webhook s'occupera de mettre à jour la DB, mais on rafraîchit le profil pour voir l'effet
+        await api.get('/user/me');
       } else {
         throw new Error('Aucune offre disponible.');
       }
@@ -40,30 +38,27 @@ export function useBoost() {
   }, []);
 
   const activateBoost = useCallback(async () => {
-    if (isBoosted) {
-      Alert.alert('Info', 'Vous avez déjà un boost actif.');
+    // ONE-TAP: Si déjà boosté, on ne fait rien (bouton normalement désactivé en amont)
+    if (isBoosted) return;
+
+    // Si on a déjà un crédit de boost (ex: via abonnement Premium), on l'active directement
+    if (boostBalance > 0) {
+      setLoading(true);
+      try {
+        await api.post('/premium/boost/activate');
+        await api.get('/user/me'); // Refresh context
+        Alert.alert('Activé !', 'Votre profil est maintenant boosté pour 1 heure.');
+      } catch (e) {
+        console.error('[useBoost] Activation Error:', e);
+        Alert.alert('Erreur', e.response?.data?.message || 'Impossible d\'activer le boost.');
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
-    if (boostBalance <= 0) {
-      Alert.alert('Aucun Boost', 'Voulez-vous en acheter un ?', [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Acheter', onPress: purchaseBoost }
-      ]);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await api.post('/premium/boost/activate');
-      await api.get('/user/me'); // Refresh
-      Alert.alert('Activé !', 'Votre profil est maintenant boosté pour 1 heure.');
-    } catch (e) {
-      console.error('[useBoost] Activation Error:', e);
-      Alert.alert('Erreur', e.response?.data?.message || 'Impossible d\'activer le boost.');
-    } finally {
-      setLoading(false);
-    }
+    // Sinon, déclenchement DIRECT de l'achat RevenueCat
+    await purchaseBoost();
   }, [boostBalance, isBoosted, purchaseBoost]);
 
   return {

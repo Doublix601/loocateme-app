@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { UserContext } from '../components/contexts/UserContext';
-import { usePremiumEnabled, useStatisticsEnabled } from '../components/contexts/FeatureFlagsContext';
+import { usePremiumEnabled, useStatisticsEnabled, useBoostEnabled } from '../components/contexts/FeatureFlagsContext';
 
 /**
  * Hook centralisé pour gérer l'accès aux fonctionnalités Premium et Statistiques de LoocateMe.
@@ -9,6 +9,7 @@ export function usePremiumAccess() {
   const { user } = useContext(UserContext);
   const premiumSystemEnabled = usePremiumEnabled();
   const statisticsSystemEnabled = useStatisticsEnabled();
+  const boostSystemEnabled = useBoostEnabled();
 
   // Statut de l'utilisateur (Indépendant des flags système)
   const isUserPremium = !!user?.isPremium;
@@ -26,12 +27,17 @@ export function usePremiumAccess() {
   // Strict Gating Logic: If premium system is enabled, user MUST have premium right to access stats.
   const hasStatsAccess = effectiveStatisticsEnabled && (!premiumSystemEnabled || hasPremiumRight);
 
+  // ACCÈS AUX BOOSTS : Ouvert à tous si boostSystemEnabled est ON
+  const canAccessBoost = boostSystemEnabled;
+
   return {
     isPremium: isPremiumActive,          // Statut premium effectif
     hasStatsAccess,                     // Accès aux stats (respecte les flags et le statut)
     effectiveStatisticsEnabled,          // Ajout de l'accès effectif global
+    canAccessBoost,                     // Accès aux boosts
     premiumSystemEnabled,               // État du flag global
     statisticsSystemEnabled,            // État du flag stats
+    boostSystemEnabled,                 // État du flag boost
     isUserPremium,                      // Statut brut isPremium de la DB
     isUserModeratorOrAdmin,             // Statut staff
     hasPremiumRight,                    // A le droit d'être premium

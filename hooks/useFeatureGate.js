@@ -24,10 +24,10 @@ export function useFeatureGate() {
         break;
 
       case 'boost':
-        // Boost might require premium or just a positive balance
-        hasAccess = premiumAccess.isPremium;
-        title = 'Boost Unavailable';
-        message = 'Premium members can use Boosts to increase visibility.';
+        // Boost is available to all if the system is enabled
+        hasAccess = premiumAccess.canAccessBoost;
+        title = 'Boost Indisponible';
+        message = 'Le système de Boost est temporairement désactivé.';
         break;
 
       default:
