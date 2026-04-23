@@ -47,6 +47,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   const [consentVersion, setConsentVersion] = useState(user?.consent?.version || 'v1');
   const [analytics, setAnalytics] = useState(!!user?.privacyPreferences?.analytics);
   const [marketing, setMarketing] = useState(!!user?.privacyPreferences?.marketing);
+  const [doNotSell, setDoNotSell] = useState(!!user?.privacyPreferences?.doNotSell);
 
   // Revocation (delete account) modal state
   const [revokeVisible, setRevokeVisible] = useState(false);
@@ -60,6 +61,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
       setConsentVersion(user?.consent?.version || 'v1');
       setAnalytics(!!user?.privacyPreferences?.analytics);
       setMarketing(!!user?.privacyPreferences?.marketing);
+      setDoNotSell(!!user?.privacyPreferences?.doNotSell);
     } catch (_) {}
   }, [user]);
 
@@ -114,13 +116,13 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
     }
   };
 
-  const persistConsentQuietly = async ({ accepted, analytics: analyticsValue, marketing: marketingValue }) => {
+  const persistConsentQuietly = async ({ accepted, analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue }) => {
     try {
-      const res = await updateConsent({ accepted, version: consentVersion, analytics: analyticsValue, marketing: marketingValue });
+      const res = await updateConsent({ accepted, version: consentVersion, analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue });
       const updatedUser = res?.user ? res.user : {
         ...user,
         consent: { accepted, version: consentVersion, consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null },
-        privacyPreferences: { analytics: analyticsValue, marketing: marketingValue },
+        privacyPreferences: { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
       };
       if (updateUser) {
         updateUser({
@@ -130,7 +132,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
           socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
           consent: updatedUser.consent || { accepted, version: consentVersion },
-          privacyPreferences: updatedUser.privacyPreferences || { analytics: analyticsValue, marketing: marketingValue },
+          privacyPreferences: updatedUser.privacyPreferences || { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
         });
       }
     } catch (e) {
@@ -148,26 +150,31 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
     }
     // If checking consent on, just persist quietly
     setConsentAccepted(true);
-    await persistConsentQuietly({ accepted: true, analytics, marketing });
+    await persistConsentQuietly({ accepted: true, analytics, marketing, doNotSell });
   };
 
   const handleToggleAnalytics = async (v) => {
     setAnalytics(v);
-    await persistConsentQuietly({ accepted: consentAccepted, analytics: v, marketing });
+    await persistConsentQuietly({ accepted: consentAccepted, analytics: v, marketing, doNotSell });
   };
 
   const handleToggleMarketing = async (v) => {
     setMarketing(v);
-    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing: v });
+    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing: v, doNotSell });
+  };
+
+  const handleToggleDoNotSell = async (v) => {
+    setDoNotSell(v);
+    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing, doNotSell: v });
   };
 
   const saveConsent = async (accepted) => {
     try {
-      const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing });
+      const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing, doNotSell });
       const updatedUser = res?.user ? res.user : {
         ...user,
         consent: { accepted, version: consentVersion, consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null },
-        privacyPreferences: { analytics, marketing },
+        privacyPreferences: { analytics, marketing, doNotSell },
       };
       if (updateUser) {
         updateUser({
@@ -177,7 +184,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
           socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
           consent: updatedUser.consent || { accepted, version: consentVersion },
-          privacyPreferences: updatedUser.privacyPreferences || { analytics, marketing },
+          privacyPreferences: updatedUser.privacyPreferences || { analytics, marketing, doNotSell },
         });
       }
       setConsentAccepted(accepted);
@@ -317,13 +324,25 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
               thumbColor={analytics ? '#fff' : '#f4f3f4'}
             />
           </View>
-          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
             <Text style={[styles.optionText, { color: colors.textPrimary }]}>Marketing</Text>
             <Switch
               value={marketing}
               onValueChange={handleToggleMarketing}
               trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
               thumbColor={marketing ? '#fff' : '#f4f3f4'}
+            />
+          </View>
+          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.optionText, { color: colors.textPrimary }]}>Vente de données (CCPA)</Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary }}>Ne pas vendre mes informations personnelles</Text>
+            </View>
+            <Switch
+              value={doNotSell}
+              onValueChange={handleToggleDoNotSell}
+              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+              thumbColor={doNotSell ? '#fff' : '#f4f3f4'}
             />
           </View>
         </View>

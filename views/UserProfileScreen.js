@@ -546,7 +546,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
             </View>
 
 
-            {(user.updatedAt && (
+            {user.updatedAt && (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.025 }}>
                 <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
                   <Text style={[styles.distanceText, { color: colors.accent }]}>{formatLastSeen(user.updatedAt)}</Text>
