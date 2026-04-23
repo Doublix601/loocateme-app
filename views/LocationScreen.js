@@ -20,10 +20,13 @@ import { formatLocationType } from '../components/LocationUtils';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { useFeatureGate } from '../hooks/useFeatureGate';
+import { useBoost } from '../hooks/useBoost';
+import { Alert } from 'react-native';
 
 const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, socialMediaIcons }) => {
   const { colors, isDark } = useTheme();
   const { checkAccess, isPremium } = useFeatureGate();
+  const { activateBoost, isBoosted, boostBalance, loading: boostLoading } = useBoost();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState(null);
@@ -91,7 +94,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
 
   const handleBoost = () => {
     if (checkAccess('boost')) {
-      Alert.alert('Boost Activé', 'Votre profil est maintenant boosté sur ce lieu !');
+      activateBoost();
     }
   };
 
@@ -118,10 +121,15 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
   const renderUser = ({ item }) => {
     const statusColor = item.status === 'green' ? '#4CAF50' : item.status === 'orange' ? '#FF9800' : '#F44336';
     const isOrangeOrRed = item.status === 'orange' || item.status === 'red';
+    const isUserBoosted = item.boostUntil && new Date(item.boostUntil) > new Date();
 
     return (
       <TouchableOpacity
-        style={[styles.userCard, { backgroundColor: colors.surface }]}
+        style={[
+          styles.userCard,
+          { backgroundColor: colors.surface },
+          isUserBoosted && { borderColor: '#FFD700', borderWidth: 2, shadowColor: '#FFD700', shadowOpacity: 0.8, shadowRadius: 10, elevation: 5 }
+        ]}
         onPress={() => onSelectUser(item)}
       >
         <ImageWithPlaceholder
@@ -134,6 +142,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
             <Text style={[styles.username, { color: isDark ? '#fff' : colors.text }]}>
               {item.customName || item.username}
             </Text>
+            {isUserBoosted && <Text style={{ marginLeft: 4 }}>⚡</Text>}
             <View style={[styles.statusDot, { backgroundColor: statusColor, borderColor: colors.surface }]} />
           </View>
           {!isOrangeOrRed && item.bio ? (

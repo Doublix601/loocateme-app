@@ -34,6 +34,9 @@ export function usePremiumAccess() {
     statisticsSystemEnabled,            // État du flag stats
     isUserPremium,                      // Statut brut isPremium de la DB
     isUserModeratorOrAdmin,             // Statut staff
-    hasPremiumRight                     // A le droit d'être premium
+    hasPremiumRight,                    // A le droit d'être premium
+    boostBalance: user?.boostBalance || 0,
+    boostUntil: user?.boostUntil ? new Date(user.boostUntil) : null,
+    isBoosted: user?.boostUntil && new Date(user.boostUntil) > new Date()
   };
 }

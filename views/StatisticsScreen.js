@@ -137,12 +137,8 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
       const res = await getDetailedProfileViews(50);
       setDetailed(Array.isArray(res?.items) ? res.items : []);
     } catch (e) {
-      const code = e?.code || e?.response?.code || '';
-      if (code === 'PREMIUM_REQUIRED' || e?.status === 403) {
-        setDetailedError('Premium requis pour voir la liste des visiteurs.');
-      } else {
-        setDetailedError("Impossible de récupérer la liste des visiteurs");
-      }
+      // Logic for 403 handling is now handled by looking at item.actor.isBlurred
+      setDetailedError("Impossible de récupérer la liste des visiteurs");
       setDetailed([]);
     } finally {
       setDetailedLoading(false);
@@ -283,53 +279,70 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
                   <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, textAlign: 'center' }}>Aucune visite récente</Text>
                 ) : (
                   <>
-                    {detailed.slice(0, visibleCount).map((it, idx) => (
-                      <TouchableOpacity
-                        key={String(it.id)}
-                        style={[styles.visitorRow, idx !== Math.min(visibleCount, detailed.length) - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
-                        onPress={() => {
-                          if (!onOpenUserProfile || !it?.actor) return;
-                          const socials = Array.isArray(it.actor?.socialNetworks)
-                            ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-                            : [];
-                          const coords = Array.isArray(it.actor?.location?.coordinates)
-                            ? it.actor.location.coordinates
-                            : null;
-                          const u = {
-                            _id: it.actor.id || it.actor._id,
-                            id: it.actor.id || it.actor._id,
-                            username: it.actor.username || it.actor.name || 'Utilisateur',
-                            firstName: '',
-                            lastName: '',
-                            customName: it.actor.name || '',
-                            photo: it.actor.profileImageUrl || null,
-                            bio: it.actor?.bio || '',
-                            socialMedias: socials,
-                            locationCoordinates: coords,
-                          };
-                          onOpenUserProfile(u);
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        {it.actor?.profileImageUrl ? (
-                          <ImageWithPlaceholder uri={it.actor.profileImageUrl} style={styles.avatar} />
-                        ) : (
-                          <View style={[styles.avatar, styles.avatarPh]}>
-                            <Text style={{ color: '#fff', fontWeight: 'bold' }}>{(it.actor?.name?.[0] || 'U').toUpperCase()}</Text>
+                    {detailed.slice(0, visibleCount).map((it, idx) => {
+                      const isBlurred = it.actor?.isBlurred;
+                      return (
+                        <TouchableOpacity
+                          key={String(it.id)}
+                          style={[styles.visitorRow, idx !== Math.min(visibleCount, detailed.length) - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                          onPress={() => {
+                            if (isBlurred) {
+                              publish('ui:open_premium');
+                              return;
+                            }
+                            if (!onOpenUserProfile || !it?.actor) return;
+                            const socials = Array.isArray(it.actor?.socialNetworks)
+                              ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+                              : [];
+                            const coords = Array.isArray(it.actor?.location?.coordinates)
+                              ? it.actor.location.coordinates
+                              : null;
+                            const u = {
+                              _id: it.actor.id || it.actor._id,
+                              id: it.actor.id || it.actor._id,
+                              username: it.actor.username || it.actor.name || 'Utilisateur',
+                              firstName: '',
+                              lastName: '',
+                              customName: it.actor.name || '',
+                              photo: it.actor.profileImageUrl || null,
+                              bio: it.actor?.bio || '',
+                              socialMedias: socials,
+                              locationCoordinates: coords,
+                            };
+                            onOpenUserProfile(u);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View style={{ borderRadius: 20, overflow: 'hidden' }}>
+                            {it.actor?.profileImageUrl ? (
+                              <ImageWithPlaceholder
+                                uri={it.actor.profileImageUrl}
+                                style={[styles.avatar, isBlurred && { opacity: 0.3 }]}
+                                blurRadius={isBlurred ? 10 : 0}
+                              />
+                            ) : (
+                              <View style={[styles.avatar, styles.avatarPh, isBlurred && { opacity: 0.3 }]}>
+                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>{(it.actor?.name?.[0] || 'U').toUpperCase()}</Text>
+                              </View>
+                            )}
                           </View>
-                        )}
-                        <View style={{ flex: 1, marginLeft: 15 }}>
-                          <Text style={{ color: isDark ? '#fff' : colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
-                            {it.actor?.name || it.actor?.username || 'Utilisateur'}
-                          </Text>
-                          <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, marginTop: 2, fontSize: 13 }}>{timeAgo(it.at)}</Text>
-                        </View>
-                        <Image
-                            source={require('../assets/appIcons/backArrow.png')}
-                            style={{ width: 16, height: 16, tintColor: isDark ? '#fff' : colors.text, opacity: 0.3, transform: [{ rotate: '180deg' }] }}
-                        />
-                      </TouchableOpacity>
-                    ))}
+                          <View style={{ flex: 1, marginLeft: 15 }}>
+                            <Text style={{ color: isDark ? '#fff' : colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
+                              {it.actor?.name || it.actor?.username || 'Utilisateur'}
+                            </Text>
+                            <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, marginTop: 2, fontSize: 13 }}>{timeAgo(it.at)}</Text>
+                          </View>
+                          {isBlurred ? (
+                             <Text style={{ fontSize: 18 }}>🔒</Text>
+                          ) : (
+                            <Image
+                                source={require('../assets/appIcons/backArrow.png')}
+                                style={{ width: 16, height: 16, tintColor: isDark ? '#fff' : colors.text, opacity: 0.3, transform: [{ rotate: '180deg' }] }}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
                     {visibleCount < detailed.length && (
                       <TouchableOpacity onPress={() => setVisibleCount((c) => Math.min(c + 10, detailed.length))} style={styles.moreBtn}>
                         <Text style={[styles.moreTxt, { color: '#00c2cb' }]}>Afficher plus</Text>

@@ -26,6 +26,8 @@ function mapBackendUser(u = {}) {
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
     moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    boostBalance: u.boostBalance || 0,
+    boostUntil: u.boostUntil || null,
   };
 }
 
@@ -45,6 +47,8 @@ export const UserProvider = ({ children }) => {
     consent: { accepted: false, version: '', consentAt: null },
     privacyPreferences: { analytics: false, marketing: false },
     moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    boostBalance: 0,
+    boostUntil: null,
   });
 
   const updateUser = useCallback((updatedUser) => {
@@ -104,6 +108,8 @@ export const UserProvider = ({ children }) => {
         consent: { accepted: false, version: '', consentAt: null },
         privacyPreferences: { analytics: false, marketing: false },
         moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+        boostBalance: 0,
+        boostUntil: null,
       });
     });
     const offLogin = subscribe('auth:login', async () => {
