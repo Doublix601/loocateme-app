@@ -27,6 +27,7 @@ import { LocationSyncService } from './services/LocationSyncService';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { usePresence } from './hooks/usePresence';
+import { usePremiumAccess } from './hooks/usePremiumAccess';
 import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken, logout as apiLogout } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 
@@ -80,6 +81,7 @@ const mapProfileUser = (u = {}) => {
 
 function AppInner({ purchasesReady }) {
   const { user: appUser, updateUser } = useContext(UserContext);
+  const { hasStatsAccess } = usePremiumAccess();
   const { colors } = useTheme();
   const [currentScreen, setCurrentScreen] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -93,6 +95,8 @@ function AppInner({ purchasesReady }) {
   const transitionX = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get('window');
   const prevScreenRef = useRef(null);
+
+  const [premiumPaywallParams, setPremiumPaywallParams] = useState(null);
 
   const socialMediaIcons = {
     facebook: require('./assets/socialMediaIcons/fb_logo.png'),
@@ -405,7 +409,10 @@ function AppInner({ purchasesReady }) {
           socialMediaIcons={socialMediaIcons}
           onReturnToSettings={onReturnToSettings}
           onOpenStatistics={() => setCurrentScreen('Statistics')}
-          onOpenPremiumPaywall={() => setCurrentScreen('PremiumPaywall')}
+          onOpenPremiumPaywall={(params) => {
+            setPremiumPaywallParams(params || null);
+            setCurrentScreen('PremiumPaywall');
+          }}
           onOpenWarnings={() => setCurrentScreen('Warnings')}
           onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
         />
@@ -476,6 +483,11 @@ function AppInner({ purchasesReady }) {
       );
       break;
     case 'Statistics':
+      if (!hasStatsAccess) {
+        setPremiumPaywallParams({ source: 'stats_button' });
+        setCurrentScreen('PremiumPaywall');
+        return null;
+      }
       screenToShow = (
         <StatisticsScreen
           onBack={() => setCurrentScreen('MyAccount')}
@@ -486,8 +498,15 @@ function AppInner({ purchasesReady }) {
     case 'PremiumPaywall':
       screenToShow = (
         <PremiumPaywallScreen
-          onBack={() => setCurrentScreen('MyAccount')}
-          onAlreadyPremium={() => setCurrentScreen('Statistics')}
+          onBack={() => {
+            setCurrentScreen('MyAccount');
+            setPremiumPaywallParams(null);
+          }}
+          onAlreadyPremium={() => {
+            setCurrentScreen('Statistics');
+            setPremiumPaywallParams(null);
+          }}
+          routeParams={premiumPaywallParams}
         />
       );
       break;

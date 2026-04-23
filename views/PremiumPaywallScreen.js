@@ -8,10 +8,12 @@ import { usePurchase } from '../hooks/usePurchase';
 
 const { width, height } = Dimensions.get('window');
 
-export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
+export default function PremiumPaywallScreen({ onBack, onAlreadyPremium, routeParams }) {
   const { colors, isDark } = useTheme();
   const { user, updateUser } = useContext(UserContext);
   const { offerings, loading, purchasePackage } = usePurchase();
+
+  const source = routeParams?.source || 'direct';
 
   // Si l'utilisateur est déjà Premium, rediriger directement
   useEffect(() => {
@@ -111,7 +113,22 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
   const handlePurchase = async (pkg) => {
     const res = await purchasePackage(pkg);
     if (res.success) {
-      Alert.alert('Succès', 'Votre achat a été validé !');
+      if (res.isMock) {
+        Alert.alert('Simulation réussie', 'En mode développement, l\'achat est simulé.');
+        // Activer le premium côté serveur via le endpoint mock
+        try {
+          await verifyPurchase(true); // isMock = true
+        } catch (e) {
+          console.error('[PremiumPaywall] Mock verification failed:', e);
+        }
+      } else {
+        Alert.alert('Succès', 'Votre achat a été validé !');
+        // Vérification normale (optionnelle car gérée par webhook)
+        try {
+          await verifyPurchase(false);
+        } catch (_) {}
+      }
+
       const userRes = await getMyUser();
       if (updateUser) updateUser(userRes.user);
       if (onAlreadyPremium) onAlreadyPremium();
@@ -137,9 +154,14 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium }) {
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.hero, { color: '#00c2cb' }]}>Débloquez plus d’informations</Text>
+          <Text style={[styles.hero, { color: '#00c2cb' }]}>
+            {source === 'stats_button' ? 'Débloquez vos statistiques' : 'Débloquez plus d’informations'}
+          </Text>
           <Text style={[styles.subtitle, { color: colors.text, opacity: 0.7 }]}>
-            Accédez aux détails des visiteurs de votre profil, recevez des notifications précises et suivez vos statistiques finement.
+            {source === 'stats_button'
+              ? 'Accédez aux détails des visiteurs de votre profil et suivez vos statistiques finement en devenant Premium.'
+              : 'Accédez aux détails des visiteurs de votre profil, recevez des notifications précises et suivez vos statistiques finement.'
+            }
           </Text>
           <View style={styles.bullets}>
             <View style={styles.bulletRow}>

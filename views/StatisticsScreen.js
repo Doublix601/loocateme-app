@@ -6,6 +6,32 @@ import { getStatsOverview, getDetailedProfileViews, getMyUser } from '../compone
 import { useTheme } from '../components/contexts/ThemeContext';
 import { subscribe, publish } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
+
+const mapBackendUser = (u = {}) => {
+  const socialMedias = Array.isArray(u.socialNetworks)
+    ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+    : (Array.isArray(u.socialMedias) ? u.socialMedias : (Array.isArray(u.socialMedia) ? u.socialMedia : []));
+  return {
+    ...u,
+    _id: u._id || u.id,
+    username: u.username || u.name || '',
+    firstName: u.firstName || '',
+    lastName: u.lastName || '',
+    customName: u.customName || '',
+    bio: u.bio || '',
+    photo: u.profileImageUrl || u.photo || null,
+    socialMedias,
+    socialMedia: socialMedias,
+    isPremium: !!u.isPremium,
+    role: u.role || 'user',
+    status: u.status || 'green',
+    consent: u.consent || { accepted: false, version: '', consentAt: null },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
+    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    updatedAt: u.updatedAt,
+  };
+};
+
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 
@@ -75,7 +101,12 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   }
 
   useEffect(() => {
-    if (!hasAccess) return; // ne pas charger si pas d'accès
+    if (!hasAccess) {
+      // Redirection immédiate si pas d'accès
+      publish('social_click_tracked'); // Trigger un refresh si besoin ailleurs
+      onBack && onBack();
+      return;
+    }
     load();
   }, [hasAccess]);
 
@@ -85,15 +116,11 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     (async () => {
       try {
         if (hasAccess) return;
-        const res = await getMyUser();
+        const res = await getMyUser({ cache: 'reload' });
         const me = res?.user;
         if (cancelled) return;
-        // Recheck access with fresh user data (admin/moderator also have premium access)
-        const freshHasPremiumRight = me?.isPremium || me?.role === 'admin' || me?.role === 'moderator';
-        const freshHasAccess = (statisticsEnabled || premiumEnabled) && (!premiumEnabled || freshHasPremiumRight);
-        if (freshHasAccess) {
-          // trigger load paths by updating a local state dependency
-          load();
+        if (me && updateUser) {
+          updateUser(mapBackendUser(me));
         }
       } catch (_) {}
     })();

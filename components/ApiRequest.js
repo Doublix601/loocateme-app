@@ -427,10 +427,10 @@ export async function startPremiumTrial() {
     return request('/premium/trial/start', { method: 'POST' });
 }
 
-export async function verifyPurchase({ platform, receipt, productId, packageName }) {
-    return request('/premium/verify-purchase', {
+export async function verifyPurchase(isMock = false) {
+    return request('/premium/verify', {
         method: 'POST',
-        body: { platform, receipt, productId, packageName }
+        body: { isMock }
     });
 }
 

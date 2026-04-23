@@ -205,12 +205,12 @@ const MyAccountScreen = ({
             if (freshHasStatsAccess) {
                 onOpenStatistics && onOpenStatistics();
             } else {
-                onOpenPremiumPaywall && onOpenPremiumPaywall();
+                onOpenPremiumPaywall && onOpenPremiumPaywall({ source: 'stats_button' });
             }
         } catch (_) {
             // Fallback to current hook state
             if (hasStatsAccess) onOpenStatistics && onOpenStatistics();
-            else onOpenPremiumPaywall && onOpenPremiumPaywall();
+            else onOpenPremiumPaywall && onOpenPremiumPaywall({ source: 'stats_button' });
         }
     };
 
