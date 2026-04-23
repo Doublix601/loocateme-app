@@ -106,9 +106,19 @@ export function useBoost() {
       return;
     }
 
+    // NEW: Check if user is at a POI before initiating purchase
+    const meRes = await api.get('/user/me');
+    if (!meRes?.user?.currentLocation) {
+      Alert.alert(
+        'Action impossible',
+        'Vous devez être physiquement présent dans un établissement pour booster votre profil.'
+      );
+      return;
+    }
+
     // Sinon, déclenchement DIRECT de l'achat RevenueCat
     await purchaseBoost();
-  }, [boostBalance, isBoosted, purchaseBoost, purchasesReady, updateUser]);
+  }, [boostBalance, isBoosted, purchaseBoost, updateUser]);
 
   return {
     purchaseBoost,
