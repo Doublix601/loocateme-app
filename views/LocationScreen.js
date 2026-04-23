@@ -129,7 +129,8 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         style={[
           styles.userCard,
           { backgroundColor: colors.surface },
-          isUserBoosted && { borderColor: '#FFD700', borderWidth: 2, shadowColor: '#FFD700', shadowOpacity: 0.8, shadowRadius: 10, elevation: 5 }
+          isUserBoosted && { borderColor: '#FFD700', borderWidth: 2, shadowColor: '#FFD700', shadowOpacity: 0.8, shadowRadius: 10, elevation: 5 },
+          item.isGhost && { opacity: 0.6 }
         ]}
         onPress={() => onSelectUser(item)}
       >
@@ -144,13 +145,18 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
               {item.customName || item.username}
             </Text>
             {isUserBoosted && <Text style={{ marginLeft: 4 }}>⚡</Text>}
+            {item.isGhost && <Text style={{ marginLeft: 4, fontSize: 12 }}>👻</Text>}
             <View style={[styles.statusDot, { backgroundColor: statusColor, borderColor: colors.surface }]} />
           </View>
-          {!isOrangeOrRed && item.bio ? (
+          {item.isGhost ? (
+            <Text style={[styles.userBio, { color: isDark ? '#aaa' : colors.textSecondary, fontStyle: 'italic' }]} numberOfLines={1}>
+              N'est plus sur place (Boost actif)
+            </Text>
+          ) : (!isOrangeOrRed && item.bio ? (
             <Text style={[styles.userBio, { color: isDark ? '#ddd' : colors.textSecondary }]} numberOfLines={1}>
               {item.bio}
             </Text>
-          ) : null}
+          ) : null)}
         </View>
       </TouchableOpacity>
     );

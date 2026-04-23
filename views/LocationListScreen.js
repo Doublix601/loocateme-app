@@ -50,22 +50,29 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
               {item.userCount || 0} utilisateur{(item.userCount || 0) > 1 ? 's' : ''} dans ce lieu
             </Text>
             <View style={styles.avatarStack}>
-              {(item.activeUsers || []).map((u, index) => (
-                <View key={u._id} style={[styles.avatarWrapper, {
-                  marginLeft: index === 0 ? 0 : -12,
-                  borderColor: colors.surface,
-                  backgroundColor: isDark ? '#333' : '#eee'
-                }]}>
-                  <ImageWithPlaceholder
-                    uri={u.profileImageUrl}
-                    style={styles.smallAvatar}
-                  />
-                  <View style={[styles.statusDotSmall, {
-                    backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
-                    borderColor: colors.surface
-                  }]} />
-                </View>
-              ))}
+              {(item.activeUsers || []).map((u, index) => {
+                const isUserBoosted = u.boostUntil && new Date(u.boostUntil) > new Date();
+                const isGhost = u.location && u.location.updatedAt && new Date(u.location.updatedAt) < new Date(Date.now() - 5 * 60 * 1000) && isUserBoosted;
+                
+                return (
+                  <View key={u._id} style={[styles.avatarWrapper, {
+                    marginLeft: index === 0 ? 0 : -12,
+                    borderColor: isUserBoosted ? '#FFD700' : colors.surface,
+                    backgroundColor: isDark ? '#333' : '#eee',
+                    opacity: isGhost ? 0.6 : 1,
+                    borderWidth: isUserBoosted ? 1.5 : 1
+                  }]}>
+                    <ImageWithPlaceholder
+                      uri={u.profileImageUrl}
+                      style={styles.smallAvatar}
+                    />
+                    <View style={[styles.statusDotSmall, {
+                      backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
+                      borderColor: colors.surface
+                    }]} />
+                  </View>
+                );
+              })}
             </View>
           </View>
         </View>
