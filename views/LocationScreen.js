@@ -103,7 +103,7 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     }
 
     // Default to 1 grey star for 0 stars
-    return <Text style={{ color: starIsDark ? '#666' : '#ccc', fontSize: 18 }}>★</Text>;
+    return <Text style={{ color: starIsDark ? '#FFFFFF' : '#ccc', opacity: starIsDark ? 0.3 : 1, fontSize: 18 }}>★</Text>;
   };
 
   const renderUser = ({ item }) => {
@@ -122,13 +122,13 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         />
         <View style={styles.userInfo}>
           <View style={styles.usernameRow}>
-            <Text style={[styles.username, { color: colors.text }]}>
+            <Text style={[styles.username, { color: isDark ? '#fff' : colors.text }]}>
               {item.customName || item.username}
             </Text>
             <View style={[styles.statusDot, { backgroundColor: statusColor, borderColor: colors.surface }]} />
           </View>
           {!isOrangeOrRed && item.bio ? (
-            <Text style={[styles.userBio, { color: colors.textSecondary }]} numberOfLines={1}>
+            <Text style={[styles.userBio, { color: isDark ? '#ddd' : colors.textSecondary }]} numberOfLines={1}>
               {item.bio}
             </Text>
           ) : null}
@@ -148,9 +148,9 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
   if (!location) {
     return (
       <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
-        <Text style={{ color: colors.text }}>Lieu non trouvé</Text>
-        <TouchableOpacity onPress={onReturnToList}>
-          <Text style={{ color: '#00c2cb', marginTop: 10 }}>Retour</Text>
+        <Text style={{ color: isDark ? '#fff' : colors.text, fontSize: 16, fontWeight: '600' }}>Lieu non trouvé</Text>
+        <TouchableOpacity onPress={onReturnToList} style={styles.errorBackButton}>
+          <Text style={{ color: '#00c2cb', fontWeight: '700', fontSize: 16 }}>Retour</Text>
         </TouchableOpacity>
       </View>
     );
@@ -187,24 +187,24 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
         }
         ListHeaderComponent={
           <View style={styles.locationHeaderInfo}>
-            <View style={styles.typeBadge}>
-              <Text style={styles.typeText}>{formatLocationType(location.type)}</Text>
+            <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
+              <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(location.type)}</Text>
             </View>
 
             <View style={styles.popularityRow}>
               <View>
-                <Text style={[styles.popularityLabel, { color: colors.textSecondary }]}>Popularité</Text>
+                <Text style={[styles.popularityLabel, { color: isDark ? '#fff' : colors.textSecondary }]}>Popularité</Text>
                 <Text style={styles.popularityStars}>
                   {getStars(location, isDark)}
                 </Text>
               </View>
 
               <TouchableOpacity style={styles.goButtonRound} onPress={handleGoToLocation}>
-                <Text style={styles.goEmoji}>📍</Text>
+                <Text style={[styles.goEmoji, { color: '#fff' }]}>📍</Text>
               </TouchableOpacity>
             </View>
 
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Utilisateurs sur place</Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#fff' : colors.text }]}>Utilisateurs sur place</Text>
           </View>
         }
         ListEmptyComponent={
@@ -252,14 +252,18 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 15,
   },
+  typeBadgeDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
   typeText: { color: '#00c2cb', fontWeight: '700', fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  typeTextDark: { color: '#fff' },
   popularityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 30,
   },
-  popularityLabel: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  popularityLabel: { fontSize: 14, fontWeight: '800', marginBottom: 4 },
   popularityStars: { fontSize: 20 },
   goButtonRound: {
     backgroundColor: '#00c2cb',
@@ -289,6 +293,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
+  },
+  errorBackButton: {
+    marginTop: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(0, 194, 203, 0.1)',
+    borderRadius: 15
   },
   userPhoto: { width: 56, height: 56, borderRadius: 28 },
   userInfo: { flex: 1, marginLeft: 16 },

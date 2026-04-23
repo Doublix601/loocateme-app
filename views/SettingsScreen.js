@@ -422,9 +422,9 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
         <View style={[styles.revokeBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
           <View style={[styles.revokeCard, { backgroundColor: colors.surface, borderColor: colors.border }] }>
             <Text style={[styles.revokeTitle, { color: colors.textPrimary }]}>Suppression du compte</Text>
-            <Text style={[styles.revokeDesc, { color: colors.textSecondary }]}>Pour confirmer, entrez votre mot de passe. Cette action est irréversible.</Text>
+            <Text style={[styles.revokeDesc, { color: isDark ? '#fff' : colors.textSecondary }]}>Pour confirmer, entrez votre mot de passe. Cette action est irréversible.</Text>
             <TextInput
-              style={[styles.revokeInput, { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
+              style={[styles.revokeInput, { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
               placeholder="Mot de passe"
               placeholderTextColor={isDark ? '#999' : '#666'}
               secureTextEntry
@@ -621,15 +621,16 @@ const styles = StyleSheet.create({
   revokeTitle: {
     fontSize: width * 0.06,
     fontWeight: '700',
-    color: '#e03131',
+    color: '#ff4d4d',
     textAlign: 'center',
     marginBottom: 8,
   },
   revokeDesc: {
     fontSize: width * 0.04,
-    color: '#444',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 12,
+    opacity: 0.8,
   },
   revokeInput: {
     borderWidth: 1,
@@ -638,7 +639,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 12,
-    color: '#222',
+    color: '#fff',
     backgroundColor: '#f8f9fa',
   },
   revokeButtons: {

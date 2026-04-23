@@ -22,13 +22,14 @@ export function usePremiumAccess() {
   const isPremiumActive = premiumSystemEnabled && hasPremiumRight;
 
   // ACCÈS AUX STATS : (statisticsSystemEnabled || premiumSystemEnabled) && (si premiumSystemEnabled ON, alors hasPremiumRight requis)
-  // C'est la logique complexe identifiée dans MyAccountScreen et StatisticsScreen
   const effectiveStatisticsEnabled = statisticsSystemEnabled || premiumSystemEnabled;
+  // Strict Gating Logic: If premium system is enabled, user MUST have premium right to access stats.
   const hasStatsAccess = effectiveStatisticsEnabled && (!premiumSystemEnabled || hasPremiumRight);
 
   return {
     isPremium: isPremiumActive,          // Statut premium effectif
     hasStatsAccess,                     // Accès aux stats (respecte les flags et le statut)
+    effectiveStatisticsEnabled,          // Ajout de l'accès effectif global
     premiumSystemEnabled,               // État du flag global
     statisticsSystemEnabled,            // État du flag stats
     isUserPremium,                      // Statut brut isPremium de la DB

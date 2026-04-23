@@ -42,8 +42,8 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       >
         <View style={styles.locationInfo}>
           <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.text }]}>{item.name}</Text>
-          <View style={styles.typeBadge}>
-            <Text style={styles.typeText}>{formatLocationType(item.type)}</Text>
+          <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
+            <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
           </View>
           <View style={styles.activeUsersContainer}>
             <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
@@ -87,7 +87,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx > 50) {
-          // Swipe vers la droite -> UserSearchView
+          // Swipe vers la droite -> SearchView
           onSearchPeople && onSearchPeople();
         } else if (gestureState.dx < -50) {
           // Swipe vers la gauche -> MyAccountScreen
@@ -140,7 +140,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     }
 
     // Default to 1 grey star for 0 stars
-    return <Text style={{ color: starIsDark ? '#666' : '#ccc', fontSize: 18 }}>★</Text>;
+    return <Text style={{ color: starIsDark ? '#FFFFFF' : '#ccc', opacity: starIsDark ? 0.3 : 1, fontSize: 18 }}>★</Text>;
   };
 
   const fetchNearbyLocations = async () => {
@@ -360,7 +360,11 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 10,
   },
+  typeBadgeDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
   typeText: { color: '#00c2cb', fontWeight: '700', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
+  typeTextDark: { color: '#fff' },
   activeUsersContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   usersCountText: { fontSize: 13, marginRight: 10, fontWeight: '500' },
   avatarStack: { flexDirection: 'row', alignItems: 'center' },

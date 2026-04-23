@@ -11,7 +11,7 @@ import LocationListScreen from './views/LocationListScreen';
 import LocationScreen from './views/LocationScreen';
 import UserProfileScreen from './views/UserProfileScreen';
 import SettingsScreen from './views/SettingsScreen';
-import UserSearchView from './views/UserSearchView';
+import SearchView from './views/SearchView';
 import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
 import StatisticsScreen from './views/StatisticsScreen';
@@ -434,7 +434,7 @@ function AppInner() {
       break;
     case 'UserSearch':
       screenToShow = (
-        <UserSearchView
+        <SearchView
           onClose={() => setCurrentScreen('LocationList')}
           onSelectUser={(u) => handleSelectUser(u, 'LocationList')}
           onSelectLocation={handleSelectLocation}

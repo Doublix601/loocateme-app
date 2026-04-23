@@ -54,7 +54,28 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const [followStatus, setFollowStatus] = React.useState('none'); // 'none' | 'pending' | 'accepted'
   const [followLoading, setFollowLoading] = React.useState(false);
   const { isDark, colors } = useTheme();
+
+  // Dynamic scaling based on number of social networks to avoid scrolling and fill the page reasonably
+  const socialsArr = (user?.socialMedias ?? user?.socialMedia ?? []);
+  const socialCountForScale = Array.isArray(socialsArr) ? socialsArr.length : 0;
+  const computeScale = (count) => {
+    if (count <= 0) return 1.1;
+    if (count === 1) return 1.05;
+    if (count <= 3) return 1.0;
+    if (count <= 6) return 0.9;
+    if (count <= 9) return 0.85;
+    return 0.8;
+  };
+
   const [measuredNameWidth, setMeasuredNameWidth] = React.useState(0);
+  const scale = computeScale(socialCountForScale);
+  const imgSize = Math.min(width * 0.4, 160) * scale;
+  const iconSize = Math.min(width * 0.2, 72) * scale;
+  const usernameFont = Math.min(width * 0.075, 30) * scale;
+  const baseBioFont = Math.min(width * 0.04, 18) * scale;
+  const bioFont = Math.max(14, Math.min(baseBioFont, 22));
+  const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
+
   const SAFE_LEFT_FOR_BACK = 56;
   const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
   const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
@@ -67,6 +88,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
       Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack
     )
   );
+
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => false,
     onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -81,25 +103,6 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
       }
     },
   });
-
-  // Dynamic scaling based on number of social networks to avoid scrolling and fill the page reasonably
-  const socialsArr = (user?.socialMedias ?? user?.socialMedia ?? []);
-  const socialCountForScale = Array.isArray(socialsArr) ? socialsArr.length : 0;
-  const computeScale = (count) => {
-    if (count <= 0) return 1.1;
-    if (count === 1) return 1.05;
-    if (count <= 3) return 1.0;
-    if (count <= 6) return 0.9;
-    if (count <= 9) return 0.85;
-    return 0.8;
-  };
-  const scale = computeScale(socialCountForScale);
-  const imgSize = Math.min(width * 0.4, 160) * scale;
-  const iconSize = Math.min(width * 0.2, 72) * scale;
-  const usernameFont = Math.min(width * 0.075, 30) * scale;
-  const baseBioFont = Math.min(width * 0.04, 18) * scale;
-  const bioFont = Math.max(14, Math.min(baseBioFont, 22));
-  const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
 
   const INSTAGRAM_USERNAME_REGEX = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
   const TIKTOK_USERNAME_REGEX = /^[A-Za-z0-9._]{2,24}$/;
@@ -491,7 +494,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                 )}
               </View>
               <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }]}>{displayName}</Text>
+                <Text style={[styles.usernameUnderPhoto, isDark && styles.usernameUnderPhotoDark, { fontSize: usernameFont }]}>{displayName}</Text>
                 {/* Traffic Light UI for Status (Read-only) */}
                 <View style={styles.statusSelector}>
                   <View style={[styles.statusCircle, { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.1 }]} />
@@ -514,7 +517,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
             <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
               <View style={styles.bioTitleContainer}>
-                <Text style={[styles.label, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
+                <Text style={[styles.label, isDark && styles.labelDark, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
               </View>
               <View style={styles.bioTextContainer}>
                 {(() => {
@@ -524,6 +527,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                     <Text
                       style={[
                         styles.value,
+                        isDark && styles.valueDark,
                         {
                           fontSize: bioFont,
                           textAlign: 'left',
@@ -600,7 +604,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                   );
                 })
               ) : (
-                <Text style={[styles.value, { color: colors.textSecondary }]}>Aucun réseau social</Text>
+                <Text style={[styles.value, isDark && styles.valueDark, { color: colors.textSecondary }]}>Aucun réseau social</Text>
               );
             })()}
           </View>
@@ -769,6 +773,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  usernameUnderPhotoDark: {
+    color: '#fff',
+  },
   statusSelector: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -804,9 +811,15 @@ const styles = StyleSheet.create({
     color: '#00c2cb',
     marginBottom: 5,
   },
+  labelDark: {
+    color: '#fff',
+  },
   value: {
     fontSize: Math.min(width * 0.04, 16),
     color: '#3f4a4b',
+  },
+  valueDark: {
+    color: '#eee',
   },
   identityCard: {
     borderRadius: 15,
@@ -828,6 +841,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     fontWeight: '700',
     marginBottom: 6,
+  },
+  identityLabelDark: {
+    color: '#fff',
   },
   identityValue: {
     fontSize: 14,

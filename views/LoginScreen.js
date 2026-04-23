@@ -119,12 +119,12 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={onForgotPassword} style={{ marginTop: 20, alignSelf: 'center' }}>
-                            <Text style={[styles.linkText, { fontSize: width * 0.035, color: '#00c2cb', opacity: 0.8 }]}>Mot de passe oublié ?</Text>
+                            <Text style={[styles.linkText, { fontSize: width * 0.035, color: isDark ? '#fff' : '#00c2cb', opacity: 0.8 }]}>Mot de passe oublié ?</Text>
                         </TouchableOpacity>
                     </View>
 
                     <TouchableOpacity onPress={onSignup} style={{ marginTop: 30, alignSelf: 'center' }}>
-                        <Text style={[styles.linkText, { fontSize: width * 0.04, color: colors.textSecondary }]}>Pas encore de compte ? <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Créer un compte</Text></Text>
+                        <Text style={[styles.linkText, { fontSize: width * 0.04, color: isDark ? '#fff' : colors.textSecondary }]}>Pas encore de compte ? <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Créer un compte</Text></Text>
                     </TouchableOpacity>
                 </ScrollView>
             </KeyboardAvoidingView>

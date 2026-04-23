@@ -14,7 +14,7 @@ const { width, height } = Dimensions.get('window');
 export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const { colors, isDark } = useTheme();
   const { user } = useContext(UserContext);
-  const { hasStatsAccess: hasAccess, premiumSystemEnabled: premiumEnabled, statisticsSystemEnabled: statisticsEnabled } = usePremiumAccess();
+  const { hasStatsAccess: hasAccess, premiumSystemEnabled: premiumEnabled, statisticsSystemEnabled: statisticsEnabled, effectiveStatisticsEnabled } = usePremiumAccess();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [data, setData] = useState(null);
@@ -193,7 +193,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Statistiques</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Statistiques</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -206,15 +206,15 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
             />
             {!effectiveStatisticsEnabled ? (
               <>
-                <Text style={[styles.paywallTitle, { color: colors.text }]}>Bientôt disponible 🚀</Text>
-                <Text style={[styles.paywallText, { color: colors.text, opacity: 0.7 }]}>
+                <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.text }]}>Bientôt disponible 🚀</Text>
+                <Text style={[styles.paywallText, { color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.9 : 0.7 }]}>
                   Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux.
                 </Text>
               </>
             ) : (
               <>
-                <Text style={[styles.paywallTitle, { color: colors.text }]}>Qui te stalke ? 👀</Text>
-                <Text style={[styles.paywallText, { color: colors.text, opacity: 0.7 }]}>
+                <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.text }]}>Qui te stalke ? 👀</Text>
+                <Text style={[styles.paywallText, { color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.9 : 0.7 }]}>
                   Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
                 </Text>
                 <TouchableOpacity
@@ -226,12 +226,12 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
               </>
             )}
             <TouchableOpacity onPress={onBack} style={{ marginTop: 20 }}>
-              <Text style={{ color: colors.text, opacity: 0.5 }}>Plus tard</Text>
+              <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.5 }}>Plus tard</Text>
             </TouchableOpacity>
           </View>
         </View>
       ) : (
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
           showsVerticalScrollIndicator={false}
         >
@@ -244,16 +244,16 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
           ) : (
             <>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.cardTitle, { color: colors.text, opacity: 0.6 }]}>Vues de profil</Text>
+                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.text, opacity: 1 }]}>Vues de profil</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                   <Text style={[styles.metric, { color: '#00c2cb' }]}>{data?.views ?? 0}</Text>
-                  <Text style={{ color: colors.text, opacity: 0.5, marginLeft: 10 }}>vues</Text>
+                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, marginLeft: 10 }}>vues</Text>
                 </View>
-                <Text style={{ color: colors.text, opacity: 0.4, marginTop: 5, fontSize: 12 }}>sur les 30 derniers jours</Text>
+                <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.5, marginTop: 5, fontSize: 12 }}>sur les 30 derniers jours</Text>
               </View>
 
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.cardTitle, { color: colors.text, opacity: 0.6, marginBottom: 15 }]}>Clics par réseau</Text>
+                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.text, opacity: 1, marginBottom: 15 }]}>Clics par réseau</Text>
                 {supportedNetworks.map(({ key, label }, index) => (
                   <View key={key} style={[styles.row, index !== supportedNetworks.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
                     <View style={styles.rowLeft}>
@@ -264,7 +264,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
                           <View style={[styles.smIcon, { backgroundColor: '#ccc' }]} />
                         )}
                       </View>
-                      <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
+                      <Text style={[styles.rowLabel, { color: isDark ? '#fff' : colors.text }]}>{label}</Text>
                     </View>
                     <View style={{ backgroundColor: 'rgba(0,194,203,0.1)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10 }}>
                         <Text style={[styles.rowValue, { color: '#00c2cb' }]}>{getCountFor(key)}</Text>
@@ -274,13 +274,13 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
               </View>
 
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.cardTitle, { color: colors.text, opacity: 0.6, marginBottom: 15 }]}>Dernières visites</Text>
+                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.text, opacity: 1, marginBottom: 15 }]}>Dernières visites</Text>
                 {detailedLoading ? (
                   <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 20 }} />
                 ) : detailedError ? (
-                  <Text style={{ color: colors.text, opacity: 0.5, textAlign: 'center' }}>{detailedError}</Text>
+                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, textAlign: 'center' }}>{detailedError}</Text>
                 ) : detailed.length === 0 ? (
-                  <Text style={{ color: colors.text, opacity: 0.5, textAlign: 'center' }}>Aucune visite récente</Text>
+                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, textAlign: 'center' }}>Aucune visite récente</Text>
                 ) : (
                   <>
                     {detailed.slice(0, visibleCount).map((it, idx) => (
@@ -319,14 +319,14 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
                           </View>
                         )}
                         <View style={{ flex: 1, marginLeft: 15 }}>
-                          <Text style={{ color: colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
+                          <Text style={{ color: isDark ? '#fff' : colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
                             {it.actor?.name || it.actor?.username || 'Utilisateur'}
                           </Text>
-                          <Text style={{ color: colors.text, opacity: 0.5, marginTop: 2, fontSize: 13 }}>{timeAgo(it.at)}</Text>
+                          <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, marginTop: 2, fontSize: 13 }}>{timeAgo(it.at)}</Text>
                         </View>
-                        <Image 
-                            source={require('../assets/appIcons/backArrow.png')} 
-                            style={{ width: 16, height: 16, tintColor: colors.text, opacity: 0.2, transform: [{ rotate: '180deg' }] }} 
+                        <Image
+                            source={require('../assets/appIcons/backArrow.png')}
+                            style={{ width: 16, height: 16, tintColor: isDark ? '#fff' : colors.text, opacity: 0.3, transform: [{ rotate: '180deg' }] }}
                         />
                       </TouchableOpacity>
                     ))}
@@ -348,11 +348,11 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between', 
-    paddingHorizontal: 20, 
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
     paddingBottom: 20,
     paddingTop: Platform.OS === 'android' ? 40 : 10,
     borderBottomLeftRadius: 30,
@@ -377,9 +377,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backIcon: { width: 24, height: 24 },
-  card: { 
-    borderRadius: 20, 
-    padding: 20, 
+  card: {
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 20,
     elevation: 2,
     shadowColor: '#000',
@@ -387,16 +387,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 5,
   },
-  cardTitle: { 
-    fontSize: 13, 
-    fontWeight: '700', 
+  cardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
   metric: { fontSize: 36, fontWeight: '800' },
-  row: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
   },
@@ -404,9 +404,9 @@ const styles = StyleSheet.create({
   smIcon: { width: 20, height: 20 },
   rowLabel: { fontSize: 16, marginLeft: 12 },
   rowValue: { fontSize: 15, fontWeight: '800' },
-  visitorRow: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
+  visitorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 12,
   },
   avatar: { width: 48, height: 48, borderRadius: 24 },
@@ -416,15 +416,15 @@ const styles = StyleSheet.create({
   centerBox: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 25 },
   paywallTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 15 },
   paywallText: { fontSize: 16, textAlign: 'center', marginBottom: 25, lineHeight: 22 },
-  paywallBtn: { 
-    paddingVertical: 16, 
-    paddingHorizontal: 30, 
-    borderRadius: 15, 
-    elevation: 3, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 4 
+  paywallBtn: {
+    paddingVertical: 16,
+    paddingHorizontal: 30,
+    borderRadius: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4
   },
   paywallBtnText: { color: '#fff', fontSize: 17, fontWeight: '800' },
 });
