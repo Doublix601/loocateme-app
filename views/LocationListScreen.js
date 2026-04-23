@@ -106,7 +106,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     // Listen for mutations that should trigger a refresh
     const unsub = subscribe('api:mutation', ({ path }) => {
       // Refresh if the user updated their location or heartbeat
-      if (path.includes('/user/location') || path.includes('/user/heartbeat')) {
+      if (path && (path.includes('/user/location') || path.includes('/user/heartbeat'))) {
         fetchNearbyLocations();
       }
     });

@@ -109,7 +109,6 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
     email: u?.email || '',
     profileImageUrl: u?.profileImageUrl || '',
     role: u?.role || 'user',
-    isVisible: u?.isVisible !== false,
     moderation: u?.moderation || {},
   });
 

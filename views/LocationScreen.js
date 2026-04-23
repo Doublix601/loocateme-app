@@ -45,7 +45,8 @@ const LocationScreen = ({ locationId, tertiles, onReturnToList, onSelectUser, so
     fetchLocationDetails();
 
     // Refresh automatically on any mutation related to users or location
-    const unsub = subscribe('api:mutation', ({ path }) => {
+    const unsub = subscribe('api:mutation', (payload) => {
+      const path = payload?.path || '';
       if (path.includes('/user/') || path.includes('/profile') || path.includes('/settings')) {
         fetchLocationDetails(true);
       }

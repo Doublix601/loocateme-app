@@ -44,7 +44,6 @@ const mapBackendUser = (u = {}) => {
     photo: u.profileImageUrl || u.photo || null,
     socialMedias,
     socialMedia: socialMedias,
-    isVisible: u.isVisible !== false,
     isPremium: !!u.isPremium,
     role: u.role || 'user',
     status: u.status || 'green',

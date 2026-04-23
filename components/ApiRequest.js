@@ -123,11 +123,11 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 
     const isGet = String(method).toUpperCase() === 'GET';
     const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(method).toUpperCase());
-    
+
     // Auto-invalidate cache on mutation
     if (isMutation) {
-        try { 
-            apiCache.clear(); 
+        try {
+            apiCache.clear();
             // Also notify the UI that data has likely changed
             publish('api:mutation', { path, method });
         } catch (_) {}
@@ -204,7 +204,7 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
                 const u = new URL(url);
                 // Disable fallback for local development (IP addresses or localhost)
                 const isLocal = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || /^192\.168\./.test(u.hostname);
-                
+
                 if (isLocal) {
                     throw networkErr; // Skip fallback
                 }
@@ -543,11 +543,6 @@ export async function registerPushToken({ token, platform = 'unknown' }) {
 export async function unregisterPushToken({ token }) {
     if (!token) return { success: false, skipped: true };
     return request('/push/unregister-token', { method: 'POST', body: { token }, retry: false, suppressAuthHandling: true });
-}
-
-// SETTINGS
-export async function setVisibility(isVisible) {
-    return request('/settings/visibility', { method: 'PUT', body: { isVisible } });
 }
 
 // REPORTS & BLOCKS

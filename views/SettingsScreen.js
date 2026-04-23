@@ -36,7 +36,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
   const isDark = themeMode === 'dark';
-  const [isVisible, setIsVisible] = useState(user?.isVisible ?? true);
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
 
@@ -83,24 +82,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   };
 
   const saveAndReturn = async () => {
-    try {
-      setSaving(true);
-      await apiSetVisibility(isVisible);
-      if (updateUser) {
-        updateUser({ ...user, isVisible });
-      }
-      // Start or stop background location according to new visibility
-      try {
-        if (isVisible) await startBackgroundLocationForOneHour();
-        else await stopBackgroundLocation();
-      } catch (_) {}
-      onReturnToAccount && onReturnToAccount();
-    } catch (e) {
-      console.error('[SettingsScreen] Save visibility error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
-      Alert.alert('Erreur', e?.message || 'Impossible de sauvegarder le paramètre');
-    } finally {
-      setSaving(false);
-    }
+    onReturnToAccount && onReturnToAccount();
   };
 
   const panResponder = PanResponder.create({
@@ -117,8 +99,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
       }
     },
   });
-
-  const toggleVisibility = () => setIsVisible((prevState) => !prevState);
 
   const openPolicy = async () => {
     try {
@@ -149,7 +129,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
           bio: user?.bio ?? updatedUser.bio ?? '',
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
           socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
-          isVisible: user?.isVisible ?? (updatedUser.isVisible !== false),
           consent: updatedUser.consent || { accepted, version: consentVersion },
           privacyPreferences: updatedUser.privacyPreferences || { analytics: analyticsValue, marketing: marketingValue },
         });
@@ -197,7 +176,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
           bio: user?.bio ?? updatedUser.bio ?? '',
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
           socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
-          isVisible: user?.isVisible ?? (updatedUser.isVisible !== false),
           consent: updatedUser.consent || { accepted, version: consentVersion },
           privacyPreferences: updatedUser.privacyPreferences || { analytics, marketing },
         });
@@ -288,15 +266,6 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={styles.sectionTitle}>GÉNÉRAL</Text>
-          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Être visible</Text>
-            <Switch
-              value={isVisible}
-              onValueChange={toggleVisibility}
-              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-              thumbColor={isVisible ? '#fff' : '#f4f3f4'}
-            />
-          </View>
 
           <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
             <View style={{ flex: 1 }}>
@@ -382,8 +351,8 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
             <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>Supprimer mon compte</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]} 
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]}
             onPress={async () => { try { await (onLogout && onLogout()); } catch(_) {} }}
           >
             <Text style={styles.logoutText}>Déconnexion</Text>
@@ -404,7 +373,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
             <View style={{ width: 60 }} />
           </View>
-          
+
           <View style={styles.modalContent}>
             {policyLoading ? (
               <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />

@@ -17,7 +17,6 @@ function mapBackendUser(u = {}) {
     socialMedia: Array.isArray(u.socialNetworks)
       ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
       : [],
-    isVisible: u.isVisible !== false,
     // Premium flag from backend; free if falsy
     isPremium: !!u.isPremium,
     // User role: 'user', 'moderator', or 'admin'
@@ -40,7 +39,6 @@ export const UserProvider = ({ children }) => {
     bio: '',
     photo: null,
     socialMedia: [],
-    isVisible: true,
     isPremium: false,
     role: 'user',
     status: 'green',
@@ -100,7 +98,6 @@ export const UserProvider = ({ children }) => {
         bio: '',
         photo: null,
         socialMedia: [],
-        isVisible: false,
         isPremium: false,
         role: 'user',
         status: 'green',
