@@ -330,6 +330,16 @@ export async function login({ email, password }) {
     return data;
 }
 
+export async function socialLogin({ provider, idToken, user }) {
+    const data = await request('/auth/social-login', {
+        method: 'POST',
+        body: { provider, idToken, user },
+    });
+    if (data?.accessToken) setAccessToken(data.accessToken);
+    try { publish('auth:login', { user: data?.user || null }); } catch (_) {}
+    return data;
+}
+
 export async function refreshAccessToken() {
     // Uses httpOnly cookie set by backend (works on web; RN native may not include cookies)
     const data = await request('/auth/refresh', { method: 'POST', retry: false, includeCredentials: true });

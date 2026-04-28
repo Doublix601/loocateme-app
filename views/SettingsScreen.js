@@ -254,7 +254,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
@@ -279,7 +279,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
               <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode d'affichage</Text>
               <Text style={{ fontSize: 12, color: colors.textSecondary }}>{displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}</Text>
             </View>
-            <TouchableOpacity onPress={toggleDisplayNameMode} style={[styles.smallPill, { backgroundColor: colors.bg }]}>
+            <TouchableOpacity onPress={toggleDisplayNameMode} style={[styles.smallPill, { backgroundColor: colors.background }]}>
               <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>{displayNameMode === 'full' ? 'Classique' : 'Custom'}</Text>
             </TouchableOpacity>
           </View>
@@ -384,7 +384,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
       </ScrollView>
 
       <Modal visible={policyModalVisible} animationType="slide" onRequestClose={() => setPolicyModalVisible(false)}>
-        <View style={[styles.modalContainer, { backgroundColor: colors.bg }] }>
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }] }>
           <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setPolicyModalVisible(false)}>
               <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Fermer</Text>

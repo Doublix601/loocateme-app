@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const THEME_MODE_KEY = 'loocateme_theme_mode'; // 'light' | 'dark' | 'system'
 
 const lightPalette = {
-  bg: '#ffffff',
+  background: '#ffffff',
   surface: '#ffffff',
   surfaceAlt: '#f5f5f5',
   border: '#e6e6e6',
@@ -15,10 +15,13 @@ const lightPalette = {
   accent: '#00c2cb',
   accentSoft: '#e6fbfc',
   danger: '#f44336',
+  white: '#ffffff',
+  inputBackground: '#f8f9fa',
+  placeholder: '#999999',
 };
 
 const darkPalette = {
-  bg: '#121212',
+  background: '#121212',
   surface: '#1e1e1e',
   surfaceAlt: '#222',
   border: '#2c2c2c',
@@ -28,12 +31,40 @@ const darkPalette = {
   accent: '#00c2cb',
   accentSoft: '#083638',
   danger: '#ef5350',
+  white: '#ffffff',
+  inputBackground: '#222',
+  placeholder: '#888888',
+};
+
+const NavigationLightTheme = {
+  dark: false,
+  colors: {
+    primary: lightPalette.accent,
+    background: lightPalette.background,
+    card: lightPalette.surface,
+    text: lightPalette.textPrimary,
+    border: lightPalette.border,
+    notification: lightPalette.danger,
+  },
+};
+
+const NavigationDarkTheme = {
+  dark: true,
+  colors: {
+    primary: darkPalette.accent,
+    background: darkPalette.background,
+    card: darkPalette.surface,
+    text: darkPalette.textPrimary,
+    border: darkPalette.border,
+    notification: darkPalette.danger,
+  },
 };
 
 const ThemeContext = createContext({
   mode: 'system',
   setMode: () => {},
   colors: lightPalette,
+  navTheme: NavigationLightTheme,
 });
 
 export function ThemeProvider({ children }) {
@@ -83,13 +114,27 @@ export function ThemeProvider({ children }) {
 
   const isDark = (mode === 'system' ? internalSystemScheme === 'dark' : mode === 'dark');
   const colors = isDark ? darkPalette : lightPalette;
+  const navTheme = isDark ? NavigationDarkTheme : NavigationLightTheme;
 
-  const value = useMemo(() => ({ mode, setMode, colors, isDark }), [mode, isDark]);
+  const value = useMemo(() => ({ mode, setMode, colors, isDark, navTheme }), [mode, isDark]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {
-  return useContext(ThemeContext);
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+}
+
+/**
+ * Hook to create dynamic styles based on the current theme.
+ * @param {(theme: {colors: any, isDark: boolean}) => any} creator
+ */
+export function useStyles(creator) {
+  const theme = useTheme();
+  return useMemo(() => creator(theme), [theme, creator]);
 }
 
 export { THEME_MODE_KEY };

@@ -411,7 +411,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
   if (!user) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
+      <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
         <Text style={styles.error}>Aucun utilisateur sélectionné.</Text>
         <TouchableOpacity style={styles.modalButton} onPress={onReturnToList}>
           <Text style={styles.modalButtonText}>Retour à la liste</Text>
@@ -459,7 +459,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={onReturnToList}

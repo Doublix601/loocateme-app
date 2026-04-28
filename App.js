@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform, StatusBar } from 'react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
@@ -82,7 +82,7 @@ const mapProfileUser = (u = {}) => {
 function AppInner({ purchasesReady }) {
   const { user: appUser, updateUser } = useContext(UserContext);
   const { hasStatsAccess } = usePremiumAccess();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [currentScreen, setCurrentScreen] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedLocationId, setSelectedLocationId] = useState(null);
@@ -374,7 +374,8 @@ function AppInner({ purchasesReady }) {
 
   if (!assetsReady || !authReady || !currentScreen) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
         <ActivityIndicator size="large" color="#00c2cb" />
       </SafeAreaView>
     );
@@ -549,8 +550,9 @@ function AppInner({ purchasesReady }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
+      <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.background }}>
         {screenToShow}
       </Animated.View>
       <LocationPermissionModal

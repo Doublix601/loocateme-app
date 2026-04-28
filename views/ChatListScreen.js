@@ -109,15 +109,15 @@ const ChatListScreen = ({ navigation }) => {
     };
 
     if (loading) {
-        return (
-            <View style={[styles.centered, { backgroundColor: colors.bg }]}>
-                <ActivityIndicator size="large" color={colors.accent} />
-            </View>
-        );
-    }
-
     return (
-        <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View style={[styles.centered, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
             <View style={[styles.header, {
                 backgroundColor: colors.surface,
                 borderBottomLeftRadius: 30,

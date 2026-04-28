@@ -157,11 +157,11 @@ const ConversationScreen = ({ route, navigation }) => {
 
     return (
         <KeyboardAvoidingView
-            style={[styles.container, { backgroundColor: colors.bg }]}
+            style={[styles.container, { backgroundColor: colors.background }]}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
         >
-            <View style={[styles.header, { 
+            <View style={[styles.header, {
                 backgroundColor: colors.surface,
                 borderBottomLeftRadius: 30,
                 borderBottomRightRadius: 30,
@@ -176,7 +176,7 @@ const ConversationScreen = ({ route, navigation }) => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.accent + '15' }]}>
                     <Text style={{ fontSize: 20, color: colors.accent }}>✕</Text>
                 </TouchableOpacity>
-                
+
                 <View style={styles.headerUser}>
                     <View style={styles.headerAvatarContainer}>
                         {conversationUser.photo ? (
@@ -264,8 +264,8 @@ const ConversationScreen = ({ route, navigation }) => {
                         onBlur={handleInputBlur}
                         multiline
                     />
-                    <TouchableOpacity 
-                        onPress={handleSendMessage} 
+                    <TouchableOpacity
+                        onPress={handleSendMessage}
                         style={[styles.sendButton, { backgroundColor: inputText.trim() ? colors.accent : colors.accent + '30' }]}
                         disabled={!inputText.trim()}
                     >

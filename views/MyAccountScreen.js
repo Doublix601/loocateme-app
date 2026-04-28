@@ -849,7 +849,7 @@ const MyAccountScreen = ({
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} {...panResponder.panHandlers}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
             <TouchableOpacity
                 style={styles.backButton}
                 onPress={onReturnToList}

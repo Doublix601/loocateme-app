@@ -1,9 +1,11 @@
 import { useState, useContext } from 'react';
-import { Text, TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, Image, useWindowDimensions, Switch, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, useWindowDimensions, Switch, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signup as apiSignup, setAccessToken, updateConsent, getPrivacyPolicy } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
-import { useTheme } from '../components/contexts/ThemeContext';
+import { useTheme, useStyles } from '../components/contexts/ThemeContext';
+import ThemedText from '../components/ThemedText';
+import AppLogo from '../components/AppLogo';
 
 // Map backend user to frontend context shape
 const mapBackendUser = (u = {}) => ({
@@ -39,6 +41,7 @@ const SignupScreen = ({ onSignup, onLogin }) => {
     const { updateUser } = useContext(UserContext);
     const { width, height } = useWindowDimensions();
     const { colors, isDark } = useTheme();
+    const styles = useStyles(getStyles);
 
     const handleSignup = async () => {
         // Normaliser et valider le username selon les règles Instagram
@@ -118,9 +121,9 @@ const SignupScreen = ({ onSignup, onLogin }) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={[styles.header, { backgroundColor: colors.surface, paddingTop: Platform.OS === 'android' ? 40 : 10 }]}>
-                <Text style={[styles.headerTitle, { color: isDark ? colors.text : '#00c2cb' }]}>Créer un compte</Text>
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <ThemedText style={styles.headerTitle} type={isDark ? 'primary' : 'accent'}>Créer un compte</ThemedText>
             </View>
 
             <KeyboardAvoidingView
@@ -134,19 +137,20 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    <Image
-                        source={require('../assets/appIcons/SquareBanner.png')}
-                        style={[styles.logo, { width: width * 0.35, height: width * 0.35 }]}
+                    <AppLogo
+                        width={width * 0.35}
+                        height={width * 0.35}
+                        style={styles.logo}
                     />
 
-                    <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                        <Text style={[styles.cardTitle, { color: colors.text }]}>Bienvenue !</Text>
-                        <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>Rejoignez la communauté LoocateMe</Text>
+                    <View style={styles.card}>
+                        <ThemedText style={styles.cardTitle}>Bienvenue !</ThemedText>
+                        <ThemedText style={styles.cardSubtitle} type="secondary">Rejoignez la communauté LoocateMe</ThemedText>
 
                         <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? colors.surfaceAlt : '#f8f9fa', color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                            style={styles.input}
                             placeholder="Nom d'utilisateur"
-                            placeholderTextColor={isDark ? '#888' : '#999'}
+                            placeholderTextColor={colors.placeholder}
                             value={username}
                             onChangeText={setUsername}
                             autoCapitalize="none"
@@ -155,17 +159,17 @@ const SignupScreen = ({ onSignup, onLogin }) => {
 
                         <View style={{ flexDirection: 'row', gap: 10 }}>
                             <TextInput
-                                style={[styles.input, { flex: 1, backgroundColor: isDark ? colors.surfaceAlt : '#f8f9fa', color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                                style={[styles.input, { flex: 1 }]}
                                 placeholder="Prénom"
-                                placeholderTextColor={isDark ? '#888' : '#999'}
+                                placeholderTextColor={colors.placeholder}
                                 value={firstName}
                                 onChangeText={setFirstName}
                                 returnKeyType="next"
                             />
                             <TextInput
-                                style={[styles.input, { flex: 1, backgroundColor: isDark ? colors.surfaceAlt : '#f8f9fa', color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                                style={[styles.input, { flex: 1 }]}
                                 placeholder="Nom"
-                                placeholderTextColor={isDark ? '#888' : '#999'}
+                                placeholderTextColor={colors.placeholder}
                                 value={lastName}
                                 onChangeText={setLastName}
                                 returnKeyType="next"
@@ -173,18 +177,18 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                         </View>
 
                         <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? colors.surfaceAlt : '#f8f9fa', color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                            style={styles.input}
                             placeholder="Nom personnalisé (optionnel)"
-                            placeholderTextColor={isDark ? '#888' : '#999'}
+                            placeholderTextColor={colors.placeholder}
                             value={customName}
                             onChangeText={setCustomName}
                             returnKeyType="next"
                         />
 
                         <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? colors.surfaceAlt : '#f8f9fa', color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                            style={styles.input}
                             placeholder="Email"
-                            placeholderTextColor={isDark ? '#888' : '#999'}
+                            placeholderTextColor={colors.placeholder}
                             keyboardType="email-address"
                             autoCapitalize="none"
                             value={email}
@@ -192,36 +196,36 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                             returnKeyType="next"
                         />
                         <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? colors.surfaceAlt : '#f8f9fa', color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                            style={styles.input}
                             placeholder="Mot de passe"
-                            placeholderTextColor={isDark ? '#888' : '#999'}
+                            placeholderTextColor={colors.placeholder}
                             secureTextEntry={true}
                             value={password}
                             onChangeText={setPassword}
                             returnKeyType="next"
                         />
                         <TextInput
-                            style={[styles.input, { backgroundColor: isDark ? colors.surfaceAlt : '#f8f9fa', color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                            style={styles.input}
                             placeholder="Confirmer le mot de passe"
-                            placeholderTextColor={isDark ? '#888' : '#999'}
+                            placeholderTextColor={colors.placeholder}
                             secureTextEntry={true}
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
                             returnKeyType="done"
                         />
 
-                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+                        {errorMessage ? <ThemedText style={styles.errorText} type="danger">{errorMessage}</ThemedText> : null}
 
                         <TouchableOpacity style={styles.button} onPress={handleSignup} disabled={loading}>
                             {loading ? (
                                 <ActivityIndicator color="#fff" />
                             ) : (
-                                <Text style={styles.buttonText}>S'inscrire</Text>
+                                <ThemedText style={styles.buttonText} type="white">S'inscrire</ThemedText>
                             )}
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.link} onPress={onLogin}>
-                            <Text style={[styles.linkText, { color: isDark ? '#fff' : colors.textSecondary }]}>Déjà un compte ? <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Se connecter</Text></Text>
+                            <ThemedText style={styles.linkText} type={isDark ? 'white' : 'secondary'}>Déjà un compte ? <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>Se connecter</ThemedText></ThemedText>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -229,49 +233,49 @@ const SignupScreen = ({ onSignup, onLogin }) => {
 
             {/* GDPR Modal: Policy -> Preferences -> Signup */}
             <Modal visible={gdprModalVisible} animationType="slide" onRequestClose={() => setGdprModalVisible(false)}>
-                <SafeAreaView style={[styles.gdprContainer, { backgroundColor: colors.background }]}>
-                    <View style={[styles.gdprHeader, { backgroundColor: colors.surface, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, paddingBottom: 20, paddingTop: Platform.OS === 'ios' ? 10 : 40 }]}>
-                        <Text style={[styles.gdprTitle, { color: colors.text }]}>Confidentialité & RGPD</Text>
+                <SafeAreaView style={styles.gdprContainer}>
+                    <View style={styles.gdprHeader}>
+                        <ThemedText style={styles.gdprTitle}>Confidentialité & RGPD</ThemedText>
                     </View>
                     {gdprStep === 'policy' ? (
                         <View style={{ flex: 1, marginTop: 10 }}>
                             {policyLoading ? (
                                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                                    <ActivityIndicator size="large" color="#00c2cb" />
+                                    <ActivityIndicator size="large" color={colors.accent} />
                                 </View>
                             ) : (
                                 <ScrollView contentContainerStyle={[styles.gdprContent, { paddingHorizontal: 20 }]}>
-                                    <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 20 }}>
-                                        <Text style={[styles.gdprPolicyText, { color: colors.text }]}>{policyText}</Text>
+                                    <View style={styles.gdprPolicyCard}>
+                                        <ThemedText style={styles.gdprPolicyText}>{policyText}</ThemedText>
                                     </View>
                                 </ScrollView>
                             )}
-                            <View style={[styles.gdprActions, { borderTopColor: 'transparent', paddingHorizontal: 20, paddingBottom: 30 }]}>
-                                <TouchableOpacity style={[styles.gdprButton, styles.gdprDecline, { backgroundColor: colors.surface }]} onPress={() => { setGdprModalVisible(false); }}>
-                                    <Text style={[styles.gdprButtonText, { color: colors.text }]}>Refuser</Text>
+                            <View style={styles.gdprActions}>
+                                <TouchableOpacity style={[styles.gdprButton, styles.gdprDecline]} onPress={() => { setGdprModalVisible(false); }}>
+                                    <ThemedText style={styles.gdprButtonText} type="primary">Refuser</ThemedText>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={[styles.gdprButton, styles.gdprAccept, { backgroundColor: '#00c2cb' }]} onPress={() => { setConsentAccepted(true); setGdprStep('prefs'); }}>
-                                    <Text style={styles.gdprButtonText}>Accepter</Text>
+                                <TouchableOpacity style={[styles.gdprButton, styles.gdprAccept]} onPress={() => { setConsentAccepted(true); setGdprStep('prefs'); }}>
+                                    <ThemedText style={styles.gdprButtonText} type="white">Accepter</ThemedText>
                                 </TouchableOpacity>
                             </View>
                         </View>
                     ) : (
                         <View style={{ flex: 1, marginTop: 20 }}>
                             <View style={[styles.gdprContent, { paddingHorizontal: 20 }]}>
-                                <View style={{ backgroundColor: colors.surface, borderRadius: 20, padding: 10 }}>
-                                    <View style={[styles.gdprToggleRow, { borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
-                                        <Text style={[styles.gdprLabel, { color: colors.text }]}>Partage analytics</Text>
-                                        <Switch value={prefAnalytics} onValueChange={setPrefAnalytics} trackColor={{ false: '#ccc', true: '#00c2cb' }} thumbColor={prefAnalytics ? '#00c2cb' : '#f4f3f4'} />
+                                <View style={styles.gdprPrefsCard}>
+                                    <View style={styles.gdprToggleRow}>
+                                        <ThemedText style={styles.gdprLabel}>Partage analytics</ThemedText>
+                                        <Switch value={prefAnalytics} onValueChange={setPrefAnalytics} trackColor={{ false: '#ccc', true: colors.accent }} thumbColor={prefAnalytics ? colors.accent : '#f4f3f4'} />
                                     </View>
                                     <View style={[styles.gdprToggleRow, { borderBottomWidth: 0 }]}>
-                                        <Text style={[styles.gdprLabel, { color: colors.text }]}>Communication marketing</Text>
-                                        <Switch value={prefMarketing} onValueChange={setPrefMarketing} trackColor={{ false: '#ccc', true: '#00c2cb' }} thumbColor={prefMarketing ? '#00c2cb' : '#f4f3f4'} />
+                                        <ThemedText style={styles.gdprLabel}>Communication marketing</ThemedText>
+                                        <Switch value={prefMarketing} onValueChange={setPrefMarketing} trackColor={{ false: '#ccc', true: colors.accent }} thumbColor={prefMarketing ? colors.accent : '#f4f3f4'} />
                                     </View>
                                 </View>
                             </View>
-                            <View style={[styles.gdprActions, { borderTopColor: 'transparent', paddingHorizontal: 20, paddingBottom: 30 }]}>
-                                <TouchableOpacity style={[styles.gdprButton, styles.gdprAccept, { backgroundColor: '#00c2cb', width: '100%' }]} onPress={doSignupWithConsent} disabled={processing}>
-                                    <Text style={styles.gdprButtonText}>{processing ? "Création..." : "Valider et créer mon compte"}</Text>
+                            <View style={styles.gdprActions}>
+                                <TouchableOpacity style={[styles.gdprButton, styles.gdprAccept, { width: '100%' }]} onPress={doSignupWithConsent} disabled={processing}>
+                                    <ThemedText style={styles.gdprButtonText} type="white">{processing ? "Création..." : "Valider et créer mon compte"}</ThemedText>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -282,9 +286,10 @@ const SignupScreen = ({ onSignup, onLogin }) => {
     );
 };
 
-const styles = StyleSheet.create({
+const getStyles = ({ colors, isDark }) => StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
     },
     header: {
         flexDirection: 'row',
@@ -292,6 +297,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: 20,
         paddingBottom: 20,
+        backgroundColor: colors.surface,
+        paddingTop: Platform.OS === 'android' ? 40 : 10,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
         elevation: 4,
@@ -310,8 +317,10 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
         alignSelf: 'center',
         marginBottom: 10,
+        backgroundColor: 'transparent',
     },
     card: {
+        backgroundColor: colors.surface,
         borderRadius: 20,
         padding: 25,
         marginBottom: 15,
@@ -341,22 +350,24 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         paddingHorizontal: 15,
         fontSize: 16,
+        backgroundColor: colors.inputBackground,
+        color: colors.textPrimary,
+        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     },
     button: {
-        backgroundColor: '#00c2cb',
+        backgroundColor: colors.accent,
         paddingVertical: 16,
         borderRadius: 15,
         alignItems: 'center',
         marginTop: 20,
         width: '100%',
         elevation: 3,
-        shadowColor: '#00c2cb',
+        shadowColor: colors.accent,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
     },
     buttonText: {
-        color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
     },
@@ -368,46 +379,23 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     errorText: {
-        color: '#ff4444',
         textAlign: 'center',
         marginTop: 15,
         fontSize: 14,
         fontWeight: '600',
     },
-    consentRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 10,
-        paddingHorizontal: 5,
-    },
-    checkbox: {
-        width: 22,
-        height: 22,
-        borderWidth: 2,
-        borderRadius: 6,
-        marginRight: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    checkboxChecked: {
-        backgroundColor: '#00c2cb',
-    },
-    checkboxTick: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: 'bold',
-    },
-    consentText: {
-        flex: 1,
-        fontSize: 13,
-        lineHeight: 18,
-    },
     gdprContainer: {
         flex: 1,
+        backgroundColor: colors.background,
     },
     gdprHeader: {
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: colors.surface,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        paddingBottom: 20,
+        paddingTop: Platform.OS === 'ios' ? 10 : 40,
         elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -421,15 +409,28 @@ const styles = StyleSheet.create({
     gdprContent: {
         paddingVertical: 20,
     },
+    gdprPolicyCard: {
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        padding: 20,
+        marginBottom: 20,
+    },
     gdprPolicyText: {
         fontSize: 14,
         lineHeight: 22,
+    },
+    gdprPrefsCard: {
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        padding: 10,
     },
     gdprActions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingTop: 15,
         gap: 10,
+        paddingHorizontal: 20,
+        paddingBottom: 30,
     },
     gdprButton: {
         flex: 1,
@@ -440,13 +441,13 @@ const styles = StyleSheet.create({
     },
     gdprDecline: {
         borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.1)',
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+        backgroundColor: colors.surface,
     },
     gdprAccept: {
-        backgroundColor: '#00c2cb',
+        backgroundColor: colors.accent,
     },
     gdprButtonText: {
-        color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -457,6 +458,7 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 15,
         borderBottomWidth: 1,
+        borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
     },
     gdprLabel: {
         fontSize: 16,
