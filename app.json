@@ -66,13 +66,7 @@
         {
           "ios": {
             "useReactNativeNewArchitecture": false,
-            "extraPods": [
-              {
-                "name": "RCT-Folly",
-                "configurations": ["Release", "Debug"],
-                "modular_headers": true
-              }
-            ]
+            "buildReactNativeFromSource": true
           }
         }
       ],
