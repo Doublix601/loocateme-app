@@ -62,6 +62,21 @@
       "expo-asset",
       "expo-font",
       [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useReactNativeNewArchitecture": false,
+            "extraPods": [
+              {
+                "name": "RCT-Folly",
+                "configurations": ["Release", "Debug"],
+                "modular_headers": true
+              }
+            ]
+          }
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/appIcons/AppIcon.png",
