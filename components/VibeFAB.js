@@ -15,7 +15,7 @@ import Animated, {
 // Total duration of the 360° pre-loading micro-animation (ms).
 // Kept in the 400–600ms range to feel snappy yet perceptible.
 const SPIN_DURATION_MS = 500;
-const LOADING_DURATION_MS = 8000;
+const LOADING_DURATION_MS = 5000;
 
 export default function VibeFAB() {
   const { isMoon, beginVibeTransition } = useVibe();

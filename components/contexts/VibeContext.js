@@ -73,7 +73,7 @@ export function VibeProvider({ children, onVibeChanged }) {
     }
   }, [onVibeChanged]);
 
-  const beginVibeTransition = useCallback((next, durationMs = 8000) => {
+  const beginVibeTransition = useCallback((next, durationMs = 5000) => {
     const target = (next === 'moon') ? 'moon' : 'sun';
     // If already in the same vibe and not transitioning, do nothing
     const current = manualVibe || autoVibe;
@@ -93,7 +93,7 @@ export function VibeProvider({ children, onVibeChanged }) {
 
   // Start the loading overlay for a fixed duration without changing the vibe
   // (vibe should already have been switched by the caller, e.g. VibeFAB onPress).
-  const startVibeLoading = useCallback((target, durationMs = 8000) => {
+  const startVibeLoading = useCallback((target, durationMs = 5000) => {
     const t = (target === 'moon') ? 'moon' : 'sun';
     if (transitionTimer.current) {
       try { clearTimeout(transitionTimer.current); } catch (_) {}
