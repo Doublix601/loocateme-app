@@ -186,9 +186,10 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
     // Listen for mutations that should trigger a refresh
     const unsub = subscribe('api:mutation', ({ path }) => {
-      // Refresh if the user updated their location or heartbeat
-      if (path && (path.includes('/user/location') || path.includes('/user/heartbeat'))) {
-        fetchNearbyLocations();
+      // Rafraîchir la liste suite aux mutations liées à la position MAIS sans renvoyer un POST
+      // pour éviter une boucle infinie (mitraillette à requêtes).
+      if (path && (path.includes('/users/location') || path.includes('/user/location') || path.includes('/user/heartbeat'))) {
+        fetchNearbyLocations({ skipUpdateMyLocation: true });
       }
     });
 
@@ -224,7 +225,8 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     return <Text style={{ color: starIsDark ? '#FFFFFF' : '#ccc', opacity: starIsDark ? 0.3 : 1, fontSize: 18 }}>★</Text>;
   };
 
-  const fetchNearbyLocations = async () => {
+  const fetchNearbyLocations = async (options = {}) => {
+    const { skipUpdateMyLocation = false } = options;
     try {
       setLoading(true);
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -273,11 +275,18 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
       const { latitude, longitude } = location.coords;
 
-      // Parallelize location update and fetching nearby locations to save time
-      const [_, res] = await Promise.all([
-        updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)),
-        getLocations({ lat: latitude, lon: longitude })
-      ]);
+      // En fonction de l'origine de l'appel, on peut éviter d'envoyer un POST /users/location
+      // pour casser toute boucle de rafraîchissement.
+      let res;
+      if (skipUpdateMyLocation) {
+        res = await getLocations({ lat: latitude, lon: longitude });
+      } else {
+        const results = await Promise.all([
+          updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)),
+          getLocations({ lat: latitude, lon: longitude })
+        ]);
+        res = results[1];
+      }
 
       if (res && Array.isArray(res.locations)) {
         // Garde-fou UI: appliquer le même filtrage que le backend

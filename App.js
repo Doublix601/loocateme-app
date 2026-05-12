@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform, StatusBar } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform, StatusBar, View, Text, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
@@ -24,6 +24,7 @@ import LocationPermissionModal from './components/LocationPermissionModal';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { LocationSyncService } from './services/LocationSyncService';
+import { LocationService, ScanMode } from './services/LocationService';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { usePresence } from './hooks/usePresence';
@@ -95,6 +96,7 @@ function AppInner({ purchasesReady }) {
   const transitionX = useRef(new Animated.Value(0)).current;
   const { width } = Dimensions.get('window');
   const prevScreenRef = useRef(null);
+  const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
 
   const [premiumPaywallParams, setPremiumPaywallParams] = useState(null);
 
@@ -109,9 +111,34 @@ function AppInner({ purchasesReady }) {
     addSocialNetwork: require('./assets/socialMediaIcons/addSocialNetwork_logo.png'),
   };
 
+  // Écoute la demande de mise à jour forcée (émise par ApiRequest sur HTTP 426)
+  useEffect(() => {
+    const unsub = subscribe('force_update_required', (payload) => {
+      setForceUpdateInfo(payload || { message: "Veuillez mettre à jour l’application pour continuer.", details: null });
+      try {
+        const url = payload?.details?.upgradeUrl || null;
+        const msg = payload?.message || "Veuillez mettre à jour l’application pour continuer.";
+        const min = payload?.details?.minAppVersion;
+        const api = payload?.details?.apiVersion;
+        const subtitle = [min ? `Version minimale: ${min}` : null, api ? `Version API: ${api}` : null].filter(Boolean).join('\n');
+        Alert.alert(
+          'Mise à jour requise',
+          subtitle ? `${msg}\n\n${subtitle}` : msg,
+          [
+            url ? { text: 'Mettre à jour', onPress: () => { try { Linking.openURL(url); } catch (_) {} } } : undefined,
+            { text: 'OK', style: 'destructive' },
+          ].filter(Boolean),
+          { cancelable: false }
+        );
+      } catch (_) {}
+    });
+    return () => { try { unsub && unsub(); } catch (_) {} };
+  }, []);
+
   const appState = useRef(AppState.currentState);
   const hasShownLocationModal = useRef(false);
   const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
+  const didInitialScanRef = useRef(false);
 
   useEffect(() => {
     const preload = async () => {
@@ -228,11 +255,29 @@ function AppInner({ purchasesReady }) {
         try { publish('userlist:refresh'); } catch (_) {}
         // Re-check permissions when coming back to app
         checkLocationPermissions();
+        // On resume, schedule background stay check-in depending on permissions
+        try { LocationService.performCheckIn(ScanMode.BACKGROUND_STAY); } catch (_) {}
       }
       appState.current = next;
     });
     return () => { try { sub?.remove?.(); } catch (_) {} };
   }, [currentScreen]);
+
+  // Cold start immediate scan once the user lands on LocationList
+  useEffect(() => {
+    if (!authReady) return;
+    if (currentScreen !== 'LocationList') return;
+    if (didInitialScanRef.current) return;
+    didInitialScanRef.current = true;
+    try { LocationService.performCheckIn(ScanMode.INITIAL_SCAN); } catch (_) {}
+  }, [authReady, currentScreen]);
+
+  // Cleanup background timers on unmount
+  useEffect(() => {
+    return () => {
+      try { LocationService.cancelBackgroundStay(); } catch (_) {}
+    };
+  }, []);
 
   useEffect(() => {
     const off = subscribe('auth:logout', () => {
@@ -552,9 +597,29 @@ function AppInner({ purchasesReady }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
-      <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.background }}>
-        {screenToShow}
-      </Animated.View>
+      {forceUpdateInfo ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.background }}>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: colors.onBackground || '#111', marginBottom: 12 }}>Mise à jour requise</Text>
+          <Text style={{ fontSize: 16, color: colors.onBackground || '#111', textAlign: 'center' }}>
+            {forceUpdateInfo?.message || "Veuillez mettre à jour l’application pour continuer."}
+          </Text>
+          {forceUpdateInfo?.details?.minAppVersion ? (
+            <Text style={{ marginTop: 8, fontSize: 14, color: colors.onBackground || '#111' }}>
+              Version minimale: {forceUpdateInfo.details.minAppVersion}
+            </Text>
+          ) : null}
+          <View style={{ height: 24 }} />
+          {forceUpdateInfo?.details?.upgradeUrl ? (
+            <TouchableOpacity onPress={() => { try { Linking.openURL(forceUpdateInfo.details.upgradeUrl); } catch (_) {} }} style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }}>
+              <Text style={{ color: colors.onPrimary || '#fff', fontWeight: '600' }}>Mettre à jour</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : (
+        <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.background }}>
+          {screenToShow}
+        </Animated.View>
+      )}
       <LocationPermissionModal
         visible={locationModal.visible}
         type={locationModal.type}

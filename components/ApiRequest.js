@@ -1,6 +1,7 @@
 // Simple API client for loocateme backend
 // Base URL of the backend API
 import { getServerAddress } from './ServerUtils';
+import Constants from 'expo-constants';
 import { publish } from './EventBus';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { optimizeImageForUpload } from './ImageUtils';
@@ -18,6 +19,7 @@ const PUSH_TOKEN_KEY = 'loocateme_push_token';
 // In-memory access token holder. Persisted via AsyncStorage for auto-login.
 let accessToken = null;
 let loggedBaseUrlOnce = false;
+const APP_VERSION = (Constants?.expoConfig?.version || Constants?.manifest2?.extra?.expoClient?.version || Constants?.manifest?.version || process.env.EXPO_APP_VERSION || '0.0.0');
 
 // --- Lightweight cache for GET requests to avoid spamming the API on navigation ---
 // Key format: `${method}:${url}` (method is uppercased)
@@ -108,6 +110,11 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
     if (includeCredentials) {
         init.credentials = 'include';
     }
+
+    // Always send current app version so le backend peut imposer une version minimale
+    try {
+        init.headers['X-App-Version'] = APP_VERSION;
+    } catch (_) {}
 
     if (accessToken) {
         init.headers['Authorization'] = `Bearer ${accessToken}`;
@@ -258,6 +265,17 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 
         if (!res.ok) {
             console.error('[API] Request failed', { url, method, status: res.status, code: data?.code, message: data?.message, response: data });
+
+            // Version minimale requise par le backend
+            if (res.status === 426) {
+                try {
+                    publish('force_update_required', {
+                        status: 426,
+                        details: data?.details || null,
+                        message: data?.message || 'Veuillez mettre à jour l’application pour continuer.'
+                    });
+                } catch (_) {}
+            }
 
         // Detect authentication/user-not-found errors and auto-logout
         const code = data?.code;
