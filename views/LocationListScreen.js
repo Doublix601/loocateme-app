@@ -28,7 +28,7 @@ import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
-import { OverpassService } from '../services/OverpassService';
+import { OverpassService, isTypeAllowedForVibe } from '../services/OverpassService';
 
 const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeople, initialScrollOffset = 0, onScroll }) => {
   const { colors, isDark } = useTheme();
@@ -47,6 +47,20 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   const [filteredOsmPois, setFilteredOsmPois] = useState([]); // vibe-filtered OSM
   const [refreshing, setRefreshing] = useState(false);
   const [userCoords, setUserCoords] = useState(null);
+  // Pagination des lieux backend : minimum 20, on charge +10 quand l'utilisateur
+  // atteint le bas de la liste, jusqu'à un plafond de 50 (cf. backend `limit`).
+  const MIN_LOCATIONS = 20;
+  const MAX_LOCATIONS = 50;
+  const LOCATIONS_STEP = 10;
+  const [displayLimit, setDisplayLimit] = useState(MIN_LOCATIONS);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
+  // `hasMore` indique si le backend peut encore renvoyer des lieux supplémentaires.
+  // Dès qu'une requête retourne moins de `limit` résultats, on sait qu'on a vidé
+  // la zone et il est inutile de continuer à incrémenter `displayLimit`.
+  // Cela évite l'affichage prématuré du message « Vous avez exploré tous les
+  // lieux actifs à proximité » lorsque la DB locale est peu peuplée.
+  const [hasMore, setHasMore] = useState(true);
   const { user: currentUser } = useContext(UserContext);
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
@@ -78,21 +92,13 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     };
   }, []);
 
-  // Contrainte stricte: afficher uniquement les tags autorisés par le mode (+ neutres)
+  // Contrainte stricte: afficher uniquement les types autorisés par le mode (jour/nuit).
+  // Le mapping vibe → types est centralisé dans OverpassService (cf. ALLOWED_TYPES_BY_VIBE)
+  // pour garantir la cohérence entre la requête Overpass et le filtre UI.
   useEffect(() => {
-    const dayTags = new Set(['gym', 'coworking_space', 'library', 'cafe']);
-    const nightTags = new Set(['bar', 'pub', 'nightclub', 'restaurant']);
-    const neutral = new Set(['cinema', 'fast_food']);
-
-    const allow = (t) => {
-      if (!t) return false;
-      if (isMoon) return nightTags.has(t) || neutral.has(t);
-      return dayTags.has(t) || neutral.has(t);
-    };
-
     const task = () => {
       try {
-        const next = Array.isArray(osmPois) ? osmPois.filter(p => allow(p?.type)) : [];
+        const next = Array.isArray(osmPois) ? osmPois.filter(p => isTypeAllowedForVibe(p?.type, vibe)) : [];
         setFilteredOsmPois(next);
       } catch (_) {}
     };
@@ -103,10 +109,19 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       return () => { try { handle?.cancel?.(); } catch (_) {} };
     }
     task();
-  }, [osmPois, isMoon, transitioningTo]);
+  }, [osmPois, vibe, transitioningTo]);
+
+  // Locations backend : le filtre par vibe est désormais entièrement délégué au
+  // backend (`TYPES_BY_VIBE` + élargissement progressif du rayon + remplissage
+  // jusqu'au minimum requis). On NE re-filtre PAS ici côté client, sinon on
+  // exclurait les lieux de remplissage que le backend a ajoutés pour garantir
+  // les 20 lieux minimum demandés par l'utilisateur, quelle que soit la vibe.
+  const filteredLocations = useMemo(() => {
+    return Array.isArray(locations) ? locations : [];
+  }, [locations]);
 
   const locationsWithDistance = useMemo(() => {
-    const merged = [...locations, ...filteredOsmPois].reduce((acc, it) => {
+    const merged = [...filteredLocations, ...filteredOsmPois].reduce((acc, it) => {
       const key = it?._id || `${it?.osmId}`;
       if (!key) return acc;
       if (acc.map.has(key)) return acc; // dedupe
@@ -126,9 +141,11 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       );
       return { ...loc, distance };
     });
-  }, [locations, filteredOsmPois, userCoords]);
+  }, [filteredLocations, filteredOsmPois, userCoords]);
 
-  // PulseList ordering by vibe
+  // PulseList ordering by vibe.
+  // Règle de tri stricte (Spec §4) : Priorité aux lieux Étoilés (Pro) > Proximité géographique.
+  // Les lieux "Pro" sont identifiés par `isPromoted` OU `stars >= 2` (étoilés persistants).
   const pulseItems = useMemo(() => {
     const items = [...locationsWithDistance];
     const greenCount = (it) => {
@@ -147,9 +164,13 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       return 0;
     };
 
-    // Partition
-    const featured = items.filter(it => !!it.isPromoted);
-    const nonFeatured = items.filter(it => !it.isPromoted);
+    const isPro = (it) => !!it?.isPromoted || (typeof it?.stars === 'number' && it.stars >= 2);
+
+    // Partition: Pro/étoilés en tête, triés par étoiles puis proximité
+    const featured = items
+      .filter(isPro)
+      .sort((a, b) => (b.stars || 0) - (a.stars || 0) || (a.distance || 0) - (b.distance || 0));
+    const nonFeatured = items.filter(it => !isPro(it));
     const hotspots = nonFeatured
       .filter(it => greenCount(it) > 0)
       .sort((a,b) => greenCount(b) - greenCount(a) || (a.distance||0) - (b.distance||0));
@@ -162,6 +183,30 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
     return [...featuredMarked, ...hotspots, ...exploration];
   }, [locationsWithDistance, isMoon]);
+
+  // Liste effectivement affichée : on borne au `displayLimit` courant pour
+  // respecter l'infinite scroll (20 → 30 → 40 → 50 max).
+  const visibleItems = useMemo(() => {
+    return pulseItems.slice(0, Math.min(displayLimit, MAX_LOCATIONS));
+  }, [pulseItems, displayLimit]);
+
+  // Reset de la pagination à chaque changement de Vibe (Soleil/Lune).
+  // Spec §2: le compteur revient à 20 et la liste se reconstruit pendant
+  // l'écran de chargement de 8s déclenché par VibeFAB.
+  const prevVibeRef = useRef(vibe);
+  useEffect(() => {
+    if (prevVibeRef.current !== vibe) {
+      prevVibeRef.current = vibe;
+      setDisplayLimit(MIN_LOCATIONS);
+      setLoadingMore(false);
+      setLoadMoreError(false);
+      setHasMore(true);
+      // Recharger les 20 lieux prioritaires correspondant aux tags du nouveau mode
+      fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, limit: MIN_LOCATIONS });
+      // Remonter en haut de liste
+      try { flatListRef.current?.scrollToOffset?.({ offset: 0, animated: false }); } catch (_) {}
+    }
+  }, [vibe]);
 
   // Suivi de visibilité pour stopper les animations hors‑écran
   const visibleSetRef = useRef(new Set());
@@ -367,9 +412,9 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   };
 
   const fetchNearbyLocations = async (options = {}) => {
-    const { skipUpdateMyLocation = false } = options;
+    const { skipUpdateMyLocation = false, silent = false } = options;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.warn('Permission to access location was denied');
@@ -420,12 +465,13 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       // En fonction de l'origine de l'appel, on peut éviter d'envoyer un POST /users/location
       // pour casser toute boucle de rafraîchissement.
       let res;
+      const reqLimit = options.limit || displayLimit;
       if (skipUpdateMyLocation) {
-        res = await getLocations({ lat: latitude, lon: longitude });
+        res = await getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe });
       } else {
         const results = await Promise.all([
           updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)),
-          getLocations({ lat: latitude, lon: longitude })
+          getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe })
         ]);
         res = results[1];
       }
@@ -443,6 +489,10 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
         // Plus de filtrage restrictif ici, le backend a déjà fait le travail de sélection
         setLocations(normalized);
+        // Si le backend renvoie moins de `reqLimit` lieux, c'est qu'on a vidé
+        // la zone : on coupe la pagination pour éviter les requêtes inutiles
+        // et l'affichage prématuré du message de fin de liste.
+        setHasMore(normalized.length >= reqLimit && reqLimit < MAX_LOCATIONS);
       }
 
       // Overpass OSM fetch with throttle (catégories dépendantes du vibe)
@@ -453,14 +503,99 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     } catch (e) {
       console.error('Error fetching locations:', e);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchNearbyLocations();
+    setDisplayLimit(MIN_LOCATIONS);
+    await fetchNearbyLocations({ limit: MIN_LOCATIONS });
     setRefreshing(false);
+  };
+
+  // Charge plus de lieux backend (jusqu'à MAX_LOCATIONS) quand l'utilisateur
+  // approche du bas de la liste. Lazy loading: l'appel API n'est déclenché
+  // qu'à la demande (scroll) et le déchargement hors-écran est géré par FlatList
+  // via `removeClippedSubviews` + `windowSize`.
+  const handleLoadMore = async () => {
+    if (loadingMore) return;
+    if (loadMoreError) return; // l'utilisateur doit cliquer sur "Réessayer"
+    if (displayLimit >= MAX_LOCATIONS) return;
+    // Stop si on sait déjà qu'il n'y a plus rien à charger côté backend.
+    // Évite la cascade d'appels qui faisait grimper `displayLimit` jusqu'à 50
+    // alors que la zone ne contenait qu'une poignée de lieux.
+    if (!hasMore && pulseItems.length <= displayLimit) return;
+    // Évite de re-fetcher si on n'a même pas encore consommé tout le buffer local.
+    // Cas typique : le backend a renvoyé 20 lieux et l'utilisateur scrolle ;
+    // on incrémente d'abord la fenêtre, puis on fetch si nécessaire.
+    const next = Math.min(MAX_LOCATIONS, displayLimit + LOCATIONS_STEP);
+    if (next === displayLimit) return;
+    setLoadingMore(true);
+    setLoadMoreError(false);
+    setDisplayLimit(next);
+    try {
+      // Si le buffer local couvre déjà la nouvelle fenêtre, pas besoin d'appel
+      // réseau supplémentaire (les données ont déjà été renvoyées par le backend).
+      if (pulseItems.length < next && hasMore) {
+        await fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, limit: next });
+      }
+    } catch (_) {
+      setLoadMoreError(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleRetryLoadMore = () => {
+    setLoadMoreError(false);
+    // Relance immédiate
+    setTimeout(() => { handleLoadMore(); }, 0);
+  };
+
+  // Footer dynamique : spinner pendant le chargement, message de fin lorsque le
+  // plafond est atteint, ou bouton "Réessayer" en cas d'erreur réseau.
+  const renderListFooter = () => {
+    if (loadingMore) {
+      return (
+        <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color="#00c2cb" />
+          <Text style={{ marginTop: 6, fontSize: 12, color: colors.textSecondary }}>
+            Chargement de lieux supplémentaires…
+          </Text>
+        </View>
+      );
+    }
+    if (loadMoreError) {
+      return (
+        <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+          <Text style={{ marginBottom: 8, fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}>
+            Impossible de charger plus de lieux. Vérifie ta connexion.
+          </Text>
+          <TouchableOpacity
+            onPress={handleRetryLoadMore}
+            style={{ backgroundColor: '#00c2cb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 8 }}
+          >
+            <Text style={{ color: '#fff', fontWeight: '700' }}>Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    // Message de fin : seulement si on a vraiment atteint le plafond (50) OU
+    // si le backend a confirmé qu'il n'y a plus rien à servir (`!hasMore`) ET
+    // que la fenêtre courante couvre déjà tout le buffer local.
+    const reachedCap = displayLimit >= MAX_LOCATIONS && visibleItems.length >= MAX_LOCATIONS;
+    const exhausted = !hasMore && visibleItems.length >= pulseItems.length && pulseItems.length > 0;
+    if (reachedCap || exhausted) {
+      return (
+        <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+          <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', fontStyle: 'italic' }}>
+            Vous avez exploré tous les lieux actifs à proximité. Déplacez-vous ou faites une recherche pour en voir plus.
+          </Text>
+        </View>
+      );
+    }
+    return null;
   };
 
 
@@ -480,12 +615,22 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent'
       }
     ]}>
-      <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Lieux à proximité</Text>
+      <Text style={[styles.headerTitle, { color: '#00c2cb', flex: 1 }]} numberOfLines={1}>Lieux à proximité</Text>
       <View style={styles.headerIcons}>
-        <TouchableOpacity onPress={() => onSearchPeople && onSearchPeople()} style={styles.headerIconButton}>
-          <Text style={{ fontSize: 24 }}>🔎</Text>
+        <TouchableOpacity
+          onPress={() => onSearchPeople && onSearchPeople()}
+          style={styles.headerIconButton}
+          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+          accessibilityLabel="Rechercher"
+        >
+          <Text style={{ fontSize: 22 }}>🔎</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={onReturnToAccount} style={styles.headerProfileButton}>
+        <TouchableOpacity
+          onPress={onReturnToAccount}
+          style={styles.headerProfileButton}
+          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+          accessibilityLabel="Mon compte"
+        >
           <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
         </TouchableOpacity>
       </View>
@@ -504,7 +649,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         {renderHeader()}
         {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
-      ) : pulseItems.length === 0 ? (
+      ) : visibleItems.length === 0 ? (
         // Etat vide: permettre le pull-to-refresh même sans éléments
         <ScrollView
           contentContainerStyle={[styles.listContent, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
@@ -513,7 +658,11 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           bounces
           overScrollMode="always"
         >
-          <Text style={[styles.emptyText, { color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }]}>Zone calme pour l’instant</Text>
+          <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🌙</Text>
+          <Text style={[styles.emptyText, { color: colors.text, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Zone calme pour l’instant</Text>
+          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, paddingHorizontal: 32, lineHeight: 20 }}>
+            Aucun lieu actif n’a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.
+          </Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity onPress={() => {
               if (userCoords) {
@@ -530,8 +679,8 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       ) : (
         <FlatList
           ref={flatListRef}
-          data={pulseItems}
-          keyExtractor={(item) => item._id}
+          data={visibleItems}
+          keyExtractor={(item) => item._id || item.osmId || String(item.name)}
           renderItem={renderLocation}
           onViewableItemsChanged={onViewableItemsChanged}
           viewabilityConfig={viewabilityConfig}
@@ -553,6 +702,9 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           maxToRenderPerBatch={10}
           windowSize={10}
           removeClippedSubviews={Platform.OS === 'android'}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={renderListFooter}
           // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
           contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
           // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
@@ -576,7 +728,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     zIndex: 10,
   },
-  headerTitle: { fontSize: 24, fontWeight: '800', flex: 1, letterSpacing: -0.5 },
+  headerTitle: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
+  headerSubtitle: { fontSize: 12, fontWeight: '500', marginTop: 2, opacity: 0.85 },
   headerIcons: { flexDirection: 'row', alignItems: 'center' },
   headerIconButton: {
     width: 44,

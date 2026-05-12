@@ -121,9 +121,13 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
     const isLocation = item._type === 'location';
     return (
         <TouchableOpacity
+        activeOpacity={0.7}
         style={[
           styles.row,
-          { backgroundColor: colors.surface },
+          {
+            backgroundColor: colors.surface,
+            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
+          },
           index === results.length - 1 && { marginBottom: 0 },
           item.isGhost && { opacity: 0.6 }
         ]}
@@ -190,14 +194,25 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
       ) : (
         <DaySkyBackground style={StyleSheet.absoluteFill} />
       )}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+      <View style={[
+        styles.header,
+        {
+          backgroundColor: colors.surface,
+          borderBottomWidth: isDark ? 1 : 0,
+          borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent',
+          shadowOpacity: isDark ? 0 : 0.08,
+          elevation: isDark ? 0 : 4
+        }
+      ]}>
         <TouchableOpacity
-          style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
+          style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.12)' }]}
           onPress={onClose}
+          hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+          accessibilityLabel="Fermer la recherche"
         >
           <Text style={{ fontSize: 18, color: '#00c2cb', fontWeight: 'bold' }}>✖</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Recherche</Text>
+        <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Recherche</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -211,12 +226,21 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
             placeholderTextColor={isDark ? '#aaa' : '#999'}
             style={[styles.input, { color: isDark ? '#fff' : colors.text }]}
             autoFocus
+            returnKeyType="search"
+            autoCorrect={false}
+            autoCapitalize="none"
           />
-          {query.length > 0 && (
-              <TouchableOpacity onPress={() => setQuery('')}>
-                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.3, fontSize: 18 }}>ⓧ</Text>
+          {loading ? (
+            <ActivityIndicator size="small" color="#00c2cb" />
+          ) : query.length > 0 ? (
+              <TouchableOpacity
+                onPress={() => setQuery('')}
+                hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+                accessibilityLabel="Effacer la recherche"
+              >
+                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.4, fontSize: 20 }}>ⓧ</Text>
               </TouchableOpacity>
-          )}
+          ) : null}
         </View>
 
         <View style={styles.filters}>
@@ -247,8 +271,11 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
         </View>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 30 }} />
+      {loading && results.length === 0 ? (
+        <View style={{ marginTop: 40, alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#00c2cb" />
+          <Text style={{ marginTop: 12, color: isDark ? '#fff' : colors.text, opacity: 0.5, fontSize: 13 }}>Recherche en cours…</Text>
+        </View>
       ) : (
         <FlatList
           data={results}
@@ -256,16 +283,29 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
           renderItem={renderRow}
           contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 }}
           ListHeaderComponent={showInfoMsg ? (
-            <View style={{ marginTop: 40, paddingHorizontal: 40 }}>
-              <Text style={{ textAlign: 'center', color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.7 : 0.5, lineHeight: 22 }}>
+            <View style={{ marginTop: 40, paddingHorizontal: 30, alignItems: 'center' }}>
+              <Text style={{ fontSize: 44, marginBottom: 12, opacity: 0.6 }}>
+                {qTrim.length < minChars ? '🔍' : '🤷'}
+              </Text>
+              <Text style={{ textAlign: 'center', color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.75 : 0.55, lineHeight: 22, fontSize: 15 }}>
                 {qTrim.length < minChars
                   ? 'Tape au moins 2 lettres pour lancer la recherche'
                   : 'Aucun résultat trouvé pour cette recherche.'}
               </Text>
+              {qTrim.length >= minChars && (
+                <Text style={{ textAlign: 'center', color: isDark ? '#aaa' : '#999', marginTop: 8, fontSize: 12 }}>
+                  Vérifie les filtres ou essaie un autre mot-clé.
+                </Text>
+              )}
             </View>
-          ) : null}
+          ) : (
+            <Text style={{ color: isDark ? '#aaa' : '#777', fontSize: 12, marginBottom: 8, marginLeft: 4 }}>
+              {results.length} résultat{results.length > 1 ? 's' : ''}
+            </Text>
+          )}
           ListEmptyComponent={null}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         />
       )}
     </View>
@@ -337,6 +377,7 @@ const styles = StyleSheet.create({
       padding: 12,
       borderRadius: 20,
       marginBottom: 12,
+      borderWidth: 1,
       elevation: 2,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },

@@ -18,14 +18,68 @@ let lastResult = { bboxKey: null, pois: [] };
 
 // Catégories d'établissement par vibe (mode jour/nuit)
 // - 'moon' (nuit) : lieux de sortie nocturne
-// - 'sun'  (jour) : lieux d'activité diurne
-const AMENITIES_BY_VIBE = {
-  moon: ['bar', 'pub', 'nightclub', 'restaurant', 'cafe', 'cinema', 'fast_food'],
-  sun:  ['cafe', 'restaurant', 'fast_food', 'coworking_space', 'library', 'gym', 'university', 'college', 'school', 'food_court'],
+// - 'sun'  (jour) : lieux d'activité diurne (études, sport, restauration)
+// On répartit selon la clé OSM utilisée (amenity vs leisure).
+const CATEGORIES_BY_VIBE = {
+  moon: {
+    amenity: ['bar', 'pub', 'nightclub', 'restaurant', 'cafe', 'cinema', 'fast_food'],
+    leisure: [],
+    // Libellés stockés côté backend (enum Location.type)
+    backend: [
+      'Bar 🍺', 'Boîte de nuit 💃',
+      // partagés jour/nuit (présents dans les deux listes)
+      'Restaurant 🍴', 'Café ☕', 'Cinéma 🎬', 'Fast food 🍔',
+      'Bowling 🎳', 'TEST 🤖',
+    ],
+  },
+  sun: {
+    amenity: ['cafe', 'restaurant', 'fast_food', 'food_court', 'coworking_space', 'library', 'gym', 'university', 'college', 'school'],
+    leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch'],
+    backend: [
+      'Salle de sport 🏋️', 'Parc 🌳', 'Plage 🏖️', "Parc d'attractions 🎢",
+      'Bibliothèque 📚', 'Centre sportif 🏟️', 'Éducation 🎓', 'Glacier 🍦',
+      // partagés jour/nuit
+      'Restaurant 🍴', 'Café ☕', 'Cinéma 🎬', 'Fast food 🍔',
+      'Bowling 🎳', 'TEST 🤖',
+    ],
+  },
 };
 
-function normalizeVibe(v) {
+// Set "à plat" des types autorisés par vibe (utile pour filtrer côté UI les POIs déjà
+// reçus, qu'ils proviennent d'Overpass ou du backend). On agrège amenity + leisure +
+// les libellés backend car le champ `type` peut contenir l'un ou l'autre format selon
+// la source (Overpass: clé OSM ; backend MongoDB: libellé français à émoji).
+export const ALLOWED_TYPES_BY_VIBE = {
+  moon: new Set([
+    ...CATEGORIES_BY_VIBE.moon.amenity,
+    ...CATEGORIES_BY_VIBE.moon.leisure,
+    ...CATEGORIES_BY_VIBE.moon.backend,
+  ]),
+  sun: new Set([
+    ...CATEGORIES_BY_VIBE.sun.amenity,
+    ...CATEGORIES_BY_VIBE.sun.leisure,
+    ...CATEGORIES_BY_VIBE.sun.backend,
+  ]),
+};
+
+export function normalizeVibe(v) {
   return v === 'moon' ? 'moon' : 'sun';
+}
+
+// Renvoie true si le type d'un POI est compatible avec la vibe demandée.
+// Règle: on n'exclut un lieu QUE si son `type` appartient exclusivement à la vibe
+// opposée (ex: 'nightclub' en mode jour). Les types inconnus, neutres ou présents
+// dans les deux vibes restent visibles. Cela évite de masquer les locations du
+// backend dont le `type` ne figure pas dans nos listes (ex: 'poi', tags rares, etc.).
+export function isTypeAllowedForVibe(type, vibe) {
+  if (!type) return true; // pas de type connu -> on garde
+  const v = normalizeVibe(vibe);
+  const other = v === 'moon' ? 'sun' : 'moon';
+  const allowedHere = ALLOWED_TYPES_BY_VIBE[v];
+  const allowedOther = ALLOWED_TYPES_BY_VIBE[other];
+  // Exclu uniquement si exclusivement dans l'autre vibe
+  if (allowedOther.has(type) && !allowedHere.has(type)) return false;
+  return true;
 }
 
 // Cache of known OSM IDs we already pushed to backend
@@ -41,9 +95,12 @@ function buildKey(lat, lon, radius, vibe) {
 }
 
 function buildQuery({ lat, lon, radius = 1200, vibe = 'sun' }) {
-  // Amenity types choisis selon le vibe (jour/nuit)
-  const types = AMENITIES_BY_VIBE[normalizeVibe(vibe)];
-  const filters = types.map(t => `node["amenity"="${t}"](around:${radius},${lat},${lon});`).join('\n');
+  // Catégories choisies selon le vibe (jour/nuit), réparties par clé OSM
+  const cats = CATEGORIES_BY_VIBE[normalizeVibe(vibe)];
+  const parts = [];
+  for (const t of cats.amenity) parts.push(`node["amenity"="${t}"](around:${radius},${lat},${lon});`);
+  for (const t of cats.leisure) parts.push(`node["leisure"="${t}"](around:${radius},${lat},${lon});`);
+  const filters = parts.join('\n');
   return `data=[out:json][timeout:25];(\n${filters}\n);out body;`;
 }
 
@@ -67,7 +124,7 @@ async function fetchOverpass(query) {
 function normalize(elements = []) {
   return (elements || []).filter(e => e && e.type === 'node').map(e => {
     const name = e.tags?.name || 'Lieu OSM';
-    const type = e.tags?.amenity || 'poi';
+    const type = e.tags?.amenity || e.tags?.leisure || 'poi';
     return {
       _id: `osm:${e.id}`,
       osmId: e.id,

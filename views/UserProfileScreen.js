@@ -480,9 +480,10 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
       )}
       <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
       <TouchableOpacity
-        style={styles.backButton}
+        style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
         onPress={onReturnToList}
         hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+        accessibilityLabel="Retour"
       >
         <Image
           source={require('../assets/appIcons/backArrow.png')}
@@ -490,11 +491,12 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         />
       </TouchableOpacity>
       <TouchableOpacity
-        style={styles.menuButton}
+        style={[styles.menuButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
         onPress={() => setActionMenuVisible(true)}
         hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+        accessibilityLabel="Plus d'options"
       >
-        <Text style={styles.menuButtonText}>...</Text>
+        <Text style={styles.menuButtonText}>⋯</Text>
       </TouchableOpacity>
       {/* Bouton Suivre/Message en icône seule (lien) */}
       <TouchableOpacity
@@ -1032,16 +1034,24 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     top: 10,
-    left: 10,
+    left: 12,
     zIndex: 10,
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menuButton: {
     position: 'absolute',
     top: 10,
-    right: 10,
+    right: 12,
     zIndex: 10,
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   followIconButton: {
     position: 'absolute',
@@ -1062,8 +1072,8 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   backButtonImage: {
-    width: 28,
-    height: 28,
+    width: 22,
+    height: 22,
     tintColor: '#00c2cb',
   },
   modalBackdrop: {

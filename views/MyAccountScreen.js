@@ -871,9 +871,10 @@ const MyAccountScreen = ({
             )}
             <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
             <TouchableOpacity
-                style={styles.backButton}
+                style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
                 onPress={onReturnToList}
                 hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+                accessibilityLabel="Retour"
             >
                 <Image
                     source={require('../assets/appIcons/backArrow.png')}
@@ -913,14 +914,12 @@ const MyAccountScreen = ({
                                 </TouchableOpacity>
                             </View>
                             <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                                <TouchableOpacity
-                                    onLongPress={() => handleEdit('username')}
-                                    delayLongPress={300}
-                                    activeOpacity={1}
-                                >
-                                    <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }, textPrimaryStyle]}>
-                                        {user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
-                                    </Text>
+                                <View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }, textPrimaryStyle]}>
+                                            {user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
+                                        </Text>
+                                    </View>
                                     {/* Mesure invisible sur une ligne pour calculer la largeur exacte du nom */}
                                     <Text
                                         style={[styles.usernameUnderPhoto, { fontSize: usernameFont, position: 'absolute', opacity: 0 }]}
@@ -932,7 +931,7 @@ const MyAccountScreen = ({
                                     >
                                         {user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
                                     </Text>
-                                </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                         {/* Traffic Light UI for Status */}
@@ -965,7 +964,10 @@ const MyAccountScreen = ({
                                 delayLongPress={300}
                                 activeOpacity={1}
                             >
-                                <Text style={[styles.identityLabel, labelStyle]}>Prénom</Text>
+                                <View style={styles.identityLabelRow}>
+                                    <Text style={[styles.identityLabel, labelStyle]}>Prénom</Text>
+                                    <Text style={styles.identityEditHint}>✏️</Text>
+                                </View>
                                 <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
                                     {user?.firstName || '—'}
                                 </Text>
@@ -977,7 +979,10 @@ const MyAccountScreen = ({
                                 delayLongPress={300}
                                 activeOpacity={1}
                             >
-                                <Text style={[styles.identityLabel, labelStyle]}>Nom</Text>
+                                <View style={styles.identityLabelRow}>
+                                    <Text style={[styles.identityLabel, labelStyle]}>Nom</Text>
+                                    <Text style={styles.identityEditHint}>✏️</Text>
+                                </View>
                                 <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
                                     {user?.lastName || '—'}
                                 </Text>
@@ -989,7 +994,10 @@ const MyAccountScreen = ({
                                 delayLongPress={300}
                                 activeOpacity={1}
                             >
-                                <Text style={[styles.identityLabel, labelStyle]}>Custom</Text>
+                                <View style={styles.identityLabelRow}>
+                                    <Text style={[styles.identityLabel, labelStyle]}>Custom</Text>
+                                    <Text style={styles.identityEditHint}>✏️</Text>
+                                </View>
                                 <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
                                     {user?.customName || '—'}
                                 </Text>
@@ -1920,14 +1928,30 @@ const styles = StyleSheet.create({
     backButton: {
         position: 'absolute',
         top: 10,
-        left: 10,
+        left: 12,
         zIndex: 10,
-        padding: 8,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     backButtonImage: {
-        width: 28,
-        height: 28,
+        width: 22,
+        height: 22,
         tintColor: '#00c2cb',
+    },
+    identityLabelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: 2,
+    },
+    identityEditHint: {
+        fontSize: 10,
+        opacity: 0.45,
+        marginLeft: 4,
     },
 });
 

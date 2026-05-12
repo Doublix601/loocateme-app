@@ -423,8 +423,11 @@ export async function getPopularUsers({ limit = 10 } = {}) {
     return request(`/users/popular?${qs.toString()}`, { method: 'GET' });
 }
 
-export async function getLocations({ lat, lon }) {
-    const qs = new URLSearchParams({ lat: String(lat), lon: String(lon) });
+export async function getLocations({ lat, lon, limit, vibe } = {}) {
+    const params = { lat: String(lat), lon: String(lon) };
+    if (limit != null) params.limit = String(limit);
+    if (vibe) params.vibe = String(vibe);
+    const qs = new URLSearchParams(params);
     return request(`/locations?${qs.toString()}`, { method: 'GET' });
 }
 
