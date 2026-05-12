@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, PanResponder, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import DaySkyBackground from '../components/DaySkyBackground';
+import NightSkyBackground from '../components/NightSkyBackground';
 import { searchUsers, trackUserSearch } from '../components/ApiRequest';
 import { proxifyImageUrl, formatDistance as sharedFormatDistance } from '../components/ServerUtils';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useVibe } from '../components/contexts/VibeContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -18,6 +22,7 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
   const [includeLocations, setIncludeLocations] = useState(true);
   const debRef = useRef(null);
   const { colors, isDark } = useTheme();
+  const { isMoon } = useVibe();
 
   const panResponder = useRef(
     PanResponder.create({
@@ -179,7 +184,12 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
   const showInfoMsg = !loading && results.length === 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+      {isMoon ? (
+        <NightSkyBackground style={StyleSheet.absoluteFill} />
+      ) : (
+        <DaySkyBackground style={StyleSheet.absoluteFill} />
+      )}
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}

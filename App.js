@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform, StatusBar, View, Text, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
 import LoginScreen from './views/LoginScreen';
 import ForgotPasswordScreen from './views/ForgotPasswordScreen';
@@ -23,6 +23,9 @@ import LocationPermissionModal from './components/LocationPermissionModal';
 // Chat screens supprimés (fonctionnalité de chat désactivée)
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
+import { VibeProvider, useVibe } from './components/contexts/VibeContext';
+import VibeFAB from './components/VibeFAB';
+import VibeTransitOverlay from './components/VibeTransitOverlay';
 import { LocationSyncService } from './services/LocationSyncService';
 import { LocationService, ScanMode } from './services/LocationService';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
@@ -83,7 +86,8 @@ const mapProfileUser = (u = {}) => {
 function AppInner({ purchasesReady }) {
   const { user: appUser, updateUser } = useContext(UserContext);
   const { hasStatsAccess } = usePremiumAccess();
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, setMode } = useTheme();
+  const { isMoon } = useVibe();
   const [currentScreen, setCurrentScreen] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedLocationId, setSelectedLocationId] = useState(null);
@@ -110,6 +114,11 @@ function AppInner({ purchasesReady }) {
     youtube: require('./assets/socialMediaIcons/yt_logo.png'),
     addSocialNetwork: require('./assets/socialMediaIcons/addSocialNetwork_logo.png'),
   };
+
+  // Synchroniser le thème avec la vibe (soleil = light, lune = dark)
+  useEffect(() => {
+    try { setMode(isMoon ? 'dark' : 'light'); } catch (_) {}
+  }, [isMoon]);
 
   // Écoute la demande de mise à jour forcée (émise par ApiRequest sur HTTP 426)
   useEffect(() => {
@@ -595,7 +604,7 @@ function AppInner({ purchasesReady }) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
       {forceUpdateInfo ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.background }}>
@@ -620,6 +629,9 @@ function AppInner({ purchasesReady }) {
           {screenToShow}
         </Animated.View>
       )}
+      {/* Vibe Switch FAB overlay */}
+      <VibeTransitOverlay />
+      {currentScreen === 'LocationList' && <VibeFAB />}
       <LocationPermissionModal
         visible={locationModal.visible}
         type={locationModal.type}
@@ -631,11 +643,15 @@ function AppInner({ purchasesReady }) {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <LocalizationProvider>
-        <AppWithReadyStatus />
-      </LocalizationProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <VibeProvider>
+          <LocalizationProvider>
+            <AppWithReadyStatus />
+          </LocalizationProvider>
+        </VibeProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
 

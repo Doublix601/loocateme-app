@@ -18,7 +18,10 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import DaySkyBackground from '../components/DaySkyBackground';
+import NightSkyBackground from '../components/NightSkyBackground';
 import * as Location from 'expo-location';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { proxifyImageUrl } from '../components/ServerUtils';
@@ -28,6 +31,7 @@ import { UserContext } from '../components/contexts/UserContext';
 import { trackProfileView, trackSocialClick, createReport, blockUser, getFollowStatus as apiGetFollowStatus, createFollowRequest as apiCreateFollowRequest } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useVibe } from '../components/contexts/VibeContext';
 import { Feather } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
@@ -57,6 +61,15 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const [followStatus, setFollowStatus] = React.useState('none'); // 'none' | 'pending' | 'accepted'
   const [followLoading, setFollowLoading] = React.useState(false);
   const { isDark, colors } = useTheme();
+  const { isMoon } = useVibe();
+  const insets = useSafeAreaInsets();
+  const skyFillStyle = {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: -insets.top,
+    bottom: -insets.bottom,
+  };
 
   // Dynamic scaling based on number of social networks to avoid scrolling and fill the page reasonably
   const socialsArr = (user?.socialMedias ?? user?.socialMedia ?? []);
@@ -459,7 +472,13 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+    <View style={{ flex: 1 }}>
+      {isMoon ? (
+        <NightSkyBackground style={skyFillStyle} />
+      ) : (
+        <DaySkyBackground style={skyFillStyle} />
+      )}
+      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
       <TouchableOpacity
         style={styles.backButton}
         onPress={onReturnToList}
@@ -503,7 +522,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         )}
       </TouchableOpacity>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.06, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.06, paddingBottom: Math.max(24, height * 0.06) + insets.bottom, flexGrow: 1 }}>
 
         <View style={styles.userInfoContainer}>
           <View style={styles.profileHeader}>
@@ -728,8 +747,8 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         </TouchableWithoutFeedback>
       </Modal>
 
-
     </SafeAreaView>
+    </View>
   );
 };
 

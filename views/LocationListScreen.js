@@ -12,8 +12,12 @@ import {
   Dimensions,
   PanResponder,
   Platform,
+  InteractionManager,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import DaySkyBackground from '../components/DaySkyBackground';
+import NightSkyBackground from '../components/NightSkyBackground';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { getLocations, updateMyLocation } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
@@ -21,13 +25,26 @@ import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance, formatDistance } from '../components/ServerUtils';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useVibe } from '../components/contexts/VibeContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
+import { OverpassService } from '../services/OverpassService';
 
 const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeople, initialScrollOffset = 0, onScroll }) => {
   const { colors, isDark } = useTheme();
+  const { isMoon, vibe, transitioningTo } = useVibe();
+  const insets = useSafeAreaInsets();
+  const skyFillStyle = {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: -insets.top,
+    bottom: -insets.bottom,
+  };
   const [loading, setLoading] = useState(false);
-  const [locations, setLocations] = useState([]);
+  const [locations, setLocations] = useState([]); // backend locations
+  const [osmPois, setOsmPois] = useState([]); // overpass locations
+  const [filteredOsmPois, setFilteredOsmPois] = useState([]); // vibe-filtered OSM
   const [refreshing, setRefreshing] = useState(false);
   const [userCoords, setUserCoords] = useState(null);
   const { user: currentUser } = useContext(UserContext);
@@ -61,10 +78,46 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     };
   }, []);
 
-  const locationsWithDistance = useMemo(() => {
-    if (!userCoords) return locations;
+  // Contrainte stricte: afficher uniquement les tags autorisés par le mode (+ neutres)
+  useEffect(() => {
+    const dayTags = new Set(['gym', 'coworking_space', 'library', 'cafe']);
+    const nightTags = new Set(['bar', 'pub', 'nightclub', 'restaurant']);
+    const neutral = new Set(['cinema', 'fast_food']);
 
-    return locations.map(loc => {
+    const allow = (t) => {
+      if (!t) return false;
+      if (isMoon) return nightTags.has(t) || neutral.has(t);
+      return dayTags.has(t) || neutral.has(t);
+    };
+
+    const task = () => {
+      try {
+        const next = Array.isArray(osmPois) ? osmPois.filter(p => allow(p?.type)) : [];
+        setFilteredOsmPois(next);
+      } catch (_) {}
+    };
+
+    // Defer heavy filtering until after transition animations
+    if (transitioningTo) {
+      const handle = InteractionManager.runAfterInteractions(task);
+      return () => { try { handle?.cancel?.(); } catch (_) {} };
+    }
+    task();
+  }, [osmPois, isMoon, transitioningTo]);
+
+  const locationsWithDistance = useMemo(() => {
+    const merged = [...locations, ...filteredOsmPois].reduce((acc, it) => {
+      const key = it?._id || `${it?.osmId}`;
+      if (!key) return acc;
+      if (acc.map.has(key)) return acc; // dedupe
+      acc.map.set(key, it);
+      acc.list.push(it);
+      return acc;
+    }, { map: new Map(), list: [] }).list;
+
+    if (!userCoords) return merged;
+
+    return merged.map(loc => {
       const distance = calculateDistance(
         userCoords.latitude,
         userCoords.longitude,
@@ -72,18 +125,76 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         loc.location.coordinates[0]
       );
       return { ...loc, distance };
-    }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
-  }, [locations, userCoords]);
+    });
+  }, [locations, filteredOsmPois, userCoords]);
+
+  // PulseList ordering by vibe
+  const pulseItems = useMemo(() => {
+    const items = [...locationsWithDistance];
+    const greenCount = (it) => {
+      if (Array.isArray(it?.activeUsers)) return it.activeUsers.filter(u => (u?.status || 'green') === 'green').length;
+      const uc = it?.userCount || 0; return uc;
+    };
+
+    // Client-side priority by vibe (category boost)
+    const dayBoost = new Set(['coworking_space','cafe','gym','library']);
+    const nightBoost = new Set(['bar','pub','nightclub','restaurant']);
+    const neutral = new Set(['cinema','fast_food']);
+    const boosted = (it) => {
+      const t = it?.type || '';
+      if ((isMoon ? nightBoost : dayBoost).has(t)) return 2; // strong boost
+      if (neutral.has(t)) return 1; // light boost appears after strong
+      return 0;
+    };
+
+    // Partition
+    const featured = items.filter(it => !!it.isPromoted);
+    const nonFeatured = items.filter(it => !it.isPromoted);
+    const hotspots = nonFeatured
+      .filter(it => greenCount(it) > 0)
+      .sort((a,b) => greenCount(b) - greenCount(a) || (a.distance||0) - (b.distance||0));
+    const exploration = nonFeatured
+      .filter(it => greenCount(it) === 0)
+      .sort((a,b) => boosted(b) - boosted(a) || (a.distance||0) - (b.distance||0));
+
+    // Mark first two featured for tall style
+    const featuredMarked = featured.map((it, idx) => idx < 2 ? { ...it, _featuredRank: idx + 1 } : it);
+
+    return [...featuredMarked, ...hotspots, ...exploration];
+  }, [locationsWithDistance, isMoon]);
+
+  // Suivi de visibilité pour stopper les animations hors‑écran
+  const visibleSetRef = useRef(new Set());
+  const [visibleTick, setVisibleTick] = useState(0);
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    const set = visibleSetRef.current;
+    const next = new Set();
+    (viewableItems || []).forEach(v => {
+      if (typeof v?.index === 'number') next.add(v.index);
+    });
+    // remplacer le set
+    visibleSetRef.current = next;
+    setVisibleTick(t => t + 1);
+  }).current;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
   const LocationItem = useMemo(() => {
-    return React.memo(({ item }) => {
+    return React.memo(({ item, index }) => {
       const isUserHere = item._id === currentUser?.currentPoiId;
+      const green = Array.isArray(item?.activeUsers)
+        ? item.activeUsers.filter(u => (u?.status || 'green') === 'green').length
+        : (item?.userCount || 0);
 
-      const Content = (
+      const card = (
         <TouchableOpacity
           style={[
             styles.locationCard,
-            { backgroundColor: colors.surface, marginBottom: isUserHere ? 0 : 16 }
+            { backgroundColor: colors.surface, marginBottom: isUserHere ? 0 : 16,
+              borderWidth: isMoon ? 1.5 : 0,
+              borderColor: isMoon ? 'rgba(255,45,168,0.35)' : 'transparent',
+              shadowColor: isMoon ? '#2dbdff' : '#000',
+              shadowOpacity: isMoon ? 0.45 : (isDark ? 0.2 : 0.08),
+            }
           ]}
           onPress={() => {
             onScroll && onScroll(currentScrollOffset.current);
@@ -108,9 +219,14 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
             <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
               <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
             </View>
+            <View style={{ marginTop: 6 }}>
+              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+                {green > 0 ? `${green} personne${green>1?'s':''} prête${green>1?'s':''} à discuter ici` : 'Découvre ce lieu'}
+              </Text>
+            </View>
             <View style={styles.activeUsersContainer}>
               <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
-                {item.userCount || 0} utilisateur{(item.userCount || 0) > 1 ? 's' : ''} dans ce lieu
+                {item.userCount || 0} visiteur{(item.userCount || 0) > 1 ? 's' : ''}
               </Text>
               <View style={styles.avatarStack}>
                 {(item.activeUsers || []).map((u, index) => {
@@ -145,19 +261,44 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         </TouchableOpacity>
       );
 
+      const isActive = visibleSetRef.current.has(index);
+
       if (isUserHere) {
         return (
-          <AnimatedGradientBorder borderRadius={12}>
-            {Content}
+          <AnimatedGradientBorder borderRadius={20} index={index} active={isActive} marginBottom={16}>
+            {card}
           </AnimatedGradientBorder>
         );
       }
 
-      return Content;
+      // Neon vibe: apply animated gradient border to all cards in Night mode
+      if (isMoon) {
+        return (
+          <AnimatedGradientBorder borderRadius={20} index={index} active={isActive} marginBottom={16} colors={["#ff2da8", "#2dbdff", "#ff2da8", "#2dbdff", "#ff2da8"]}>
+            {card}
+          </AnimatedGradientBorder>
+        );
+      }
+
+      return card;
     });
   }, [colors, isDark, onSelectLocation, onScroll, currentUser?.currentPoiId]);
 
-  const renderLocation = ({ item }) => <LocationItem item={item} />;
+  const renderLocation = ({ item, index }) => <LocationItem item={item} index={index} />;
+
+  // Fetch Overpass on significant coordinate changes only (~110m, 3 decimals).
+  // The service itself enforces a time-based throttle + failure backoff.
+  const roundedLat = userCoords ? Math.round(userCoords.latitude * 1000) / 1000 : null;
+  const roundedLon = userCoords ? Math.round(userCoords.longitude * 1000) / 1000 : null;
+  useEffect(() => {
+    (async () => {
+      if (roundedLat == null || roundedLon == null) return;
+      try {
+        const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: 1500, vibe });
+        setOsmPois(pois);
+      } catch (_) {}
+    })();
+  }, [roundedLat, roundedLon, vibe]);
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -274,6 +415,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       }
 
       const { latitude, longitude } = location.coords;
+      setUserCoords({ latitude, longitude });
 
       // En fonction de l'origine de l'appel, on peut éviter d'envoyer un POST /users/location
       // pour casser toute boucle de rafraîchissement.
@@ -302,6 +444,12 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         // Plus de filtrage restrictif ici, le backend a déjà fait le travail de sélection
         setLocations(normalized);
       }
+
+      // Overpass OSM fetch with throttle (catégories dépendantes du vibe)
+      try {
+        const pois = await OverpassService.fetchAround({ lat: latitude, lon: longitude, radius: 1500, vibe });
+        setOsmPois(pois);
+      } catch (_) {}
     } catch (e) {
       console.error('Error fetching locations:', e);
     } finally {
@@ -345,11 +493,18 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
-      {renderHeader()}
-      {loading && !refreshing ? (
+    <View style={{ flex: 1 }}>
+      {/* Fond cohérent avec la vibe (même palette que l’interstitiel) */}
+      {isMoon ? (
+        <NightSkyBackground style={skyFillStyle} />
+      ) : (
+        <DaySkyBackground style={skyFillStyle} />
+      )}
+      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+        {renderHeader()}
+        {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
-      ) : locations.length === 0 ? (
+      ) : pulseItems.length === 0 ? (
         // Etat vide: permettre le pull-to-refresh même sans éléments
         <ScrollView
           contentContainerStyle={[styles.listContent, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
@@ -358,14 +513,28 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           bounces
           overScrollMode="always"
         >
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Aucun lieu trouvé à proximité</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary, textAlign: 'center', marginBottom: 16 }]}>Zone calme pour l’instant</Text>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity onPress={() => {
+              if (userCoords) {
+                OverpassService.fetchAround({ lat: userCoords.latitude, lon: userCoords.longitude, radius: 3000, force: true, vibe }).then(setOsmPois).catch(()=>{});
+              }
+            }} style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}>
+              <Text style={{ color: '#fff', fontWeight: '600' }}>Élargir le périmètre</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { /* future: suggestion flow */ }} style={{ backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#eaeaea' }}>
+              <Text style={{ color: colors.text }}>Suggérer ce lieu</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       ) : (
         <FlatList
           ref={flatListRef}
-          data={locationsWithDistance}
+          data={pulseItems}
           keyExtractor={(item) => item._id}
           renderItem={renderLocation}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
           onScroll={(event) => {
             currentScrollOffset.current = event.nativeEvent.contentOffset.y;
           }}
@@ -385,13 +554,14 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           windowSize={10}
           removeClippedSubviews={Platform.OS === 'android'}
           // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
-          contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: 20 }]}
+          contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
           // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
           bounces
           overScrollMode="always"
         />
       )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 

@@ -1,9 +1,13 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder, AppState, Platform } from 'react-native';
 import { proxifyImageUrl } from '../components/ServerUtils';
+import { LinearGradient } from 'expo-linear-gradient';
+import DaySkyBackground from '../components/DaySkyBackground';
+import NightSkyBackground from '../components/NightSkyBackground';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { getStatsOverview, getDetailedProfileViews, getMyUser } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useVibe } from '../components/contexts/VibeContext';
 import { subscribe, publish } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
 
@@ -39,6 +43,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const { colors, isDark } = useTheme();
+  const { isMoon } = useVibe();
   const { user } = useContext(UserContext);
   const { hasStatsAccess: hasAccess, premiumSystemEnabled: premiumEnabled, statisticsSystemEnabled: statisticsEnabled, effectiveStatisticsEnabled } = usePremiumAccess();
   const [loading, setLoading] = useState(false);
@@ -205,7 +210,12 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   }, [detailed.length]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+      {isMoon ? (
+        <NightSkyBackground style={StyleSheet.absoluteFill} />
+      ) : (
+        <DaySkyBackground style={StyleSheet.absoluteFill} />
+      )}
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}

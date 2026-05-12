@@ -18,7 +18,10 @@ import {
     Share,
     KeyboardAvoidingView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import DaySkyBackground from '../components/DaySkyBackground';
+import NightSkyBackground from '../components/NightSkyBackground';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
@@ -29,6 +32,7 @@ import Toast from '../components/Toast';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
+import { useVibe } from '../components/contexts/VibeContext';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 
@@ -44,7 +48,16 @@ const MyAccountScreen = ({
                              onOpenWarnings,
                          }) => {
     const { colors, isDark } = useTheme();
+    const { isMoon } = useVibe();
     const { locale } = useLocale();
+    const insets = useSafeAreaInsets();
+    const skyFillStyle = {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: -insets.top,
+        bottom: -insets.bottom,
+    };
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: () => false,
         onMoveShouldSetPanResponder: (_evt, gestureState) => {
@@ -849,7 +862,14 @@ const MyAccountScreen = ({
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+        <View style={{ flex: 1 }}>
+            {/* Fond cohérent avec la vibe (jour/nuit) */}
+            {isMoon ? (
+                <NightSkyBackground style={skyFillStyle} />
+            ) : (
+                <DaySkyBackground style={skyFillStyle} />
+            )}
+            <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
             <TouchableOpacity
                 style={styles.backButton}
                 onPress={onReturnToList}
@@ -863,7 +883,7 @@ const MyAccountScreen = ({
 
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06), flexGrow: 1 }}
+                contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06) + insets.bottom, flexGrow: 1 }}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
@@ -1391,6 +1411,7 @@ const MyAccountScreen = ({
             />
 
         </SafeAreaView>
+        </View>
     );
 };
 

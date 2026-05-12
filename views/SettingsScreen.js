@@ -15,6 +15,9 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import DaySkyBackground from '../components/DaySkyBackground';
+import NightSkyBackground from '../components/NightSkyBackground';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,12 +32,14 @@ import {
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useVibe } from '../components/contexts/VibeContext';
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModerator }) => {
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
+  const { isMoon } = useVibe();
   const isDark = themeMode === 'dark';
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
@@ -254,7 +259,12 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+      {isMoon ? (
+        <NightSkyBackground style={StyleSheet.absoluteFill} />
+      ) : (
+        <DaySkyBackground style={StyleSheet.absoluteFill} />
+      )}
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
@@ -443,8 +453,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
-    paddingBottom: 25,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
+    paddingBottom: 20,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
