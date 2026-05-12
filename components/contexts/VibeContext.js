@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LayoutAnimation, Platform, UIManager } from 'react-native';
+import { AppState, LayoutAnimation, Platform, UIManager } from 'react-native';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -35,13 +35,40 @@ export function VibeProvider({ children, onVibeChanged }) {
   const transitionTimer = useRef(null);
   const [transitioningTo, setTransitioningTo] = useState(null);
 
-  // Load manual override from storage
+  // Load manual override from storage.
+  // Nouveau format: JSON { value: 'sun'|'moon', setAtAuto: 'sun'|'moon' }.
+  // Ancien format (rétro-compat): chaîne brute 'sun'|'moon'.
+  // Si une frontière horaire (7h/19h) a été franchie depuis la pose de l'override,
+  // on l'efface afin que le défaut horaire s'applique.
   useEffect(() => {
     (async () => {
-      const saved = await AsyncStorage.getItem(K_VIBE_KEY).catch(() => null);
-      if (saved === 'sun' || saved === 'moon') {
-        setManualVibe(saved);
+      const raw = await AsyncStorage.getItem(K_VIBE_KEY).catch(() => null);
+      if (!raw) return;
+      let value = null;
+      let setAtAuto = null;
+      if (raw === 'sun' || raw === 'moon') {
+        // Ancien format: pas d'info de frontière. On applique tout de même la
+        // règle "le défaut reprend à 7h/19h": si la valeur diverge du défaut
+        // horaire courant, on l'efface (migration douce).
+        value = raw;
+        setAtAuto = raw; // équivaut à dire "posé alors que le défaut était === value"
+      } else {
+        try {
+          const obj = JSON.parse(raw);
+          if (obj && (obj.value === 'sun' || obj.value === 'moon')) {
+            value = obj.value;
+            setAtAuto = (obj.setAtAuto === 'sun' || obj.setAtAuto === 'moon') ? obj.setAtAuto : null;
+          }
+        } catch (_) {}
       }
+      if (!value) return;
+      const currentAuto = getAutoVibe();
+      if (setAtAuto && setAtAuto !== currentAuto) {
+        // Frontière franchie depuis le choix manuel → on efface l'override
+        AsyncStorage.removeItem(K_VIBE_KEY).catch(() => {});
+        return;
+      }
+      setManualVibe(value);
     })();
   }, []);
 
@@ -54,18 +81,51 @@ export function VibeProvider({ children, onVibeChanged }) {
       next.setHours(new Date().getHours() + 1);
       const delay = Math.max(1000, next.getTime() - Date.now());
       autoTimer.current = setTimeout(() => {
-        setAutoVibeState(getAutoVibe());
+        const prev = getAutoVibe(new Date(Date.now() - 60 * 1000));
+        const curr = getAutoVibe();
+        setAutoVibeState(curr);
+        // Au franchissement d'une frontière horaire (7h ou 19h),
+        // le mode jour/nuit redevient le défaut: on efface l'override manuel
+        // afin que le défaut horaire s'applique.
+        if (prev !== curr) {
+          setManualVibe(null);
+          AsyncStorage.removeItem(K_VIBE_KEY).catch(() => {});
+        }
         schedule();
       }, delay);
     };
     schedule();
-    return () => autoTimer.current && clearTimeout(autoTimer.current);
+
+    // Re-vérifier au retour d'arrière-plan: si l'app était suspendue lors du
+    // franchissement d'une frontière (7h/19h), le timer n'a pas pu se déclencher.
+    const onAppState = (state) => {
+      if (state !== 'active') return;
+      const curr = getAutoVibe();
+      setAutoVibeState((prev) => {
+        if (prev !== curr) {
+          // Frontière franchie pendant le sommeil de l'app → on efface l'override.
+          setManualVibe(null);
+          AsyncStorage.removeItem(K_VIBE_KEY).catch(() => {});
+        }
+        return curr;
+      });
+      // Replanifier le prochain tick horaire à partir de maintenant.
+      schedule();
+    };
+    const sub = AppState.addEventListener('change', onAppState);
+    return () => {
+      autoTimer.current && clearTimeout(autoTimer.current);
+      try { sub && sub.remove && sub.remove(); } catch (_) {}
+    };
   }, []);
 
   const setVibe = useCallback(async (next) => {
     const val = (next === 'moon') ? 'moon' : 'sun';
     setManualVibe(val);
-    try { await AsyncStorage.setItem(K_VIBE_KEY, val); } catch {}
+    try {
+      const payload = JSON.stringify({ value: val, setAtAuto: getAutoVibe() });
+      await AsyncStorage.setItem(K_VIBE_KEY, payload);
+    } catch {}
     // Animate reorder/layout on change
     try { LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut); } catch {}
     if (typeof onVibeChanged === 'function') {
