@@ -19,7 +19,7 @@ import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
-import { getLocations, updateMyLocation } from '../components/ApiRequest';
+import { getLocations, updateMyLocation, seedOsmLocation } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance, formatDistance } from '../components/ServerUtils';
@@ -241,8 +241,37 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
               shadowOpacity: isMoon ? 0.45 : (isDark ? 0.2 : 0.08),
             }
           ]}
-          onPress={() => {
+          onPress={async () => {
             onScroll && onScroll(currentScrollOffset.current);
+            // POI Overpass non persisté: on l'upsert en base avant d'ouvrir l'écran
+            // de détail pour éviter un 404/500 sur `getLocationById('osm:*')`.
+            const isOsm = typeof item?._id === 'string' && item._id.startsWith('osm:');
+            if (isOsm) {
+              try {
+                const coords = item?.location?.coordinates || [];
+                const lon = typeof coords[0] === 'number' ? coords[0] : null;
+                const lat = typeof coords[1] === 'number' ? coords[1] : null;
+                if (lat != null && lon != null && item?.osmId != null) {
+                  const res = await seedOsmLocation({
+                    osmId: item.osmId,
+                    name: item.name,
+                    type: item.type,
+                    lat,
+                    lon,
+                  });
+                  const seeded = res?.location;
+                  if (seeded && seeded._id) {
+                    onSelectLocation({ ...item, ...seeded });
+                    return;
+                  }
+                }
+              } catch (e) {
+                // En cas d'erreur (type non supporté, réseau, etc.), on retombe
+                // sur le comportement standard: la nav passera l'id `osm:*` et
+                // le backend renverra un 404 propre.
+                console.warn('[LocationListScreen] seedOsmLocation failed:', e?.message || e);
+              }
+            }
             onSelectLocation({ ...item });
           }}
         >

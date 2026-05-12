@@ -435,6 +435,16 @@ export async function getLocationById(id) {
     return request(`/locations/${id}`, { method: 'GET' });
 }
 
+// Seed unitaire d'un POI Overpass (id `osm:<osmId>`) côté backend pour qu'il
+// soit ensuite récupérable par `getLocationById`. À appeler juste avant
+// d'ouvrir l'écran de détail d'un lieu OSM affiché dans la liste.
+export async function seedOsmLocation({ osmId, name, type, lat, lon }) {
+    return request('/locations/osm-seed', {
+        method: 'POST',
+        body: { osmId, name, type, lat, lon },
+    });
+}
+
 export async function updateUserStatus(status) {
     return request('/profile/status', {
         method: 'PATCH',

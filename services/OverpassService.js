@@ -1,15 +1,20 @@
 // Lightweight Overpass API client with time-based throttle, backoff on errors,
 // request timeout via AbortController and simple in-memory cache.
-import { post } from '../components/ApiRequest';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
 // Minimum interval between two real network calls (regardless of bbox)
 const MIN_INTERVAL_MS = 30 * 1000;        // 30s
 // After a failure, do not retry before this backoff window
-const FAILURE_BACKOFF_MS = 60 * 1000;     // 60s
-// Per-request timeout
-const REQUEST_TIMEOUT_MS = 8 * 1000;      // 8s
+const FAILURE_BACKOFF_MS = 60 * 1000;     // 60s (erreurs génériques)
+// Backoff plus long pour les erreurs serveur Overpass (5xx, ex: 504 Gateway Timeout).
+// L'API publique Overpass étant régulièrement surchargée, on évite de la marteler.
+const SERVER_ERROR_BACKOFF_MS = 5 * 60 * 1000; // 5 min
+// Per-request timeout (doit être >= au [timeout:N] envoyé à Overpass ci-dessous)
+const REQUEST_TIMEOUT_MS = 20 * 1000;     // 20s
+// Timeout demandé au serveur Overpass (en secondes). On le garde légèrement
+// inférieur au timeout client pour laisser le temps à la réponse de revenir.
+const OVERPASS_SERVER_TIMEOUT_S = 18;
 
 let lastFetchAt = 0;
 let lastFailureAt = 0;
@@ -82,8 +87,6 @@ export function isTypeAllowedForVibe(type, vibe) {
   return true;
 }
 
-// Cache of known OSM IDs we already pushed to backend
-const knownIds = new Set();
 
 // Round coordinates to ~110m precision to stabilize cache key against tiny GPS jitter
 function roundCoord(v) {
@@ -95,13 +98,20 @@ function buildKey(lat, lon, radius, vibe) {
 }
 
 function buildQuery({ lat, lon, radius = 1200, vibe = 'sun' }) {
-  // Catégories choisies selon le vibe (jour/nuit), réparties par clé OSM
+  // Catégories choisies selon le vibe (jour/nuit), réparties par clé OSM.
+  // On fusionne les types via une regex `~"a|b|c"` pour réduire le nombre de
+  // sous-requêtes Overpass (1 par clé OSM au lieu d'une par type), ce qui
+  // accélère significativement le temps de réponse.
   const cats = CATEGORIES_BY_VIBE[normalizeVibe(vibe)];
   const parts = [];
-  for (const t of cats.amenity) parts.push(`node["amenity"="${t}"](around:${radius},${lat},${lon});`);
-  for (const t of cats.leisure) parts.push(`node["leisure"="${t}"](around:${radius},${lat},${lon});`);
+  if (cats.amenity && cats.amenity.length > 0) {
+    parts.push(`node["amenity"~"^(${cats.amenity.join('|')})$"](around:${radius},${lat},${lon});`);
+  }
+  if (cats.leisure && cats.leisure.length > 0) {
+    parts.push(`node["leisure"~"^(${cats.leisure.join('|')})$"](around:${radius},${lat},${lon});`);
+  }
   const filters = parts.join('\n');
-  return `data=[out:json][timeout:25];(\n${filters}\n);out body;`;
+  return `[out:json][timeout:${OVERPASS_SERVER_TIMEOUT_S}];(\n${filters}\n);out body;`;
 }
 
 async function fetchOverpass(query) {
@@ -175,31 +185,17 @@ export const OverpassService = {
         lastFetchAt = Date.now();
         lastFailureAt = 0;
         lastResult = { bboxKey: key, pois };
-
-        // Fire-and-forget push unknown OSM to backend to seed DB
-        (async () => {
-          for (const p of pois) {
-            if (knownIds.has(p.osmId)) continue;
-            knownIds.add(p.osmId);
-            try {
-              await post('/locations/osm-seed', {
-                osmId: p.osmId,
-                name: p.name,
-                type: p.type,
-                lon: p.location.coordinates[0],
-                lat: p.location.coordinates[1],
-              });
-            } catch (_) {
-              // Ignore any backend error silently
-            }
-          }
-        })();
-
+        // Note: pas d'appel unitaire `/locations/osm-seed` ici. La sync globale
+        // est déjà assurée par `LocationSyncService` via `/locations/sync-osm`.
         return pois;
       } catch (e) {
-        lastFailureAt = Date.now();
+        // Sur erreur serveur Overpass (HTTP 5xx, ex: 504), on applique un
+        // backoff plus long pour ne pas re-cogner une API déjà surchargée.
+        const msg = String(e?.message || '');
+        const is5xx = /Overpass HTTP 5\d\d/.test(msg);
+        lastFailureAt = Date.now() + (is5xx ? (SERVER_ERROR_BACKOFF_MS - FAILURE_BACKOFF_MS) : 0);
         const label = e?.name === 'AbortError' ? 'timeout' : (e?.name || 'Error');
-        console.warn(`[OverpassService] fetchAround failed (${label}): ${e?.message || e}`);
+        console.warn(`[OverpassService] fetchAround failed (${label}): ${msg || e}`);
         return lastResult.pois || [];
       } finally {
         inflight = null;
