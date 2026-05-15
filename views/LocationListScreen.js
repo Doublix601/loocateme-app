@@ -365,13 +365,25 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   const roundedLat = userCoords ? Math.round(userCoords.latitude * 1000) / 1000 : null;
   const roundedLon = userCoords ? Math.round(userCoords.longitude * 1000) / 1000 : null;
   useEffect(() => {
+    let active = true;
     (async () => {
       if (roundedLat == null || roundedLon == null) return;
+
+      // On attend une frame pour laisser respirer l'UI
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      if (!active) return;
+
+      // Attendre que les interactions (animations) soient finies avant de charger Overpass
+      // car c'est une requête lourde qui peut ralentir le thread JS au moment du rendu.
+      await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
+      if (!active) return;
+
       try {
         const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: 1500, vibe });
-        setOsmPois(pois);
+        if (active) setOsmPois(pois);
       } catch (_) {}
     })();
+    return () => { active = false; };
   }, [roundedLat, roundedLon, vibe]);
 
   const panResponder = React.useRef(
@@ -445,91 +457,65 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     const currentVibe = overrideVibe || vibe;
     try {
       if (!silent) setLoading(true);
-      let { status } = await Location.requestForegroundPermissionsAsync();
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.warn('Permission to access location was denied');
+        if (!silent) setLoading(false);
         return;
       }
 
-      // Optimization for Android: high accuracy can be slow.
-      // Using balanced accuracy and a timeout to ensure quick feedback.
-      let location;
-      try {
-        // First try to get last known location for immediate feedback if available
-        location = await Location.getLastKnownPositionAsync({});
+      // 1. Démarrer immédiatement avec la dernière position connue pour gagner du temps
+      // (souvent instantané, alors que getCurrentPositionAsync peut prendre 1-5s)
+      let location = await Location.getLastKnownPositionAsync({ maxAge: 600000 }); // 10 min
 
-        // Then start fetching fresh location in the background if last known is old or null
-        // On Android, getCurrentPositionAsync is much faster with a timeout and lower accuracy.
-        Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        }).then(loc => {
-          if (loc && (!location || loc.timestamp > location.timestamp)) {
-             // If we already finished loading but got a better location,
-             // we could trigger a silent refresh here if we wanted.
-          }
-        }).catch(() => {});
-      } catch (err) {
-        console.warn('Location fetching logic error', err);
-      }
-
+      // 2. Si on n'a pas de position connue récente, on doit attendre la position actuelle
       if (!location) {
-        // Fallback to a slow but sure high accuracy if nothing else worked
-        try {
-          location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-            timeout: 5000,
-          });
-        } catch (e) {
-          console.warn('Final fallback failed', e);
-        }
+        location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
       }
 
       if (!location) {
         console.warn('Could not determine position');
+        if (!silent) setLoading(false);
         return;
       }
 
       const { latitude, longitude } = location.coords;
       setUserCoords({ latitude, longitude });
 
-      // En fonction de l'origine de l'appel, on peut éviter d'envoyer un POST /users/location
-      // pour casser toute boucle de rafraîchissement.
-      let res;
+      // 3. Lancer les requêtes API en parallèle
       const reqLimit = options.limit || displayLimit;
-      if (skipUpdateMyLocation) {
-        res = await getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe });
-      } else {
-        const results = await Promise.all([
-          updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)),
-          getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe })
-        ]);
-        res = results[1];
+      const tasks = [];
+
+      if (!skipUpdateMyLocation) {
+        tasks.push(updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)));
       }
 
+      tasks.push(getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe }));
+
+      const results = await Promise.all(tasks);
+      // Si on n'a PAS skippé updateMyLocation, alors getLocations est le 2ème élément (index 1)
+      // Sinon, c'est le 1er élément (index 0).
+      const res = skipUpdateMyLocation ? results[0] : results[1];
+
       if (res && Array.isArray(res.locations)) {
-        // Garde-fou UI: appliquer le même filtrage que le backend
-        // et garantir au moins 1★ d'affichage lorsqu'un lieu est occupé
         const normalized = res.locations.map((it) => {
           const userCount = it?.userCount || 0;
           const stars = typeof it?.stars === 'number' ? it.stars : parseInt(it?.stars, 10) || 0;
-          // Un lieu avec popularity >= 1000 reste considéré comme persistent (3 étoiles)
           const isPersistent = (it?.popularity || 0) >= 1000 || stars === 3;
           return { ...it, stars, userCount, isPersistent };
         });
 
-        // Plus de filtrage restrictif ici, le backend a déjà fait le travail de sélection
         setLocations(normalized);
-        // Si le backend renvoie moins de `reqLimit` lieux, c'est qu'on a vidé
-        // la zone : on coupe la pagination pour éviter les requêtes inutiles
-        // et l'affichage prématuré du message de fin de liste.
         setHasMore(normalized.length >= reqLimit && reqLimit < MAX_LOCATIONS);
       }
 
-      // Overpass OSM fetch with throttle (catégories dépendantes du vibe)
-      try {
-        const pois = await OverpassService.fetchAround({ lat: latitude, lon: longitude, radius: 1500, vibe: currentVibe });
-        setOsmPois(pois);
-      } catch (_) {}
+      // NOTE: On a supprimé l'appel OverpassService.fetchAround ici
+      // car il est déjà géré par le useEffect([roundedLat, roundedLon, vibe])
+      // qui se déclenchera suite au setUserCoords(...) ci-dessus.
+
     } catch (e) {
       console.error('Error fetching locations:', e);
     } finally {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TextInput, TouchableOpacity, StyleSheet, Alert, useWindowDimensions, ActivityIndicator, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { TextInput, TouchableOpacity, StyleSheet, Alert, useWindowDimensions, ActivityIndicator, View, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
@@ -28,7 +28,7 @@ const ForgotPasswordScreen = ({ onResetPassword, onBack }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButtonCircular}
@@ -100,20 +100,25 @@ const getStyles = ({ colors, isDark }) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 10,
     paddingBottom: 20,
     backgroundColor: colors.surface,
-    paddingTop: Platform.OS === 'android' ? 40 : 10,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    elevation: 4,
+    elevation: isDark ? 0 : 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isDark ? 0.3 : 0.1,
+    shadowRadius: 10,
+    borderBottomWidth: isDark ? 1 : 0,
+    borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent',
+    zIndex: 10,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#00c2cb',
+    letterSpacing: -0.5,
     flex: 1,
     textAlign: 'center',
     marginRight: 40,
