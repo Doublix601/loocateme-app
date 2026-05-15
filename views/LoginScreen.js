@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { TextInput, TouchableOpacity, StyleSheet, View, useWindowDimensions, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { login as apiLogin, setAccessToken } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
@@ -29,6 +29,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
     const { updateUser } = useContext(UserContext);
     const { colors, isDark } = useTheme();
     const styles = useStyles(getStyles);
+    const insets = useSafeAreaInsets();
 
     const handleLoginPress = async () => {
         try {
@@ -60,9 +61,9 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['left', 'right']}>
             <View style={styles.header}>
-                <ThemedText style={styles.headerTitle} type={isDark ? 'primary' : 'accent'}>Connexion</ThemedText>
+                <ThemedText style={styles.headerTitle}>Connexion</ThemedText>
             </View>
 
             <KeyboardAvoidingView
@@ -72,7 +73,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
             >
                 <ScrollView
                     style={{ flex: 1, alignSelf: 'stretch' }}
-                    contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 20, paddingBottom: 40, paddingTop: 20 }}
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 20, paddingTop: 0 }}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
@@ -157,27 +158,30 @@ const getStyles = ({ colors, isDark }) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'android' ? 40 : 10,
         paddingBottom: 20,
         backgroundColor: colors.surface,
-        paddingTop: Platform.OS === 'android' ? 40 : 10,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
-        elevation: 4,
+        elevation: isDark ? 0 : 5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: isDark ? 0.3 : 0.1,
+        shadowRadius: 10,
+        borderBottomWidth: isDark ? 1 : 0,
+        borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent',
         zIndex: 10,
     },
     headerTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        textAlign: 'center',
+        fontSize: 24,
+        fontWeight: '800',
+        color: '#00c2cb',
+        letterSpacing: -0.5,
     },
     logo: {
         resizeMode: 'contain',
         alignSelf: 'center',
-        marginBottom: 20,
+        marginBottom: 10,
         backgroundColor: 'transparent',
     },
     card: {
@@ -224,6 +228,7 @@ const getStyles = ({ colors, isDark }) => StyleSheet.create({
         backgroundColor: colors.accent,
         borderRadius: 15,
         marginTop: 10,
+        marginBottom: 20,
         elevation: 3,
         shadowColor: colors.accent,
         shadowOffset: { width: 0, height: 4 },
