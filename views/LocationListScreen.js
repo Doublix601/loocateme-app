@@ -154,8 +154,8 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     };
 
     // Client-side priority by vibe (category boost)
-    const dayBoost = new Set(['coworking_space','cafe','gym','library']);
-    const nightBoost = new Set(['bar','pub','nightclub','restaurant']);
+    const dayBoost = new Set(['coworking_space','cafe','gym','library','school','university','college','stadium','sports_centre']);
+    const nightBoost = new Set(['bar','pub','nightclub','restaurant','cafe','cinema','fast_food','bowling']);
     const neutral = new Set(['cinema','fast_food']);
     const boosted = (it) => {
       const t = it?.type || '';
@@ -202,7 +202,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       setLoadMoreError(false);
       setHasMore(true);
       // Recharger les 20 lieux prioritaires correspondant aux tags du nouveau mode
-      fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, limit: MIN_LOCATIONS });
+      fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, limit: MIN_LOCATIONS, vibe });
       // Remonter en haut de liste
       try { flatListRef.current?.scrollToOffset?.({ offset: 0, animated: false }); } catch (_) {}
     }
@@ -441,7 +441,8 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   };
 
   const fetchNearbyLocations = async (options = {}) => {
-    const { skipUpdateMyLocation = false, silent = false } = options;
+    const { skipUpdateMyLocation = false, silent = false, vibe: overrideVibe } = options;
+    const currentVibe = overrideVibe || vibe;
     try {
       if (!silent) setLoading(true);
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -496,11 +497,11 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       let res;
       const reqLimit = options.limit || displayLimit;
       if (skipUpdateMyLocation) {
-        res = await getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe });
+        res = await getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe });
       } else {
         const results = await Promise.all([
           updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)),
-          getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe })
+          getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe })
         ]);
         res = results[1];
       }
@@ -526,7 +527,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
       // Overpass OSM fetch with throttle (catégories dépendantes du vibe)
       try {
-        const pois = await OverpassService.fetchAround({ lat: latitude, lon: longitude, radius: 1500, vibe });
+        const pois = await OverpassService.fetchAround({ lat: latitude, lon: longitude, radius: 1500, vibe: currentVibe });
         setOsmPois(pois);
       } catch (_) {}
     } catch (e) {
@@ -539,7 +540,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   const onRefresh = async () => {
     setRefreshing(true);
     setDisplayLimit(MIN_LOCATIONS);
-    await fetchNearbyLocations({ limit: MIN_LOCATIONS });
+    await fetchNearbyLocations({ limit: MIN_LOCATIONS, vibe });
     setRefreshing(false);
   };
 

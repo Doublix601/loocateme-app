@@ -70,7 +70,7 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
 
   const handleBoost = () => {
     if (isBoosted || boostLoading) return;
-    if (checkAccess('boost')) activateBoost();
+    if (checkAccess('boost')) activateBoost(locationId);
   };
 
   // Image de cover : on tente plusieurs champs courants (futur-proof OSM/Wikidata).

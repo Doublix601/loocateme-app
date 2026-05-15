@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform, StatusBar, View, Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform, StatusBar, View, Text, TouchableOpacity, LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+]);
 import * as Location from 'expo-location';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';

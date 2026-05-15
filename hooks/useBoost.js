@@ -83,9 +83,22 @@ export function useBoost() {
     }
   }, [purchasesReady, updateUser]);
 
-  const activateBoost = useCallback(async () => {
+  const activateBoost = useCallback(async (targetLocationId) => {
     // ONE-TAP: Si déjà boosté, on ne fait rien (bouton normalement désactivé en amont)
     if (isBoosted) return;
+
+    // Récupérer les données fraîches de l'utilisateur
+    const meRes = await api.get('/user/me');
+    const currentUser = meRes?.user;
+
+    // Vérifier si l'utilisateur est physiquement présent sur le lieu cible
+    if (!currentUser?.currentPoiId || (targetLocationId && currentUser.currentPoiId !== targetLocationId)) {
+      Alert.alert(
+        'Action impossible',
+        'Vous devez être physiquement présent dans cet établissement pour booster votre profil.'
+      );
+      return;
+    }
 
     // Si on a déjà un crédit de boost (ex: via abonnement Premium), on l'active directement
     if (boostBalance > 0) {
@@ -103,16 +116,6 @@ export function useBoost() {
       } finally {
         setLoading(false);
       }
-      return;
-    }
-
-    // NEW: Check if user is at a POI before initiating purchase
-    const meRes = await api.get('/user/me');
-    if (!meRes?.user?.currentLocation) {
-      Alert.alert(
-        'Action impossible',
-        'Vous devez être physiquement présent dans un établissement pour booster votre profil.'
-      );
       return;
     }
 

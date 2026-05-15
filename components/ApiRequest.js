@@ -218,8 +218,13 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 
                 const toggledProtocol = u.protocol === 'http:' ? 'https:' : 'http:';
                 const fallbackUrl = `${toggledProtocol}//${u.host}${u.pathname}${u.search}${u.hash}`;
-                console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });
-                res = await doFetchWithTimeout(fallbackUrl);
+                if (u.protocol === 'https:') {
+                    // Silent retry for https -> http fallback
+                    res = await doFetchWithTimeout(fallbackUrl);
+                } else {
+                    console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });
+                    res = await doFetchWithTimeout(fallbackUrl);
+                }
             } catch (_fallbackErr) {
                 console.error('[API] Network error (no fallback succeeded)', { url, method, error: networkErr?.message || networkErr });
                 throw networkErr;
