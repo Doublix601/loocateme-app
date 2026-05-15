@@ -48,7 +48,8 @@
           "data": [
             {
               "scheme": "https",
-              "host": "api.loocate.me"
+              "host": "api.loocate.me",
+              "pathPrefix": "/profile"
             }
           ],
           "category": [
