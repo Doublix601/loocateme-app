@@ -164,7 +164,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       return 0;
     };
 
-    const isPro = (it) => !!it?.isPromoted || (typeof it?.stars === 'number' && it.stars >= 2);
+    const isPro = (it) => !!it?.isPro || !!it?.isPromoted || (typeof it?.stars === 'number' && it.stars >= 2);
 
     // Partition: Pro/étoilés en tête, triés par étoiles puis proximité
     const featured = items
@@ -276,8 +276,22 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           }}
         >
           <View style={styles.locationInfo}>
+            {item.isPro && item.bannerUrl && (
+              <Image
+                source={{ uri: item.bannerUrl }}
+                style={styles.proBanner}
+                resizeMode="cover"
+              />
+            )}
             <View style={styles.locationHeaderRow}>
-              <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.text }]}>{item.name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.text }]}>{item.name}</Text>
+                {item.isPro && (
+                  <View style={styles.verifiedBadge}>
+                    <Text style={styles.verifiedText}>✓</Text>
+                  </View>
+                )}
+              </View>
               {isUserHere ? (
                 <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>
                   Actuellement ici
@@ -819,6 +833,26 @@ const styles = StyleSheet.create({
   popularityContainer: { alignItems: 'flex-end', marginLeft: 12 },
   popularityStars: { fontSize: 18 },
   emptyText: { textAlign: 'center', fontSize: 16, fontWeight: '500' },
+  proBanner: {
+    width: '100%',
+    height: 100,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  verifiedBadge: {
+    backgroundColor: '#00c2cb',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 6,
+  },
+  verifiedText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
 });
 
 export default LocationListScreen;
