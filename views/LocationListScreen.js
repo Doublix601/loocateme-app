@@ -136,11 +136,13 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     if (!userCoords) return merged;
 
     return merged.map(loc => {
+      const coords = loc?.location?.coordinates;
+      if (!Array.isArray(coords) || coords.length < 2) return loc;
       const distance = calculateDistance(
         userCoords.latitude,
         userCoords.longitude,
-        loc.location.coordinates[1],
-        loc.location.coordinates[0]
+        coords[1],
+        coords[0]
       );
       return { ...loc, distance };
     });
@@ -373,7 +375,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
       return card;
     });
-  }, [colors, isDark, onSelectLocation, onScroll, currentUser?.currentPoiId]);
+  }, [colors, isDark, isMoon, onSelectLocation, onScroll, currentUser?.currentPoiId]);
 
   const renderLocation = ({ item, index }) => <LocationItem item={item} index={index} />;
 

@@ -28,6 +28,7 @@ const TYPE_LABELS = {
   'Bibliothèque 📚': 'BIBLIOTHÈQUE 📚',
   'Centre sportif 🏟️': 'CENTRE SPORTIF 🏟️',
   'Éducation 🎓': 'ÉDUCATION 🎓',
+  'Coworking 🧑‍💻': 'COWORKING 🧑‍💻',
   'Glacier 🍦': 'GLACIER 🍦',
   'TEST 🤖': 'TEST 🤖',
   'Lieu 📍': 'LIEU 📍',
