@@ -196,7 +196,7 @@ const MyAccountScreen = ({
             const me = res?.user;
             const nowPremium = !!me?.isPremium;
             const nowRole = me?.role || user?.role || 'user';
-            const nowHasPremiumRight = nowPremium || nowRole === 'admin' || nowRole === 'moderator';
+            const nowHasPremiumRight = nowPremium;
             const freshHasStatsAccess = (flags.statisticsEnabled || premiumSystemEnabled) && (!premiumSystemEnabled || nowHasPremiumRight);
             if (updateUser && me) {
                 updateUser({
@@ -380,6 +380,10 @@ const MyAccountScreen = ({
 
     const handleUpdateStatus = async (status) => {
         if (user?.status === status) {
+            return;
+        }
+        if (status === 'red' && !isPremium) {
+            onOpenPremiumPaywall && onOpenPremiumPaywall({ source: 'invisible_mode' });
             return;
         }
         try {

@@ -413,7 +413,7 @@ const DebugScreen = ({ onBack }) => {
   const subTextStyle = { color: isDark ? '#eee' : subTextColor };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: borderColor, borderBottomWidth: 1 }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
@@ -434,30 +434,34 @@ const DebugScreen = ({ onBack }) => {
         {/* IAP Debug Section */}
         <Text style={sectionTitleStyle}>In-App Purchases</Text>
         <View style={cardStyle}>
-          <View style={[styles.flagRow, { borderBottomColor: borderColor }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.flagKey, textStyle]}>IAP_DISABLED</Text>
-              <Text style={[styles.flagDesc, subTextStyle]}>Simule les achats sans vraie transaction</Text>
-            </View>
-            <Switch
-              value={iapDisabled}
-              onValueChange={(v) => { setDebugFlag('IAP_DISABLED', v); setIapDisabled(v); }}
-              trackColor={{ false: '#3e3e3e', true: '#f39c12' }}
-              thumbColor="#fff"
-            />
-          </View>
-          <View style={[styles.flagRow, { borderBottomColor: borderColor }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.flagKey, textStyle]}>FORCE_PREMIUM</Text>
-              <Text style={[styles.flagDesc, subTextStyle]}>Force le statut Premium localement</Text>
-            </View>
-            <Switch
-              value={forcePremium}
-              onValueChange={(v) => { setDebugFlag('FORCE_PREMIUM', v); setForcePremium(v); }}
-              trackColor={{ false: '#3e3e3e', true: '#2ecc71' }}
-              thumbColor="#fff"
-            />
-          </View>
+          {__DEV__ && (
+            <>
+              <View style={[styles.flagRow, { borderBottomColor: borderColor }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.flagKey, textStyle]}>IAP_DISABLED</Text>
+                  <Text style={[styles.flagDesc, subTextStyle]}>Simule les achats sans vraie transaction</Text>
+                </View>
+                <Switch
+                  value={iapDisabled}
+                  onValueChange={(v) => { setDebugFlag('IAP_DISABLED', v); setIapDisabled(v); }}
+                  trackColor={{ false: '#3e3e3e', true: '#f39c12' }}
+                  thumbColor="#fff"
+                />
+              </View>
+              <View style={[styles.flagRow, { borderBottomColor: borderColor }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.flagKey, textStyle]}>FORCE_PREMIUM</Text>
+                  <Text style={[styles.flagDesc, subTextStyle]}>Force le statut Premium localement</Text>
+                </View>
+                <Switch
+                  value={forcePremium}
+                  onValueChange={(v) => { setDebugFlag('FORCE_PREMIUM', v); setForcePremium(v); }}
+                  trackColor={{ false: '#3e3e3e', true: '#2ecc71' }}
+                  thumbColor="#fff"
+                />
+              </View>
+            </>
+          )}
 
           {/* Consumables status */}
           <View style={{ paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: borderColor }}>

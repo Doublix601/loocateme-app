@@ -32,11 +32,24 @@ const IAPStore = {
     }
   },
 
+  // Démarre l'essai gratuit 7 jours via le backend (sans paiement).
+  async startTrial(userId) {
+    try {
+      const res = await post('/premium/trial/start', {});
+      await PremiumService.refreshFromBackend();
+      _log({ product_id: 'trial', timestamp: Date.now(), user_id: userId, success: true });
+      return { success: true, trialActive: res?.trialActive, premiumTrialEnd: res?.premiumTrialEnd };
+    } catch (e) {
+      _log({ product_id: 'trial', timestamp: Date.now(), user_id: userId, success: false, error: e.message });
+      throw e;
+    }
+  },
+
   // Achat d'un abonnement (monthly / yearly).
   async purchaseSubscription(pkg, userId) {
     if (DEBUG_CONFIG.IAP_DISABLED) {
-      console.log('[DEBUG] IAP disabled — subscription purchase simulated');
-      try { await post('/premium/verify', { isMock: true }); } catch (_) {}
+      console.log('[DEBUG] IAP disabled — subscription purchase simulated via trial');
+      try { await post('/premium/trial/start', {}); } catch (_) {}
       await PremiumService.refreshFromBackend();
       _log({ product_id: pkg?.product?.identifier ?? 'simulated', timestamp: Date.now(), user_id: userId, success: true, debug: true });
       return { success: true, isMock: true };

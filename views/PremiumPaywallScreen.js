@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions,
-  ActivityIndicator, Alert, Platform, Linking, PanResponder,
+  ActivityIndicator, Alert, Platform, Linking,
 } from 'react-native';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { UserContext } from '../components/contexts/UserContext';
@@ -17,17 +17,19 @@ const SLIDES = [
   { emoji: '👀', title: 'Qui te visite ?', desc: 'Découvre en temps réel qui consulte ton profil.' },
   { emoji: '🔥', title: 'Boosts de visibilité', desc: 'Remonte en tête de liste pendant 30 min dans ton établissement.' },
   { emoji: '⭐', title: 'Superlikes', desc: 'Montre un intérêt particulier à quelqu\'un que tu remarques.' },
+  { emoji: '🫥', title: 'Mode invisible', desc: 'Disparais de la liste des utilisateurs proches quand tu le souhaites.' },
+  { emoji: '🗺️', title: 'Rayon étendu', desc: 'Explore jusqu\'à 2 km autour de toi (500 m en version gratuite).' },
   { emoji: '📊', title: 'Statistiques avancées', desc: 'Suis tes vues et clics sur tous tes réseaux sociaux.' },
-  { emoji: '🔔', title: 'Alertes temps réel', desc: 'Reçois une notification à chaque visite de ton profil.' },
 ];
 
 const FEATURES = [
   'Voir qui consulte ton profil',
   'Boosts de visibilité (1 pack offert)',
-  'Superlikes (1 pack offert)',
+  'Superlikes (3/semaine offerts)',
+  'Mode invisible',
+  'Rayon de recherche jusqu\'à 2 km',
   'Statistiques avancées',
   'Notifications enrichies',
-  'Support prioritaire',
 ];
 
 const FALLBACK = { monthly: '4,99 €', annual: '39,99 €', savings: 33 };
@@ -90,14 +92,6 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium, routePa
     return () => clearInterval(autoRef.current);
   }, []);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 10,
-      onPanResponderRelease: (_e, g) => { if (g.dx > 60 || g.vx > 0.3) onBack?.(); },
-    })
-  ).current;
-
   const monthlyPkg = offerings?.availablePackages?.find((p) => p.packageType === 'MONTHLY') ?? null;
   const annualPkg = offerings?.availablePackages?.find((p) => p.packageType === 'ANNUAL') ?? null;
   const selectedPkg = period === 'monthly' ? monthlyPkg : annualPkg;
@@ -158,7 +152,7 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium, routePa
   const sub = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)';
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: bg }]}>
       {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity

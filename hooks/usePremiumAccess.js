@@ -16,8 +16,9 @@ export function usePremiumAccess() {
   const isUserPremium = !!user?.isPremium;
   const isUserModeratorOrAdmin = ['admin', 'moderator'].includes(user?.role);
 
-  // L'utilisateur a le droit d'accès au premium si isPremium ou s'il est staff
-  const hasPremiumRight = isUserPremium || isUserModeratorOrAdmin;
+  // Le droit premium est basé uniquement sur isPremium, PAS sur le rôle admin/moderator.
+  // Un admin doit s'abonner ou se passer lui-même en premium explicitement pour tester le flow.
+  const hasPremiumRight = isUserPremium;
 
   // ACCÈS EFFECTIF : Combiner le droit de l'utilisateur avec l'activation système
   // Si le système premium est désactivé (OFF), personne n'est considéré premium (pour le front)

@@ -11,23 +11,34 @@ export function useFeatureGate() {
 
   const checkAccess = (feature, options = { silent: false }) => {
     let hasAccess = false;
-    let title = 'Feature Restricted';
-    let message = 'This feature requires a Premium subscription.';
+    let title = 'Fonctionnalité Premium';
+    let message = 'Cette fonctionnalité est réservée aux abonnés Premium.';
 
     switch (feature) {
       case 'statistics':
         hasAccess = premiumAccess.hasStatsAccess;
-        title = 'Statistics Restricted';
+        title = 'Statistiques Premium';
         message = premiumAccess.premiumSystemEnabled
-          ? 'Upgrade to Premium to access detailed statistics.'
-          : 'Statistics are currently unavailable.';
+          ? 'Passez Premium pour accéder à vos statistiques détaillées.'
+          : 'Les statistiques sont temporairement indisponibles.';
         break;
 
       case 'boost':
-        // Boost is available to all if the system is enabled
         hasAccess = premiumAccess.canAccessBoost;
         title = 'Boost Indisponible';
         message = 'Le système de Boost est temporairement désactivé.';
+        break;
+
+      case 'invisible':
+        hasAccess = premiumAccess.isPremium;
+        title = 'Mode invisible Premium';
+        message = 'Passez Premium pour activer le mode invisible et disparaître de la liste des utilisateurs proches.';
+        break;
+
+      case 'extended_radius':
+        hasAccess = premiumAccess.isPremium;
+        title = 'Rayon étendu Premium';
+        message = 'Passez Premium pour explorer jusqu\'à 2 km autour de vous (500 m en version gratuite).';
         break;
 
       default:

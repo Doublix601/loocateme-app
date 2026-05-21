@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEBUG_CONFIG } from './DebugConfig';
-import { getMyUser } from '../components/ApiRequest';
+import { getMyUser, get } from '../components/ApiRequest';
 
 const STORAGE_KEY = '@loocateme:premium_v2';
 
@@ -106,12 +106,20 @@ const PremiumService = {
       _state.boostsRemaining =
         typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
 
-      // superlikeBalance n'existe pas encore côté backend → gestion locale
       if (typeof user.superlikeBalance === 'number') {
         _state.superlikesRemaining = user.superlikeBalance;
       } else if (wasFree && _state.subscriptionStatus !== 'free') {
-        // Première activation premium : donner l'allocation hebdomadaire
         _state.superlikesRemaining = SUPERLIKE_WEEKLY_ALLOWANCE;
+      }
+
+      // Déclenche le reset hebdomadaire des superlikes si le user est premium
+      if (_state.subscriptionStatus !== 'free') {
+        try {
+          const allowance = await get('/premium/allowance');
+          if (typeof allowance?.superlikeBalance === 'number') {
+            _state.superlikesRemaining = allowance.superlikeBalance;
+          }
+        } catch (_) {}
       }
 
       _state.lastSyncAt = Date.now();
