@@ -30,6 +30,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
 import { trackProfileView, trackSocialClick, createReport, blockUser, getFollowStatus as apiGetFollowStatus, createFollowRequest as apiCreateFollowRequest } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
+import SuperlikeService from '../services/SuperlikeService';
+import PremiumService from '../services/PremiumService';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { Feather } from '@expo/vector-icons';
@@ -60,6 +62,9 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const [reportSubmitting, setReportSubmitting] = React.useState(false);
   const [followStatus, setFollowStatus] = React.useState('none'); // 'none' | 'pending' | 'accepted'
   const [followLoading, setFollowLoading] = React.useState(false);
+  const [superlikeBalance, setSuperlikeBalance] = React.useState(() => PremiumService.getSuperlikesRemaining());
+  const [superlikeSent, setSuperlikeSent] = React.useState(false);
+  const [superlikeLoading, setSuperlikeLoading] = React.useState(false);
   const { isDark, colors } = useTheme();
   const { isMoon } = useVibe();
   const insets = useSafeAreaInsets();
@@ -471,6 +476,32 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     }
   };
 
+  const handleSuperlike = async () => {
+    if (superlikeSent || superlikeLoading) return;
+    if (superlikeBalance <= 0) {
+      publish('ui:open_consumables', { type: 'superlike' });
+      return;
+    }
+    setSuperlikeLoading(true);
+    try {
+      const targetId = user?._id || user?.id;
+      const result = await SuperlikeService.send(targetId);
+      if (result.success) {
+        setSuperlikeSent(true);
+        setSuperlikeBalance(PremiumService.getSuperlikesRemaining());
+        Alert.alert('⭐ Superlike envoyé !', `${displayName} a été notifié(e) que tu le/la remarques.`);
+      } else if (result.reason === 'no_superlikes') {
+        publish('ui:open_consumables', { type: 'superlike' });
+      } else {
+        Alert.alert('Erreur', 'Impossible d\'envoyer le superlike.');
+      }
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible d\'envoyer le superlike.');
+    } finally {
+      setSuperlikeLoading(false);
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       {isMoon ? (
@@ -521,6 +552,37 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
             size={22}
             color={followStatus === 'accepted' ? '#fff' : colors.accent}
           />
+        )}
+      </TouchableOpacity>
+
+      {/* Superlike button */}
+      <TouchableOpacity
+        style={[
+          styles.superlikeButton,
+          {
+            backgroundColor: superlikeSent
+              ? 'rgba(255,215,0,0.2)'
+              : superlikeBalance > 0
+                ? 'rgba(255,215,0,0.12)'
+                : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+            borderColor: superlikeSent ? '#FFD700' : 'rgba(255,215,0,0.4)',
+            opacity: (superlikeLoading || superlikeSent) ? 0.75 : 1,
+          },
+        ]}
+        onPress={handleSuperlike}
+        disabled={superlikeLoading || superlikeSent}
+        hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+        accessibilityLabel="Envoyer un superlike"
+      >
+        {superlikeLoading ? (
+          <ActivityIndicator size="small" color="#FFD700" />
+        ) : (
+          <Text style={{ fontSize: 20 }}>{superlikeSent ? '✓' : '⭐'}</Text>
+        )}
+        {superlikeBalance > 0 && !superlikeSent && (
+          <View style={styles.superlikeBadge}>
+            <Text style={styles.superlikeBadgeText}>{superlikeBalance}</Text>
+          </View>
         )}
       </TouchableOpacity>
 
@@ -1065,6 +1127,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  superlikeButton: {
+    position: 'absolute',
+    top: 110,
+    right: 14,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  superlikeBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#FFD700',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  superlikeBadgeText: { color: '#000', fontSize: 9, fontWeight: '900' },
   menuButtonText: {
     fontSize: 26,
     fontWeight: '700',

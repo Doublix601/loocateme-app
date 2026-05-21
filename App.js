@@ -21,6 +21,7 @@ import ConsentScreen from './views/ConsentScreen';
 import DebugScreen from './views/DebugScreen';
 import StatisticsScreen from './views/StatisticsScreen';
 import PremiumPaywallScreen from './views/PremiumPaywallScreen';
+import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import ModeratorScreen from './views/ModeratorScreen';
 import WarningsScreen from './views/WarningsScreen';
 import Purchases from 'react-native-purchases';
@@ -39,6 +40,7 @@ import { usePresence } from './hooks/usePresence';
 import { usePremiumAccess } from './hooks/usePremiumAccess';
 import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken, logout as apiLogout } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
+import PremiumService from './services/PremiumService';
 
 const mapBackendUser = (u = {}) => {
   const socialMedias = Array.isArray(u.socialNetworks)
@@ -108,6 +110,7 @@ function AppInner({ purchasesReady }) {
   const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
 
   const [premiumPaywallParams, setPremiumPaywallParams] = useState(null);
+  const [shopSheetVisible, setShopSheetVisible] = useState(false);
 
   const socialMediaIcons = {
     facebook: require('./assets/socialMediaIcons/fb_logo.png'),
@@ -299,6 +302,23 @@ function AppInner({ purchasesReady }) {
       setCurrentScreen('Login');
     });
     return () => { try { off && off(); } catch (_) {} };
+  }, []);
+
+  // Global EventBus: open premium paywall from any screen via publish('ui:open_premium')
+  useEffect(() => {
+    const off = subscribe('ui:open_premium', () => setCurrentScreen('PremiumPaywall'));
+    return () => { try { off && off(); } catch (_) {} };
+  }, []);
+
+  // Global EventBus: open consumables shop from any screen via publish('ui:open_consumables')
+  useEffect(() => {
+    const off = subscribe('ui:open_consumables', () => setShopSheetVisible(true));
+    return () => { try { off && off(); } catch (_) {} };
+  }, []);
+
+  // Init PremiumService once on mount to load local consumable balances
+  useEffect(() => {
+    PremiumService.init().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -637,6 +657,12 @@ function AppInner({ purchasesReady }) {
       {/* Vibe Switch FAB overlay */}
       <VibeTransitOverlay />
       {currentScreen === 'LocationList' && <VibeFAB />}
+      {/* Consumables shop — global overlay, openable from any screen */}
+      <ConsumablesShopSheet
+        visible={shopSheetVisible}
+        onClose={() => setShopSheetVisible(false)}
+        userId={appUser?._id || appUser?.id}
+      />
       <LocationPermissionModal
         visible={locationModal.visible}
         type={locationModal.type}
