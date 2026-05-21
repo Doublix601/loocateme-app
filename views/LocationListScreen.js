@@ -49,9 +49,9 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
   const [userCoords, setUserCoords] = useState(null);
   // Pagination des lieux backend : minimum 20, on charge +10 quand l'utilisateur
   // atteint le bas de la liste, jusqu'à un plafond de 50 (cf. backend `limit`).
-  const MIN_LOCATIONS = 20;
-  const MAX_LOCATIONS = 50;
-  const LOCATIONS_STEP = 10;
+  const MIN_LOCATIONS = 40;
+  const MAX_LOCATIONS = 80;
+  const LOCATIONS_STEP = 20;
   const [displayLimit, setDisplayLimit] = useState(MIN_LOCATIONS);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState(false);
@@ -398,7 +398,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       if (!active) return;
 
       try {
-        const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: 1500, vibe });
+        const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: 3000, vibe });
         if (active) setOsmPois(pois);
       } catch (_) {}
     })();
