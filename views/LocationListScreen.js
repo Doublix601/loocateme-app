@@ -181,7 +181,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       .sort((a,b) => greenCount(b) - greenCount(a) || (a.distance||0) - (b.distance||0));
     const exploration = nonFeatured
       .filter(it => greenCount(it) === 0)
-      .sort((a,b) => boosted(b) - boosted(a) || (a.distance||0) - (b.distance||0));
+      .sort((a,b) => (a.distance||0) - (b.distance||0) || boosted(b) - boosted(a));
 
     // Mark first two featured for tall style
     const featuredMarked = featured.map((it, idx) => idx < 2 ? { ...it, _featuredRank: idx + 1 } : it);
