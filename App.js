@@ -120,7 +120,6 @@ function AppInner({ purchasesReady }) {
     tiktok: require('./assets/socialMediaIcons/tiktok_logo.png'),
     snapchat: require('./assets/socialMediaIcons/snapchat_logo.png'),
     youtube: require('./assets/socialMediaIcons/yt_logo.png'),
-    addSocialNetwork: require('./assets/socialMediaIcons/addSocialNetwork_logo.png'),
   };
 
   // Synchroniser le thème avec la vibe (soleil = light, lune = dark)
