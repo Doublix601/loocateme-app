@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder, AppState, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
@@ -44,7 +45,7 @@ const { width, height } = Dimensions.get('window');
 export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const { colors, isDark } = useTheme();
   const { isMoon } = useVibe();
-  const { user } = useContext(UserContext);
+  const { user, updateUser } = useContext(UserContext);
   const { hasStatsAccess: hasAccess, premiumSystemEnabled: premiumEnabled, statisticsSystemEnabled: statisticsEnabled, effectiveStatisticsEnabled } = usePremiumAccess();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -53,6 +54,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   const [detailedError, setDetailedError] = useState('');
   const [detailedLoading, setDetailedLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Icônes des réseaux sociaux disponibles dans le projet
   const socialMediaIcons = {
@@ -179,18 +181,15 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
 
   function timeAgo(ts) {
     try {
-      const now = Date.now();
-      const t = new Date(ts).getTime();
-      const diffMs = Math.max(0, now - t);
-      const min = Math.floor(diffMs / (60 * 1000));
-      if (min < 60) return `${min} min`;
+      const diffMs = Math.max(0, Date.now() - new Date(ts).getTime());
+      const min = Math.floor(diffMs / 60000);
+      if (min < 2) return 'À l\'instant';
+      if (min < 60) return `il y a ${min} min`;
       const hours = Math.floor(min / 60);
-      if (hours < 24) return `${hours} h`;
-      const days = Math.floor(hours / 24);
-      return `${days} j`;
-    } catch (_) {
-      return '';
-    }
+      if (hours < 24) return `il y a ${hours}h`;
+      if (hours < 48) return 'Hier';
+      return `il y a ${Math.floor(hours / 24)} j`;
+    } catch (_) { return ''; }
   }
 
   const clicks = data?.clicksByNetwork || {};
@@ -205,9 +204,22 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   useEffect(() => { if (hasAccess) loadDetailed(); }, [hasAccess]);
 
   useEffect(() => {
-    // Reset visible count on refresh of the list
     setVisibleCount(10);
   }, [detailed.length]);
+
+  // Unread badge: count visits newer than last opened, then mark as seen
+  useEffect(() => {
+    if (!hasAccess || detailed.length === 0) return;
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('@loocateme:stats_last_visited');
+        const lastMs = raw ? parseInt(raw, 10) : 0;
+        const count = detailed.filter((it) => new Date(it.at).getTime() > lastMs).length;
+        setUnreadCount(count);
+        await AsyncStorage.setItem('@loocateme:stats_last_visited', String(Date.now()));
+      } catch (_) {}
+    })();
+  }, [hasAccess, detailed.length]);
 
   return (
     <View style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
@@ -226,7 +238,14 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Statistiques</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Statistiques</Text>
+          {unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+            </View>
+          )}
+        </View>
         <View style={{ width: 40 }} />
       </View>
 
@@ -313,73 +332,125 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
                 ) : detailedError ? (
                   <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, textAlign: 'center' }}>{detailedError}</Text>
                 ) : detailed.length === 0 ? (
-                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, textAlign: 'center' }}>Aucune visite récente</Text>
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyEmoji}>👻</Text>
+                    <Text style={[styles.emptyTitle, { color: isDark ? '#fff' : colors.text }]}>Personne n'a encore visité ton profil</Text>
+                    <Text style={[styles.emptyDesc, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>
+                      Continue à explorer des lieux pour être découvert !
+                    </Text>
+                  </View>
                 ) : (
                   <>
-                    {detailed.slice(0, visibleCount).map((it, idx) => {
-                      const isBlurred = it.actor?.isBlurred;
+                    {(() => {
+                      const visible = detailed.slice(0, visibleCount);
+                      const blurredCount = visible.filter((it) => it.actor?.isBlurred).length;
                       return (
-                        <TouchableOpacity
-                          key={String(it.id)}
-                          style={[styles.visitorRow, idx !== Math.min(visibleCount, detailed.length) - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
-                          onPress={() => {
-                            if (isBlurred) {
-                              publish('ui:open_premium');
-                              return;
-                            }
-                            if (!onOpenUserProfile || !it?.actor) return;
-                            const socials = Array.isArray(it.actor?.socialNetworks)
-                              ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-                              : [];
-                            const coords = Array.isArray(it.actor?.location?.coordinates)
-                              ? it.actor.location.coordinates
-                              : null;
-                            const u = {
-                              _id: it.actor.id || it.actor._id,
-                              id: it.actor.id || it.actor._id,
-                              username: it.actor.username || it.actor.name || 'Utilisateur',
-                              firstName: '',
-                              lastName: '',
-                              customName: it.actor.name || '',
-                              photo: it.actor.profileImageUrl || null,
-                              bio: it.actor?.bio || '',
-                              socialMedias: socials,
-                              locationCoordinates: coords,
-                            };
-                            onOpenUserProfile(u);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <View style={{ borderRadius: 20, overflow: 'hidden' }}>
-                            {it.actor?.profileImageUrl ? (
-                              <ImageWithPlaceholder
-                                uri={it.actor.profileImageUrl}
-                                style={[styles.avatar, isBlurred && { opacity: 0.3 }]}
-                                blurRadius={isBlurred ? 10 : 0}
-                              />
-                            ) : (
-                              <View style={[styles.avatar, styles.avatarPh, isBlurred && { opacity: 0.3 }]}>
-                                <Text style={{ color: '#fff', fontWeight: 'bold' }}>{(it.actor?.name?.[0] || 'U').toUpperCase()}</Text>
-                              </View>
-                            )}
-                          </View>
-                          <View style={{ flex: 1, marginLeft: 15 }}>
-                            <Text style={{ color: isDark ? '#fff' : colors.text, fontWeight: '700', fontSize: 15 }} numberOfLines={1}>
-                              {it.actor?.name || it.actor?.username || 'Utilisateur'}
-                            </Text>
-                            <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, marginTop: 2, fontSize: 13 }}>{timeAgo(it.at)}</Text>
-                          </View>
-                          {isBlurred ? (
-                             <Text style={{ fontSize: 18 }}>🔒</Text>
-                          ) : (
-                            <Image
-                                source={require('../assets/appIcons/backArrow.png')}
-                                style={{ width: 16, height: 16, tintColor: isDark ? '#fff' : colors.text, opacity: 0.3, transform: [{ rotate: '180deg' }] }}
-                            />
+                        <>
+                          {visible.map((it, idx) => {
+                            const isBlurred = it.actor?.isBlurred;
+                            const displayName = isBlurred ? '···' : (it.actor?.name || it.actor?.username || 'Utilisateur');
+                            const locationName = it.actor?.currentPoiName || it.actor?.locationName || null;
+                            return (
+                              <TouchableOpacity
+                                key={String(it.id || idx)}
+                                style={[
+                                  styles.visitorRow,
+                                  idx !== Math.min(visibleCount, detailed.length) - 1 && {
+                                    borderBottomWidth: 1,
+                                    borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                                  },
+                                ]}
+                                onPress={() => {
+                                  if (isBlurred) { publish('ui:open_premium'); return; }
+                                  if (!onOpenUserProfile || !it?.actor) return;
+                                  const socials = Array.isArray(it.actor?.socialNetworks)
+                                    ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+                                    : [];
+                                  const coords = Array.isArray(it.actor?.location?.coordinates)
+                                    ? it.actor.location.coordinates : null;
+                                  onOpenUserProfile({
+                                    _id: it.actor.id || it.actor._id,
+                                    id: it.actor.id || it.actor._id,
+                                    username: it.actor.username || it.actor.name || 'Utilisateur',
+                                    firstName: '',
+                                    lastName: '',
+                                    customName: it.actor.name || '',
+                                    photo: it.actor.profileImageUrl || null,
+                                    bio: it.actor?.bio || '',
+                                    socialMedias: socials,
+                                    locationCoordinates: coords,
+                                  });
+                                }}
+                                activeOpacity={0.7}
+                              >
+                                <View style={{ borderRadius: 24, overflow: 'hidden' }}>
+                                  {it.actor?.profileImageUrl && !isBlurred ? (
+                                    <ImageWithPlaceholder
+                                      uri={it.actor.profileImageUrl}
+                                      style={styles.avatar}
+                                    />
+                                  ) : (
+                                    <View style={[
+                                      styles.avatar,
+                                      styles.avatarPh,
+                                      isBlurred && { backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)' },
+                                    ]}>
+                                      <Text style={{ color: isBlurred ? (isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)') : '#fff', fontWeight: 'bold', fontSize: isBlurred ? 20 : 18 }}>
+                                        {isBlurred ? '?' : (it.actor?.name?.[0] || 'U').toUpperCase()}
+                                      </Text>
+                                    </View>
+                                  )}
+                                </View>
+                                <View style={{ flex: 1, marginLeft: 14 }}>
+                                  <Text
+                                    style={{ color: isDark ? '#fff' : colors.text, fontWeight: '700', fontSize: 15, letterSpacing: isBlurred ? 2 : 0 }}
+                                    numberOfLines={1}
+                                  >
+                                    {displayName}
+                                  </Text>
+                                  {locationName && !isBlurred && (
+                                    <Text style={{ color: '#00c2cb', fontSize: 11, fontWeight: '600', marginTop: 1 }} numberOfLines={1}>
+                                      📍 {locationName}
+                                    </Text>
+                                  )}
+                                  <Text style={{ color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)', marginTop: 2, fontSize: 12 }}>
+                                    {timeAgo(it.at)}
+                                  </Text>
+                                </View>
+                                {isBlurred ? (
+                                  <Text style={{ fontSize: 18, opacity: 0.5 }}>🔒</Text>
+                                ) : (
+                                  <Image
+                                    source={require('../assets/appIcons/backArrow.png')}
+                                    style={{ width: 14, height: 14, tintColor: isDark ? '#fff' : colors.text, opacity: 0.25, transform: [{ rotate: '180deg' }] }}
+                                  />
+                                )}
+                              </TouchableOpacity>
+                            );
+                          })}
+
+                          {/* Paywall CTA when blurred visitors exist */}
+                          {blurredCount > 0 && (
+                            <View style={[styles.paywallOverlay, { backgroundColor: isDark ? 'rgba(15,15,26,0.95)' : 'rgba(255,255,255,0.95)' }]}>
+                              <Text style={{ fontSize: 28, marginBottom: 6 }}>🔒</Text>
+                              <Text style={[{ fontWeight: '800', fontSize: 15, marginBottom: 4, textAlign: 'center' }, { color: isDark ? '#fff' : colors.text }]}>
+                                {blurredCount} visite{blurredCount > 1 ? 's' : ''} masquée{blurredCount > 1 ? 's' : ''}
+                              </Text>
+                              <Text style={[{ fontSize: 12, textAlign: 'center', marginBottom: 12 }, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>
+                                Passe en Premium pour tout voir
+                              </Text>
+                              <TouchableOpacity
+                                onPress={() => publish('ui:open_premium')}
+                                style={styles.paywallCTA}
+                              >
+                                <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>Découvrir mes visiteurs</Text>
+                              </TouchableOpacity>
+                            </View>
                           )}
-                        </TouchableOpacity>
+                        </>
                       );
-                    })}
+                    })()}
+
                     {visibleCount < detailed.length && (
                       <TouchableOpacity onPress={() => setVisibleCount((c) => Math.min(c + 10, detailed.length))} style={styles.moreBtn}>
                         <Text style={[styles.moreTxt, { color: '#00c2cb' }]}>Afficher plus</Text>
@@ -474,7 +545,40 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 4
+    shadowRadius: 4,
   },
   paywallBtnText: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  unreadBadge: {
+    backgroundColor: '#00c2cb',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  unreadBadgeText: { color: '#fff', fontSize: 11, fontWeight: '900' },
+  emptyState: { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 10 },
+  emptyEmoji: { fontSize: 44, marginBottom: 12 },
+  emptyTitle: { fontSize: 15, fontWeight: '700', marginBottom: 6, textAlign: 'center' },
+  emptyDesc: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
+  paywallOverlay: {
+    marginTop: 12,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,194,203,0.2)',
+  },
+  paywallCTA: {
+    backgroundColor: '#00c2cb',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    elevation: 2,
+    shadowColor: '#00c2cb',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
 });

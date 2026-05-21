@@ -10,6 +10,10 @@ import { UserContext } from '../components/contexts/UserContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 
 import { useTheme } from '../components/contexts/ThemeContext';
+import { DEBUG_CONFIG, setDebugFlag } from '../services/DebugConfig';
+import PremiumService from '../services/PremiumService';
+
+export { DEBUG_CONFIG } from '../services/DebugConfig';
 
 const DebugScreen = ({ onBack }) => {
   const { colors, isDark } = useTheme();
@@ -42,6 +46,12 @@ const DebugScreen = ({ onBack }) => {
   const [pushResponse, setPushResponse] = useState(null);
   const [currentPushToken, setCurrentPushToken] = useState('Chargement...');
   const [registering, setRegistering] = useState(false);
+  // IAP debug state
+  const [iapDisabled, setIapDisabled] = useState(DEBUG_CONFIG.IAP_DISABLED);
+  const [forcePremium, setForcePremium] = useState(DEBUG_CONFIG.FORCE_PREMIUM);
+  const [boostsRemaining, setBoostsRemaining] = useState(0);
+  const [superlikesRemaining, setSuperlikesRemaining] = useState(0);
+  const [premiumStatus, setPremiumStatus] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -89,6 +99,25 @@ const DebugScreen = ({ onBack }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const debRef = useRef(null);
 
+  const loadPremiumStatus = () => {
+    try {
+      setBoostsRemaining(PremiumService.getBoostsRemaining());
+      setSuperlikesRemaining(PremiumService.getSuperlikesRemaining());
+      const status = PremiumService.getSubscriptionStatus();
+      setPremiumStatus(status === 'premium' ? 'Premium actif' : status === 'trial' ? 'Essai gratuit' : 'Gratuit');
+    } catch (_) {}
+  };
+
+  const handleResetConsumables = async () => {
+    try {
+      await PremiumService.resetConsumables();
+      loadPremiumStatus();
+      Alert.alert('Réinitialisé', 'Boosts et superlikes remis à zéro.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de réinitialiser.');
+    }
+  };
+
   const runAllApiUsers = async () => {
     try {
       setLoading(true);
@@ -134,6 +163,7 @@ const DebugScreen = ({ onBack }) => {
   useEffect(() => {
     try { runAllApiUsers(); } catch (_) {}
     try { loadFlags(); } catch (_) {}
+    try { loadPremiumStatus(); } catch (_) {}
   }, []);
 
   // Load feature flags from admin endpoint
@@ -401,6 +431,69 @@ const DebugScreen = ({ onBack }) => {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
+        {/* IAP Debug Section */}
+        <Text style={sectionTitleStyle}>In-App Purchases</Text>
+        <View style={cardStyle}>
+          <View style={[styles.flagRow, { borderBottomColor: borderColor }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.flagKey, textStyle]}>IAP_DISABLED</Text>
+              <Text style={[styles.flagDesc, subTextStyle]}>Simule les achats sans vraie transaction</Text>
+            </View>
+            <Switch
+              value={iapDisabled}
+              onValueChange={(v) => { setDebugFlag('IAP_DISABLED', v); setIapDisabled(v); }}
+              trackColor={{ false: '#3e3e3e', true: '#f39c12' }}
+              thumbColor="#fff"
+            />
+          </View>
+          <View style={[styles.flagRow, { borderBottomColor: borderColor }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.flagKey, textStyle]}>FORCE_PREMIUM</Text>
+              <Text style={[styles.flagDesc, subTextStyle]}>Force le statut Premium localement</Text>
+            </View>
+            <Switch
+              value={forcePremium}
+              onValueChange={(v) => { setDebugFlag('FORCE_PREMIUM', v); setForcePremium(v); }}
+              trackColor={{ false: '#3e3e3e', true: '#2ecc71' }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          {/* Consumables status */}
+          <View style={{ paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: borderColor }}>
+            <Text style={[{ fontSize: 11, fontWeight: '800', letterSpacing: 0.8, marginBottom: 12, textTransform: 'uppercase' }, subTextStyle]}>
+              État des consommables
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 24, alignItems: 'center' }}>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 26 }}>🔥</Text>
+                <Text style={{ fontSize: 22, fontWeight: '900', color: '#00c2cb' }}>{boostsRemaining}</Text>
+                <Text style={[{ fontSize: 11 }, subTextStyle]}>boosts</Text>
+              </View>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ fontSize: 26 }}>⭐</Text>
+                <Text style={{ fontSize: 22, fontWeight: '900', color: '#00c2cb' }}>{superlikesRemaining}</Text>
+                <Text style={[{ fontSize: 11 }, subTextStyle]}>superlikes</Text>
+              </View>
+              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                <View style={[styles.badge, { backgroundColor: premiumStatus === 'Premium actif' ? '#2ecc71' : premiumStatus === 'Essai gratuit' ? '#f39c12' : '#3498db' }]}>
+                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{premiumStatus || '—'}</Text>
+                </View>
+                <TouchableOpacity onPress={loadPremiumStatus} style={{ marginTop: 8 }}>
+                  <Text style={{ color: '#00c2cb', fontSize: 12, fontWeight: '700' }}>Actualiser</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.cmdBtn, { backgroundColor: '#e74c3c', borderColor: 'transparent', marginTop: 12, marginBottom: 0 }]}
+            onPress={handleResetConsumables}
+          >
+            <Text style={styles.cmdTxt}>Réinitialiser consommables</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Feature Flags Section */}
         <Text style={sectionTitleStyle}>Feature Flags (Global)</Text>
         <View style={cardStyle}>
