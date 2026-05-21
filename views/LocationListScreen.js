@@ -122,7 +122,10 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
   const locationsWithDistance = useMemo(() => {
     const merged = [...filteredLocations, ...filteredOsmPois].reduce((acc, it) => {
-      const key = it?._id || `${it?.osmId}`;
+      // Dédoublonnage robuste : on privilégie l'osmId s'il existe, sinon l'id MongoDB.
+      // Cela permet de fusionner un lieu backend synchronisé (qui a un osmId)
+      // avec son équivalent brut provenant d'Overpass.
+      const key = it?.osmId ? `osm:${it.osmId}` : it?._id;
       if (!key) return acc;
       if (acc.map.has(key)) return acc; // dedupe
       acc.map.set(key, it);
