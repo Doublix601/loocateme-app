@@ -46,8 +46,8 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
 export function formatDistance(meters) {
     if (!meters && meters !== 0) return '';
 
-    // Round to nearest 50m
-    const roundedMeters = Math.round(meters / 50) * 50;
+    // Round to nearest 10m
+    const roundedMeters = Math.round(meters / 10) * 10;
 
     if (roundedMeters < 1000) {
         return `${roundedMeters}m`;
