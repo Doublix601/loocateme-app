@@ -38,13 +38,13 @@ const CATEGORIES_BY_VIBE = {
     ],
   },
   sun: {
-    amenity: ['cafe', 'restaurant', 'fast_food', 'food_court', 'coworking_space', 'library', 'gym', 'university', 'college', 'school'],
+    amenity: ['cafe', 'fast_food', 'food_court', 'coworking_space', 'library', 'gym', 'university', 'college', 'school'],
     leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch'],
     backend: [
       'Salle de sport 🏋️', 'Parc 🌳', 'Plage 🏖️', "Parc d'attractions 🎢",
       'Bibliothèque 📚', 'Centre sportif 🏟️', 'Éducation 🎓', 'Coworking 🧑‍💻', 'Glacier 🍦',
-      // partagés jour/nuit
-      'Restaurant 🍴', 'Café ☕', 'Cinéma 🎬', 'Fast food 🍔',
+      // partagés jour/nuit (Restaurant retiré : uniquement en mode nuit)
+      'Café ☕', 'Cinéma 🎬', 'Fast food 🍔',
       'Bowling 🎳', 'TEST 🤖',
     ],
   },
