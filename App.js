@@ -34,6 +34,7 @@ import {
 import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
 import { mapBackendUser, mapProfileUser } from './utils/mappers';
+import { hasSeenOnboarding } from './utils/onboarding';
 import RootNavigator from './navigation/RootNavigator';
 
 const navigationRef = createNavigationContainerRef();
@@ -94,7 +95,8 @@ function AppShell({ purchasesReady }) {
             if (me && updateUser) updateUser(mapBackendUser(me));
             const consentAccepted = !!(me?.consent?.accepted);
             if (consentAccepted) {
-              navigationRef.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+              const seen = await hasSeenOnboarding();
+              navigationRef.reset({ index: 0, routes: [{ name: seen ? 'MainTabs' : 'Onboarding' }] });
               setTimeout(() => publish('userlist:refresh'), 1000);
             } else {
               navigationRef.reset({ index: 0, routes: [{ name: 'Consent' }] });
@@ -104,7 +106,8 @@ function AppShell({ purchasesReady }) {
               await apiLogout();
               navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
             } else {
-              navigationRef.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+              const seen = await hasSeenOnboarding();
+              navigationRef.reset({ index: 0, routes: [{ name: seen ? 'MainTabs' : 'Onboarding' }] });
             }
           }
         } else {
