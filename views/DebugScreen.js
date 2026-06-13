@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser } from '../components/ApiRequest';
+import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser, triggerLocationSync } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
@@ -241,6 +241,19 @@ const DebugScreen = () => {
       Alert.alert('Succès', 'Utilisateur débanni.');
     } catch (e) {
       Alert.alert('Erreur', e?.message || "Impossible de lever le ban.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncLocations = async () => {
+    try {
+      setLoading(true);
+      const res = await triggerLocationSync();
+      Alert.alert('Sync terminée', res?.message || 'Stats lieux recalculées.');
+      setResult(res);
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de déclencher la sync.');
     } finally {
       setLoading(false);
     }
@@ -726,6 +739,10 @@ const DebugScreen = () => {
         )}
 
         <Text style={[sectionTitleStyle, { marginTop: 25 }]}>Actions Globales</Text>
+        <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#8e44ad', borderColor: 'transparent' }]} onPress={handleSyncLocations} disabled={loading}>
+          <Text style={styles.cmdTxt}>Recalculer les étoiles des lieux (30j)</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#00c2cb', borderColor: 'transparent' }]} onPress={runAllApiUsers} disabled={loading}>
           <Text style={styles.cmdTxt}>Lister tous les utilisateurs (API)</Text>
         </TouchableOpacity>

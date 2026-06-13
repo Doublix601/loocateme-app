@@ -730,6 +730,10 @@ export async function unbanUser(userId) {
     });
 }
 
+export async function triggerLocationSync() {
+    return request('/admin/sync-locations', { method: 'POST' });
+}
+
 // FOLLOW / RELATIONS
 export async function getFollowStatus(targetUserId) {
     const id = String(targetUserId || '');
