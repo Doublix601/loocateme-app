@@ -162,14 +162,18 @@ const LocationListScreen = () => {
       const uc = it?.userCount || 0; return uc;
     };
 
-    // Client-side priority by vibe (category boost)
-    const dayBoost = new Set(['coworking_space','cafe','gym','library','school','university','college','stadium','sports_centre']);
-    const nightBoost = new Set(['bar','pub','nightclub','restaurant','cafe','cinema','fast_food','bowling']);
-    const neutral = new Set(['cinema','fast_food']);
+    // Client-side priority by vibe (category boost) — séparation stricte jour/nuit
+    const dayBoost = new Set([
+      'cafe', 'Café ☕', 'coworking_space', 'Coworking 🧑‍💻', 'gym', 'Salle de sport 🏋️',
+      'sports_centre', 'Centre sportif 🏟️', 'park', 'Parc 🌳', 'Brunch 🥞',
+    ]);
+    const nightBoost = new Set([
+      'bar', 'Bar 🍺', 'pub', 'nightclub', 'Boîte de nuit 💃', 'restaurant', 'Restaurant 🍴',
+      'Rooftop 🌆', 'Karaoké 🎤', 'Club de jeux 🎮',
+    ]);
     const boosted = (it) => {
       const t = it?.type || '';
-      if ((isMoon ? nightBoost : dayBoost).has(t)) return 2; // strong boost
-      if (neutral.has(t)) return 1; // light boost appears after strong
+      if ((isMoon ? nightBoost : dayBoost).has(t)) return 2;
       return 0;
     };
 

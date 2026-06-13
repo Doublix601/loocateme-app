@@ -27,25 +27,22 @@ let lastResult = { bboxKey: null, pois: [] };
 // On répartit selon la clé OSM utilisée (amenity vs leisure).
 const CATEGORIES_BY_VIBE = {
   moon: {
-    amenity: ['bar', 'pub', 'nightclub', 'restaurant', 'cafe', 'cinema', 'fast_food'],
-    leisure: [],
-    // Libellés stockés côté backend (enum Location.type)
+    amenity: ['bar', 'pub', 'biergarten', 'nightclub', 'restaurant', 'cinema', 'fast_food', 'food_court'],
+    leisure: ['bowling_alley'],
     backend: [
-      'Bar 🍺', 'Boîte de nuit 💃',
-      // partagés jour/nuit (présents dans les deux listes)
-      'Restaurant 🍴', 'Café ☕', 'Cinéma 🎬', 'Fast food 🍔',
-      'Bowling 🎳', 'TEST 🤖',
+      'Bar 🍺', 'Boîte de nuit 💃', 'Restaurant 🍴', 'Cinéma 🎬',
+      'Fast food 🍔', 'Bowling 🎳', 'Rooftop 🌆', 'Karaoké 🎤', 'Club de jeux 🎮',
+      'TEST 🤖',
     ],
   },
   sun: {
-    amenity: ['cafe', 'fast_food', 'food_court', 'coworking_space', 'library', 'gym', 'university', 'college', 'school'],
-    leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch'],
+    amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'school', 'marketplace', 'museum'],
+    leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach'],
     backend: [
-      'Salle de sport 🏋️', 'Parc 🌳', 'Plage 🏖️', "Parc d'attractions 🎢",
-      'Bibliothèque 📚', 'Centre sportif 🏟️', 'Éducation 🎓', 'Coworking 🧑‍💻', 'Glacier 🍦',
-      // partagés jour/nuit (Restaurant retiré : uniquement en mode nuit)
-      'Café ☕', 'Cinéma 🎬', 'Fast food 🍔',
-      'Bowling 🎳', 'TEST 🤖',
+      'Café ☕', 'Coworking 🧑‍💻', 'Salle de sport 🏋️', 'Centre sportif 🏟️',
+      'Parc 🌳', 'Plage 🏖️', "Parc d'attractions 🎢", 'Bibliothèque 📚',
+      'Éducation 🎓', 'Glacier 🍦', 'Marché 🛒', 'Musée 🏛️', 'Brunch 🥞',
+      'TEST 🤖',
     ],
   },
 };
@@ -72,19 +69,12 @@ export function normalizeVibe(v) {
 }
 
 // Renvoie true si le type d'un POI est compatible avec la vibe demandée.
-// Règle: on n'exclut un lieu QUE si son `type` appartient exclusivement à la vibe
-// opposée (ex: 'nightclub' en mode jour). Les types inconnus, neutres ou présents
-// dans les deux vibes restent visibles. Cela évite de masquer les locations du
-// backend dont le `type` ne figure pas dans nos listes (ex: 'poi', tags rares, etc.).
+// Séparation stricte : chaque type appartient à un seul mode.
+// Les types inconnus sont exclus par défaut (type absent des deux listes → caché).
 export function isTypeAllowedForVibe(type, vibe) {
-  if (!type) return true; // pas de type connu -> on garde
+  if (!type) return false;
   const v = normalizeVibe(vibe);
-  const other = v === 'moon' ? 'sun' : 'moon';
-  const allowedHere = ALLOWED_TYPES_BY_VIBE[v];
-  const allowedOther = ALLOWED_TYPES_BY_VIBE[other];
-  // Exclu uniquement si exclusivement dans l'autre vibe
-  if (allowedOther.has(type) && !allowedHere.has(type)) return false;
-  return true;
+  return ALLOWED_TYPES_BY_VIBE[v].has(type);
 }
 
 
