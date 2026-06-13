@@ -45,7 +45,7 @@ const H = height;
 
 const MyAccountScreen = () => {
     const navigation = useNavigation();
-    const { goToPage, currentPage } = useMainSwiper();
+    const { goToPage, currentPage, lockSwiper, unlockSwiper } = useMainSwiper();
     const { colors, isDark } = useTheme();
     const { isMoon } = useVibe();
     const { locale } = useLocale();
@@ -126,6 +126,14 @@ const MyAccountScreen = () => {
       setSpotStep(idx);
     };
 
+    const endOnboarding = async () => {
+      setSpotStep(-1);
+      setSpotRect(null);
+      unlockSwiper();
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      await markProfileOnboardingDone();
+    };
+
     // Démarre uniquement quand l'utilisateur arrive sur la page profil (page 2)
     useEffect(() => {
       if (currentPage !== 2 || spotStarted.current) return;
@@ -133,6 +141,7 @@ const MyAccountScreen = () => {
         const seen = await hasSeenProfileOnboarding();
         if (seen) return;
         spotStarted.current = true;
+        lockSwiper();
         setTimeout(() => goToStep(0), 600);
       })();
     }, [currentPage]);
@@ -140,19 +149,13 @@ const MyAccountScreen = () => {
     const handleSpotNext = async () => {
       const next = spotStep + 1;
       if (next >= SPOT_STEPS.length) {
-        setSpotStep(-1);
-        setSpotRect(null);
-        await markProfileOnboardingDone();
+        await endOnboarding();
       } else {
         await goToStep(next);
       }
     };
 
-    const handleSpotSkip = async () => {
-      setSpotStep(-1);
-      setSpotRect(null);
-      await markProfileOnboardingDone();
-    };
+    const handleSpotSkip = () => endOnboarding();
     // ─────────────────────────────────────────────────────────────
 
     // Dynamically scale UI based on number of social networks to best fill the page without scrolling
@@ -956,6 +959,7 @@ const MyAccountScreen = () => {
             <ScrollView
                 ref={scrollViewRef}
                 style={{ flex: 1 }}
+                scrollEnabled={spotStep < 0}
                 contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: insets.top + 16, paddingBottom: Math.max(24, height * 0.06) + insets.bottom, flexGrow: 1 }}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />

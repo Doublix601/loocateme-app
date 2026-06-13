@@ -14,7 +14,7 @@ export default function MainSwiper() {
   const pageRef = useRef(INITIAL_PAGE);
   const gestureBaseRef = useRef(-width * INITIAL_PAGE);
   const [currentPage, setCurrentPage] = useState(INITIAL_PAGE);
-  // Keep a stable ref so the PanResponder (created once) can always call the latest goToPage
+  const swiperLockedRef = useRef(false);
   const goToPageRef = useRef(null);
 
   const goToPage = useCallback(
@@ -46,10 +46,8 @@ export default function MainSwiper() {
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onStartShouldSetPanResponderCapture: () => false,
-      // Capture phase: claim the gesture before FlatList / ScrollView see it,
-      // but only for clearly-horizontal movements (dx at least 3x larger than dy).
       onMoveShouldSetPanResponderCapture: (_, { dx, dy }) =>
-        Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 3,
+        !swiperLockedRef.current && Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 3,
       onPanResponderGrant: () => {
         // Dismiss keyboard immediately when a swipe starts so it never
         // obstructs the animation.
@@ -86,9 +84,12 @@ export default function MainSwiper() {
     }),
   ).current;
 
+  const lockSwiper   = useCallback(() => { swiperLockedRef.current = true; }, []);
+  const unlockSwiper = useCallback(() => { swiperLockedRef.current = false; }, []);
+
   const contextValue = useMemo(
-    () => ({ goToPage, currentPage, insideSwiper: true }),
-    [goToPage, currentPage],
+    () => ({ goToPage, currentPage, insideSwiper: true, lockSwiper, unlockSwiper }),
+    [goToPage, currentPage, lockSwiper, unlockSwiper],
   );
 
   return (

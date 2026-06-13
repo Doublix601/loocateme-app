@@ -100,11 +100,11 @@ export default function SpotlightOverlay({
         <View style={[s.dark, { top: sy, left: 0, width: sx, height: sh }]} />
         <View style={[s.dark, { top: sy, left: sx + sw, right: 0, height: sh }]} />
 
-        {/* ── 4 coins arrondis (masquent les angles du trou) ── */}
-        <View style={[s.corner, { top: sy,           left: sx,           borderBottomRightRadius: br }]} />
-        <View style={[s.corner, { top: sy,           left: sx + sw - br, borderBottomLeftRadius:  br }]} />
-        <View style={[s.corner, { top: sy + sh - br, left: sx,           borderTopRightRadius:    br }]} />
-        <View style={[s.corner, { top: sy + sh - br, left: sx + sw - br, borderTopLeftRadius:     br }]} />
+        {/* ── 4 coins arrondis : taille = br, borderRadius sur le coin intérieur ── */}
+        <View style={[s.dark, { top: sy,           left: sx,           width: br, height: br, borderBottomRightRadius: br }]} />
+        <View style={[s.dark, { top: sy,           left: sx + sw - br, width: br, height: br, borderBottomLeftRadius:  br }]} />
+        <View style={[s.dark, { top: sy + sh - br, left: sx,           width: br, height: br, borderTopRightRadius:    br }]} />
+        <View style={[s.dark, { top: sy + sh - br, left: sx + sw - br, width: br, height: br, borderTopLeftRadius:     br }]} />
 
         {/* ── Anneau fixe ── */}
         <View
@@ -160,16 +160,8 @@ export default function SpotlightOverlay({
   );
 }
 
-const CORNER_SIZE = 32;
-
 const s = StyleSheet.create({
   dark: { position: 'absolute', backgroundColor: DARK },
-  corner: {
-    position: 'absolute',
-    width: CORNER_SIZE,
-    height: CORNER_SIZE,
-    backgroundColor: DARK,
-  },
   ring: {
     position: 'absolute',
     borderWidth: 2,
