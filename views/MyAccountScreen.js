@@ -41,10 +41,11 @@ import SpotlightOverlay from '../components/SpotlightOverlay';
 import { hasSeenProfileOnboarding, markProfileOnboardingDone } from '../utils/onboarding';
 
 const { width, height } = Dimensions.get('window');
+const H = height;
 
 const MyAccountScreen = () => {
     const navigation = useNavigation();
-    const { goToPage } = useMainSwiper();
+    const { goToPage, currentPage } = useMainSwiper();
     const { colors, isDark } = useTheme();
     const { isMoon } = useVibe();
     const { locale } = useLocale();
@@ -72,8 +73,10 @@ const MyAccountScreen = () => {
     const [measuredNameWidth, setMeasuredNameWidth] = useState(0);
 
     // ── Spotlight onboarding ──────────────────────────────────────
-    const [spotStep, setSpotStep] = useState(-1); // -1 = inactif
+    const [spotStep, setSpotStep] = useState(-1);
     const [spotRects, setSpotRects] = useState([]);
+    const spotStarted = useRef(false);
+    const scrollViewRef = useRef(null);
     const photoRef = useRef(null);
     const identityRowRef = useRef(null);
     const bioRef = useRef(null);
@@ -81,34 +84,47 @@ const MyAccountScreen = () => {
     const statusRef = useRef(null);
 
     const SPOT_STEPS = [
-      { title: 'Ta photo de profil', description: 'Reste appuyé sur ta photo pour la modifier ou en choisir une nouvelle.' },
-      { title: 'Ton identité', description: 'Reste appuyé sur Prénom, Nom ou Pseudo pour les modifier.' },
-      { title: 'Ta bio', description: 'Reste appuyé sur la bio pour la personnaliser. C\'est la première chose que les autres voient.' },
-      { title: 'Tes réseaux sociaux', description: 'Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône pour la modifier ou la supprimer.' },
-      { title: 'Ton statut', description: 'Vert = disponible · Orange = occupé · Rouge = ne pas déranger. Les autres voient ton statut en temps réel.' },
+      { ref: photoRef,       borderRadius: 999, title: 'Ta photo de profil',   description: 'Reste appuyé sur ta photo pour la modifier ou en choisir une nouvelle depuis ta galerie.' },
+      { ref: identityRowRef, borderRadius: 14,  title: 'Ton identité',          description: 'Reste appuyé sur Prénom, Nom ou Pseudo pour modifier chaque champ individuellement.' },
+      { ref: bioRef,         borderRadius: 16,  title: 'Ta bio',                description: 'Reste appuyé sur la bio pour la personnaliser. C\'est la première chose que les autres voient sur ton profil.' },
+      { ref: socialRef,      borderRadius: 16,  title: 'Tes réseaux sociaux',   description: 'Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône existante pour la modifier ou la supprimer.' },
+      { ref: statusRef,      borderRadius: 99,  title: 'Ton statut',            description: 'Vert = disponible · Orange = occupé · Rouge = ne pas déranger. Les autres voient ton statut en temps réel.' },
     ];
 
-    const measureRef = (ref) => new Promise((resolve) => {
+    const measureOne = (step) => new Promise((resolve) => {
       setTimeout(() => {
-        ref.current?.measureInWindow((x, y, w, h) => {
-          resolve({ x, y, width: w, height: h, borderRadius: 14 });
+        step.ref.current?.measureInWindow((x, y, w, h) => {
+          resolve({ x, y, width: w, height: h, borderRadius: step.borderRadius });
         });
-      }, 100);
+      }, 80);
     });
 
+    // Démarre uniquement quand l'utilisateur arrive sur la page profil (page 2)
     useEffect(() => {
+      if (currentPage !== 2 || spotStarted.current) return;
       (async () => {
         const seen = await hasSeenProfileOnboarding();
         if (seen) return;
-        // Laisser le temps au layout de s'établir
+        spotStarted.current = true;
         setTimeout(async () => {
-          const refs = [photoRef, identityRowRef, bioRef, socialRef, statusRef];
-          const rects = await Promise.all(refs.map(measureRef));
+          const rects = await Promise.all(SPOT_STEPS.map(measureOne));
           setSpotRects(rects);
           setSpotStep(0);
-        }, 600);
+        }, 500);
       })();
-    }, []);
+    }, [currentPage]);
+
+    // Auto-scroll vers l'élément mis en valeur à chaque étape
+    useEffect(() => {
+      if (spotStep < 0 || !spotRects[spotStep]) return;
+      const rect = spotRects[spotStep];
+      // Si l'élément est en dessous du milieu de l'écran, on scrolle pour le centrer
+      if (rect.y > H * 0.55) {
+        scrollViewRef.current?.scrollTo({ y: rect.y - H * 0.3, animated: true });
+      } else if (rect.y < 80) {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      }
+    }, [spotStep]);
 
     const handleSpotNext = async () => {
       const next = spotStep + 1;
@@ -925,6 +941,7 @@ const MyAccountScreen = () => {
             </TouchableOpacity>
 
             <ScrollView
+                ref={scrollViewRef}
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: insets.top + 16, paddingBottom: Math.max(24, height * 0.06) + insets.bottom, flexGrow: 1 }}
                 refreshControl={
