@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser, triggerLocationSync } from '../components/ApiRequest';
-import { resetOnboarding } from '../utils/onboarding';
+import { resetOnboarding, resetProfileOnboarding } from '../utils/onboarding';
 import { subscribe } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
@@ -250,6 +250,11 @@ const DebugScreen = () => {
   const handleResetOnboarding = async () => {
     await resetOnboarding();
     Alert.alert('Onboarding réinitialisé', "Au prochain lancement de l'app, l'onboarding s'affichera.");
+  };
+
+  const handleResetProfileOnboarding = async () => {
+    await resetProfileOnboarding();
+    Alert.alert('Onboarding profil réinitialisé', "Au prochain affichage du profil, les coach marks s'afficheront.");
   };
 
   const handleSyncLocations = async () => {
@@ -746,7 +751,11 @@ const DebugScreen = () => {
 
         <Text style={[sectionTitleStyle, { marginTop: 25 }]}>Actions Globales</Text>
         <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]} onPress={handleResetOnboarding}>
-          <Text style={styles.cmdTxt}>Réinitialiser l'onboarding</Text>
+          <Text style={styles.cmdTxt}>Réinitialiser l'onboarding (slides)</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]} onPress={handleResetProfileOnboarding}>
+          <Text style={styles.cmdTxt}>Réinitialiser l'onboarding profil (coach marks)</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#8e44ad', borderColor: 'transparent' }]} onPress={handleSyncLocations} disabled={loading}>

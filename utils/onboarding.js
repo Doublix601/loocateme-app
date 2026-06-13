@@ -23,6 +23,28 @@ export async function resetOnboarding() {
   } catch {}
 }
 
+const PROFILE_KEY = 'loocateme_profile_onboarding_done';
+
+export async function hasSeenProfileOnboarding() {
+  try {
+    return (await AsyncStorage.getItem(PROFILE_KEY)) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export async function markProfileOnboardingDone() {
+  try {
+    await AsyncStorage.setItem(PROFILE_KEY, 'true');
+  } catch {}
+}
+
+export async function resetProfileOnboarding() {
+  try {
+    await AsyncStorage.removeItem(PROFILE_KEY);
+  } catch {}
+}
+
 // Navigue vers Onboarding si pas encore vu, sinon MainTabs.
 export async function navigateAfterAuth(navigation) {
   const seen = await hasSeenOnboarding();

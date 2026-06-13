@@ -37,6 +37,8 @@ import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import socialMediaIcons from '../constants/socialMediaIcons';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
+import SpotlightOverlay from '../components/SpotlightOverlay';
+import { hasSeenProfileOnboarding, markProfileOnboardingDone } from '../utils/onboarding';
 
 const { width, height } = Dimensions.get('window');
 
@@ -68,6 +70,61 @@ const MyAccountScreen = () => {
     const [myUserId, setMyUserId] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [measuredNameWidth, setMeasuredNameWidth] = useState(0);
+
+    // ── Spotlight onboarding ──────────────────────────────────────
+    const [spotStep, setSpotStep] = useState(-1); // -1 = inactif
+    const [spotRects, setSpotRects] = useState([]);
+    const photoRef = useRef(null);
+    const identityRowRef = useRef(null);
+    const bioRef = useRef(null);
+    const socialRef = useRef(null);
+    const statusRef = useRef(null);
+
+    const SPOT_STEPS = [
+      { title: 'Ta photo de profil', description: 'Reste appuyé sur ta photo pour la modifier ou en choisir une nouvelle.' },
+      { title: 'Ton identité', description: 'Reste appuyé sur Prénom, Nom ou Pseudo pour les modifier.' },
+      { title: 'Ta bio', description: 'Reste appuyé sur la bio pour la personnaliser. C\'est la première chose que les autres voient.' },
+      { title: 'Tes réseaux sociaux', description: 'Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône pour la modifier ou la supprimer.' },
+      { title: 'Ton statut', description: 'Vert = disponible · Orange = occupé · Rouge = ne pas déranger. Les autres voient ton statut en temps réel.' },
+    ];
+
+    const measureRef = (ref) => new Promise((resolve) => {
+      setTimeout(() => {
+        ref.current?.measureInWindow((x, y, w, h) => {
+          resolve({ x, y, width: w, height: h, borderRadius: 14 });
+        });
+      }, 100);
+    });
+
+    useEffect(() => {
+      (async () => {
+        const seen = await hasSeenProfileOnboarding();
+        if (seen) return;
+        // Laisser le temps au layout de s'établir
+        setTimeout(async () => {
+          const refs = [photoRef, identityRowRef, bioRef, socialRef, statusRef];
+          const rects = await Promise.all(refs.map(measureRef));
+          setSpotRects(rects);
+          setSpotStep(0);
+        }, 600);
+      })();
+    }, []);
+
+    const handleSpotNext = async () => {
+      const next = spotStep + 1;
+      if (next >= SPOT_STEPS.length) {
+        setSpotStep(-1);
+        await markProfileOnboardingDone();
+      } else {
+        setSpotStep(next);
+      }
+    };
+
+    const handleSpotSkip = async () => {
+      setSpotStep(-1);
+      await markProfileOnboardingDone();
+    };
+    // ─────────────────────────────────────────────────────────────
 
     // Dynamically scale UI based on number of social networks to best fill the page without scrolling
     const socialCountForScale = Array.isArray(user?.socialMedia) ? user.socialMedia.length : 0;
@@ -882,7 +939,7 @@ const MyAccountScreen = () => {
                             { backgroundColor: colors.surfaceAlt, width: desiredBoxWidth, paddingHorizontal: boxHorizontalPadding }
                         ]}>
                             <View style={styles.userProfilePictureContainer}>
-                                <TouchableOpacity onLongPress={handleProfileImageLongPress}>
+                                <TouchableOpacity ref={photoRef} onLongPress={handleProfileImageLongPress}>
                                     {user.photo ? (
                                         <ImageWithPlaceholder
                                             uri={user.photo}
@@ -920,7 +977,7 @@ const MyAccountScreen = () => {
                             </View>
                         </View>
                         {/* Traffic Light UI for Status */}
-                        <View style={[styles.statusSelector]}>
+                        <View ref={statusRef} style={[styles.statusSelector]}>
                             <TouchableOpacity
                                 style={[styles.statusCircle, { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.3 }]}
                                 onPress={() => handleUpdateStatus('red')}
@@ -935,7 +992,9 @@ const MyAccountScreen = () => {
                             />
                         </View>
 
-                        <View style={{
+                        <View
+                            ref={identityRowRef}
+                            style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             width: '100%',
@@ -989,7 +1048,7 @@ const MyAccountScreen = () => {
                             </TouchableOpacity>
                         </View>
 
-                        <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
+                        <View ref={bioRef} style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
                             <View style={styles.bioTitleContainer}>
                                 <Text style={[styles.label, labelStyle, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
                                 <Text style={{ marginLeft: 6, fontSize: 14 }}>🖋️</Text>
@@ -1067,7 +1126,7 @@ const MyAccountScreen = () => {
                         </View>
                     </View>
 
-                    <View style={styles.socialMediaContainer}>
+                    <View ref={socialRef} style={styles.socialMediaContainer}>
                             <TouchableOpacity
                                 onPress={() => setShowSocialModal(true)}
                                 style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}>
@@ -1405,6 +1464,18 @@ const MyAccountScreen = () => {
 
         </SafeAreaView>
         </View>
+
+        {/* Spotlight onboarding profil */}
+        <SpotlightOverlay
+          visible={spotStep >= 0 && spotStep < SPOT_STEPS.length && !!spotRects[spotStep]}
+          rect={spotRects[spotStep]}
+          title={SPOT_STEPS[spotStep]?.title}
+          description={SPOT_STEPS[spotStep]?.description}
+          stepIndex={spotStep}
+          totalSteps={SPOT_STEPS.length}
+          onNext={handleSpotNext}
+          onSkip={handleSpotSkip}
+        />
     );
 };
 
