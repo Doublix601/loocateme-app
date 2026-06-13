@@ -3,6 +3,7 @@ import { TextInput, TouchableOpacity, StyleSheet, View, useWindowDimensions, Act
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { login as apiLogin, setAccessToken } from '../components/ApiRequest';
+import { navigateAfterAuth } from '../utils/onboarding';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
@@ -38,7 +39,7 @@ const LoginScreen = () => {
             const user = res?.user;
             const consentAccepted = !!(user?.consent?.accepted);
             if (consentAccepted) {
-                navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+                await navigateAfterAuth(navigation);
                 setTimeout(() => publish('userlist:refresh'), 1000);
             } else {
                 navigation.reset({ index: 0, routes: [{ name: 'Consent' }] });

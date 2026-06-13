@@ -14,6 +14,7 @@ import StatisticsScreen from '../views/StatisticsScreen';
 import WarningsScreen from '../views/WarningsScreen';
 import DataManagementScreen from '../views/DataManagementScreen';
 import PremiumPaywallScreen from '../views/PremiumPaywallScreen';
+import OnboardingScreen from '../views/OnboardingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +29,9 @@ export default function RootNavigator() {
       <Stack.Screen name="Signup" component={SignupScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="Consent" component={ConsentScreen} />
+
+      {/* Onboarding */}
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ animation: 'fade' }} />
 
       {/* App */}
       <Stack.Screen name="MainTabs" component={MainSwiper} />

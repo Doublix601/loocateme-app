@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { getPrivacyPolicy, updateConsent, logout } from '../components/ApiRequest';
+import { navigateAfterAuth } from '../utils/onboarding';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { publish } from '../components/EventBus';
@@ -39,7 +40,7 @@ export default function ConsentScreen() {
           updateUser({ ...user, consent: { accepted: true, version: 'v1', consentAt: new Date().toISOString() } });
         } catch (_) { /* ignore mapping issues */ }
       }
-      navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      await navigateAfterAuth(navigation);
       setTimeout(() => publish('userlist:refresh'), 1000);
     } catch (e) {
       Alert.alert('Erreur', "Impossible d'enregistrer votre consentement. Réessayez.");
