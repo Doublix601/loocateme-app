@@ -95,17 +95,11 @@ export default function SpotlightOverlay({
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: overlayOpacity }]}>
 
-        {/* ── Overlay 4 panneaux ── */}
+        {/* ── Overlay 4 panneaux (trou rectangulaire transparent) ── */}
         <View style={[s.dark, { top: 0, left: 0, right: 0, height: sy }]} />
         <View style={[s.dark, { top: sy + sh, left: 0, right: 0, bottom: 0 }]} />
         <View style={[s.dark, { top: sy, left: 0, width: sx, height: sh }]} />
         <View style={[s.dark, { top: sy, left: sx + sw, right: 0, height: sh }]} />
-
-        {/* ── 4 coins arrondis : taille = br, borderRadius sur le coin intérieur ── */}
-        <View style={[s.dark, { top: sy,           left: sx,           width: br, height: br, borderBottomRightRadius: br }]} />
-        <View style={[s.dark, { top: sy,           left: sx + sw - br, width: br, height: br, borderBottomLeftRadius:  br }]} />
-        <View style={[s.dark, { top: sy + sh - br, left: sx,           width: br, height: br, borderTopRightRadius:    br }]} />
-        <View style={[s.dark, { top: sy + sh - br, left: sx + sw - br, width: br, height: br, borderTopLeftRadius:     br }]} />
 
         {/* ── Anneau fixe ── */}
         <View
