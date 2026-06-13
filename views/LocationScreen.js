@@ -8,7 +8,6 @@ import {
   Linking,
   ActivityIndicator,
   RefreshControl,
-  PanResponder,
   Platform,
   Dimensions,
   ImageBackground,
@@ -18,14 +17,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useVibe } from '../components/contexts/VibeContext';
 import { formatLocationType } from '../components/LocationUtils';
 import { useFeatureGate } from '../hooks/useFeatureGate';
 import { useBoost } from '../hooks/useBoost';
 import { useLocationData } from '../hooks/useLocationData';
 import { useVibeTheme } from '../hooks/useVibeTheme';
+import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import SocialPulseAvatar from '../components/SocialPulseAvatar';
 import ProfileCard from '../components/ProfileCard';
+import socialMediaIcons from '../constants/socialMediaIcons';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
@@ -40,7 +42,12 @@ const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
  *  - Bouton d'action fixe en bas avec BlurView.
  *  - Tout pilote par `useVibeTheme` (zéro `if (isMoon)` cosmétique éparpillé).
  */
-const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaIcons = {} }) => {
+const LocationScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { locationId, tertiles } = route.params ?? {};
+  const navigateToUser = useNavigateToUser();
+
   const { isMoon } = useVibe();
   const theme = useVibeTheme();
   const { palette, radius, spacing, shadows, typography } = theme;
@@ -49,18 +56,6 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
   const { checkAccess } = useFeatureGate();
   const { activateBoost, isBoosted, boostUntil, boostBalance, loading: boostLoading } = useBoost();
   const { location, users, loading, refreshing, refresh } = useLocationData(locationId);
-
-  // Swipe-right pour revenir à la liste (préservé depuis l'ancienne version).
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, g) =>
-        Math.abs(g.dx) > 20 && Math.abs(g.dx) > Math.abs(g.dy) && g.dx > 0,
-      onPanResponderRelease: (_, g) => {
-        if (g.dx > 50) onReturnToList && onReturnToList();
-      },
-    })
-  ).current;
 
   const handleGoToLocation = () => {
     if (!location?.location?.coordinates) return;
@@ -83,12 +78,11 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
 
   const popularity = useMemo(() => {
     const s = location?.stars || 0;
-    const count = users?.length || 0;
     if (s >= 3) return { label: 'Très populaire', stars: 3 };
     if (s === 2) return { label: 'Populaire', stars: 2 };
-    if (s === 1 || count > 0) return { label: 'Actif', stars: 1 };
+    if (s === 1) return { label: 'Actif', stars: 1 };
     return { label: 'Calme', stars: 0 };
-  }, [location, users]);
+  }, [location]);
 
   // ─── Loading / Error ───────────────────────────────────────────
   if (loading) {
@@ -105,7 +99,7 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
         <Text style={[typography.h2, { marginBottom: spacing.lg }]}>Lieu introuvable</Text>
         <TouchableOpacity
           style={[styles.errorBtn, { backgroundColor: palette.accentSoft }]}
-          onPress={onReturnToList}
+          onPress={() => navigation.goBack()}
         >
           <Text style={{ color: palette.accent, fontWeight: '800' }}>Retour</Text>
         </TouchableOpacity>
@@ -125,7 +119,7 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
         {/* Back button flottant */}
         <SafeAreaView edges={['top']} style={styles.heroSafeTop}>
           <TouchableOpacity
-            onPress={onReturnToList}
+            onPress={() => navigation.goBack()}
             style={[styles.heroBackBtn, { backgroundColor: palette.overlay }]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
@@ -315,7 +309,7 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
               size={60}
               isMoon={isMoon}
               index={i}
-              onPress={() => onSelectUser && onSelectUser(u)}
+              onPress={() => navigateToUser(u)}
             />
           ))}
         </ScrollView>
@@ -348,7 +342,7 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
             radius={radius}
             spacing={spacing}
             socialMediaIcons={socialMediaIcons}
-            onPress={() => onSelectUser && onSelectUser(u)}
+            onPress={() => navigateToUser(u)}
           />
         ))
       )}
@@ -405,7 +399,7 @@ const LocationScreen = ({ locationId, onReturnToList, onSelectUser, socialMediaI
 
   // ─── Render ────────────────────────────────────────────────────
   return (
-    <View style={{ flex: 1, backgroundColor: palette.bg }} {...panResponder.panHandlers}>
+    <View style={{ flex: 1, backgroundColor: palette.bg }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
