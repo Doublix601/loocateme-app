@@ -122,8 +122,8 @@ async function fetchOverpass(query) {
 }
 
 function normalize(elements = []) {
-  return (elements || []).filter(e => e && e.type === 'node').map(e => {
-    const name = e.tags?.name || 'Lieu OSM';
+  return (elements || []).filter(e => e && e.type === 'node' && e.tags?.name).map(e => {
+    const name = e.tags.name;
     const type = e.tags?.amenity || e.tags?.leisure || 'poi';
     return {
       _id: `osm:${e.id}`,
