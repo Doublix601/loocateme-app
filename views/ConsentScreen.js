@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { getPrivacyPolicy, updateConsent, logout } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { publish } from '../components/EventBus';
 
-export default function ConsentScreen({ onAccepted, onDeclined }) {
+export default function ConsentScreen() {
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [policy, setPolicy] = useState('');
   const [accepting, setAccepting] = useState(false);
@@ -36,7 +39,8 @@ export default function ConsentScreen({ onAccepted, onDeclined }) {
           updateUser({ ...user, consent: { accepted: true, version: 'v1', consentAt: new Date().toISOString() } });
         } catch (_) { /* ignore mapping issues */ }
       }
-      onAccepted && onAccepted();
+      navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+      setTimeout(() => publish('userlist:refresh'), 1000);
     } catch (e) {
       Alert.alert('Erreur', "Impossible d'enregistrer votre consentement. Réessayez.");
     } finally {
@@ -48,7 +52,7 @@ export default function ConsentScreen({ onAccepted, onDeclined }) {
     try {
       Alert.alert('Information', "Vous devez accepter la politique de confidentialité pour utiliser l'application.");
       await logout();
-      onDeclined && onDeclined();
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch { /* noop */ }
   };
 

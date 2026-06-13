@@ -1,160 +1,61 @@
+import 'react-native-gesture-handler';
 import { useState, useEffect, useRef, useContext } from 'react';
-import { ActivityIndicator, Animated, Easing, Dimensions, Alert, AppState, Linking, Platform, StatusBar, View, Text, TouchableOpacity, LogBox } from 'react-native';
+import {
+  ActivityIndicator, Alert, AppState, Linking, Platform,
+  StatusBar, View, Text, TouchableOpacity, StyleSheet, LogBox,
+} from 'react-native';
 
 LogBox.ignoreLogs([
   'expo-notifications: Android Push notifications',
   '`expo-notifications` functionality is not fully supported in Expo Go',
 ]);
+
 import * as Location from 'expo-location';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
-import LoginScreen from './views/LoginScreen';
-import ForgotPasswordScreen from './views/ForgotPasswordScreen';
-import SignupScreen from './views/SignupScreen';
-import MyAccountScreen from './views/MyAccountScreen';
-import LocationListScreen from './views/LocationListScreen';
-import LocationScreen from './views/LocationScreen';
-import UserProfileScreen from './views/UserProfileScreen';
-import SettingsScreen from './views/SettingsScreen';
-import SearchView from './views/SearchView';
-import ConsentScreen from './views/ConsentScreen';
-import DebugScreen from './views/DebugScreen';
-import StatisticsScreen from './views/StatisticsScreen';
-import PremiumPaywallScreen from './views/PremiumPaywallScreen';
-import ConsumablesShopSheet from './components/ConsumablesShopSheet';
-import ModeratorScreen from './views/ModeratorScreen';
-import WarningsScreen from './views/WarningsScreen';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import Purchases from 'react-native-purchases';
+
+import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
-// Chat screens supprimés (fonctionnalité de chat désactivée)
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { VibeProvider, useVibe } from './components/contexts/VibeContext';
-import VibeFAB from './components/VibeFAB';
 import VibeTransitOverlay from './components/VibeTransitOverlay';
 import { LocationSyncService } from './services/LocationSyncService';
 import { LocationService, ScanMode } from './services/LocationService';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { usePresence } from './hooks/usePresence';
-import { usePremiumAccess } from './hooks/usePremiumAccess';
-import { initApiFromStorage, getMyUser, clearApiCache, getUserById, getAccessToken, logout as apiLogout } from './components/ApiRequest';
+import {
+  initApiFromStorage, getMyUser, clearApiCache, getUserById,
+  getAccessToken, logout as apiLogout,
+} from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
+import { mapBackendUser, mapProfileUser } from './utils/mappers';
+import RootNavigator from './navigation/RootNavigator';
 
-const mapBackendUser = (u = {}) => {
-  const socialMedias = Array.isArray(u.socialNetworks)
-    ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-    : (Array.isArray(u.socialMedias) ? u.socialMedias : (Array.isArray(u.socialMedia) ? u.socialMedia : []));
-  return {
-    ...u,
-    _id: u._id || u.id,
-    username: u.username || u.name || '',
-    firstName: u.firstName || '',
-    lastName: u.lastName || '',
-    customName: u.customName || '',
-    bio: u.bio || '',
-    photo: u.profileImageUrl || u.photo || null,
-    socialMedias,
-    socialMedia: socialMedias,
-    isPremium: !!u.isPremium,
-    role: u.role || 'user',
-    status: u.status || 'green',
-    consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
-    updatedAt: u.updatedAt,
-  };
-};
+const navigationRef = createNavigationContainerRef();
 
-const mapProfileUser = (u = {}) => {
-  const socialMedias = Array.isArray(u.socialNetworks)
-    ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-    : (Array.isArray(u.socialMedias) ? u.socialMedias : (Array.isArray(u.socialMedia) ? u.socialMedia : []));
-  return {
-    ...u,
-    _id: u._id || u.id,
-    username: u.username || u.name || '',
-    firstName: u.firstName || '',
-    lastName: u.lastName || '',
-    customName: u.customName || '',
-    bio: u.bio || '',
-    photo: u.profileImageUrl || u.photo || null,
-    status: u.status || 'green',
-    socialMedias,
-    socialMedia: socialMedias,
-    locationCoordinates: Array.isArray(u.location?.coordinates)
-      ? u.location.coordinates
-      : (Array.isArray(u.locationCoordinates) ? u.locationCoordinates : undefined),
-    updatedAt: u.updatedAt,
-  };
-};
-
-function AppInner({ purchasesReady }) {
+function AppShell({ purchasesReady }) {
   const { user: appUser, updateUser } = useContext(UserContext);
-  const { hasStatsAccess } = usePremiumAccess();
   const { colors, isDark, setMode } = useTheme();
   const { isMoon } = useVibe();
-  const [currentScreen, setCurrentScreen] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [selectedLocationId, setSelectedLocationId] = useState(null);
-  const [selectedLocationTertiles, setSelectedLocationTertiles] = useState(null);
-  const [profileReturnTo, setProfileReturnTo] = useState('LocationList');
-  const [locationListScrollOffset, setLocationListScrollOffset] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
-  const [pendingProfileId, setPendingProfileId] = useState(null);
-  const transitionX = useRef(new Animated.Value(0)).current;
-  const { width } = Dimensions.get('window');
-  const prevScreenRef = useRef(null);
   const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
-
-  const [premiumPaywallParams, setPremiumPaywallParams] = useState(null);
   const [shopSheetVisible, setShopSheetVisible] = useState(false);
+  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
+  const appState = useRef(AppState.currentState);
+  const hasShownLocationModal = useRef(false);
+  const didInitialScanRef = useRef(false);
 
-  const socialMediaIcons = {
-    facebook: require('./assets/socialMediaIcons/fb_logo.png'),
-    x: require('./assets/socialMediaIcons/x_logo.png'),
-    linkedin: require('./assets/socialMediaIcons/linkedin_logo.png'),
-    instagram: require('./assets/socialMediaIcons/instagram_logo.png'),
-    tiktok: require('./assets/socialMediaIcons/tiktok_logo.png'),
-    snapchat: require('./assets/socialMediaIcons/snapchat_logo.png'),
-    youtube: require('./assets/socialMediaIcons/yt_logo.png'),
-  };
+  usePresence();
 
-  // Synchroniser le thème avec la vibe (soleil = light, lune = dark)
   useEffect(() => {
     try { setMode(isMoon ? 'dark' : 'light'); } catch (_) {}
   }, [isMoon]);
-
-  // Écoute la demande de mise à jour forcée (émise par ApiRequest sur HTTP 426)
-  useEffect(() => {
-    const unsub = subscribe('force_update_required', (payload) => {
-      setForceUpdateInfo(payload || { message: "Veuillez mettre à jour l’application pour continuer.", details: null });
-      try {
-        const url = payload?.details?.upgradeUrl || null;
-        const msg = payload?.message || "Veuillez mettre à jour l’application pour continuer.";
-        const min = payload?.details?.minAppVersion;
-        const api = payload?.details?.apiVersion;
-        const subtitle = [min ? `Version minimale: ${min}` : null, api ? `Version API: ${api}` : null].filter(Boolean).join('\n');
-        Alert.alert(
-          'Mise à jour requise',
-          subtitle ? `${msg}\n\n${subtitle}` : msg,
-          [
-            url ? { text: 'Mettre à jour', onPress: () => { try { Linking.openURL(url); } catch (_) {} } } : undefined,
-            { text: 'OK', style: 'destructive' },
-          ].filter(Boolean),
-          { cancelable: false }
-        );
-      } catch (_) {}
-    });
-    return () => { try { unsub && unsub(); } catch (_) {} };
-  }, []);
-
-  const appState = useRef(AppState.currentState);
-  const hasShownLocationModal = useRef(false);
-  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
-  const didInitialScanRef = useRef(false);
 
   useEffect(() => {
     const preload = async () => {
@@ -190,31 +91,27 @@ function AppInner({ purchasesReady }) {
           try {
             const res = await getMyUser();
             const me = res?.user;
-            if (me && updateUser) {
-              updateUser(mapBackendUser(me));
-            }
+            if (me && updateUser) updateUser(mapBackendUser(me));
             const consentAccepted = !!(me?.consent?.accepted);
-            setCurrentScreen(consentAccepted ? 'LocationList' : 'Consent');
             if (consentAccepted) {
+              navigationRef.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
               setTimeout(() => publish('userlist:refresh'), 1000);
+            } else {
+              navigationRef.reset({ index: 0, routes: [{ name: 'Consent' }] });
             }
           } catch (err) {
-            console.error('[App] Auth init getMyUser error:', err);
-            // If it's a 401, logout, otherwise maybe network error, retry or let current screen be Login
             if (err?.status === 401) {
               await apiLogout();
-              setCurrentScreen('Login');
+              navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
             } else {
-              // Network error? Try to proceed to UserList if we have user info, or just stay on Login
-              setCurrentScreen('LocationList');
+              navigationRef.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
             }
           }
         } else {
-          setCurrentScreen('Login');
+          navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
         }
       } catch (err) {
-        console.error('[App] Auth init error:', err);
-        setCurrentScreen('Login');
+        navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
       } finally {
         setAuthReady(true);
       }
@@ -223,16 +120,54 @@ function AppInner({ purchasesReady }) {
   }, [updateUser]);
 
   useEffect(() => {
-    const checkLocationPermissions = async (force = false) => {
-      // Don't check if user is not logged in or is on Consent/Login/Signup screens
-      if (!getAccessToken() || ['Login', 'Signup', 'ForgotPassword', 'Consent', 'Activity'].includes(currentScreen)) {
-        return;
-      }
+    const unsub = subscribe('force_update_required', (payload) => {
+      setForceUpdateInfo(payload || { message: "Veuillez mettre à jour l'application pour continuer.", details: null });
+      try {
+        const url = payload?.details?.upgradeUrl || null;
+        const msg = payload?.message || "Veuillez mettre à jour l'application pour continuer.";
+        const min = payload?.details?.minAppVersion;
+        const api = payload?.details?.apiVersion;
+        const subtitle = [min ? `Version minimale: ${min}` : null, api ? `Version API: ${api}` : null].filter(Boolean).join('\n');
+        Alert.alert(
+          'Mise à jour requise',
+          subtitle ? `${msg}\n\n${subtitle}` : msg,
+          [
+            url ? { text: 'Mettre à jour', onPress: () => { try { Linking.openURL(url); } catch (_) {} } } : undefined,
+            { text: 'OK', style: 'destructive' },
+          ].filter(Boolean),
+          { cancelable: false }
+        );
+      } catch (_) {}
+    });
+    return () => { try { unsub && unsub(); } catch (_) {} };
+  }, []);
 
-      // If we've already shown the modal this session, skip unless forced
-      if (hasShownLocationModal.current && !force) {
-        return;
-      }
+  useEffect(() => {
+    const off = subscribe('auth:logout', () => {
+      try { clearApiCache(); } catch (_) {}
+      navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
+    });
+    return () => { try { off && off(); } catch (_) {} };
+  }, []);
+
+  useEffect(() => {
+    const off = subscribe('ui:open_premium', () => navigationRef.navigate('PremiumPaywall'));
+    return () => { try { off && off(); } catch (_) {} };
+  }, []);
+
+  useEffect(() => {
+    const off = subscribe('ui:open_consumables', () => setShopSheetVisible(true));
+    return () => { try { off && off(); } catch (_) {} };
+  }, []);
+
+  useEffect(() => {
+    PremiumService.init().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const checkLocationPermissions = async () => {
+      if (!getAccessToken()) return;
+      if (hasShownLocationModal.current) return;
 
       try {
         const { status: fgStatus } = await Location.getForegroundPermissionsAsync();
@@ -250,13 +185,11 @@ function AppInner({ purchasesReady }) {
           return;
         }
 
-        // If foreground is granted, check background
         const { status: bgStatus } = await Location.getBackgroundPermissionsAsync();
         if (bgStatus !== 'granted') {
           setLocationModal({ visible: true, type: 'always' });
           hasShownLocationModal.current = true;
         } else {
-          // Both granted, hide modal if it was visible
           setLocationModal(prev => prev.visible ? { ...prev, visible: false } : prev);
         }
       } catch (err) {
@@ -264,77 +197,49 @@ function AppInner({ purchasesReady }) {
       }
     };
 
-    checkLocationPermissions();
+    if (authReady) checkLocationPermissions();
 
     const sub = AppState.addEventListener?.('change', (next) => {
       if (appState.current.match(/inactive|background/) && next === 'active') {
         try { publish('userlist:refresh'); } catch (_) {}
-        // Re-check permissions when coming back to app
         checkLocationPermissions();
-        // On resume, schedule background stay check-in depending on permissions
         try { LocationService.performCheckIn(ScanMode.BACKGROUND_STAY); } catch (_) {}
       }
       appState.current = next;
     });
     return () => { try { sub?.remove?.(); } catch (_) {} };
-  }, [currentScreen]);
+  }, [authReady]);
 
-  // Cold start immediate scan once the user lands on LocationList
   useEffect(() => {
     if (!authReady) return;
-    if (currentScreen !== 'LocationList') return;
     if (didInitialScanRef.current) return;
     didInitialScanRef.current = true;
     try { LocationService.performCheckIn(ScanMode.INITIAL_SCAN); } catch (_) {}
-  }, [authReady, currentScreen]);
+  }, [authReady]);
 
-  // Cleanup background timers on unmount
   useEffect(() => {
     return () => {
       try { LocationService.cancelBackgroundStay(); } catch (_) {}
     };
   }, []);
 
-  useEffect(() => {
-    const off = subscribe('auth:logout', () => {
-      try { clearApiCache(); } catch (_) {}
-      setCurrentScreen('Login');
-    });
-    return () => { try { off && off(); } catch (_) {} };
-  }, []);
-
-  // Global EventBus: open premium paywall from any screen via publish('ui:open_premium')
-  useEffect(() => {
-    const off = subscribe('ui:open_premium', () => setCurrentScreen('PremiumPaywall'));
-    return () => { try { off && off(); } catch (_) {} };
-  }, []);
-
-  // Global EventBus: open consumables shop from any screen via publish('ui:open_consumables')
-  useEffect(() => {
-    const off = subscribe('ui:open_consumables', () => setShopSheetVisible(true));
-    return () => { try { off && off(); } catch (_) {} };
-  }, []);
-
-  // Init PremiumService once on mount to load local consumable balances
-  useEffect(() => {
-    PremiumService.init().catch(() => {});
-  }, []);
-
+  // Deep link handling: loocateme://profile/:userId
   useEffect(() => {
     const extractProfileId = (url) => {
       if (!url) return null;
       const match = String(url).match(/profile\/([^?#]+)/i);
       if (!match || !match[1]) return null;
-      try {
-        return decodeURIComponent(match[1]);
-      } catch (_) {
-        return match[1];
-      }
+      try { return decodeURIComponent(match[1]); } catch (_) { return match[1]; }
     };
 
-    const handleUrl = (url) => {
+    const handleUrl = async (url) => {
       const id = extractProfileId(url);
-      if (id) setPendingProfileId(id);
+      if (!id || !getAccessToken()) return;
+      try {
+        const res = await getUserById(id);
+        const u = res?.user;
+        if (u) navigationRef.navigate('UserProfile', { user: mapProfileUser(u) });
+      } catch (_) {}
     };
 
     (async () => {
@@ -348,315 +253,39 @@ function AppInner({ purchasesReady }) {
     return () => { try { sub?.remove?.(); } catch (_) {} };
   }, []);
 
-  useEffect(() => {
-    const openProfileFromLink = async () => {
-      if (!pendingProfileId || !authReady) return;
-      if (!getAccessToken()) return;
-      try {
-        const res = await getUserById(pendingProfileId);
-        const u = res?.user;
-        if (!u) {
-          setPendingProfileId(null);
-          return;
-        }
-        setSelectedUser(mapProfileUser(u));
-        setProfileReturnTo('LocationList');
-        setCurrentScreen('UserProfile');
-        setPendingProfileId(null);
-      } catch (e) {
-        if (e?.status === 401) return;
-        setPendingProfileId(null);
-      }
-    };
-    openProfileFromLink();
-  }, [pendingProfileId, authReady, appUser]);
-
-  const handleLogin = (user) => {
-    const consentAccepted = !!(user?.consent?.accepted);
-    setCurrentScreen(consentAccepted ? 'LocationList' : 'Consent');
-    if (consentAccepted) {
-      setTimeout(() => publish('userlist:refresh'), 1000);
-    }
-  };
-  const handleForgotPassword = () => setCurrentScreen('ForgotPassword');
-  const handleSignup = () => setCurrentScreen('Signup');
-  const handleSignupSuccess = () => {
-    try {
-      Alert.alert('Vérifiez vos emails', "Un email de vérification vient de vous être envoyé. Cliquez sur le lien pour confirmer votre adresse, puis connectez-vous.");
-    } catch {}
-    setCurrentScreen('Login');
-  };
-  const handleGoToLogin = () => setCurrentScreen('Login');
-  const handleReturnToList = (offset = null) => {
-    if (offset !== null) setLocationListScrollOffset(offset);
-    setCurrentScreen('LocationList');
-  };
-  const handleReturnToAccount = () => setCurrentScreen('MyAccount');
-  const onReturnToSettings = () => setCurrentScreen('Settings');
-  const handleLogout = async () => {
-    try {
-      await apiLogout();
-    } catch (_) {
-      // ignore
-    } finally {
-      setCurrentScreen('Login');
-    }
-  };
-
-  const handleSelectUser = (user, returnTo = 'Location') => {
-    const userId = user._id || user.id;
-    const myId = appUser?._id;
-    if (userId && myId && String(userId) === String(myId)) {
-      setCurrentScreen('MyAccount');
-      return;
-    }
-    setSelectedUser(mapProfileUser(user));
-    setProfileReturnTo(returnTo);
-    setCurrentScreen('UserProfile');
-  };
-
-  const handleSelectLocation = (loc) => {
-    setSelectedLocationId(loc._id || loc.id);
-    setSelectedLocationTertiles(loc.tertiles || null);
-    setCurrentScreen('Location');
-  };
-
-  useEffect(() => {
-    const prev = prevScreenRef.current;
-
-    const isForward =
-      (prev === 'LocationList' && (currentScreen === 'UserProfile' || currentScreen === 'MyAccount' || currentScreen === 'Location')) ||
-      (prev === 'Location' && currentScreen === 'UserProfile') ||
-      (prev === 'MyAccount' && (currentScreen === 'Settings' || currentScreen === 'Warnings'));
-
-    const isBack =
-      (currentScreen === 'LocationList' && (prev === 'UserProfile' || prev === 'MyAccount' || prev === 'Location')) ||
-      (currentScreen === 'Location' && prev === 'UserProfile') ||
-      (currentScreen === 'MyAccount' && (prev === 'Settings' || prev === 'Warnings'));
-
-    if (isForward || isBack) {
-      const from = isForward ? width : -width;
-      transitionX.setValue(from);
-      Animated.timing(transitionX, {
-        toValue: 0,
-        duration: 250,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      transitionX.setValue(0);
-    }
-
-    prevScreenRef.current = currentScreen;
-  }, [currentScreen, transitionX, width]);
-
-  if (!assetsReady || !authReady || !currentScreen) {
-    return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
-        <ActivityIndicator size="large" color="#00c2cb" />
-      </SafeAreaView>
-    );
-  }
-
-  // Chat désactivé: aucune navigation de chat
-
-  let screenToShow;
-  switch (currentScreen) {
-    case 'Login':
-      screenToShow = (
-        <LoginScreen
-          onLogin={handleLogin}
-          onForgotPassword={handleForgotPassword}
-          onSignup={handleSignup}
-        />
-      );
-      break;
-    case 'Signup':
-      screenToShow = (
-        <SignupScreen onSignup={handleSignupSuccess} onLogin={handleGoToLogin} />
-      );
-      break;
-    case 'ForgotPassword':
-      screenToShow = <ForgotPasswordScreen onResetPassword={() => setCurrentScreen('Login')} onBack={() => setCurrentScreen('Login')} />;
-      break;
-    case 'MyAccount':
-      screenToShow = (
-        <MyAccountScreen
-          user={appUser}
-          onReturnToList={handleReturnToList}
-          socialMediaIcons={socialMediaIcons}
-          onReturnToSettings={onReturnToSettings}
-          onOpenStatistics={() => setCurrentScreen('Statistics')}
-          onOpenPremiumPaywall={(params) => {
-            setPremiumPaywallParams(params || null);
-            setCurrentScreen('PremiumPaywall');
-          }}
-          onOpenWarnings={() => setCurrentScreen('Warnings')}
-          onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
-        />
-      );
-      break;
-    case 'LocationList':
-      screenToShow = (
-        <LocationListScreen
-          onSelectLocation={handleSelectLocation}
-          onReturnToAccount={handleReturnToAccount}
-          onSearchPeople={() => setCurrentScreen('UserSearch')}
-          initialScrollOffset={locationListScrollOffset}
-          onScroll={(offset) => setLocationListScrollOffset(offset)}
-        />
-      );
-      break;
-    case 'Location':
-      screenToShow = (
-        <LocationScreen
-          locationId={selectedLocationId}
-          tertiles={selectedLocationTertiles}
-          onReturnToList={handleReturnToList}
-          onSelectUser={handleSelectUser}
-          socialMediaIcons={socialMediaIcons}
-        />
-      );
-      break;
-    case 'UserSearch':
-      screenToShow = (
-        <SearchView
-          onClose={() => setCurrentScreen('LocationList')}
-          onSelectUser={(u) => handleSelectUser(u, 'LocationList')}
-          onSelectLocation={handleSelectLocation}
-          userLocation={appUser?.location?.coordinates ? { latitude: appUser.location.coordinates[1], longitude: appUser.location.coordinates[0] } : null}
-        />
-      );
-      break;
-    case 'UserProfile':
-      screenToShow = (
-        <UserProfileScreen
-          user={selectedUser}
-          onReturnToList={() => {
-            if (profileReturnTo === 'Statistics') setCurrentScreen('Statistics');
-            else if (profileReturnTo === 'Moderator') setCurrentScreen('Moderator');
-            else if (profileReturnTo === 'Location') setCurrentScreen('Location');
-            else handleReturnToList();
-          }}
-          onReturnToAccount={handleReturnToAccount}
-          socialMediaIcons={socialMediaIcons}
-          onOpenMessages={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
-          onOpenConversation={() => Alert.alert('Indisponible', 'La messagerie a été désactivée.')}
-          onOpenPremium={() => setCurrentScreen('PremiumPaywall')}
-        />
-      );
-      break;
-    case 'Warnings':
-      screenToShow = (
-        <WarningsScreen
-          onBack={() => setCurrentScreen('MyAccount')}
-        />
-      );
-      break;
-    case 'Debug':
-      screenToShow = (
-        <DebugScreen
-          onBack={() => setCurrentScreen('Settings')}
-        />
-      );
-      break;
-    case 'Statistics':
-      if (!hasStatsAccess) {
-        setPremiumPaywallParams({ source: 'stats_button' });
-        setCurrentScreen('PremiumPaywall');
-        return null;
-      }
-      screenToShow = (
-        <StatisticsScreen
-          onBack={() => setCurrentScreen('MyAccount')}
-          onOpenUserProfile={(u) => handleSelectUser(u, 'Statistics')}
-        />
-      );
-      break;
-    case 'PremiumPaywall':
-      screenToShow = (
-        <PremiumPaywallScreen
-          onBack={() => {
-            setCurrentScreen('MyAccount');
-            setPremiumPaywallParams(null);
-          }}
-          onAlreadyPremium={() => {
-            setCurrentScreen('Statistics');
-            setPremiumPaywallParams(null);
-          }}
-          routeParams={premiumPaywallParams}
-        />
-      );
-      break;
-    case 'Settings':
-      screenToShow = (
-        <SettingsScreen
-          onReturnToAccount={handleReturnToAccount}
-          onLogout={handleLogout}
-          onOpenDebug={() => setCurrentScreen('Debug')}
-          onOpenModerator={() => setCurrentScreen('Moderator')}
-        />
-      );
-      break;
-    // Chat désactivé: aucun écran de chat
-    case 'Moderator':
-      screenToShow = (
-        <ModeratorScreen
-          onBack={() => setCurrentScreen('Settings')}
-          onOpenUserProfile={(u) => handleSelectUser(u, 'Moderator')}
-        />
-      );
-      break;
-    case 'Consent':
-      screenToShow = (
-        <ConsentScreen
-          onAccepted={() => setCurrentScreen('LocationList')}
-          onDeclined={() => setCurrentScreen('Login')}
-        />
-      );
-      break;
-    default:
-      screenToShow = (
-        <LoginScreen
-          onLogin={handleLogin}
-          onForgotPassword={handleForgotPassword}
-          onSignup={handleSignup}
-        />
-      );
-      break;
-  }
+  const isLoading = !assetsReady || !authReady;
 
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
-      {forceUpdateInfo ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.background }}>
-          <Text style={{ fontSize: 22, fontWeight: '700', color: colors.onBackground || '#111', marginBottom: 12 }}>Mise à jour requise</Text>
-          <Text style={{ fontSize: 16, color: colors.onBackground || '#111', textAlign: 'center' }}>
-            {forceUpdateInfo?.message || "Veuillez mettre à jour l’application pour continuer."}
-          </Text>
-          {forceUpdateInfo?.details?.minAppVersion ? (
-            <Text style={{ marginTop: 8, fontSize: 14, color: colors.onBackground || '#111' }}>
-              Version minimale: {forceUpdateInfo.details.minAppVersion}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <NavigationContainer ref={navigationRef}>
+        <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
+        {forceUpdateInfo ? (
+          <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.background }}>
+            <Text style={{ fontSize: 22, fontWeight: '700', color: colors.onBackground || '#111', marginBottom: 12 }}>Mise à jour requise</Text>
+            <Text style={{ fontSize: 16, color: colors.onBackground || '#111', textAlign: 'center' }}>
+              {forceUpdateInfo?.message || "Veuillez mettre à jour l'application pour continuer."}
             </Text>
-          ) : null}
-          <View style={{ height: 24 }} />
-          {forceUpdateInfo?.details?.upgradeUrl ? (
-            <TouchableOpacity onPress={() => { try { Linking.openURL(forceUpdateInfo.details.upgradeUrl); } catch (_) {} }} style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }}>
-              <Text style={{ color: colors.onPrimary || '#fff', fontWeight: '600' }}>Mettre à jour</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      ) : (
-        <Animated.View style={{ flex: 1, transform: [{ translateX: transitionX }], backgroundColor: colors.background }}>
-          {screenToShow}
-        </Animated.View>
-      )}
-      {/* Vibe Switch FAB overlay */}
-      <VibeTransitOverlay />
-      {currentScreen === 'LocationList' && <VibeFAB />}
-      {/* Consumables shop — global overlay, openable from any screen */}
+            {forceUpdateInfo?.details?.minAppVersion ? (
+              <Text style={{ marginTop: 8, fontSize: 14, color: colors.onBackground || '#111' }}>
+                Version minimale: {forceUpdateInfo.details.minAppVersion}
+              </Text>
+            ) : null}
+            <View style={{ height: 24 }} />
+            {forceUpdateInfo?.details?.upgradeUrl ? (
+              <TouchableOpacity
+                onPress={() => { try { Linking.openURL(forceUpdateInfo.details.upgradeUrl); } catch (_) {} }}
+                style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }}
+              >
+                <Text style={{ color: colors.onPrimary || '#fff', fontWeight: '600' }}>Mettre à jour</Text>
+              </TouchableOpacity>
+            ) : null}
+          </SafeAreaView>
+        ) : (
+          <RootNavigator />
+        )}
+        <VibeTransitOverlay />
+      </NavigationContainer>
+
       <ConsumablesShopSheet
         visible={shopSheetVisible}
         onClose={() => setShopSheetVisible(false)}
@@ -667,7 +296,13 @@ function AppInner({ purchasesReady }) {
         type={locationModal.type}
         onClose={() => setLocationModal(prev => ({ ...prev, visible: false }))}
       />
-    </SafeAreaView>
+
+      {isLoading && (
+        <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color="#00c2cb" />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -692,17 +327,12 @@ function AppWithReadyStatus() {
     const initPurchases = async () => {
       try {
         const apiKey = Platform.select({
-          ios: 'appl_EXAMPLE_REVENUECAT_API_KEY', // TO BE UPDATED
-          android: 'goog_EXAMPLE_REVENUECAT_API_KEY' // TO BE UPDATED
+          ios: 'appl_EXAMPLE_REVENUECAT_API_KEY',
+          android: 'goog_EXAMPLE_REVENUECAT_API_KEY',
         });
-
-        // Use a test API key for Expo Go or development environments
-        // See: https://rev.cat/sdk-test-store
-        const finalApiKey = __DEV__ ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey; // Test Store API Key
-
+        const finalApiKey = __DEV__ ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey;
         await Purchases.configure({ apiKey: finalApiKey });
         setPurchasesReady(true);
-        console.log('[App] RevenueCat initialized');
       } catch (e) {
         console.error('[App] RevenueCat initialization failed', e);
         setPurchasesReady(true);
@@ -714,7 +344,7 @@ function AppWithReadyStatus() {
   return (
     <FeatureFlagsProvider ready={purchasesReady}>
       <UserProvider>
-        <AppInner purchasesReady={purchasesReady} />
+        <AppShell purchasesReady={purchasesReady} />
       </UserProvider>
     </FeatureFlagsProvider>
   );

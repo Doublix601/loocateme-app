@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput, Switch, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
@@ -15,7 +16,8 @@ import PremiumService from '../services/PremiumService';
 
 export { DEBUG_CONFIG } from '../services/DebugConfig';
 
-const DebugScreen = ({ onBack }) => {
+const DebugScreen = () => {
+  const navigation = useNavigation();
   const { colors, isDark } = useTheme();
   const { refresh: refreshFlags } = useFeatureFlags();
   const { locale } = useLocale();
@@ -413,11 +415,11 @@ const DebugScreen = ({ onBack }) => {
   const subTextStyle = { color: isDark ? '#eee' : subTextColor };
 
   return (
-    <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: borderColor, borderBottomWidth: 1 }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
-          onPress={onBack}
+          onPress={() => navigation.goBack()}
         >
           <Image
             source={require('../assets/appIcons/backArrow.png')}
@@ -676,7 +678,7 @@ const DebugScreen = ({ onBack }) => {
               const banLabel = bannedPermanent
                 ? 'Ban définitif'
                 : bannedUntilActive
-                  ? `Ban jusqu’au ${bannedUntil.toLocaleString(locale)}`
+                  ? `Ban jusqu'au ${bannedUntil.toLocaleString(locale)}`
                   : 'Non banni';
               return (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>

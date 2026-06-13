@@ -68,7 +68,7 @@ export default function VibeTransitOverlay() {
 
   if (!transitioningTo) return null;
 
-  const label = goingToMoon ? 'Le soleil se couche…' : 'Le monde s’éveille…';
+  const label = goingToMoon ? 'Le soleil se couche…' : "Le monde s'éveille…";
   const sub = 'Recherchez dans ces lieux';
   const items = goingToMoon
     ? [

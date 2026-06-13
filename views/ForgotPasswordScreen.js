@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { TextInput, TouchableOpacity, StyleSheet, Alert, useWindowDimensions, ActivityIndicator, View, KeyboardAvoidingView, Platform, ScrollView, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
 import AppLogo from '../components/AppLogo';
 import { forgotPassword } from '../components/ApiRequest';
 
-const ForgotPasswordScreen = ({ onResetPassword, onBack }) => {
+const ForgotPasswordScreen = () => {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const { width, height } = useWindowDimensions();
@@ -18,7 +21,7 @@ const ForgotPasswordScreen = ({ onResetPassword, onBack }) => {
       setLoading(true);
       await forgotPassword(email);
       Alert.alert('Email envoyé', 'Si un compte existe, un email a été envoyé.');
-      onResetPassword && onResetPassword();
+      navigation.navigate('Login');
     } catch (e) {
       console.error('[ForgotPasswordScreen] Forgot password error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
       Alert.alert('Erreur', e?.message || 'Veuillez réessayer');
@@ -29,10 +32,10 @@ const ForgotPasswordScreen = ({ onResetPassword, onBack }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <TouchableOpacity
           style={styles.backButtonCircular}
-          onPress={onBack}
+          onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
         >
           <Image

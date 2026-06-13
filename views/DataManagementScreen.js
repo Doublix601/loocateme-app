@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, ScrollView, Image, Platform, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { exportMyData, deleteMyAccount, logout } from '../components/ApiRequest';
+import { useNavigation } from '@react-navigation/native';
+import { exportMyData, deleteMyAccount, logout, clearApiCache } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
-export default function DataManagementScreen({ onBackToAccount }) {
+export default function DataManagementScreen() {
+  const navigation = useNavigation();
   const [password, setPassword] = useState('');
   const [working, setWorking] = useState(false);
   const { colors, isDark } = useTheme();
@@ -39,7 +41,8 @@ export default function DataManagementScreen({ onBackToAccount }) {
             await deleteMyAccount({ password });
             await logout();
             Alert.alert('Compte supprimé', 'Votre compte et vos données ont été supprimés.');
-            onBackToAccount && onBackToAccount('Login');
+            try { clearApiCache(); } catch (_) {}
+            navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
           } catch (e) {
             Alert.alert('Erreur', "Suppression impossible. Mot de passe invalide ou problème serveur.");
           } finally {
@@ -55,7 +58,7 @@ export default function DataManagementScreen({ onBackToAccount }) {
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
-          onPress={() => onBackToAccount && onBackToAccount()}
+          onPress={() => navigation.goBack()}
         >
           <Image
             source={require('../assets/appIcons/backArrow.png')}

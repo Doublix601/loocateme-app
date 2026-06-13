@@ -277,7 +277,7 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
                     publish('force_update_required', {
                         status: 426,
                         details: data?.details || null,
-                        message: data?.message || 'Veuillez mettre à jour l’application pour continuer.'
+                        message: data?.message || "Veuillez mettre à jour l'application pour continuer."
                     });
                 } catch (_) {}
             }

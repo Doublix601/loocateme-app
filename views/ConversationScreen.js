@@ -113,7 +113,7 @@ const ConversationScreen = ({ route, navigation }) => {
                 setInputText('');
             }
         } catch (e) {
-            Alert.alert('Erreur', e?.message || "Impossible d’envoyer le message");
+            Alert.alert('Erreur', e?.message || "Impossible d'envoyer le message");
         }
     };
 
@@ -142,7 +142,7 @@ const ConversationScreen = ({ route, navigation }) => {
                     setMessages(prev => [...prev, { id: `tmp_${Date.now()}`, type: 'video', mediaUrl, thumbnailUrl, timestamp: new Date().toISOString(), senderId: 'me' }]);
                 }
             } catch (e) {
-                Alert.alert('Upload', e?.message || "Échec de l’envoi du média");
+                Alert.alert('Upload', e?.message || "Échec de l'envoi du média");
             }
         }
     };

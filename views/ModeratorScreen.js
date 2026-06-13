@@ -10,7 +10,6 @@ import {
   Modal,
   TextInput,
   Dimensions,
-  PanResponder,
   Image,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
@@ -18,10 +17,12 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { getReports, actOnReport, searchModerationUsers, moderateUser } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 import { UserContext } from '../components/contexts/UserContext';
+import { useNavigateToUser } from '../hooks/useNavigateToUser';
 
 const { width, height } = Dimensions.get('window');
 
@@ -47,12 +48,14 @@ const CATEGORY_LABELS = {
   harassment: 'Harcèlement',
   spam: 'Spam',
   inappropriate: 'Contenu inapproprié',
-  impersonation: 'Usurpation d’identité',
+  impersonation: "Usurpation d'identité",
   scam: 'Arnaque',
   other: 'Autre',
 };
 
-const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
+const ModeratorScreen = () => {
+  const navigation = useNavigation();
+  const navigateToUser = useNavigateToUser();
   const { colors, isDark } = useTheme();
   const borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
   const subTextColor = isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.5)';
@@ -85,20 +88,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const textStyle = { color: isDark ? '#fff' : colors.text };
   const subTextStyle = { color: isDark ? '#eee' : subTextColor };
 
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_evt, gestureState) => {
-      const { dx, dy } = gestureState;
-      const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      return isHorizontal && dx > 10;
-    },
-    onPanResponderRelease: (_evt, gestureState) => {
-      const { dx, vx } = gestureState;
-      if (dx > 50 || vx > 0.3) {
-        onBack && onBack();
-      }
-    },
-  });
+  // Swipe-back handled natively by React Navigation native stack.
 
   const mapModerationUser = (u) => ({
     id: u?.id || u?._id,
@@ -171,7 +161,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   const submitAction = async () => {
     if (!selectedReport?.id) return;
     if (actionType === 'ban_temp' && (!durationHours || Number(durationHours) <= 0)) {
-      Alert.alert('Durée requise', 'Merci d’indiquer un nombre d’heures valide.');
+      Alert.alert('Durée requise', "Merci d'indiquer un nombre d'heures valide.");
       return;
     }
     try {
@@ -187,7 +177,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
       await loadReports();
       Alert.alert('Action appliquée', 'La décision a été enregistrée.');
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible d’appliquer cette action.');
+      Alert.alert('Erreur', e?.message || "Impossible d'appliquer cette action.");
     } finally {
       setWorking(false);
     }
@@ -208,7 +198,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
       if (action === 'ban_temp') {
         const hours = Math.max(1, parseInt(options.durationHours, 10) || 0);
         if (!hours) {
-          Alert.alert('Durée requise', 'Merci d’indiquer un nombre d’heures valide.');
+          Alert.alert('Durée requise', "Merci d'indiquer un nombre d'heures valide.");
           return;
         }
       }
@@ -224,7 +214,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
       }
       Alert.alert('Succès', 'Action enregistrée.');
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible d’appliquer cette action.');
+      Alert.alert('Erreur', e?.message || "Impossible d'appliquer cette action.");
     } finally {
       setModerationWorking(false);
     }
@@ -235,17 +225,17 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
     const bannedUntil = mod.bannedUntil ? new Date(mod.bannedUntil) : null;
     const bannedUntilActive = bannedUntil && !isNaN(bannedUntil.getTime()) && bannedUntil.getTime() > Date.now();
     if (bannedPermanent) return 'Ban définitif';
-    if (bannedUntilActive) return `Ban jusqu’au ${bannedUntil.toLocaleString(locale)}`;
+    if (bannedUntilActive) return `Ban jusqu'au ${bannedUntil.toLocaleString(locale)}`;
     return 'Non banni';
   };
 
   if (!user || !['admin', 'moderator'].includes(user.role)) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} >
         <View style={[styles.header, { backgroundColor: colors.surface }]}>
           <TouchableOpacity
             style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
-            onPress={onBack}
+            onPress={() => navigation.goBack()}
           >
             <Image
               source={require('../assets/appIcons/backArrow.png')}
@@ -257,7 +247,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
         </View>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
           <Text style={[styles.subtitle, { color: colors.text, textAlign: 'center' }]}>Cette section est réservée aux modérateurs.</Text>
-          <TouchableOpacity style={[styles.primaryButton, { marginTop: 20 }]} onPress={onBack}>
+          <TouchableOpacity style={[styles.primaryButton, { marginTop: 20 }]} onPress={() => navigation.goBack()}>
             <Text style={styles.primaryButtonText}>Retour</Text>
           </TouchableOpacity>
         </View>
@@ -266,11 +256,11 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} >
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: borderColor, borderBottomWidth: 1 }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
-          onPress={onBack}
+          onPress={() => navigation.goBack()}
         >
           <Image
             source={require('../assets/appIcons/backArrow.png')}
@@ -350,11 +340,9 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
                 <TouchableOpacity
                     style={styles.cardTitleButton}
                     onPress={() => {
-                    if (rep?.reported?.id && onOpenUserProfile) {
-                        onOpenUserProfile(rep.reported);
-                    }
+                    if (rep?.reported?.id) navigateToUser(rep.reported);
                     }}
-                    disabled={!rep?.reported?.id || !onOpenUserProfile}
+                    disabled={!rep?.reported?.id}
                 >
                     <Text style={[styles.cardTitle, textStyle]}>
                     {formatName(rep.reported)}
@@ -440,7 +428,7 @@ const ModeratorScreen = ({ onBack, onOpenUserProfile }) => {
 
                   {actionType === 'warn' && (
                     <>
-                      <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Type d’avertissement</Text>
+                      <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Type d'avertissement</Text>
                       <TextInput
                         style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
                         value={warningType}

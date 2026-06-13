@@ -1,23 +1,16 @@
 import { useState, useContext } from 'react';
 import { TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, useWindowDimensions, Switch, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { signup as apiSignup, setAccessToken, updateConsent, getPrivacyPolicy } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
 import AppLogo from '../components/AppLogo';
+import { mapBackendUser } from '../utils/mappers';
 
-// Map backend user to frontend context shape
-const mapBackendUser = (u = {}) => ({
-    username: u.username || u.name || '',
-    bio: u.bio || '',
-    photo: u.profileImageUrl || null,
-    socialMedia: Array.isArray(u.socialNetworks) ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : [],
-    consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-});
-
-const SignupScreen = ({ onSignup, onLogin }) => {
+const SignupScreen = () => {
+    const navigation = useNavigation();
     const [username, setUsername] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -112,7 +105,8 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                 }
             }
             setGdprModalVisible(false);
-            onSignup && onSignup(updatedUser);
+            Alert.alert('Vérifiez vos emails', "Un email de vérification vient de vous être envoyé. Cliquez sur le lien pour confirmer votre adresse, puis connectez-vous.");
+            navigation.navigate('Login');
         } catch (e) {
             console.error('[SignupScreen] Signup error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             Alert.alert("Erreur d'inscription", e?.message || 'Veuillez réessayer');
@@ -123,7 +117,7 @@ const SignupScreen = ({ onSignup, onLogin }) => {
 
     return (
         <SafeAreaView style={styles.container} edges={['left', 'right']}>
-            <View style={styles.header}>
+            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <ThemedText style={styles.headerTitle}>Créer un compte</ThemedText>
             </View>
 
@@ -225,7 +219,7 @@ const SignupScreen = ({ onSignup, onLogin }) => {
                             )}
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.link} onPress={onLogin}>
+                        <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')}>
                             <ThemedText style={styles.linkText} type={isDark ? 'white' : 'secondary'}>Déjà un compte ? <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>Se connecter</ThemedText></ThemedText>
                         </TouchableOpacity>
                     </View>

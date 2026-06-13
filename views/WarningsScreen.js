@@ -7,10 +7,10 @@ import {
   ScrollView,
   Dimensions,
   Image,
-  PanResponder,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
@@ -18,25 +18,11 @@ import { useLocale } from '../components/contexts/LocalizationContext';
 const { width, height } = Dimensions.get('window');
 
 
-const WarningsScreen = ({ onBack }) => {
+const WarningsScreen = () => {
+  const navigation = useNavigation();
   const { user } = useContext(UserContext);
   const { colors, isDark } = useTheme();
   const { locale } = useLocale();
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_evt, gestureState) => {
-      const { dx, dy } = gestureState;
-      const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      return isHorizontal && dx > 10;
-    },
-    onPanResponderRelease: (_evt, gestureState) => {
-      const { dx, vx } = gestureState;
-      if (dx > 60 || vx > 0.3) {
-        onBack && onBack();
-      }
-    },
-  });
 
   const warnings = useMemo(() => {
     const list = Array.isArray(user?.moderation?.warningsHistory)
@@ -52,11 +38,11 @@ const WarningsScreen = ({ onBack }) => {
   }, [user]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
-          onPress={onBack}
+          onPress={() => navigation.goBack()}
         >
           <Image
             source={require('../assets/appIcons/backArrow.png')}
@@ -73,7 +59,7 @@ const WarningsScreen = ({ onBack }) => {
       >
         <View style={[styles.infoCard, { backgroundColor: 'rgba(0,194,203,0.1)', borderColor: isDark ? 'rgba(0,194,203,0.3)' : 'rgba(0,194,203,0.2)' }]}>
           <Text style={[styles.infoText, { color: colors.text }]}>
-            Ce comportement peut entraîner un bannissement temporaire ou définitif de l’application.
+            Ce comportement peut entraîner un bannissement temporaire ou définitif de l'application.
           </Text>
         </View>
 
@@ -85,7 +71,7 @@ const WarningsScreen = ({ onBack }) => {
           warnings.map((entry, index) => (
             <View key={`${entry.at.getTime()}_${index}`} style={[styles.warningCard, { backgroundColor: colors.surface }]}>
               <View style={{ marginBottom: 15 }}>
-                <Text style={[styles.warningLabel, { color: colors.text, opacity: 0.5 }]}>Type d’avertissement</Text>
+                <Text style={[styles.warningLabel, { color: colors.text, opacity: 0.5 }]}>Type d'avertissement</Text>
                 <Text style={[styles.warningValue, { color: colors.text }]}>
                     {entry.type || 'Non précisé'}
                 </Text>

@@ -1,47 +1,52 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, PanResponder, Platform } from 'react-native';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, TextInput, FlatList, Image, ActivityIndicator, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
+import { useNavigation } from '@react-navigation/native';
 import { searchUsers, trackUserSearch } from '../components/ApiRequest';
 import { proxifyImageUrl, formatDistance as sharedFormatDistance } from '../components/ServerUtils';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
+import { UserContext } from '../components/contexts/UserContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigateToUser } from '../hooks/useNavigateToUser';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 
 const { width, height } = Dimensions.get('window');
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode';
 
-export default function SearchView({ onClose, onSelectUser, onSelectLocation, userLocation }) {
+export default function SearchView() {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const { goToPage, currentPage } = useMainSwiper();
+  const navigateToUser = useNavigateToUser();
+  const { user: appUser } = useContext(UserContext);
+  const userLocation = appUser?.location?.coordinates
+    ? { latitude: appUser.location.coordinates[1], longitude: appUser.location.coordinates[0] }
+    : null;
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [includeUsers, setIncludeUsers] = useState(true);
   const [includeLocations, setIncludeLocations] = useState(true);
   const debRef = useRef(null);
+  const inputRef = useRef(null);
   const { colors, isDark } = useTheme();
   const { isMoon } = useVibe();
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        const { dx, dy } = gestureState;
-        // On capture si c'est un swipe vertical descendant prédominant
-        const isVerticalSwipe = Math.abs(dy) > Math.abs(dx) && dy > 10;
-        // On capture aussi si c'est un swipe horizontal vers la gauche prédominant (retour)
-        const isHorizontalBackSwipe = Math.abs(dx) > Math.abs(dy) && dx < -10;
-        return isVerticalSwipe || isHorizontalBackSwipe;
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dy > 50 || gestureState.dx < -50 || gestureState.vx < -0.3) {
-          onClose();
-        }
-      },
-    })
-  ).current;
+  // Focus the input once the slide-in animation has settled (page 0 only).
+  // The spring takes ~350 ms; we wait a bit longer to avoid fighting
+  // with the keyboard dismiss that MainSwiper fires on every transition.
+  useEffect(() => {
+    if (currentPage === 0) {
+      const t = setTimeout(() => { try { inputRef.current?.focus(); } catch (_) {} }, 450);
+      return () => clearTimeout(t);
+    }
+  }, [currentPage]);
 
   const toggleFilter = (type) => {
     if (type === 'users') {
@@ -133,9 +138,9 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
         ]}
         onPress={() => {
           if (isLocation) {
-            onSelectLocation && onSelectLocation(item);
+            navigation.navigate('Location', { locationId: item._id || item.id, tertiles: item.tertiles || null });
           } else {
-            onSelectUser && onSelectUser(item);
+            navigateToUser(item);
           }
         }}
       >
@@ -188,7 +193,7 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
   const showInfoMsg = !loading && results.length === 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
       {isMoon ? (
         <NightSkyBackground style={StyleSheet.absoluteFill} />
       ) : (
@@ -198,6 +203,7 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
         styles.header,
         {
           backgroundColor: colors.surface,
+          paddingTop: insets.top + 10,
           borderBottomWidth: isDark ? 1 : 0,
           borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent',
           shadowOpacity: isDark ? 0 : 0.08,
@@ -206,7 +212,7 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
       ]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.12)' }]}
-          onPress={onClose}
+          onPress={() => goToPage(1)}
           hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
           accessibilityLabel="Fermer la recherche"
         >
@@ -220,12 +226,12 @@ export default function SearchView({ onClose, onSelectUser, onSelectLocation, us
         <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
           <Text style={{ marginRight: 10, fontSize: 18 }}>🔎</Text>
           <TextInput
+            ref={inputRef}
             value={query}
             onChangeText={setQuery}
             placeholder="Nom d'utilisateur, lieu..."
             placeholderTextColor={isDark ? '#aaa' : '#999'}
             style={[styles.input, { color: isDark ? '#fff' : colors.text }]}
-            autoFocus
             returnKeyType="search"
             autoCorrect={false}
             autoCapitalize="none"

@@ -1,26 +1,17 @@
 import { useState, useContext } from 'react';
 import { TextInput, TouchableOpacity, StyleSheet, View, useWindowDimensions, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { login as apiLogin, setAccessToken } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
 import AppLogo from '../components/AppLogo';
 import SocialAuthButton from '../components/SocialAuthButton';
+import { publish } from '../components/EventBus';
 
-// Map backend user to frontend shape used by context/UI
-const mapBackendUser = (u = {}) => ({
-    username: u.username || u.name || '',
-    bio: u.bio || '',
-    photo: u.profileImageUrl || null,
-    socialMedia: Array.isArray(u.socialNetworks) ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : [],
-    isPremium: !!u.isPremium,
-    role: u.role || 'user',
-    consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-});
-
-const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
+const LoginScreen = () => {
+    const navigation = useNavigation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -44,7 +35,14 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
                     console.error('[LoginScreen] map user error', mapErr);
                 }
             }
-            onLogin && onLogin(res?.user);
+            const user = res?.user;
+            const consentAccepted = !!(user?.consent?.accepted);
+            if (consentAccepted) {
+                navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+                setTimeout(() => publish('userlist:refresh'), 1000);
+            } else {
+                navigation.reset({ index: 0, routes: [{ name: 'Consent' }] });
+            }
         } catch (e) {
             console.error('[LoginScreen] Login error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             if (e?.code === 'EMAIL_NOT_VERIFIED' || e?.status === 403 && (e?.response?.code === 'EMAIL_NOT_VERIFIED')) {
@@ -62,7 +60,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
 
     return (
         <SafeAreaView style={styles.container} edges={['left', 'right']}>
-            <View style={styles.header}>
+            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
                 <ThemedText style={styles.headerTitle}>Connexion</ThemedText>
             </View>
 
@@ -115,7 +113,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
                             )}
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={onForgotPassword} style={{ marginTop: 20, alignSelf: 'center' }}>
+                        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={{ marginTop: 20, alignSelf: 'center' }}>
                             <ThemedText style={[styles.linkText, { fontSize: width * 0.035 }]} type={isDark ? 'white' : 'accent'}>Mot de passe oublié ?</ThemedText>
                         </TouchableOpacity>
 
@@ -139,7 +137,7 @@ const LoginScreen = ({ onLogin, onForgotPassword, onSignup }) => {
                         )}
                     </View>
 
-                    <TouchableOpacity onPress={onSignup} style={{ marginTop: 30, alignSelf: 'center' }}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Signup')} style={{ marginTop: 30, alignSelf: 'center' }}>
                         <ThemedText style={[styles.linkText, { fontSize: width * 0.04 }]} type={isDark ? 'white' : 'secondary'}>Pas encore de compte ? <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>Créer un compte</ThemedText></ThemedText>
                     </TouchableOpacity>
                 </ScrollView>

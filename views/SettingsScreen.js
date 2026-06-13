@@ -7,7 +7,6 @@ import {
   Switch,
   Image,
   Dimensions,
-  PanResponder,
   Alert,
   ScrollView,
   Modal,
@@ -15,6 +14,8 @@ import {
   TextInput,
   Platform,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
@@ -28,6 +29,8 @@ import {
   updateConsent,
   exportMyData,
   deleteMyAccount,
+  logout as apiLogout,
+  clearApiCache,
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -36,7 +39,9 @@ import { useVibe } from '../components/contexts/VibeContext';
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
-const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModerator }) => {
+const SettingsScreen = () => {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
   const { isMoon } = useVibe();
@@ -88,24 +93,9 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
     } catch (_) {}
   };
 
-  const saveAndReturn = async () => {
-    onReturnToAccount && onReturnToAccount();
+  const saveAndReturn = () => {
+    navigation.goBack();
   };
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_evt, gestureState) => {
-      const { dx, dy } = gestureState;
-      const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      return isHorizontal && dx > 10;
-    },
-    onPanResponderRelease: (_evt, gestureState) => {
-      const { dx, vx } = gestureState;
-      if (dx > 50 || vx > 0.3) {
-        saveAndReturn();
-      }
-    },
-  });
 
   const openPolicy = async () => {
     try {
@@ -220,7 +210,8 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
       await deleteMyAccount({ password: revokePassword });
       setRevokeVisible(false);
       setRevokePassword('');
-      onLogout && onLogout();
+      try { clearApiCache(); } catch (_) {}
+      navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Suppression impossible. Mot de passe invalide ou problème serveur.');
     } finally {
@@ -259,13 +250,13 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
       {isMoon ? (
         <NightSkyBackground style={StyleSheet.absoluteFill} />
       ) : (
         <DaySkyBackground style={StyleSheet.absoluteFill} />
       )}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, paddingTop: insets.top + 10 }]}>
         <TouchableOpacity
           style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
           onPress={saveAndReturn}
@@ -360,11 +351,11 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
         {['admin', 'moderator'].includes(user?.role) && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <Text style={styles.sectionTitle}>MODÉRATION</Text>
-            <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={onOpenModerator}>
+            <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => navigation.navigate('Moderator')}>
               <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Signalements</Text>
             </TouchableOpacity>
             {user?.role === 'admin' && (
-              <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={onOpenDebug}>
+              <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={() => navigation.navigate('Debug')}>
                 <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Debug Console</Text>
               </TouchableOpacity>
             )}
@@ -382,7 +373,7 @@ const SettingsScreen = ({ onReturnToAccount, onLogout, onOpenDebug, onOpenModera
 
           <TouchableOpacity
             style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]}
-            onPress={async () => { try { await (onLogout && onLogout()); } catch(_) {} }}
+            onPress={async () => { try { await apiLogout(); } catch (_) {} try { clearApiCache(); } catch (_) {} navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); }}
           >
             <Text style={styles.logoutText}>Déconnexion</Text>
           </TouchableOpacity>

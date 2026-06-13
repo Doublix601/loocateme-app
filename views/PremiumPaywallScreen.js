@@ -3,6 +3,8 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions,
   ActivityIndicator, Alert, Platform, Linking,
 } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { UserContext } from '../components/contexts/UserContext';
 import { getMyUser } from '../components/ApiRequest';
@@ -34,7 +36,13 @@ const FEATURES = [
 
 const FALLBACK = { monthly: '4,99 €', annual: '39,99 €', savings: 33 };
 
-export default function PremiumPaywallScreen({ onBack, onAlreadyPremium, routeParams }) {
+export default function PremiumPaywallScreen() {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const route = useRoute();
+  const routeParams = route.params ?? {};
+  const onBack = () => navigation.goBack();
+  const onAlreadyPremium = () => navigation.navigate('Statistics');
   const { colors, isDark } = useTheme();
   const { user, updateUser } = useContext(UserContext);
   const [period, setPeriod] = useState('annual');
@@ -154,7 +162,7 @@ export default function PremiumPaywallScreen({ onBack, onAlreadyPremium, routePa
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
       {/* Header */}
-      <View style={styles.headerRow}>
+      <View style={[styles.headerRow, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           onPress={onBack}
           style={[styles.closeBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}

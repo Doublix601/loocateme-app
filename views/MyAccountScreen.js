@@ -10,7 +10,6 @@ import {
     ScrollView,
     RefreshControl,
     Dimensions,
-    PanResponder,
     Alert,
     Platform,
     Pressable,
@@ -19,6 +18,7 @@ import {
     KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
@@ -35,18 +35,14 @@ import { useLocale } from '../components/contexts/LocalizationContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
+import socialMediaIcons from '../constants/socialMediaIcons';
+import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 
 const { width, height } = Dimensions.get('window');
 
-const MyAccountScreen = ({
-                             onReturnToList,
-                             socialMediaIcons,
-                             onReturnToSettings,
-                             onOpenDataManagement,
-                             onOpenStatistics,
-                             onOpenPremiumPaywall,
-                             onOpenWarnings,
-                         }) => {
+const MyAccountScreen = () => {
+    const navigation = useNavigation();
+    const { goToPage } = useMainSwiper();
     const { colors, isDark } = useTheme();
     const { isMoon } = useVibe();
     const { locale } = useLocale();
@@ -58,21 +54,6 @@ const MyAccountScreen = ({
         top: -insets.top,
         bottom: -insets.bottom,
     };
-    const panResponder = PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_evt, gestureState) => {
-            const { dx, dy } = gestureState;
-            const isHorizontal = Math.abs(dx) > Math.abs(dy);
-            // Enable from anywhere on screen: start responding when a right swipe is detected
-            return isHorizontal && dx > 10;
-        },
-        onPanResponderRelease: (_evt, gestureState) => {
-            const { dx, vx } = gestureState;
-            if (dx > 60 || vx > 0.3) {
-                onReturnToList && onReturnToList();
-            }
-        },
-    });
     const { user, updateUser } = useContext(UserContext);
     const { isPremium, hasStatsAccess, premiumSystemEnabled, effectiveStatisticsEnabled } = usePremiumAccess();
     const { flags } = useFeatureFlags();
@@ -216,14 +197,14 @@ const MyAccountScreen = ({
                 });
             }
             if (freshHasStatsAccess) {
-                onOpenStatistics && onOpenStatistics();
+                navigation.navigate('Statistics');
             } else {
-                onOpenPremiumPaywall && onOpenPremiumPaywall({ source: 'stats_button' });
+                navigation.navigate('PremiumPaywall', { source: 'stats_button' });
             }
         } catch (_) {
             // Fallback to current hook state
-            if (hasStatsAccess) onOpenStatistics && onOpenStatistics();
-            else onOpenPremiumPaywall && onOpenPremiumPaywall({ source: 'stats_button' });
+            if (hasStatsAccess) navigation.navigate('Statistics');
+            else navigation.navigate('PremiumPaywall', { source: 'stats_button' });
         }
     };
 
@@ -383,7 +364,7 @@ const MyAccountScreen = ({
             return;
         }
         if (status === 'red' && !isPremium) {
-            onOpenPremiumPaywall && onOpenPremiumPaywall({ source: 'invisible_mode' });
+            navigation.navigate('PremiumPaywall', { source: 'invisible_mode' });
             return;
         }
         try {
@@ -873,10 +854,10 @@ const MyAccountScreen = ({
             ) : (
                 <DaySkyBackground style={skyFillStyle} />
             )}
-            <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+            <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
             <TouchableOpacity
-                style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
-                onPress={onReturnToList}
+                style={[styles.backButton, { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
+                onPress={() => goToPage(1)}
                 hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
                 accessibilityLabel="Retour"
             >
@@ -888,7 +869,7 @@ const MyAccountScreen = ({
 
             <ScrollView
                 style={{ flex: 1 }}
-                contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.01, paddingBottom: Math.max(24, height * 0.06) + insets.bottom, flexGrow: 1 }}
+                contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: insets.top + 16, paddingBottom: Math.max(24, height * 0.06) + insets.bottom, flexGrow: 1 }}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
@@ -1048,7 +1029,7 @@ const MyAccountScreen = ({
                         {warningsCount > 0 && (
                             <TouchableOpacity
                                 style={[styles.warningCard, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}
-                                onPress={onOpenWarnings}
+                                onPress={() => navigation.navigate('Warnings')}
                                 activeOpacity={0.8}
                             >
                                 <Text style={[styles.warningTitle, { color: colors.accent }]}>Avertissements</Text>
@@ -1398,7 +1379,7 @@ const MyAccountScreen = ({
 
             <TouchableOpacity
                 style={styles.returnToListButton}
-                onPress={onReturnToList}>
+                onPress={() => goToPage(1)}>
                 <Image
                     source={require('../assets/appIcons/userList.png')}
                     style={styles.roundButtonImage}
@@ -1409,7 +1390,7 @@ const MyAccountScreen = ({
 
             <TouchableOpacity
                 style={styles.settingsButton}
-                onPress={onReturnToSettings}>
+                onPress={() => navigation.navigate('Settings')}>
                 <Image
                     source={require('../assets/appIcons/settings.png')}
                     style={styles.roundButtonImage}

@@ -1,48 +1,28 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, PanResponder, AppState, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, ScrollView, Image, AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
+import { useNavigation } from '@react-navigation/native';
 import { getStatsOverview, getDetailedProfileViews, getMyUser } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { subscribe, publish } from '../components/EventBus';
 import { UserContext } from '../components/contexts/UserContext';
-
-const mapBackendUser = (u = {}) => {
-  const socialMedias = Array.isArray(u.socialNetworks)
-    ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-    : (Array.isArray(u.socialMedias) ? u.socialMedias : (Array.isArray(u.socialMedia) ? u.socialMedia : []));
-  return {
-    ...u,
-    _id: u._id || u.id,
-    username: u.username || u.name || '',
-    firstName: u.firstName || '',
-    lastName: u.lastName || '',
-    customName: u.customName || '',
-    bio: u.bio || '',
-    photo: u.profileImageUrl || u.photo || null,
-    socialMedias,
-    socialMedia: socialMedias,
-    isPremium: !!u.isPremium,
-    role: u.role || 'user',
-    status: u.status || 'green',
-    consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
-    updatedAt: u.updatedAt,
-  };
-};
-
+import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
-export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
+export default function StatisticsScreen() {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const navigateToUser = useNavigateToUser();
   const { colors, isDark } = useTheme();
   const { isMoon } = useVibe();
   const { user, updateUser } = useContext(UserContext);
@@ -78,22 +58,6 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     { key: 'youtube', label: 'YouTube' },
   ];
 
-  // Geste de retour (slide de gauche vers la droite)
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_evt, g) => {
-        const isH = Math.abs(g.dx) > Math.abs(g.dy);
-        return isH && g.dx > 10; // gauche -> droite
-      },
-      onPanResponderRelease: (_evt, g) => {
-        if (g.dx > 60 || g.vx > 0.3) {
-          onBack && onBack();
-        }
-      },
-    })
-  ).current;
-
   async function load() {
     setLoading(true);
     setError('');
@@ -111,7 +75,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
     if (!hasAccess) {
       // Redirection immédiate si pas d'accès
       publish('social_click_tracked'); // Trigger un refresh si besoin ailleurs
-      onBack && onBack();
+      navigation.goBack();
       return;
     }
     load();
@@ -222,16 +186,16 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
   }, [hasAccess, detailed.length]);
 
   return (
-    <View style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
       {isMoon ? (
         <NightSkyBackground style={StyleSheet.absoluteFill} />
       ) : (
         <DaySkyBackground style={StyleSheet.absoluteFill} />
       )}
-      <View style={[styles.header, { backgroundColor: colors.surface }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, paddingTop: insets.top + 10 }]}>
         <TouchableOpacity
           style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
-          onPress={onBack}
+          onPress={() => navigation.goBack()}
         >
           <Image
             source={require('../assets/appIcons/backArrow.png')}
@@ -277,7 +241,7 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
                 </TouchableOpacity>
               </>
             )}
-            <TouchableOpacity onPress={onBack} style={{ marginTop: 20 }}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
               <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.5 }}>Plus tard</Text>
             </TouchableOpacity>
           </View>
@@ -362,13 +326,13 @@ export default function StatisticsScreen({ onBack, onOpenUserProfile }) {
                                 ]}
                                 onPress={() => {
                                   if (isBlurred) { publish('ui:open_premium'); return; }
-                                  if (!onOpenUserProfile || !it?.actor) return;
+                                  if (!it?.actor) return;
                                   const socials = Array.isArray(it.actor?.socialNetworks)
                                     ? it.actor.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
                                     : [];
                                   const coords = Array.isArray(it.actor?.location?.coordinates)
                                     ? it.actor.location.coordinates : null;
-                                  onOpenUserProfile({
+                                  navigateToUser({
                                     _id: it.actor.id || it.actor._id,
                                     id: it.actor.id || it.actor._id,
                                     username: it.actor.username || it.actor.name || 'Utilisateur',

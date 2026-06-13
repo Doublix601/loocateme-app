@@ -7,7 +7,6 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  PanResponder,
   Linking,
   Alert,
   Modal,
@@ -19,6 +18,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
@@ -35,6 +35,7 @@ import PremiumService from '../services/PremiumService';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { Feather } from '@expo/vector-icons';
+import socialMediaIcons from '../constants/socialMediaIcons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -44,7 +45,7 @@ const REPORT_CATEGORIES = [
   { value: 'harassment', label: 'Harcèlement' },
   { value: 'spam', label: 'Spam' },
   { value: 'inappropriate', label: 'Contenu inapproprié' },
-  { value: 'impersonation', label: 'Usurpation d’identité' },
+  { value: 'impersonation', label: "Usurpation d'identité" },
   { value: 'scam', label: 'Arnaque' },
   { value: 'other', label: 'Autre' },
 ];
@@ -52,7 +53,10 @@ const REPORT_CATEGORIES = [
 const UPSELL_COUNTER_KEY = 'premium_upsell_counter';
 const UPSELL_THRESHOLD = 5;
 
-const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMediaIcons, onOpenMessages, onOpenConversation, onOpenPremium }) => {
+const UserProfileScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const user = route.params?.user;
   const { user: currentUser } = React.useContext(UserContext);
   const [actionMenuVisible, setActionMenuVisible] = React.useState(false);
   const [reportVisible, setReportVisible] = React.useState(false);
@@ -110,20 +114,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
     )
   );
 
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_evt, gestureState) => {
-      const { dx, dy } = gestureState;
-      const isHorizontal = Math.abs(dx) > Math.abs(dy);
-      return isHorizontal && dx > 10;
-    },
-    onPanResponderRelease: (_evt, gestureState) => {
-      const { dx, vx } = gestureState;
-      if (dx > 60 || vx > 0.3) {
-        onReturnToList && onReturnToList();
-      }
-    },
-  });
+  // Swipe-back handled natively by React Navigation native stack.
 
   const INSTAGRAM_USERNAME_REGEX = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
   const TIKTOK_USERNAME_REGEX = /^[A-Za-z0-9._]{2,24}$/;
@@ -178,7 +169,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
               'Vous avez consulté plusieurs profils. Passez Premium pour voir qui a visité VOTRE profil et débloquer de nombreuses autres fonctionnalités !',
               [
                 { text: 'Plus tard', style: 'cancel' },
-                { text: 'Voir l’offre', onPress: () => onOpenPremium && onOpenPremium() }
+                { text: "Voir l'offre", onPress: () => navigation.navigate('PremiumPaywall') }
               ]
             );
           } else {
@@ -403,7 +394,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
   const handleSubmitReport = async () => {
     if (!user?._id) return;
     if (!reportReason.trim()) {
-      Alert.alert('Motif requis', 'Merci d’indiquer un motif.');
+      Alert.alert('Motif requis', "Merci d'indiquer un motif.");
       return;
     }
     try {
@@ -420,7 +411,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
       setReportDescription('');
       Alert.alert('Signalement envoyé', 'Merci pour votre signalement.');
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible d’envoyer le signalement.');
+      Alert.alert('Erreur', e?.message || "Impossible d'envoyer le signalement.");
     } finally {
       setReportSubmitting(false);
     }
@@ -429,9 +420,9 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
 
   if (!user) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]} {...panResponder.panHandlers}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <Text style={styles.error}>Aucun utilisateur sélectionné.</Text>
-        <TouchableOpacity style={styles.modalButton} onPress={onReturnToList}>
+        <TouchableOpacity style={styles.modalButton} onPress={() => navigation.goBack()}>
           <Text style={styles.modalButtonText}>Retour à la liste</Text>
         </TouchableOpacity>
       </View>
@@ -470,7 +461,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
       await apiCreateFollowRequest(user._id || user.id);
       setFollowStatus('pending');
     } catch (e) {
-      try { Alert.alert('Erreur', e?.message || 'Impossible d’envoyer la demande'); } catch (_) {}
+      try { Alert.alert('Erreur', e?.message || "Impossible d'envoyer la demande"); } catch (_) {}
     } finally {
       setFollowLoading(false);
     }
@@ -509,10 +500,10 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
       ) : (
         <DaySkyBackground style={skyFillStyle} />
       )}
-      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
       <TouchableOpacity
-        style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
-        onPress={onReturnToList}
+        style={[styles.backButton, { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
+        onPress={() => navigation.goBack()}
         hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
         accessibilityLabel="Retour"
       >
@@ -522,7 +513,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
         />
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.menuButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
+        style={[styles.menuButton, { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
         onPress={() => setActionMenuVisible(true)}
         hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
         accessibilityLabel="Plus d'options"
@@ -761,7 +752,7 @@ const UserProfileScreen = ({ user, onReturnToList, onReturnToAccount, socialMedi
                   keyboardShouldPersistTaps="handled"
                 >
                   <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Signaler un utilisateur</Text>
-                  <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>Les signalements abusifs peuvent entraîner des sanctions. Merci d’être honnête.</Text>
+                  <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>Les signalements abusifs peuvent entraîner des sanctions. Merci d'être honnête.</Text>
 
                   <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Catégorie</Text>
                   <View style={styles.categoryGrid}>

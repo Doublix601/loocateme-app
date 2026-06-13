@@ -1,5 +1,5 @@
-// Service d’enregistrement de token push côté backend.
-// Remarque: l’obtention du token FCM dépend de votre intégration (ex: @react-native-firebase/messaging).
+// Service d'enregistrement de token push côté backend.
+// Remarque: l'obtention du token FCM dépend de votre intégration (ex: @react-native-firebase/messaging).
 // Ce module expose une fonction utilitaire pour transmettre le token au backend.
 
 import { registerPushToken, unregisterPushToken } from './ApiRequest';
@@ -57,7 +57,7 @@ export async function unregisterCurrentDevicePushToken() {
 }
 
 /**
- * Exemple d’intégration avec @react-native-firebase/messaging (à adapter si vous ajoutez la dépendance):
+ * Exemple d'intégration avec @react-native-firebase/messaging (à adapter si vous ajoutez la dépendance):
  *
  * import messaging from '@react-native-firebase/messaging';
  * import { Platform } from 'react-native';

@@ -10,7 +10,6 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  PanResponder,
   Platform,
   InteractionManager,
 } from 'react-native';
@@ -18,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { getLocations, updateMyLocation, seedOsmLocation } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
@@ -29,8 +29,12 @@ import { useVibe } from '../components/contexts/VibeContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
 import { OverpassService, isTypeAllowedForVibe } from '../services/OverpassService';
+import VibeFAB from '../components/VibeFAB';
+import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 
-const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeople, initialScrollOffset = 0, onScroll }) => {
+const LocationListScreen = () => {
+  const navigation = useNavigation();
+  const { goToPage } = useMainSwiper();
   const { colors, isDark } = useTheme();
   const { isMoon, vibe, transitioningTo } = useVibe();
   const insets = useSafeAreaInsets();
@@ -247,7 +251,6 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
             }
           ]}
           onPress={async () => {
-            onScroll && onScroll(currentScrollOffset.current);
             // POI Overpass non persisté: on l'upsert en base avant d'ouvrir l'écran
             // de détail pour éviter un 404/500 sur `getLocationById('osm:*')`.
             const isOsm = typeof item?._id === 'string' && item._id.startsWith('osm:');
@@ -266,7 +269,8 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
                   });
                   const seeded = res?.location;
                   if (seeded && seeded._id) {
-                    onSelectLocation({ ...item, ...seeded });
+                    const merged = { ...item, ...seeded };
+                    navigation.navigate('Location', { locationId: merged._id || merged.id, tertiles: merged.tertiles || null });
                     return;
                   }
                 }
@@ -277,7 +281,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
                 console.warn('[LocationListScreen] seedOsmLocation failed:', e?.message || e);
               }
             }
-            onSelectLocation({ ...item });
+            navigation.navigate('Location', { locationId: item._id || item.id, tertiles: item.tertiles || null });
           }}
         >
           <View style={styles.locationInfo}>
@@ -375,7 +379,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
       return card;
     });
-  }, [colors, isDark, isMoon, onSelectLocation, onScroll, currentUser?.currentPoiId]);
+  }, [colors, isDark, isMoon, navigation, currentUser?.currentPoiId]);
 
   const renderLocation = ({ item, index }) => <LocationItem item={item} index={index} />;
 
@@ -405,27 +409,6 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     return () => { active = false; };
   }, [roundedLat, roundedLon, vibe]);
 
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Seuleument capturer si le mouvement est principalement horizontal
-        return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx > 50) {
-          // Swipe vers la droite -> SearchView
-          onSearchPeople && onSearchPeople();
-        } else if (gestureState.dx < -50) {
-          // Swipe vers la gauche -> MyAccountScreen
-          onReturnToAccount && onReturnToAccount();
-        }
-      },
-    })
-  ).current;
-
-  // Important: do not intercept horizontal gestures here so that
-  // the parent navigator can handle global swipes (Search / MyAccount).
 
   useEffect(() => {
     fetchNearbyLocations();
@@ -442,13 +425,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
     return () => unsub();
   }, []);
 
-  useEffect(() => {
-    if (initialScrollOffset > 0 && flatListRef.current && locations.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToOffset({ offset: initialScrollOffset, animated: false });
-      }, 100);
-    }
-  }, [locations.length]);
+  // Scroll position is preserved automatically by React Navigation's native stack.
 
 
   const getStars = (item, starIsDark) => {
@@ -639,6 +616,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       styles.header,
       {
         backgroundColor: colors.surface,
+        paddingTop: insets.top + 10,
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
         elevation: isDark ? 0 : 5,
@@ -653,7 +631,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
       <Text style={[styles.headerTitle, { color: '#00c2cb', flex: 1 }]} numberOfLines={1}>Lieux à proximité</Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity
-          onPress={() => onSearchPeople && onSearchPeople()}
+          onPress={() => goToPage(0)}
           style={styles.headerIconButton}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
           accessibilityLabel="Rechercher"
@@ -661,7 +639,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           <Text style={{ fontSize: 22 }}>🔎</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={onReturnToAccount}
+          onPress={() => goToPage(2)}
           style={styles.headerProfileButton}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
           accessibilityLabel="Mon compte"
@@ -674,13 +652,13 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Fond cohérent avec la vibe (même palette que l’interstitiel) */}
+      {/* Fond cohérent avec la vibe (même palette que l'interstitiel) */}
       {isMoon ? (
         <NightSkyBackground style={skyFillStyle} />
       ) : (
         <DaySkyBackground style={skyFillStyle} />
       )}
-      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]} {...panResponder.panHandlers}>
+      <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
         {renderHeader()}
         {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
@@ -694,9 +672,9 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
           overScrollMode="always"
         >
           <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🌙</Text>
-          <Text style={[styles.emptyText, { color: colors.text, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Zone calme pour l’instant</Text>
+          <Text style={[styles.emptyText, { color: colors.text, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Zone calme pour l'instant</Text>
           <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, paddingHorizontal: 32, lineHeight: 20 }}>
-            Aucun lieu actif n’a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.
+            Aucun lieu actif n'a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.
           </Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity onPress={() => {
@@ -748,6 +726,7 @@ const LocationListScreen = ({ onSelectLocation, onReturnToAccount, onSearchPeopl
         />
       )}
       </SafeAreaView>
+      <VibeFAB />
     </View>
   );
 };
