@@ -904,7 +904,7 @@ const MyAccountScreen = () => {
     };
 
     return (
-        <View style={{ flex: 1 }}>
+        <><View style={{ flex: 1 }}>
             {/* Fond cohérent avec la vibe (jour/nuit) */}
             {isMoon ? (
                 <NightSkyBackground style={skyFillStyle} />
@@ -1475,7 +1475,7 @@ const MyAccountScreen = () => {
           totalSteps={SPOT_STEPS.length}
           onNext={handleSpotNext}
           onSkip={handleSpotSkip}
-        />
+        /></>
     );
 };
 
