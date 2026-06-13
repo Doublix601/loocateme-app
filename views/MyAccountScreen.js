@@ -74,7 +74,7 @@ const MyAccountScreen = () => {
 
     // ── Spotlight onboarding ──────────────────────────────────────
     const [spotStep, setSpotStep] = useState(-1);
-    const [spotRects, setSpotRects] = useState([]);
+    const [spotRect, setSpotRect] = useState(null);
     const spotStarted = useRef(false);
     const scrollViewRef = useRef(null);
     const photoRef = useRef(null);
@@ -84,20 +84,47 @@ const MyAccountScreen = () => {
     const statusRef = useRef(null);
 
     const SPOT_STEPS = [
-      { ref: photoRef,       borderRadius: 999, title: 'Ta photo de profil',   description: 'Reste appuyé sur ta photo pour la modifier ou en choisir une nouvelle depuis ta galerie.' },
-      { ref: identityRowRef, borderRadius: 14,  title: 'Ton identité',          description: 'Reste appuyé sur Prénom, Nom ou Pseudo pour modifier chaque champ individuellement.' },
-      { ref: bioRef,         borderRadius: 16,  title: 'Ta bio',                description: 'Reste appuyé sur la bio pour la personnaliser. C\'est la première chose que les autres voient sur ton profil.' },
-      { ref: socialRef,      borderRadius: 16,  title: 'Tes réseaux sociaux',   description: 'Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône existante pour la modifier ou la supprimer.' },
-      { ref: statusRef,      borderRadius: 99,  title: 'Ton statut',            description: 'Vert = disponible · Orange = occupé · Rouge = ne pas déranger. Les autres voient ton statut en temps réel.' },
+      { ref: photoRef,       borderRadius: 999, title: 'Ta photo de profil',  description: 'Reste appuyé sur ta photo pour la modifier ou en choisir une nouvelle depuis ta galerie.' },
+      { ref: identityRowRef, borderRadius: 14,  title: 'Ton identité',         description: 'Reste appuyé sur Prénom, Nom ou Pseudo pour modifier chaque champ individuellement.' },
+      { ref: bioRef,         borderRadius: 16,  title: 'Ta bio',               description: "Reste appuyé sur la bio pour la personnaliser. C'est la première chose que les autres voient." },
+      { ref: socialRef,      borderRadius: 16,  title: 'Tes réseaux sociaux',  description: 'Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône pour la modifier ou supprimer.' },
+      { ref: statusRef,      borderRadius: 99,  title: 'Ton statut',           description: 'Vert = disponible · Orange = occupé · Rouge = ne pas déranger. Visible par les autres en temps réel.' },
     ];
 
-    const measureOne = (step) => new Promise((resolve) => {
-      setTimeout(() => {
-        step.ref.current?.measureInWindow((x, y, w, h) => {
-          resolve({ x, y, width: w, height: h, borderRadius: step.borderRadius });
-        });
-      }, 80);
+    // Scrolle vers l'élément puis mesure sa position fenêtre
+    const scrollAndMeasure = (stepIdx) => new Promise((resolve) => {
+      const step = SPOT_STEPS[stepIdx];
+      if (!step?.ref?.current) return resolve(null);
+      // 1. Mesure la position relative au ScrollView pour savoir où scroller
+      step.ref.current.measureLayout(
+        scrollViewRef.current,
+        (_, yInScroll, _w, elH) => {
+          const targetScroll = Math.max(0, yInScroll - H * 0.28);
+          scrollViewRef.current?.scrollTo({ y: targetScroll, animated: true });
+          // 2. Après l'animation de scroll, mesure la position fenêtre réelle
+          setTimeout(() => {
+            step.ref.current?.measureInWindow((x, y, w, h) => {
+              resolve({ x, y, width: w, height: h, borderRadius: step.borderRadius });
+            });
+          }, 350);
+        },
+        () => {
+          // fallback si measureLayout échoue
+          setTimeout(() => {
+            step.ref.current?.measureInWindow((x, y, w, h) => {
+              resolve({ x, y, width: w, height: h, borderRadius: step.borderRadius });
+            });
+          }, 350);
+        }
+      );
     });
+
+    const goToStep = async (idx) => {
+      if (idx < 0 || idx >= SPOT_STEPS.length) return;
+      const rect = await scrollAndMeasure(idx);
+      setSpotRect(rect);
+      setSpotStep(idx);
+    };
 
     // Démarre uniquement quand l'utilisateur arrive sur la page profil (page 2)
     useEffect(() => {
@@ -106,38 +133,24 @@ const MyAccountScreen = () => {
         const seen = await hasSeenProfileOnboarding();
         if (seen) return;
         spotStarted.current = true;
-        setTimeout(async () => {
-          const rects = await Promise.all(SPOT_STEPS.map(measureOne));
-          setSpotRects(rects);
-          setSpotStep(0);
-        }, 500);
+        setTimeout(() => goToStep(0), 600);
       })();
     }, [currentPage]);
-
-    // Auto-scroll vers l'élément mis en valeur à chaque étape
-    useEffect(() => {
-      if (spotStep < 0 || !spotRects[spotStep]) return;
-      const rect = spotRects[spotStep];
-      // Si l'élément est en dessous du milieu de l'écran, on scrolle pour le centrer
-      if (rect.y > H * 0.55) {
-        scrollViewRef.current?.scrollTo({ y: rect.y - H * 0.3, animated: true });
-      } else if (rect.y < 80) {
-        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
-      }
-    }, [spotStep]);
 
     const handleSpotNext = async () => {
       const next = spotStep + 1;
       if (next >= SPOT_STEPS.length) {
         setSpotStep(-1);
+        setSpotRect(null);
         await markProfileOnboardingDone();
       } else {
-        setSpotStep(next);
+        await goToStep(next);
       }
     };
 
     const handleSpotSkip = async () => {
       setSpotStep(-1);
+      setSpotRect(null);
       await markProfileOnboardingDone();
     };
     // ─────────────────────────────────────────────────────────────
@@ -1484,8 +1497,8 @@ const MyAccountScreen = () => {
 
         {/* Spotlight onboarding profil */}
         <SpotlightOverlay
-          visible={spotStep >= 0 && spotStep < SPOT_STEPS.length && !!spotRects[spotStep]}
-          rect={spotRects[spotStep]}
+          visible={spotStep >= 0 && !!spotRect}
+          rect={spotRect}
           title={SPOT_STEPS[spotStep]?.title}
           description={SPOT_STEPS[spotStep]?.description}
           stepIndex={spotStep}
