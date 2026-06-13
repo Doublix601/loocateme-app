@@ -82,7 +82,8 @@ export default function SpotlightOverlay({
   const sy = Math.max(0, rect.y - PAD);
   const sw = rect.width + PAD * 2;
   const sh = rect.height + PAD * 2;
-  const br = (rect.borderRadius ?? 14) + PAD;
+  // Plafonner br à la moitié du côté le plus court pour éviter des caps gigantesques (ex: photo circulaire)
+  const br = Math.min((rect.borderRadius ?? 14) + PAD, sw / 2, sh / 2);
 
   const showBelow = sy + sh < H * 0.58;
   const tooltipTop  = showBelow ? Math.min(sy + sh + 16, H - 220) : undefined;
