@@ -264,6 +264,33 @@ function AppShell({ purchasesReady }) {
     return () => { try { sub?.remove?.(); } catch (_) {} };
   }, []);
 
+  // Notification tap handling: navigate to the relevant screen based on the
+  // `data` payload attached server-side (see push.service.js). Dynamic import
+  // mirrors components/notifications.js / DebugScreen.js, since expo-notifications
+  // isn't fully supported in Expo Go.
+  useEffect(() => {
+    let sub;
+    (async () => {
+      try {
+        const Notifications = await import('expo-notifications');
+
+        const handleResponse = (response) => {
+          const data = response?.notification?.request?.content?.data;
+          if (!data || !navigationRef.isReady()) return;
+          if (data.kind === 'ultra_boost' && data.locationId) {
+            navigationRef.navigate('Location', { locationId: data.locationId });
+          }
+        };
+
+        const last = await Notifications.getLastNotificationResponseAsync();
+        if (last) handleResponse(last);
+
+        sub = Notifications.addNotificationResponseReceivedListener(handleResponse);
+      } catch (_) {}
+    })();
+    return () => { try { sub?.remove?.(); } catch (_) {} };
+  }, []);
+
   const isLoading = !assetsReady || !authReady;
 
   return (
