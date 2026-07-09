@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Platform,
   Dimensions,
   ImageBackground,
+  Image,
+  Modal,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -28,6 +30,7 @@ import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import SocialPulseAvatar from '../components/SocialPulseAvatar';
 import ProfileCard from '../components/ProfileCard';
 import socialMediaIcons from '../constants/socialMediaIcons';
+import { trackLocationView } from '../components/ApiRequest';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
@@ -55,7 +58,14 @@ const LocationScreen = () => {
 
   const { checkAccess } = useFeatureGate();
   const { activateBoost, isBoosted, boostUntil, boostBalance, loading: boostLoading } = useBoost();
-  const { location, users, loading, refreshing, refresh } = useLocationData(locationId);
+  const { location, users, monthlyUsers, loading, refreshing, refresh } = useLocationData(locationId);
+  const [storyViewerIndex, setStoryViewerIndex] = useState(null);
+
+  // Alimente les statistiques de fréquentation des lieux pro (vues sur 1/7/30j)
+  useEffect(() => {
+    if (!locationId) return;
+    trackLocationView(locationId).catch(() => {});
+  }, [locationId]);
 
   const handleGoToLocation = () => {
     if (!location?.location?.coordinates) return;
@@ -68,13 +78,20 @@ const LocationScreen = () => {
     if (checkAccess('boost')) activateBoost(locationId);
   };
 
-  // Image de cover : on tente plusieurs champs courants (futur-proof OSM/Wikidata).
+  // Image de cover : priorité à la couverture pro (bannerUrl), puis champs
+  // courants (futur-proof OSM/Wikidata).
   const coverUri =
+    location?.bannerUrl ||
     location?.coverUrl ||
     location?.imageUrl ||
     location?.photoUrl ||
     location?.image ||
     null;
+
+  const activeStories = useMemo(() => {
+    const now = Date.now();
+    return (location?.stories || []).filter((s) => !s.expiresAt || new Date(s.expiresAt).getTime() > now);
+  }, [location]);
 
   const popularity = useMemo(() => {
     const s = location?.stars || 0;
@@ -209,12 +226,17 @@ const LocationScreen = () => {
         </View>
       </View>
 
-      <Text
-        style={[typography.h1, { marginTop: spacing.sm }]}
-        numberOfLines={2}
-      >
-        {location.name}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }}>
+        {location.logoUrl && (
+          <Image
+            source={{ uri: location.logoUrl }}
+            style={{ width: 36, height: 36, borderRadius: 18, marginRight: spacing.sm, borderWidth: 2, borderColor: palette.bgElevated }}
+          />
+        )}
+        <Text style={[typography.h1, { flex: 1 }]} numberOfLines={2}>
+          {location.name}
+        </Text>
+      </View>
 
       <View style={[styles.metaRow, { marginTop: spacing.sm }]}>
         <View style={styles.metaItem}>
@@ -223,6 +245,17 @@ const LocationScreen = () => {
             {users.length} sur place
           </Text>
         </View>
+        {monthlyUsers > 0 && (
+          <>
+            <View style={[styles.metaDot, { backgroundColor: palette.border }]} />
+            <View style={styles.metaItem}>
+              <Ionicons name="calendar-outline" size={14} color={palette.textMuted} />
+              <Text style={[typography.body, { marginLeft: 4 }]}>
+                {monthlyUsers} ce mois
+              </Text>
+            </View>
+          </>
+        )}
         <View style={[styles.metaDot, { backgroundColor: palette.border }]} />
         <View style={styles.metaItem}>
           <Ionicons name="pulse" size={14} color={palette.textMuted} />
@@ -281,6 +314,95 @@ const LocationScreen = () => {
       )}
     </TouchableOpacity>
   );
+
+  // ─── Stories & PDF pro (Premium Pro 1/2) ───────────────────────
+  const renderProSection = () => {
+    const media = (location.media || []).filter((m) => m.type === 'PDF');
+    if (!activeStories.length && !media.length) return null;
+    return (
+      <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
+        {activeStories.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: media.length ? spacing.md : 0 }}>
+            {activeStories.map((story, idx) => (
+              <TouchableOpacity
+                key={story._id || idx}
+                onPress={() => setStoryViewerIndex(idx)}
+                style={{
+                  width: 64,
+                  height: 100,
+                  borderRadius: radius.md,
+                  marginRight: spacing.sm,
+                  overflow: 'hidden',
+                  borderWidth: 2,
+                  borderColor: palette.accent,
+                }}
+              >
+                <Image source={{ uri: story.url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+        {media.map((m) => (
+          <TouchableOpacity
+            key={m._id || m.url}
+            onPress={() => Linking.openURL(m.url)}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: palette.surface,
+              borderRadius: radius.md,
+              paddingVertical: spacing.md,
+              paddingHorizontal: spacing.lg,
+              marginBottom: spacing.sm,
+              borderWidth: 1,
+              borderColor: palette.border,
+            }}
+          >
+            <Ionicons name="document-text-outline" size={20} color={palette.accent} />
+            <Text style={[typography.body, { marginLeft: spacing.sm, color: palette.text, fontWeight: '700' }]}>
+              {m.title}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const renderStoryViewer = () => {
+    if (storyViewerIndex === null || !activeStories[storyViewerIndex]) return null;
+    const story = activeStories[storyViewerIndex];
+    const goNext = () => {
+      if (storyViewerIndex < activeStories.length - 1) setStoryViewerIndex(storyViewerIndex + 1);
+      else setStoryViewerIndex(null);
+    };
+    const goPrev = () => {
+      if (storyViewerIndex > 0) setStoryViewerIndex(storyViewerIndex - 1);
+    };
+    return (
+      <Modal visible transparent animationType="fade" onRequestClose={() => setStoryViewerIndex(null)}>
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          <Image source={{ uri: story.url }} style={{ flex: 1 }} resizeMode="contain" />
+          <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', padding: spacing.md }}>
+            {activeStories.map((_, idx) => (
+              <View
+                key={idx}
+                style={{ flex: 1, height: 3, borderRadius: 2, marginHorizontal: 2, backgroundColor: idx <= storyViewerIndex ? '#fff' : 'rgba(255,255,255,0.35)' }}
+              />
+            ))}
+          </SafeAreaView>
+          <TouchableOpacity
+            onPress={() => setStoryViewerIndex(null)}
+            style={{ position: 'absolute', top: insets.top + spacing.lg, right: spacing.lg }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={goPrev} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '35%' }} />
+          <TouchableOpacity onPress={goNext} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '65%' }} />
+        </View>
+      </Modal>
+    );
+  };
 
   // ─── Social Pulse (grille horizontale d'avatars) ───────────────
   const renderSocialPulse = () => {
@@ -416,12 +538,14 @@ const LocationScreen = () => {
       >
         {renderHero()}
         {renderFloatingCard()}
+        {renderProSection()}
         {renderBoostCard()}
         {renderSocialPulse()}
         {renderProfileList()}
       </ScrollView>
 
       {renderFixedAction()}
+      {renderStoryViewer()}
     </View>
   );
 };

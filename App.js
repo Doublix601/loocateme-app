@@ -18,6 +18,7 @@ import Purchases from 'react-native-purchases';
 
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
+import PolicyUpdateBanner from './components/PolicyUpdateBanner';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { VibeProvider, useVibe } from './components/contexts/VibeContext';
@@ -29,7 +30,7 @@ import { LocalizationProvider } from './components/contexts/LocalizationContext'
 import { usePresence } from './hooks/usePresence';
 import {
   initApiFromStorage, getMyUser, clearApiCache, getUserById,
-  getAccessToken, logout as apiLogout,
+  getAccessToken, logout as apiLogout, getPolicyStatus,
 } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
@@ -94,7 +95,14 @@ function AppShell({ purchasesReady }) {
             const me = res?.user;
             if (me && updateUser) updateUser(mapBackendUser(me));
             const consentAccepted = !!(me?.consent?.accepted);
+            let policyBlocking = false;
             if (consentAccepted) {
+              try {
+                const status = await getPolicyStatus();
+                policyBlocking = !!status?.blocking;
+              } catch (_) { /* fail-open: don't block the app on a network error */ }
+            }
+            if (consentAccepted && !policyBlocking) {
               const seen = await hasSeenOnboarding();
               navigationRef.reset({ index: 0, routes: [{ name: seen ? 'MainTabs' : 'Onboarding' }] });
               setTimeout(() => publish('userlist:refresh'), 1000);
@@ -288,6 +296,8 @@ function AppShell({ purchasesReady }) {
         )}
         <VibeTransitOverlay />
       </NavigationContainer>
+
+      <PolicyUpdateBanner />
 
       <ConsumablesShopSheet
         visible={shopSheetVisible}

@@ -525,6 +525,7 @@ const UserProfileScreen = () => {
         style={[
           styles.followIconButton,
           {
+            top: insets.top + 56,
             backgroundColor: followStatus === 'accepted' ? colors.accent : colors.surfaceAlt,
             borderColor: colors.accent,
             opacity: (followLoading || followStatus === 'pending') ? 0.6 : 1,
@@ -551,6 +552,7 @@ const UserProfileScreen = () => {
         style={[
           styles.superlikeButton,
           {
+            top: insets.top + 110,
             backgroundColor: superlikeSent
               ? 'rgba(255,215,0,0.2)'
               : superlikeBalance > 0

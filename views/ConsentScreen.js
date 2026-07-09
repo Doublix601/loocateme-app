@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { getPrivacyPolicy, updateConsent, logout } from '../components/ApiRequest';
+import { getPrivacyPolicy, acceptPolicyVersion, logout } from '../components/ApiRequest';
 import { navigateAfterAuth } from '../utils/onboarding';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -12,6 +12,8 @@ export default function ConsentScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [policy, setPolicy] = useState('');
+  const [changelog, setChangelog] = useState('');
+  const [version, setVersion] = useState('');
   const [accepting, setAccepting] = useState(false);
   const { user, updateUser } = useContext(UserContext);
   const { colors, isDark } = useTheme();
@@ -21,7 +23,11 @@ export default function ConsentScreen() {
     (async () => {
       try {
         const res = await getPrivacyPolicy();
-        if (mounted) setPolicy(res?.policy || '');
+        if (mounted) {
+          setPolicy(res?.policy || '');
+          setChangelog(res?.changelog || '');
+          setVersion(res?.version || '');
+        }
       } catch (e) {
         // ignore
       } finally {
@@ -34,10 +40,10 @@ export default function ConsentScreen() {
   const handleAccept = async () => {
     try {
       setAccepting(true);
-      await updateConsent({ accepted: true, version: 'v1' });
+      const res = await acceptPolicyVersion();
       if (updateUser) {
         try {
-          updateUser({ ...user, consent: { accepted: true, version: 'v1', consentAt: new Date().toISOString() } });
+          updateUser(res?.user ? { ...user, consent: res.user.consent } : { ...user, consent: { accepted: true, version, consentAt: new Date().toISOString() } });
         } catch (_) { /* ignore mapping issues */ }
       }
       await navigateAfterAuth(navigation);
@@ -69,6 +75,12 @@ export default function ConsentScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {!!changelog && (
+            <View style={[styles.card, { backgroundColor: colors.surface, borderLeftWidth: 3, borderLeftColor: '#00c2cb' }]}>
+              <Text style={[styles.changelogTitle, { color: colors.text }]}>Ce qui a changé{version ? ` (v${version})` : ''}</Text>
+              <Text style={[styles.policyText, { color: colors.text }]}>{changelog}</Text>
+            </View>
+          )}
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <Text style={[styles.policyText, { color: colors.text }]}>{policy}</Text>
           </View>
@@ -105,6 +117,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontWeight: 'bold' },
   content: { padding: 20 },
   card: { borderRadius: 20, padding: 20, marginBottom: 20 },
+  changelogTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
   policyText: { fontSize: 14, lineHeight: 22 },
   actions: {
     flexDirection: 'row',

@@ -152,50 +152,26 @@ const LocationListScreen = () => {
     });
   }, [filteredLocations, filteredOsmPois, userCoords]);
 
-  // PulseList ordering by vibe.
-  // Règle de tri stricte (Spec §4) : Priorité aux lieux Étoilés (Pro) > Proximité géographique.
-  // Les lieux "Pro" sont identifiés par `isPromoted` OU `stars >= 2` (étoilés persistants).
+  // PulseList ordering: le lieu "Pro Boost" sponsorisé (renvoyé par le backend
+  // avec isSponsored:true, un seul possible à la fois) est toujours épinglé en
+  // tête, avant le tri normal par popularité (étoiles) puis distance croissante.
+  // 3★ > 2★ > 1★ > 0★ ; à égalité d'étoiles on trie par distance.
   const pulseItems = useMemo(() => {
-    const items = [...locationsWithDistance];
-    const greenCount = (it) => {
-      if (Array.isArray(it?.activeUsers)) return it.activeUsers.filter(u => (u?.status || 'green') === 'green').length;
-      const uc = it?.userCount || 0; return uc;
-    };
-
-    // Client-side priority by vibe (category boost) — séparation stricte jour/nuit
-    const dayBoost = new Set([
-      'cafe', 'Café ☕', 'coworking_space', 'Coworking 🧑‍💻', 'gym', 'Salle de sport 🏋️',
-      'sports_centre', 'Centre sportif 🏟️', 'park', 'Parc 🌳', 'Brunch 🥞',
-    ]);
-    const nightBoost = new Set([
-      'bar', 'Bar 🍺', 'pub', 'nightclub', 'Boîte de nuit 💃', 'restaurant', 'Restaurant 🍴',
-      'Rooftop 🌆', 'Karaoké 🎤', 'Club de jeux 🎮',
-    ]);
-    const boosted = (it) => {
-      const t = it?.type || '';
-      if ((isMoon ? nightBoost : dayBoost).has(t)) return 2;
-      return 0;
-    };
-
-    const isPro = (it) => !!it?.isPro || !!it?.isPromoted || (typeof it?.stars === 'number' && it.stars >= 2);
-
-    // Partition: Pro/étoilés en tête, triés par étoiles puis proximité
-    const featured = items
-      .filter(isPro)
-      .sort((a, b) => (b.stars || 0) - (a.stars || 0) || (a.distance || 0) - (b.distance || 0));
-    const nonFeatured = items.filter(it => !isPro(it));
-    const hotspots = nonFeatured
-      .filter(it => greenCount(it) > 0)
-      .sort((a,b) => greenCount(b) - greenCount(a) || (a.distance||0) - (b.distance||0));
-    const exploration = nonFeatured
-      .filter(it => greenCount(it) === 0)
-      .sort((a,b) => (a.distance||0) - (b.distance||0) || boosted(b) - boosted(a));
-
-    // Mark first two featured for tall style
-    const featuredMarked = featured.map((it, idx) => idx < 2 ? { ...it, _featuredRank: idx + 1 } : it);
-
-    return [...featuredMarked, ...hotspots, ...exploration];
-  }, [locationsWithDistance, isMoon]);
+    const sorted = [...locationsWithDistance].sort((a, b) => {
+      if (a.isSponsored && !b.isSponsored) return -1;
+      if (b.isSponsored && !a.isSponsored) return 1;
+      return (b.stars || 0) - (a.stars || 0) || (a.distance || 0) - (b.distance || 0);
+    });
+    // Mark first two high-rated items for tall card style
+    let featuredCount = 0;
+    return sorted.map((it) => {
+      if (featuredCount < 2 && (it.stars || 0) >= 2) {
+        featuredCount++;
+        return { ...it, _featuredRank: featuredCount };
+      }
+      return it;
+    });
+  }, [locationsWithDistance]);
 
   // Liste effectivement affichée : on borne au `displayLimit` courant pour
   // respecter l'infinite scroll (20 → 30 → 40 → 50 max).
@@ -302,6 +278,11 @@ const LocationListScreen = () => {
                 {item.isPro && (
                   <View style={styles.verifiedBadge}>
                     <Text style={styles.verifiedText}>✓</Text>
+                  </View>
+                )}
+                {item.isSponsored && (
+                  <View style={styles.sponsoredBadge}>
+                    <Text style={styles.sponsoredText}>SPONSORISÉ</Text>
                   </View>
                 )}
               </View>
@@ -840,6 +821,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  sponsoredBadge: {
+    backgroundColor: '#FF3DAD',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    marginLeft: 8,
+  },
+  sponsoredText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 });
 

@@ -285,10 +285,14 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
         // Detect authentication/user-not-found errors and auto-logout
         const code = data?.code;
         const msg = (data?.message || '').toString().toLowerCase();
+        // AUTH_MISSING means this specific request carried no token — this can legitimately
+        // happen for a not-yet-authenticated user, or as a startup race before the persisted
+        // token has been reloaded into memory. It must NOT force a global logout, otherwise a
+        // racy unauthenticated call at boot can wipe out a perfectly valid stored session.
         // Only treat 401 as an authentication status. 403s are feature/business restrictions in our app.
-        const isAuthStatus = res.status === 401;
+        const isAuthStatus = res.status === 401 && code !== 'AUTH_MISSING';
         // Do not treat REFRESH_INVALID as a standalone trigger (avoid logging out on failed /auth/refresh)
-        const isAuthCode = code === 'AUTH_MISSING' || code === 'AUTH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
+        const isAuthCode = code === 'AUTH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
         const isUserNotFound404 = res.status === 404 && (code === 'NOT_FOUND' || msg.includes('user not found')) && path.startsWith('/users');
         // Do NOT treat business 403 restrictions as auth errors
         const nonAuthForbiddenCodes = new Set(['INVISIBLE', 'PREMIUM_REQUIRED', 'PLAN_REQUIRED', 'PAYWALL', 'PLAN_DOWNGRADED']);
@@ -570,6 +574,14 @@ export async function trackUserSearch(query) {
     return request('/events/user-search', { method: 'POST', body: { query } });
 }
 
+export async function trackLocationView(locationId) {
+    return request('/events/location-view', { method: 'POST', body: { locationId } });
+}
+
+export async function updateDemographics({ birthdate, gender }) {
+    return request('/profile/demographics', { method: 'PUT', body: { birthdate, gender } });
+}
+
 export async function getStatsOverview(range = '30d') {
     const qs = new URLSearchParams({ range });
     return request(`/stats/overview?${qs.toString()}`, { method: 'GET' });
@@ -635,6 +647,21 @@ export async function getBlockedUsers() {
     return request('/blocks', { method: 'GET' });
 }
 
+// COMPTES PRO — modération des candidatures (ModeratorScreen)
+export async function getBusinessClaims({ status = 'pending', page = 1, limit = 50 } = {}) {
+    const qs = new URLSearchParams({ status, page: String(page), limit: String(limit) });
+    return request(`/business-claims?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+}
+
+export async function actOnBusinessClaim(claimId, { action, rejectionReason } = {}) {
+    const id = String(claimId || '');
+    if (!id) throw new Error('claimId requis');
+    return request(`/business-claims/${encodeURIComponent(id)}/action`, {
+        method: 'POST',
+        body: { action, rejectionReason },
+    });
+}
+
 export async function blockUser(targetUserId) {
     return request('/blocks', { method: 'POST', body: { targetUserId } });
 }
@@ -655,6 +682,23 @@ export function initApi({ token } = {}) {
 // GDPR
 export async function getPrivacyPolicy() {
     return request('/gdpr/policy', { method: 'GET' });
+}
+
+// Compares the user's accepted/seen policy version against the latest
+// published one. `blocking: true` means a MAJOR update requires re-consent;
+// `hasUnseenUpdate: true` means a MINOR update can be shown as a dismissible banner.
+export async function getPolicyStatus() {
+    return request('/gdpr/policy-status', { method: 'GET' });
+}
+
+// Explicitly accepts the latest published policy version (blocking modal, MAJOR bump).
+export async function acceptPolicyVersion() {
+    return request('/gdpr/policy/accept', { method: 'PUT' });
+}
+
+// Marks the latest published policy version as "seen" (dismiss the MINOR update banner).
+export async function markPolicyVersionSeen() {
+    return request('/gdpr/policy/seen', { method: 'PUT' });
 }
 
 export async function updateConsent({ accepted, version = 'v1', analytics = false, marketing = false }) {

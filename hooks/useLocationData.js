@@ -14,6 +14,7 @@ export function useLocationData(locationId) {
   const [refreshing, setRefreshing] = useState(false);
   const [location, setLocation] = useState(null);
   const [users, setUsers] = useState([]);
+  const [monthlyUsers, setMonthlyUsers] = useState(0);
 
   const fetchDetails = useCallback(async (isRefreshing = false) => {
     if (!locationId) return;
@@ -27,6 +28,7 @@ export function useLocationData(locationId) {
 
         setLocation({ ...loc, stars, userCount });
         setUsers(res.users || []);
+        setMonthlyUsers(typeof res.monthlyUsers === 'number' ? res.monthlyUsers : loc.popularity || 0);
       }
     } catch (e) {
       console.error('[useLocationData] Error:', e);
@@ -58,6 +60,7 @@ export function useLocationData(locationId) {
   return {
     location,
     users,
+    monthlyUsers,
     loading,
     refreshing,
     refresh

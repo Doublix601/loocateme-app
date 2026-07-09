@@ -183,7 +183,7 @@ const ConversationScreen = ({ route, navigation }) => {
                             <Image source={{ uri: proxifyImageUrl(conversationUser.photo) }} style={styles.headerAvatar} />
                         ) : (
                             <View style={[styles.headerAvatarPlaceholder, { backgroundColor: colors.accent + '20' }]}>
-                                <Text style={[styles.headerAvatarInitial, { color: colors.accent }]}>{conversationUser.username[0].toUpperCase()}</Text>
+                                <Text style={[styles.headerAvatarInitial, { color: colors.accent }]}>{conversationUser.username?.[0]?.toUpperCase() ?? '?'}</Text>
                             </View>
                         )}
                         <View style={[styles.statusIndicator, { backgroundColor: '#4CD964', borderColor: colors.surface }]} />

@@ -18,11 +18,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { getReports, actOnReport, searchModerationUsers, moderateUser } from '../components/ApiRequest';
+import { getReports, actOnReport, searchModerationUsers, moderateUser, getBusinessClaims, actOnBusinessClaim } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 import { UserContext } from '../components/contexts/UserContext';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
+import DocumentViewer from '../components/DocumentViewer';
+
+const DOC_TYPE_LABELS = { KBIS: 'Extrait Kbis', ID: "Pièce d'identité", LEASE_PROOF: 'Justificatif de bail' };
 
 const { width, height } = Dimensions.get('window');
 
@@ -82,6 +85,14 @@ const ModeratorScreen = () => {
   const [banDurationHours, setBanDurationHours] = useState('24');
   const [banNote, setBanNote] = useState('');
   const [moderationWorking, setModerationWorking] = useState(false);
+  const [activeTab, setActiveTab] = useState('reports');
+  const [claims, setClaims] = useState([]);
+  const [claimsLoading, setClaimsLoading] = useState(false);
+  const [claimsError, setClaimsError] = useState('');
+  const [claimRejectVisible, setClaimRejectVisible] = useState(false);
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [claimRejectionReason, setClaimRejectionReason] = useState('');
+  const [claimWorking, setClaimWorking] = useState(false);
   const searchDebounceRef = useRef(null);
   const cardStyle = [styles.card, { backgroundColor: cardBg, borderColor: borderColor, borderWidth: 1, shadowColor: isDark ? 'transparent' : '#000' }];
   const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.text, opacity: 1 }];
@@ -115,8 +126,22 @@ const ModeratorScreen = () => {
     }
   };
 
+  const loadClaims = async () => {
+    try {
+      setClaimsLoading(true);
+      setClaimsError('');
+      const res = await getBusinessClaims({ status: 'pending', page: 1, limit: 50 });
+      setClaims(Array.isArray(res?.items) ? res.items : []);
+    } catch (e) {
+      setClaimsError(e?.message || 'Impossible de charger les candidatures.');
+    } finally {
+      setClaimsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadReports();
+    loadClaims();
   }, []);
 
   useEffect(() => {
@@ -220,6 +245,37 @@ const ModeratorScreen = () => {
     }
   };
 
+  const approveClaim = (claim) => {
+    Alert.alert(
+      'Approuver la candidature',
+      `Créer le compte pro pour "${claim?.locationId?.name || 'ce lieu'}" et envoyer l'email d'activation ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Approuver', onPress: () => submitClaimAction(claim._id, 'approve') },
+      ]
+    );
+  };
+
+  const openRejectClaim = (claim) => {
+    setSelectedClaim(claim);
+    setClaimRejectionReason('');
+    setClaimRejectVisible(true);
+  };
+
+  const submitClaimAction = async (claimId, action, rejectionReason) => {
+    try {
+      setClaimWorking(true);
+      await actOnBusinessClaim(claimId, { action, rejectionReason });
+      setClaimRejectVisible(false);
+      await loadClaims();
+      Alert.alert('Succès', action === 'approve' ? 'Compte pro créé, email d\'activation envoyé.' : 'Candidature rejetée.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || "Impossible d'appliquer cette action.");
+    } finally {
+      setClaimWorking(false);
+    }
+  };
+
   const getBanLabel = (mod = {}) => {
     const bannedPermanent = !!mod.bannedPermanent;
     const bannedUntil = mod.bannedUntil ? new Date(mod.bannedUntil) : null;
@@ -267,13 +323,34 @@ const ModeratorScreen = () => {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Signalements</Text>
-        <TouchableOpacity onPress={loadReports} style={{ padding: 8 }}>
+        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Modération</Text>
+        <TouchableOpacity onPress={() => (activeTab === 'reports' ? loadReports() : loadClaims())} style={{ padding: 8 }}>
             <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Rafraîchir</Text>
         </TouchableOpacity>
       </View>
 
+      <View style={styles.tabRow}>
+        <TouchableOpacity
+          style={[styles.tabPill, activeTab === 'reports' && styles.tabPillActive]}
+          onPress={() => setActiveTab('reports')}
+        >
+          <Text style={[styles.tabPillText, textStyle, activeTab === 'reports' && styles.tabPillTextActive]}>
+            Signalements
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabPill, activeTab === 'claims' && styles.tabPillActive]}
+          onPress={() => setActiveTab('claims')}
+        >
+          <Text style={[styles.tabPillText, textStyle, activeTab === 'claims' && styles.tabPillTextActive]}>
+            Demandes Pro{claims.length > 0 ? ` (${claims.length})` : ''}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        {activeTab === 'reports' && (
+        <>
         <View style={styles.searchSection}>
             <Text style={sectionTitleStyle}>Recherche utilisateur</Text>
             <View style={[styles.searchBar, { borderColor: borderColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : colors.surface, borderWidth: 1 }]}>
@@ -379,6 +456,56 @@ const ModeratorScreen = () => {
                 </View>
                 </View>
             ))
+        )}
+        </>
+        )}
+
+        {activeTab === 'claims' && (
+        <>
+        <Text style={[sectionTitleStyle, { marginBottom: 15 }]}>Demandes de compte pro en attente</Text>
+        {claimsLoading ? (
+            <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
+        ) : claimsError ? (
+            <Text style={[styles.error, { color: '#ff6b6b', textAlign: 'center' }]}>{claimsError}</Text>
+        ) : claims.length === 0 ? (
+            <View style={[styles.card, { backgroundColor: cardBg, alignItems: 'center', borderColor: borderColor, borderWidth: 1 }]}>
+                <Text style={subTextStyle}>Aucune demande en attente.</Text>
+            </View>
+        ) : (
+            claims.map((claim) => (
+                <View key={claim._id} style={cardStyle}>
+                    <Text style={[styles.cardTitle, textStyle]}>{claim.locationId?.name || 'Lieu inconnu'}</Text>
+                    <Text style={[styles.cardMeta, subTextStyle]}>
+                        {[claim.locationId?.type, claim.locationId?.city].filter(Boolean).join(' · ')}
+                    </Text>
+                    <View style={{ marginTop: 8 }}>
+                        <Text style={[styles.cardMeta, textStyle]}>Candidat: <Text style={{ fontWeight: '600' }}>{claim.applicantName}</Text></Text>
+                        <Text style={[styles.cardMeta, subTextStyle]}>{claim.applicantEmail}{claim.applicantPhone ? ` · ${claim.applicantPhone}` : ''}</Text>
+                        <Text style={[styles.cardMeta, subTextStyle]}>Reçu le {formatDate(claim.createdAt, locale)}</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+                        {(claim.documents || []).map((doc, idx) => (
+                            <DocumentViewer
+                                key={idx}
+                                path={`/business-claims/${claim._id}/documents/${idx}`}
+                                label={DOC_TYPE_LABELS[doc.type] || doc.type}
+                            />
+                        ))}
+                    </View>
+
+                    <View style={styles.actionsRow}>
+                        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#2ecc71' }]} onPress={() => approveClaim(claim)}>
+                            <Text style={styles.actionBtnText}>Approuver</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#ff4444' }]} onPress={() => openRejectClaim(claim)}>
+                            <Text style={styles.actionBtnText}>Rejeter</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            ))
+        )}
+        </>
         )}
       </ScrollView>
 
@@ -541,6 +668,44 @@ const ModeratorScreen = () => {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* Claim Rejection Modal */}
+      <Modal transparent visible={claimRejectVisible} animationType="fade" onRequestClose={() => setClaimRejectVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setClaimRejectVisible(false); }}>
+          <View style={styles.modalBackdrop}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
+                <ScrollView contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]} keyboardShouldPersistTaps="handled">
+                  <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#00c2cb' }]}>Rejeter la candidature</Text>
+                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Motif (envoyé au candidat)</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    value={claimRejectionReason}
+                    onChangeText={setClaimRejectionReason}
+                    multiline
+                  />
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity
+                      style={styles.primaryButton}
+                      onPress={() => submitClaimAction(selectedClaim?._id, 'reject', claimRejectionReason)}
+                      disabled={claimWorking}
+                    >
+                      <Text style={styles.primaryButtonText}>{claimWorking ? 'Traitement...' : 'Confirmer le rejet'}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.primaryButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                      onPress={() => setClaimRejectVisible(false)}
+                      disabled={claimWorking}
+                    >
+                      <Text style={[styles.primaryButtonText, textStyle, { opacity: 0.6 }]}>Annuler</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -579,6 +744,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backIcon: { width: 24, height: 24 },
+  tabRow: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+  },
+  tabPill: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,194,203,0.1)',
+  },
+  tabPillActive: {
+    backgroundColor: '#00c2cb',
+  },
+  tabPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    opacity: 0.8,
+  },
+  tabPillTextActive: {
+    color: '#fff',
+    opacity: 1,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800',

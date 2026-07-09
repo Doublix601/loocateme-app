@@ -2,7 +2,7 @@ import { useState, useContext } from 'react';
 import { TextInput, TouchableOpacity, StyleSheet, View, useWindowDimensions, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { login as apiLogin, setAccessToken } from '../components/ApiRequest';
+import { login as apiLogin, setAccessToken, getPolicyStatus } from '../components/ApiRequest';
 import { navigateAfterAuth } from '../utils/onboarding';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
@@ -10,6 +10,7 @@ import ThemedText from '../components/ThemedText';
 import AppLogo from '../components/AppLogo';
 import SocialAuthButton from '../components/SocialAuthButton';
 import { publish } from '../components/EventBus';
+import { mapBackendUser } from '../utils/mappers';
 
 const LoginScreen = () => {
     const navigation = useNavigation();
@@ -38,7 +39,14 @@ const LoginScreen = () => {
             }
             const user = res?.user;
             const consentAccepted = !!(user?.consent?.accepted);
+            let policyBlocking = false;
             if (consentAccepted) {
+                try {
+                    const status = await getPolicyStatus();
+                    policyBlocking = !!status?.blocking;
+                } catch (_) { /* fail-open: don't block login on a network error */ }
+            }
+            if (consentAccepted && !policyBlocking) {
                 await navigateAfterAuth(navigation);
                 setTimeout(() => publish('userlist:refresh'), 1000);
             } else {
