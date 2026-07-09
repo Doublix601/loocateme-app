@@ -267,6 +267,46 @@ const LocationScreen = () => {
     </View>
   );
 
+  // ─── Bannière Ultra Boost (offre du lieu, cf. push envoyé par
+  // ultraBoost.service.js côté backend — même texte "20 minutes") ─
+  const ultraBoostActive =
+    location?.ultraBoost?.active &&
+    location.ultraBoost.until &&
+    new Date(location.ultraBoost.until) > new Date();
+
+  const renderUltraBoostBanner = () => {
+    if (!ultraBoostActive) return null;
+    return (
+      <View
+        style={[
+          styles.boostCard,
+          {
+            marginHorizontal: spacing.lg,
+            marginTop: spacing.lg,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            borderRadius: radius.lg,
+            backgroundColor: isMoon ? 'rgba(255,215,0,0.08)' : 'rgba(255,215,0,0.10)',
+            borderColor: '#FFD700',
+            borderWidth: 1.5,
+          },
+        ]}
+      >
+        <View style={styles.boostIcon}>
+          <Text style={{ fontSize: 22 }}>🔥</Text>
+        </View>
+        <View style={{ flex: 1, marginLeft: spacing.md }}>
+          <Text style={[styles.boostTitle, { color: palette.text }]}>
+            Offre spéciale de ce lieu
+          </Text>
+          <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
+            Passe 20 minutes sur place pour débloquer un boost de profil gratuit !
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   // ─── Boost CTA ─────────────────────────────────────────────────
   const renderBoostCard = () => (
     <TouchableOpacity
@@ -538,6 +578,7 @@ const LocationScreen = () => {
       >
         {renderHero()}
         {renderFloatingCard()}
+        {renderUltraBoostBanner()}
         {renderProSection()}
         {renderBoostCard()}
         {renderSocialPulse()}
