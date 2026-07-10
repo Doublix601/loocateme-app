@@ -24,8 +24,10 @@ import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { UserContext } from '../components/contexts/UserContext';
-import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser, updateUserStatus as apiUpdateUserStatus } from '../components/ApiRequest';
+import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser, updateUserStatus as apiUpdateUserStatus, updateDemographics as apiUpdateDemographics } from '../components/ApiRequest';
+import { isAtLeast18 } from '../utils/age';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import Toast from '../components/Toast';
@@ -42,6 +44,19 @@ import { hasSeenProfileOnboarding, markProfileOnboardingDone } from '../utils/on
 
 const { width, height } = Dimensions.get('window');
 const H = height;
+
+const GENDER_OPTIONS = [
+    { key: 'male', label: 'Garçon' },
+    { key: 'female', label: 'Fille' },
+    { key: 'prefer_not_to_say', label: 'Ne souhaite pas répondre' },
+];
+
+const formatBirthdate = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString('fr-FR');
+};
 
 const MyAccountScreen = () => {
     const navigation = useNavigation();
@@ -64,6 +79,7 @@ const MyAccountScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [editType, setEditType] = useState('');
     const [newValue, setNewValue] = useState('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
     // Partage / QR
     const [qrVisible, setQrVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
@@ -428,6 +444,8 @@ const MyAccountScreen = () => {
                 username: me.username || me.name || user?.username || '',
                 bio: typeof me.bio === 'string' ? me.bio : (user.bio || ''),
                 photo: me.profileImageUrl || user.photo || null,
+                birthdate: me.birthdate || user.birthdate || null,
+                gender: me.gender || user.gender || '',
                 socialMedia: Array.isArray(me.socialNetworks) ? mapNetworksToSocialMedia(me.socialNetworks) : (user.socialMedia || []),
                 isPremium: !!me.isPremium,
                 role: me.role || user?.role || 'user',
@@ -483,7 +501,12 @@ const MyAccountScreen = () => {
 
     const handleEdit = (type) => {
         setEditType(type);
-        setNewValue(user[type]);
+        if (type === 'birthdate') {
+            const d = user.birthdate ? new Date(user.birthdate) : new Date(2000, 0, 1);
+            setNewValue(isNaN(d.getTime()) ? new Date(2000, 0, 1) : d);
+        } else {
+            setNewValue(user[type]);
+        }
         setModalVisible(true);
     };
 
@@ -604,11 +627,40 @@ const MyAccountScreen = () => {
                     photo: updated.profileImageUrl ?? user.photo,
                 });
                 await refreshMyProfile();
+            } else if (editType === 'birthdate') {
+                const selectedDate = newValue instanceof Date ? newValue : new Date(newValue);
+                if (isNaN(selectedDate.getTime())) {
+                    Alert.alert('Date invalide', 'Merci de sélectionner une date de naissance valide.');
+                    return;
+                }
+                if (!isAtLeast18(selectedDate)) {
+                    Alert.alert('Âge minimum requis', 'Vous devez avoir au moins 18 ans.');
+                    return;
+                }
+                const isoDate = selectedDate.toISOString().slice(0, 10);
+                const res = await apiUpdateDemographics({ birthdate: isoDate, gender: user.gender || undefined });
+                const updated = res?.user || {};
+                updateUser({
+                    ...user,
+                    birthdate: updated.birthdate ?? isoDate,
+                    privacyPreferences: updated.privacyPreferences ?? user.privacyPreferences,
+                });
+                await refreshMyProfile();
+            } else if (editType === 'gender') {
+                const res = await apiUpdateDemographics({ birthdate: user.birthdate || undefined, gender: newValue || undefined });
+                const updated = res?.user || {};
+                updateUser({
+                    ...user,
+                    gender: updated.gender ?? newValue,
+                    privacyPreferences: updated.privacyPreferences ?? user.privacyPreferences,
+                });
+                await refreshMyProfile();
             }
         } catch (e) {
             Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
         }
         setModalVisible(false);
+        setShowDatePicker(false);
     };
 
     const handleAddSocial = async () => {
@@ -1082,6 +1134,45 @@ const MyAccountScreen = () => {
                             </TouchableOpacity>
                         </View>
 
+                        <View style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            paddingHorizontal: 15,
+                            marginTop: 8,
+                            gap: 8
+                        }}>
+                            <TouchableOpacity
+                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
+                                onLongPress={() => handleEdit('birthdate')}
+                                delayLongPress={300}
+                                activeOpacity={1}
+                            >
+                                <View style={styles.identityLabelRow}>
+                                    <Text style={[styles.identityLabel, labelStyle]}>Date de naissance</Text>
+                                    <Text style={styles.identityEditHint}>✏️</Text>
+                                </View>
+                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
+                                    {formatBirthdate(user?.birthdate) || '—'}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
+                                onLongPress={() => handleEdit('gender')}
+                                delayLongPress={300}
+                                activeOpacity={1}
+                            >
+                                <View style={styles.identityLabelRow}>
+                                    <Text style={[styles.identityLabel, labelStyle]}>Sexe</Text>
+                                    <Text style={styles.identityEditHint}>✏️</Text>
+                                </View>
+                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
+                                    {GENDER_OPTIONS.find((o) => o.key === user?.gender)?.label || '—'}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
                         <View ref={bioRef} style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
                             <View style={styles.bioTitleContainer}>
                                 <Text style={[styles.label, labelStyle, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
@@ -1194,7 +1285,7 @@ const MyAccountScreen = () => {
                 <Modal visible={modalVisible} transparent={true} animationType="fade">
                     <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
                         <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-                        <Pressable style={StyleSheet.absoluteFill} onPress={() => setModalVisible(false)} />
+                        <Pressable style={StyleSheet.absoluteFill} onPress={() => { setModalVisible(false); setShowDatePicker(false); }} />
                         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
                             <Text style={[styles.modalTitle, textPrimaryStyle]}>
                                 Modifier {
@@ -1203,30 +1294,86 @@ const MyAccountScreen = () => {
                                     editType === 'customName' ? 'le Nom personnalisé' :
                                     editType === 'username' ? "le Nom d'utilisateur" :
                                     editType === 'bio' ? 'la Bio' :
+                                    editType === 'birthdate' ? 'la Date de naissance' :
+                                    editType === 'gender' ? 'le Sexe' :
                                     editType
                                 }
                             </Text>
-                            <TextInput
-                                value={newValue}
-                                onChangeText={setNewValue}
-                                placeholder={
-                                    editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" :
-                                    editType === 'firstName' ? "Votre Prénom" :
-                                    editType === 'lastName' ? "Votre Nom" :
-                                    editType === 'customName' ? "Votre Nom personnalisé" :
-                                    'Votre texte'
-                                }
-                                placeholderTextColor={isDark ? '#999' : '#666'}
-                                style={[
-                                    styles.modalInput,
-                                    { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
-                                    editType === 'bio' ? { height: Math.max(height * 0.18, 120), textAlignVertical: 'top', paddingTop: 10 } : null,
-                                ]}
-                                multiline={editType === 'bio'}
-                                numberOfLines={editType === 'bio' ? 6 : 1}
-                                blurOnSubmit={editType !== 'bio'}
-                                returnKeyType={editType === 'bio' ? 'default' : 'done'}
-                            />
+                            {editType === 'birthdate' ? (
+                                Platform.OS === 'ios' ? (
+                                    <DateTimePicker
+                                        value={newValue instanceof Date ? newValue : new Date(2000, 0, 1)}
+                                        mode="date"
+                                        display="spinner"
+                                        maximumDate={new Date()}
+                                        onChange={(event, selectedDate) => {
+                                            if (event.type !== 'dismissed' && selectedDate) setNewValue(selectedDate);
+                                        }}
+                                    />
+                                ) : (
+                                    <>
+                                        <TouchableOpacity
+                                            onPress={() => setShowDatePicker(true)}
+                                            style={[styles.modalInput, { borderColor: colors.border, backgroundColor: isDark ? '#0f1115' : '#ffffff', justifyContent: 'center' }]}
+                                        >
+                                            <Text style={{ color: colors.textPrimary }}>
+                                                {newValue instanceof Date ? newValue.toLocaleDateString('fr-FR') : 'Sélectionner une date'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                        {showDatePicker && (
+                                            <DateTimePicker
+                                                value={newValue instanceof Date ? newValue : new Date(2000, 0, 1)}
+                                                mode="date"
+                                                display="default"
+                                                maximumDate={new Date()}
+                                                onChange={(event, selectedDate) => {
+                                                    setShowDatePicker(false);
+                                                    if (event.type !== 'dismissed' && selectedDate) setNewValue(selectedDate);
+                                                }}
+                                            />
+                                        )}
+                                    </>
+                                )
+                            ) : editType === 'gender' ? (
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                                    {GENDER_OPTIONS.map((opt) => (
+                                        <TouchableOpacity
+                                            key={opt.key}
+                                            onPress={() => setNewValue(newValue === opt.key ? '' : opt.key)}
+                                            style={[
+                                                styles.genderPill,
+                                                newValue === opt.key && styles.genderPillActive,
+                                            ]}
+                                        >
+                                            <Text style={newValue === opt.key ? styles.genderPillTextActive : [styles.genderPillText, { color: colors.textSecondary }]}>
+                                                {opt.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            ) : (
+                                <TextInput
+                                    value={newValue}
+                                    onChangeText={setNewValue}
+                                    placeholder={
+                                        editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" :
+                                        editType === 'firstName' ? "Votre Prénom" :
+                                        editType === 'lastName' ? "Votre Nom" :
+                                        editType === 'customName' ? "Votre Nom personnalisé" :
+                                        'Votre texte'
+                                    }
+                                    placeholderTextColor={isDark ? '#999' : '#666'}
+                                    style={[
+                                        styles.modalInput,
+                                        { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
+                                        editType === 'bio' ? { height: Math.max(height * 0.18, 120), textAlignVertical: 'top', paddingTop: 10 } : null,
+                                    ]}
+                                    multiline={editType === 'bio'}
+                                    numberOfLines={editType === 'bio' ? 6 : 1}
+                                    blurOnSubmit={editType !== 'bio'}
+                                    returnKeyType={editType === 'bio' ? 'default' : 'done'}
+                                />
+                            )}
                             {editType === 'username' ? (
                                 <Text style={styles.modalHint}>Format requis: ^[A-Z][a-z]+$ (exemple: Arnaud)</Text>
                             ) : null}
@@ -1234,7 +1381,7 @@ const MyAccountScreen = () => {
                                 <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>Enregistrer</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                onPress={() => setModalVisible(false)}
+                                onPress={() => { setModalVisible(false); setShowDatePicker(false); }}
                                 style={styles.modalButton}>
                                 <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>Annuler</Text>
                             </TouchableOpacity>
@@ -1781,6 +1928,26 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         paddingLeft: width * 0.03,
         marginBottom: height * 0.02,
+    },
+    genderPill: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
+    },
+    genderPillActive: {
+        backgroundColor: '#00c2cb',
+        borderColor: '#00c2cb',
+    },
+    genderPillText: {
+        fontSize: 13,
+    },
+    genderPillTextActive: {
+        fontSize: 13,
+        color: '#fff',
+        fontWeight: '600',
     },
     inputWrapper: {
         flexDirection: 'row',

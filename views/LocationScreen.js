@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,17 +10,18 @@ import {
   RefreshControl,
   Platform,
   Dimensions,
-  ImageBackground,
-  Image,
   Modal,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useVibe } from '../components/contexts/VibeContext';
+import { UserContext } from '../components/contexts/UserContext';
 import { formatLocationType } from '../components/LocationUtils';
 import { useFeatureGate } from '../hooks/useFeatureGate';
 import { useBoost } from '../hooks/useBoost';
@@ -28,9 +29,24 @@ import { useLocationData } from '../hooks/useLocationData';
 import { useVibeTheme } from '../hooks/useVibeTheme';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import SocialPulseAvatar from '../components/SocialPulseAvatar';
+import StoryRingAvatar from '../components/StoryRingAvatar';
+import StoryViewerModal from '../components/StoryViewerModal';
+import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import ProfileCard from '../components/ProfileCard';
+import UltraBoostProgressBar from '../components/UltraBoostProgressBar';
 import socialMediaIcons from '../constants/socialMediaIcons';
+import { getPdfIconName } from '../constants/pdfIcons';
 import { trackLocationView } from '../components/ApiRequest';
+
+const ULTRA_BOOST_TARGET_MS = 20 * 60 * 1000;
+const MAX_PDF_MEDIA = 3;
+// L'Android WebView ne sait pas rendre un PDF nativement (contrairement à
+// WKWebView sur iOS) : on passe par la visionneuse Google Docs en lecture
+// intégrée, ce qui évite de sortir vers un navigateur externe.
+const pdfViewerUri = (url) =>
+  Platform.OS === 'android'
+    ? `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
+    : url;
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
@@ -52,14 +68,38 @@ const LocationScreen = () => {
   const navigateToUser = useNavigateToUser();
 
   const { isMoon } = useVibe();
+  const { user } = useContext(UserContext);
   const theme = useVibeTheme();
   const { palette, radius, spacing, shadows, typography } = theme;
   const insets = useSafeAreaInsets();
 
   const { checkAccess } = useFeatureGate();
-  const { activateBoost, isBoosted, boostUntil, boostBalance, loading: boostLoading } = useBoost();
+  const { activateBoost, isBoosted, loading: boostLoading } = useBoost();
   const { location, users, monthlyUsers, loading, refreshing, refresh } = useLocationData(locationId);
   const [storyViewerIndex, setStoryViewerIndex] = useState(null);
+  const [lastStorySeenAt, setLastStorySeenAt] = useState(null);
+  const [pdfViewer, setPdfViewer] = useState(null); // { url, title } | null
+  const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
+
+  // Suivi "vu/non vu" des stories du lieu (persisté localement, façon Instagram :
+  // anneau dégradé tant qu'une story plus récente que la dernière consultation existe).
+  useEffect(() => {
+    if (!locationId) return;
+    AsyncStorage.getItem(`story_seen_${locationId}`).then(setLastStorySeenAt).catch(() => {});
+  }, [locationId]);
+
+  const markStoriesSeen = () => {
+    if (!locationId) return;
+    const now = new Date().toISOString();
+    setLastStorySeenAt(now);
+    AsyncStorage.setItem(`story_seen_${locationId}`, now).catch(() => {});
+  };
+
+  const openStoryViewer = (index) => setStoryViewerIndex(index);
+  const closeStoryViewer = () => {
+    setStoryViewerIndex(null);
+    markStoriesSeen();
+  };
 
   // Alimente les statistiques de fréquentation des lieux pro (vues sur 1/7/30j)
   useEffect(() => {
@@ -92,6 +132,17 @@ const LocationScreen = () => {
     const now = Date.now();
     return (location?.stories || []).filter((s) => !s.expiresAt || new Date(s.expiresAt).getTime() > now);
   }, [location]);
+
+  // 'none' (aucune story), 'unseen' (au moins une story plus récente que la
+  // dernière consultation) ou 'seen' (toutes déjà vues) — pilote l'anneau
+  // façon Instagram autour de la photo de profil.
+  const storyRingState = useMemo(() => {
+    if (!activeStories.length) return 'none';
+    if (!lastStorySeenAt) return 'unseen';
+    const lastSeenMs = new Date(lastStorySeenAt).getTime();
+    const hasUnseen = activeStories.some((s) => new Date(s.createdAt || s.expiresAt || 0).getTime() > lastSeenMs);
+    return hasUnseen ? 'unseen' : 'seen';
+  }, [activeStories, lastStorySeenAt]);
 
   const popularity = useMemo(() => {
     const s = location?.stars || 0;
@@ -156,13 +207,10 @@ const LocationScreen = () => {
 
     if (coverUri) {
       return (
-        <ImageBackground
-          source={{ uri: coverUri }}
-          style={styles.hero}
-          imageStyle={{ resizeMode: 'cover' }}
-        >
+        <View style={styles.hero}>
+          <ImageWithPlaceholder uri={coverUri} style={StyleSheet.absoluteFill} />
           {HeroContent}
-        </ImageBackground>
+        </View>
       );
     }
     // Fallback : gradient signature + icône
@@ -228,10 +276,16 @@ const LocationScreen = () => {
 
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }}>
         {location.logoUrl && (
-          <Image
-            source={{ uri: location.logoUrl }}
-            style={{ width: 36, height: 36, borderRadius: 18, marginRight: spacing.sm, borderWidth: 2, borderColor: palette.bgElevated }}
-          />
+          <View style={{ marginRight: spacing.sm }}>
+            <StoryRingAvatar
+              uri={location.logoUrl}
+              size={80}
+              state={storyRingState}
+              isMoon={isMoon}
+              gradient={palette.gradient}
+              onPress={activeStories.length ? () => openStoryViewer(0) : undefined}
+            />
+          </View>
         )}
         <Text style={[typography.h1, { flex: 1 }]} numberOfLines={2}>
           {location.name}
@@ -274,90 +328,88 @@ const LocationScreen = () => {
     location.ultraBoost.until &&
     new Date(location.ultraBoost.until) > new Date();
 
-  const renderUltraBoostBanner = () => {
-    if (!ultraBoostActive) return null;
-    return (
-      <View
-        style={[
-          styles.boostCard,
-          {
-            marginHorizontal: spacing.lg,
-            marginTop: spacing.lg,
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md,
-            borderRadius: radius.lg,
-            backgroundColor: isMoon ? 'rgba(255,215,0,0.08)' : 'rgba(255,215,0,0.10)',
-            borderColor: '#FFD700',
-            borderWidth: 1.5,
-          },
-        ]}
-      >
-        <View style={styles.boostIcon}>
-          <Text style={{ fontSize: 22 }}>🔥</Text>
-        </View>
-        <View style={{ flex: 1, marginLeft: spacing.md }}>
-          <Text style={[styles.boostTitle, { color: palette.text }]}>
-            Offre spéciale de ce lieu
-          </Text>
-          <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
-            Passe 20 minutes sur place pour débloquer un boost de profil gratuit !
-          </Text>
-        </View>
-      </View>
-    );
-  };
-
-  // ─── Boost CTA ─────────────────────────────────────────────────
-  const renderBoostCard = () => (
-    <TouchableOpacity
-      activeOpacity={0.9}
-      onPress={handleBoost}
-      disabled={isBoosted || boostLoading}
-      style={[
-        styles.boostCard,
-        {
-          marginHorizontal: spacing.lg,
-          marginTop: spacing.lg,
-          paddingHorizontal: spacing.lg,
-          paddingVertical: spacing.md,
-          borderRadius: radius.lg,
-          backgroundColor: isMoon ? 'rgba(255,215,0,0.08)' : 'rgba(255,215,0,0.10)',
-          borderColor: '#FFD700',
-          borderWidth: 1.5,
-          opacity: isBoosted ? 0.85 : 1,
-        },
-      ]}
-    >
-      <View style={styles.boostIcon}>
-        <Text style={{ fontSize: 22 }}>{isBoosted ? '⚡' : '🔥'}</Text>
-      </View>
-      <View style={{ flex: 1, marginLeft: spacing.md }}>
-        <Text style={[styles.boostTitle, { color: palette.text }]}>
-          {isBoosted ? 'Boost actif' : 'Boostez votre profil'}
-        </Text>
-        <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
-          {isBoosted
-            ? `Expire dans ${Math.max(0, Math.ceil((boostUntil - new Date()) / 60000))} min.`
-            : boostBalance > 0
-              ? `${boostBalance} boost${boostBalance > 1 ? 's' : ''} disponible${boostBalance > 1 ? 's' : ''}.`
-              : '3x plus visible pendant 30 min.'}
-        </Text>
-      </View>
-      {boostLoading ? (
-        <ActivityIndicator color="#FFD700" />
-      ) : (
-        <View style={[styles.boostBadgePill, isBoosted && { backgroundColor: '#FFD700' }]}>
-          <Text style={[styles.boostBadgeText, isBoosted && { color: '#000' }]}>
-            {isBoosted ? 'ACTIF' : 'GO'}
-          </Text>
-        </View>
-      )}
-    </TouchableOpacity>
+  const isUserHere = !!(
+    user?.currentPoiId &&
+    location?._id &&
+    String(user.currentPoiId) === String(location._id)
   );
+
+  const renderUltraBoostSection = () => {
+    if (!ultraBoostActive) return null;
+
+    const cardStyle = [
+      styles.boostCard,
+      {
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.lg,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderRadius: radius.lg,
+        backgroundColor: isMoon ? 'rgba(255,215,0,0.08)' : 'rgba(255,215,0,0.10)',
+        borderColor: '#FFD700',
+        borderWidth: 1.5,
+      },
+    ];
+
+    // L'utilisateur est physiquement sur place et n'a pas encore reçu la
+    // récompense : on affiche la progression du temps passé (cible 20 min).
+    if (isUserHere && !isBoosted && user?.currentLocationSince) {
+      return (
+        <View style={[cardStyle, { flexDirection: 'column', alignItems: 'stretch' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={styles.boostIcon}>
+              <Text style={{ fontSize: 22 }}>🔥</Text>
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <Text style={[styles.boostTitle, { color: palette.text }]}>
+                Tu es sur place !
+              </Text>
+              <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
+                Reste encore un peu pour débloquer ton boost de profil gratuit.
+              </Text>
+            </View>
+          </View>
+          <UltraBoostProgressBar
+            startedAt={user.currentLocationSince}
+            targetMs={ULTRA_BOOST_TARGET_MS}
+            palette={palette}
+            spacing={spacing}
+            radius={radius}
+            typography={typography}
+          />
+        </View>
+      );
+    }
+
+    // L'offre est active mais l'utilisateur n'est pas (encore) sur place :
+    // bannière d'invitation statique.
+    if (!isUserHere) {
+      return (
+        <View style={cardStyle}>
+          <View style={styles.boostIcon}>
+            <Text style={{ fontSize: 22 }}>🔥</Text>
+          </View>
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
+            <Text style={[styles.boostTitle, { color: palette.text }]}>
+              Offre spéciale de ce lieu
+            </Text>
+            <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
+              Passe 20 minutes sur place pour débloquer un boost de profil gratuit !
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    // Sur place mais déjà boosté (récompense obtenue) : rien à afficher ici,
+    // le bouton fixe en bas montre déjà l'état "Boosté".
+    return null;
+  };
 
   // ─── Stories & PDF pro (Premium Pro 1/2) ───────────────────────
   const renderProSection = () => {
-    const media = (location.media || []).filter((m) => m.type === 'PDF');
+    // Max 3 PDF affichés (aligné sur la limite d'ajout côté dashboard business).
+    const media = (location.media || []).filter((m) => m.type === 'PDF').slice(0, MAX_PDF_MEDIA);
     if (!activeStories.length && !media.length) return null;
     return (
       <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
@@ -366,7 +418,7 @@ const LocationScreen = () => {
             {activeStories.map((story, idx) => (
               <TouchableOpacity
                 key={story._id || idx}
-                onPress={() => setStoryViewerIndex(idx)}
+                onPress={() => openStoryViewer(idx)}
                 style={{
                   width: 64,
                   height: 100,
@@ -377,7 +429,15 @@ const LocationScreen = () => {
                   borderColor: palette.accent,
                 }}
               >
-                <Image source={{ uri: story.url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                <ImageWithPlaceholder
+                  uri={story.mediaType === 'video' ? story.thumbnailUrl : story.url}
+                  style={{ width: '100%', height: '100%' }}
+                />
+                {story.mediaType === 'video' && (
+                  <View style={styles.storyPlayBadge} pointerEvents="none">
+                    <Ionicons name="play" size={12} color="#fff" />
+                  </View>
+                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -385,62 +445,110 @@ const LocationScreen = () => {
         {media.map((m) => (
           <TouchableOpacity
             key={m._id || m.url}
-            onPress={() => Linking.openURL(m.url)}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: palette.surface,
-              borderRadius: radius.md,
-              paddingVertical: spacing.md,
-              paddingHorizontal: spacing.lg,
-              marginBottom: spacing.sm,
-              borderWidth: 1,
-              borderColor: palette.border,
+            activeOpacity={0.85}
+            onPress={() => {
+              setPdfLoadFailed(false);
+              setPdfViewer({ url: m.url, title: m.title });
             }}
+            style={[
+              styles.pdfCard,
+              {
+                backgroundColor: palette.surface,
+                borderRadius: radius.md,
+                marginBottom: spacing.sm,
+                borderWidth: 1,
+                borderColor: palette.border,
+              },
+              shadows.floating,
+            ]}
           >
-            <Ionicons name="document-text-outline" size={20} color={palette.accent} />
-            <Text style={[typography.body, { marginLeft: spacing.sm, color: palette.text, fontWeight: '700' }]}>
-              {m.title}
-            </Text>
+            <View style={[styles.pdfIconWrap, { backgroundColor: palette.accentSoft }]}>
+              <Ionicons name={getPdfIconName(m.icon)} size={20} color={palette.accent} />
+            </View>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <Text style={[typography.body, { color: palette.text, fontWeight: '700' }]} numberOfLines={1}>
+                {m.title}
+              </Text>
+              <Text style={[typography.caption, { color: palette.textMuted, marginTop: 2 }]}>
+                Voir le PDF
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={palette.textFaint} />
           </TouchableOpacity>
         ))}
       </View>
     );
   };
 
-  const renderStoryViewer = () => {
-    if (storyViewerIndex === null || !activeStories[storyViewerIndex]) return null;
-    const story = activeStories[storyViewerIndex];
-    const goNext = () => {
-      if (storyViewerIndex < activeStories.length - 1) setStoryViewerIndex(storyViewerIndex + 1);
-      else setStoryViewerIndex(null);
-    };
-    const goPrev = () => {
-      if (storyViewerIndex > 0) setStoryViewerIndex(storyViewerIndex - 1);
-    };
+  const renderPdfViewer = () => {
+    if (!pdfViewer) return null;
     return (
-      <Modal visible transparent animationType="fade" onRequestClose={() => setStoryViewerIndex(null)}>
-        <View style={{ flex: 1, backgroundColor: '#000' }}>
-          <Image source={{ uri: story.url }} style={{ flex: 1 }} resizeMode="contain" />
-          <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', padding: spacing.md }}>
-            {activeStories.map((_, idx) => (
-              <View
-                key={idx}
-                style={{ flex: 1, height: 3, borderRadius: 2, marginHorizontal: 2, backgroundColor: idx <= storyViewerIndex ? '#fff' : 'rgba(255,255,255,0.35)' }}
-              />
-            ))}
-          </SafeAreaView>
-          <TouchableOpacity
-            onPress={() => setStoryViewerIndex(null)}
-            style={{ position: 'absolute', top: insets.top + spacing.lg, right: spacing.lg }}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      <Modal
+        visible
+        animationType="slide"
+        onRequestClose={() => setPdfViewer(null)}
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: palette.bg }}>
+          <View
+            style={[
+              styles.pdfViewerHeader,
+              { borderBottomColor: palette.border, paddingHorizontal: spacing.lg },
+            ]}
           >
-            <Ionicons name="close" size={28} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={goPrev} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '35%' }} />
-          <TouchableOpacity onPress={goNext} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '65%' }} />
-        </View>
+            <Text style={[typography.body, { flex: 1, color: palette.text, fontWeight: '800' }]} numberOfLines={1}>
+              {pdfViewer.title}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setPdfViewer(null)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={[styles.pdfViewerCloseBtn, { backgroundColor: palette.surface }]}
+            >
+              <Ionicons name="close" size={20} color={palette.text} />
+            </TouchableOpacity>
+          </View>
+          {pdfLoadFailed ? (
+            <View style={[styles.center, { flex: 1 }]}>
+              <Ionicons name="alert-circle-outline" size={36} color={palette.textFaint} />
+              <Text style={[typography.body, { color: palette.textMuted, marginTop: spacing.sm, textAlign: 'center' }]}>
+                Impossible d'afficher ce PDF.
+              </Text>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(pdfViewer.url)}
+                style={[styles.errorBtn, { backgroundColor: palette.accentSoft, marginTop: spacing.md }]}
+              >
+                <Text style={{ color: palette.accent, fontWeight: '800' }}>Ouvrir dans le navigateur</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <WebView
+              source={{ uri: pdfViewerUri(pdfViewer.url) }}
+              style={{ flex: 1 }}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={[StyleSheet.absoluteFill, styles.center, { backgroundColor: palette.bg }]}>
+                  <ActivityIndicator size="large" color={palette.accent} />
+                </View>
+              )}
+              onError={() => setPdfLoadFailed(true)}
+              onHttpError={() => setPdfLoadFailed(true)}
+            />
+          )}
+        </SafeAreaView>
       </Modal>
+    );
+  };
+
+  const renderStoryViewer = () => {
+    if (storyViewerIndex === null || !activeStories.length) return null;
+    return (
+      <StoryViewerModal
+        stories={activeStories}
+        initialIndex={storyViewerIndex}
+        onClose={closeStoryViewer}
+        insetsTop={insets.top}
+        spacing={spacing}
+      />
     );
   };
 
@@ -551,7 +659,7 @@ const LocationScreen = () => {
             />
             <Ionicons name="flash" size={18} color="#fff" />
             <Text style={styles.primaryButtonText}>
-              {isBoosted ? 'Boosté' : 'Me signaler ici'}
+              {isBoosted ? 'Boosté' : 'Booster mon profil ici'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -578,15 +686,15 @@ const LocationScreen = () => {
       >
         {renderHero()}
         {renderFloatingCard()}
-        {renderUltraBoostBanner()}
+        {renderUltraBoostSection()}
         {renderProSection()}
-        {renderBoostCard()}
         {renderSocialPulse()}
         {renderProfileList()}
       </ScrollView>
 
       {renderFixedAction()}
       {renderStoryViewer()}
+      {renderPdfViewer()}
     </View>
   );
 };
@@ -655,14 +763,44 @@ const styles = StyleSheet.create({
   },
   boostTitle: { fontSize: 15, fontWeight: '800' },
   boostSubtitle: { fontSize: 12, fontWeight: '500', marginTop: 2 },
-  boostBadgePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: '#FFD700',
+
+  storyPlayBadge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
-  boostBadgeText: { fontSize: 10, fontWeight: '900', color: '#FFD700', letterSpacing: 0.5 },
+
+  pdfCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  pdfIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pdfViewerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  pdfViewerCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   sectionHeader: {
     flexDirection: 'row',

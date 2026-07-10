@@ -14,12 +14,15 @@ function mapBackendUser(u = {}) {
     customName: u.customName || '',
     bio: u.bio || '',
     photo: u.profileImageUrl || null,
+    birthdate: u.birthdate || null,
+    gender: u.gender || '',
     socialMedia: Array.isArray(u.socialNetworks)
       ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
       : [],
     // Premium flag from backend; free if falsy
     isPremium: !!u.isPremium,
-    currentPoiId: u.currentPoiId || null,
+    currentPoiId: u.currentLocation ? String(u.currentLocation) : null,
+    currentLocationSince: u.currentLocationSince || null,
     // User role: 'user', 'moderator', or 'admin'
     role: u.role || 'user',
     // Include GDPR consent and privacy preferences if present
@@ -41,9 +44,12 @@ export const UserProvider = ({ children }) => {
     customName: '',
     bio: '',
     photo: null,
+    birthdate: null,
+    gender: '',
     socialMedia: [],
     isPremium: false,
     currentPoiId: null,
+    currentLocationSince: null,
     role: 'user',
     status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
@@ -103,9 +109,12 @@ export const UserProvider = ({ children }) => {
         customName: '',
         bio: '',
         photo: null,
+        birthdate: null,
+        gender: '',
         socialMedia: [],
         isPremium: false,
         currentPoiId: null,
+        currentLocationSince: null,
         role: 'user',
         status: 'green',
         consent: { accepted: false, version: '', consentAt: null },

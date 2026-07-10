@@ -11,6 +11,8 @@ export const mapBackendUser = (u = {}) => {
     customName: u.customName || '',
     bio: u.bio || '',
     photo: u.profileImageUrl || u.photo || null,
+    birthdate: u.birthdate || null,
+    gender: u.gender || '',
     socialMedias,
     socialMedia: socialMedias,
     isPremium: !!u.isPremium,
@@ -19,6 +21,8 @@ export const mapBackendUser = (u = {}) => {
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
     moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    currentPoiId: u.currentLocation ? String(u.currentLocation) : null,
+    currentLocationSince: u.currentLocationSince || null,
     updatedAt: u.updatedAt,
   };
 };
@@ -36,6 +40,8 @@ export const mapProfileUser = (u = {}) => {
     customName: u.customName || '',
     bio: u.bio || '',
     photo: u.profileImageUrl || u.photo || null,
+    birthdate: u.birthdate || null,
+    gender: u.gender || '',
     status: u.status || 'green',
     socialMedias,
     socialMedia: socialMedias,

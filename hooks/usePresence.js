@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import * as Location from 'expo-location';
 import { post } from '../components/ApiRequest';
+import { UserContext } from '../components/contexts/UserContext';
+import { mapBackendUser } from '../utils/mappers';
 
 /**
  * Hook pour gérer le "Heartbeat" (battement de cœur) de présence en premier plan.
@@ -14,6 +16,7 @@ import { post } from '../components/ApiRequest';
  *    ne bouge pas, pour maintenir la fraîcheur côté serveur.
  */
 export function usePresence(isEnabled) {
+  const { updateUser } = useContext(UserContext);
   const intervalRef = useRef(null);
   const watcherRef = useRef(null);
   const inFlightRef = useRef(false);
@@ -45,7 +48,8 @@ export function usePresence(isEnabled) {
 
         const startTime = Date.now();
         try {
-          await post('/user/heartbeat', { lat, lon });
+          const res = await post('/user/heartbeat', { lat, lon });
+          if (res?.user) updateUser(mapBackendUser(res.user));
           lastSentAtRef.current = Date.now();
           const duration = Date.now() - startTime;
           console.log(`[usePresence] Foreground heartbeat sent successfully in ${duration}ms`);
@@ -125,5 +129,5 @@ export function usePresence(isEnabled) {
       subscription.remove();
       stopHeartbeat();
     };
-  }, [isEnabled]);
+  }, [isEnabled, updateUser]);
 }

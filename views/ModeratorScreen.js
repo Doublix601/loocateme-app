@@ -131,6 +131,7 @@ const ModeratorScreen = () => {
       setClaimsLoading(true);
       setClaimsError('');
       const res = await getBusinessClaims({ status: 'pending', page: 1, limit: 50 });
+      console.log('[ModeratorScreen] business-claims response', JSON.stringify(res));
       setClaims(Array.isArray(res?.items) ? res.items : []);
     } catch (e) {
       setClaimsError(e?.message || 'Impossible de charger les candidatures.');

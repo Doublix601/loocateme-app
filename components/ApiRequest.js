@@ -334,10 +334,10 @@ async function request(path, { method = 'GET', body, headers = {}, formData = nu
 }
 
 // AUTH
-export async function signup({ email, password, username, firstName = '', lastName = '', customName = '' }) {
+export async function signup({ email, password, username, firstName = '', lastName = '', customName = '', birthdate, gender }) {
     const data = await request('/auth/signup', {
         method: 'POST',
-        body: { email, password, username, firstName, lastName, customName },
+        body: { email, password, username, firstName, lastName, customName, birthdate, gender },
     });
     if (data?.accessToken) setAccessToken(data.accessToken);
     try { publish('auth:login', { user: data?.user || null }); } catch (_) {}
@@ -441,7 +441,8 @@ export async function getLocations({ lat, lon, limit, vibe } = {}) {
 }
 
 export async function getLocationById(id) {
-    return request(`/locations/${id}`, { method: 'GET' });
+    // Always bypass cache to avoid stale location info/photos on refresh
+    return request(`/locations/${id}`, { method: 'GET', cache: 'reload' });
 }
 
 // Seed unitaire d'un POI Overpass (id `osm:<osmId>`) côté backend pour qu'il

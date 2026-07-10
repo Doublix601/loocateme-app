@@ -6,8 +6,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from './contexts/ThemeContext';
 import PremiumService from '../services/PremiumService';
+import PremiumNudgeService from '../services/PremiumNudgeService';
 import IAPStore from '../services/IAPStore';
 import { DEBUG_CONFIG } from '../services/DebugConfig';
+import { publish } from './EventBus';
+import { usePremiumAccess } from '../hooks/usePremiumAccess';
 
 const HISTORY_KEY = '@loocateme:iap_history_v1';
 
@@ -73,6 +76,7 @@ async function addToHistory(entry) {
 // userId   : string  — pour analytics IAPStore
 const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
   const { colors, isDark } = useTheme();
+  const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const slideAnim = useRef(new Animated.Value(400)).current;
   const [boosts, setBoosts] = useState(0);
   const [superlikes, setSuperlikes] = useState(0);
@@ -80,6 +84,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
   const [offerings, setOfferings] = useState(null);
   const [purchasing, setPurchasing] = useState(null); // pack id en cours
   const [refreshing, setRefreshing] = useState(false);
+  const [nudge, setNudge] = useState(null); // note inline "Premium inclut..."
 
   const refresh = async () => {
     setBoosts(PremiumService.getBoostsRemaining());
@@ -94,6 +99,25 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
     Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }).start();
     return () => {};
   }, [visible]);
+
+  // Note inline "Premium inclut..." : évaluée à l'ouverture du sheet plutôt que via
+  // la bannière globale, pour éviter d'empiler deux interruptions concurrentes au
+  // moment où l'utilisateur vient déjà de manquer de boosts/superlikes.
+  useEffect(() => {
+    if (!visible || isPremium) { setNudge(null); return; }
+    PremiumNudgeService.evaluate('consumables_depleted', { isPremium, premiumSystemEnabled })
+      .then(setNudge)
+      .catch(() => setNudge(null));
+  }, [visible, isPremium, premiumSystemEnabled]);
+
+  const handleNudgePress = () => {
+    if (!nudge) return;
+    PremiumNudgeService.recordShown(nudge.id).catch(() => {});
+    handleClose();
+    // Petit délai pour laisser l'animation de fermeture du sheet se terminer
+    // avant de pousser le paywall par-dessus.
+    setTimeout(() => publish('ui:open_premium', { source: nudge.source }), 260);
+  };
 
   const handleClose = () => {
     Animated.timing(slideAnim, { toValue: 400, duration: 250, useNativeDriver: true }).start(() => {
@@ -169,6 +193,20 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
           <View style={styles.debugBanner}>
             <Text style={styles.debugBannerText}>⚠️ Paiements désactivés (mode debug)</Text>
           </View>
+        )}
+
+        {/* Note inline Premium (remplace la bannière globale pour ne pas empiler
+            deux interruptions au moment où le sheet de consommables est déjà ouvert) */}
+        {nudge && (
+          <TouchableOpacity
+            style={[styles.premiumNote, { backgroundColor: isDark ? 'rgba(0,194,203,0.12)' : 'rgba(0,194,203,0.08)' }]}
+            onPress={handleNudgePress}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.premiumNoteText, { color: text }]}>
+              <Text style={{ fontWeight: '800' }}>{nudge.title}</Text> — {nudge.message}
+            </Text>
+          </TouchableOpacity>
         )}
 
         {/* Compteurs actuels */}
@@ -288,6 +326,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   debugBannerText: { color: '#fff', fontWeight: '700', fontSize: 13, textAlign: 'center' },
+  premiumNote: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  premiumNoteText: { fontSize: 13, lineHeight: 18 },
   countersRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -19,6 +19,7 @@ import Purchases from 'react-native-purchases';
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
 import PolicyUpdateBanner from './components/PolicyUpdateBanner';
+import PremiumNudgeBanner from './components/PremiumNudgeBanner';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { VibeProvider, useVibe } from './components/contexts/VibeContext';
@@ -34,6 +35,7 @@ import {
 } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
+import PremiumNudgeService from './services/PremiumNudgeService';
 import { mapBackendUser, mapProfileUser } from './utils/mappers';
 import { hasSeenOnboarding } from './utils/onboarding';
 import RootNavigator from './navigation/RootNavigator';
@@ -53,7 +55,7 @@ function AppShell({ purchasesReady }) {
   const hasShownLocationModal = useRef(false);
   const didInitialScanRef = useRef(false);
 
-  usePresence();
+  usePresence(authReady);
 
   useEffect(() => {
     try { setMode(isMoon ? 'dark' : 'light'); } catch (_) {}
@@ -162,7 +164,7 @@ function AppShell({ purchasesReady }) {
   }, []);
 
   useEffect(() => {
-    const off = subscribe('ui:open_premium', () => navigationRef.navigate('PremiumPaywall'));
+    const off = subscribe('ui:open_premium', (payload) => navigationRef.navigate('PremiumPaywall', payload));
     return () => { try { off && off(); } catch (_) {} };
   }, []);
 
@@ -173,6 +175,7 @@ function AppShell({ purchasesReady }) {
 
   useEffect(() => {
     PremiumService.init().catch(() => {});
+    PremiumNudgeService.init().catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -325,6 +328,7 @@ function AppShell({ purchasesReady }) {
       </NavigationContainer>
 
       <PolicyUpdateBanner />
+      <PremiumNudgeBanner />
 
       <ConsumablesShopSheet
         visible={shopSheetVisible}

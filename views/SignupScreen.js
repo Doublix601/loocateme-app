@@ -2,12 +2,20 @@ import { useState, useContext } from 'react';
 import { TextInput, TouchableOpacity, StyleSheet, View, ActivityIndicator, Alert, useWindowDimensions, Switch, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { signup as apiSignup, setAccessToken, updateConsent, getPrivacyPolicy } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
 import AppLogo from '../components/AppLogo';
 import { mapBackendUser } from '../utils/mappers';
+import { isAtLeast18 } from '../utils/age';
+
+const GENDER_OPTIONS = [
+    { key: 'male', label: 'Garçon' },
+    { key: 'female', label: 'Fille' },
+    { key: 'prefer_not_to_say', label: 'Ne souhaite pas répondre' },
+];
 
 const SignupScreen = () => {
     const navigation = useNavigation();
@@ -15,6 +23,9 @@ const SignupScreen = () => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [customName, setCustomName] = useState('');
+    const [birthdate, setBirthdate] = useState(null);
+    const [gender, setGender] = useState('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -57,6 +68,14 @@ const SignupScreen = () => {
             setErrorMessage('Tous les champs doivent être remplis.');
             return;
         }
+        if (!birthdate) {
+            setErrorMessage('La date de naissance est obligatoire.');
+            return;
+        }
+        if (!isAtLeast18(birthdate)) {
+            setErrorMessage('Vous devez avoir au moins 18 ans pour vous inscrire.');
+            return;
+        }
         // Start GDPR flow: show policy then preferences, then perform signup + consent update
         setErrorMessage('');
         try {
@@ -80,13 +99,14 @@ const SignupScreen = () => {
         // Re-run minimal validations to be safe
         let normalized = String(username || '').trim().toLowerCase();
         const IG_RE = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
-        if (!IG_RE.test(normalized) || !email || !password || password !== confirmPassword) {
+        if (!IG_RE.test(normalized) || !email || !password || password !== confirmPassword || !birthdate || !isAtLeast18(birthdate)) {
             Alert.alert("Erreur", "Vérifiez les informations saisies.");
             return;
         }
         try {
             setProcessing(true);
-            const res = await apiSignup({ email, password, username: normalized, firstName, lastName, customName });
+            const birthdateIso = birthdate.toISOString().slice(0, 10);
+            const res = await apiSignup({ email, password, username: normalized, firstName, lastName, customName, birthdate: birthdateIso, gender: gender || undefined });
             if (res?.accessToken) setAccessToken(res.accessToken);
             // Persist consent with chosen preferences
             let updatedUser = res?.user;
@@ -179,6 +199,45 @@ const SignupScreen = () => {
                             onChangeText={setCustomName}
                             returnKeyType="next"
                         />
+
+                        <TouchableOpacity style={[styles.input, { justifyContent: 'center' }]} onPress={() => setShowDatePicker(true)}>
+                            <ThemedText style={{ color: birthdate ? colors.textPrimary : colors.placeholder }}>
+                                {birthdate
+                                    ? birthdate.toLocaleDateString('fr-FR')
+                                    : 'Date de naissance *'}
+                            </ThemedText>
+                        </TouchableOpacity>
+                        {showDatePicker && (
+                            <DateTimePicker
+                                value={birthdate || new Date(2000, 0, 1)}
+                                mode="date"
+                                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                maximumDate={new Date()}
+                                onChange={(event, selectedDate) => {
+                                    setShowDatePicker(Platform.OS === 'ios');
+                                    if (event.type !== 'dismissed' && selectedDate) {
+                                        setBirthdate(selectedDate);
+                                    }
+                                }}
+                            />
+                        )}
+
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                            {GENDER_OPTIONS.map((opt) => (
+                                <TouchableOpacity
+                                    key={opt.key}
+                                    onPress={() => setGender(gender === opt.key ? '' : opt.key)}
+                                    style={[
+                                        styles.genderPill,
+                                        gender === opt.key && styles.genderPillActive,
+                                    ]}
+                                >
+                                    <ThemedText style={gender === opt.key ? styles.genderPillTextActive : styles.genderPillText}>
+                                        {opt.label}
+                                    </ThemedText>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
 
                         <TextInput
                             style={styles.input}
@@ -351,6 +410,27 @@ const getStyles = ({ colors, isDark }) => StyleSheet.create({
         backgroundColor: colors.inputBackground,
         color: colors.textPrimary,
         borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    },
+    genderPill: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        backgroundColor: colors.inputBackground,
+        borderWidth: 1,
+        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+    },
+    genderPillActive: {
+        backgroundColor: '#00c2cb',
+        borderColor: '#00c2cb',
+    },
+    genderPillText: {
+        fontSize: 13,
+        color: colors.textSecondary,
+    },
+    genderPillTextActive: {
+        fontSize: 13,
+        color: '#fff',
+        fontWeight: '600',
     },
     button: {
         backgroundColor: colors.accent,

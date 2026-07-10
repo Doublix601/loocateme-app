@@ -31,7 +31,6 @@ import {
   deleteMyAccount,
   logout as apiLogout,
   clearApiCache,
-  updateDemographics,
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -59,9 +58,6 @@ const SettingsScreen = () => {
   const [analytics, setAnalytics] = useState(!!user?.privacyPreferences?.analytics);
   const [marketing, setMarketing] = useState(!!user?.privacyPreferences?.marketing);
   const [doNotSell, setDoNotSell] = useState(!!user?.privacyPreferences?.doNotSell);
-  const [birthdate, setBirthdate] = useState(user?.birthdate ? user.birthdate.slice(0, 10) : '');
-  const [gender, setGender] = useState(user?.gender || '');
-  const [demographicsSaving, setDemographicsSaving] = useState(false);
 
   // Revocation (delete account) modal state
   const [revokeVisible, setRevokeVisible] = useState(false);
@@ -165,23 +161,6 @@ const SettingsScreen = () => {
   const handleToggleDoNotSell = async (v) => {
     setDoNotSell(v);
     await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing, doNotSell: v });
-  };
-
-  // Âge/genre : utilisés uniquement pour les statistiques de fréquentation des
-  // lieux pro (moyenne d'âge, répartition H/F). Envoi = consentement (active Analytics).
-  const handleSaveDemographics = async () => {
-    setDemographicsSaving(true);
-    try {
-      const res = await updateDemographics({ birthdate: birthdate || undefined, gender: gender || undefined });
-      if (res?.user && updateUser) {
-        setAnalytics(true);
-        updateUser({ ...user, birthdate: res.user.birthdate, gender: res.user.gender, privacyPreferences: res.user.privacyPreferences });
-      }
-    } catch (e) {
-      Alert.alert('Erreur', "Impossible d'enregistrer ces informations pour le moment.");
-    } finally {
-      setDemographicsSaving(false);
-    }
   };
 
   const saveConsent = async (accepted) => {
@@ -367,51 +346,6 @@ const SettingsScreen = () => {
               thumbColor={doNotSell ? '#fff' : '#f4f3f4'}
             />
           </View>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={styles.sectionTitle}>PROFIL DÉMOGRAPHIQUE (OPTIONNEL)</Text>
-          <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 12 }}>
-            Aide les lieux partenaires à mieux connaître leur public (âge moyen, répartition H/F).
-            Ces informations restent anonymisées dans les statistiques affichées aux établissements.
-          </Text>
-          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Date de naissance</Text>
-            <TextInput
-              value={birthdate}
-              onChangeText={setBirthdate}
-              placeholder="AAAA-MM-JJ"
-              placeholderTextColor={colors.textSecondary}
-              style={{ color: colors.textPrimary, minWidth: 110, textAlign: 'right' }}
-            />
-          </View>
-          <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 4 }}>
-            {[
-              { key: 'male', label: 'Homme' },
-              { key: 'female', label: 'Femme' },
-              { key: 'other', label: 'Autre' },
-              { key: 'prefer_not_to_say', label: 'Ne pas dire' },
-            ].map((opt) => (
-              <TouchableOpacity
-                key={opt.key}
-                onPress={() => setGender(opt.key)}
-                style={[styles.themePill, gender === opt.key && { backgroundColor: '#00c2cb' }]}
-              >
-                <Text style={[styles.themePillText, { color: gender === opt.key ? '#fff' : colors.textSecondary }]}>{opt.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity
-            onPress={handleSaveDemographics}
-            disabled={demographicsSaving}
-            style={[styles.linkRow, { borderBottomWidth: 0, marginTop: 8 }]}
-          >
-            {demographicsSaving ? (
-              <ActivityIndicator size="small" color="#00c2cb" />
-            ) : (
-              <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Enregistrer</Text>
-            )}
-          </TouchableOpacity>
         </View>
 
         {['admin', 'moderator'].includes(user?.role) && (

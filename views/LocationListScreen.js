@@ -19,8 +19,10 @@ import NightSkyBackground from '../components/NightSkyBackground';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import { getLocations, updateMyLocation, seedOsmLocation } from '../components/ApiRequest';
-import { subscribe } from '../components/EventBus';
+import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe } from '../components/ApiRequest';
+import { subscribe, publish } from '../components/EventBus';
+import PremiumNudgeService from '../services/PremiumNudgeService';
+import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance, formatDistance } from '../components/ServerUtils';
 import { UserContext } from '../components/contexts/UserContext';
@@ -66,6 +68,7 @@ const LocationListScreen = () => {
   // lieux actifs à proximité » lorsque la DB locale est peu peuplée.
   const [hasMore, setHasMore] = useState(true);
   const { user: currentUser } = useContext(UserContext);
+  const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
 
@@ -265,12 +268,24 @@ const LocationListScreen = () => {
           }}
         >
           <View style={styles.locationInfo}>
-            {item.isPro && item.bannerUrl && (
-              <Image
-                source={{ uri: item.bannerUrl }}
-                style={styles.proBanner}
-                resizeMode="cover"
-              />
+            {item.isPro && (item.bannerUrl || item.logoUrl) && (
+              <View style={item.bannerUrl ? styles.proBannerContainer : null}>
+                {item.bannerUrl && (
+                  <ImageWithPlaceholder
+                    uri={item.bannerUrl}
+                    style={styles.proBanner}
+                  />
+                )}
+                {item.logoUrl && (
+                  <ImageWithPlaceholder
+                    uri={item.logoUrl}
+                    style={[
+                      item.bannerUrl ? styles.proLogoOverlap : styles.proLogoInline,
+                      { borderColor: colors.surface },
+                    ]}
+                  />
+                )}
+              </View>
             )}
             <View style={styles.locationHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
@@ -465,6 +480,33 @@ const LocationListScreen = () => {
 
       const { latitude, longitude } = location.coords;
       setUserCoords({ latitude, longitude });
+
+      // Nudge Premium (signal passif, fire-and-forget) : uniquement au tout premier
+      // chargement (skipUpdateMyLocation=false distingue le cold-start du refresh
+      // silencieux/loadMore) et seulement pour les comptes non-premium, pour éviter
+      // de spammer /users/nearby à chaque pull-to-refresh alors que le nudge lui-même
+      // est de toute façon plafonné à 1x/7j.
+      if (!skipUpdateMyLocation && !isPremium) {
+        (async () => {
+          try {
+            let radiusNudge = null;
+            const nearby = await getUsersAroundMe({ lat: latitude, lon: longitude, radius: 2000 });
+            if (nearby && typeof nearby.maxRadius === 'number' && nearby.maxRadius < 2000) {
+              radiusNudge = await PremiumNudgeService.evaluate('radius_limited', { isPremium, premiumSystemEnabled });
+            }
+            if (radiusNudge) {
+              publish('premium:nudge', radiusNudge);
+              return;
+            }
+            // radius_limited n'a rien retourné (hors cooldown ou pas plafonné) : on
+            // laisse une chance au rappel périodique, moins prioritaire.
+            const periodicNudge = await PremiumNudgeService.evaluate('periodic_home', { isPremium, premiumSystemEnabled });
+            if (periodicNudge) publish('premium:nudge', periodicNudge);
+          } catch (_) {
+            // Signal purement observationnel : ne doit jamais impacter la liste principale.
+          }
+        })();
+      }
 
       // 3. Lancer les requêtes API en parallèle
       const reqLimit = options.limit || displayLimit;
@@ -802,10 +844,28 @@ const styles = StyleSheet.create({
   popularityContainer: { alignItems: 'flex-end', marginLeft: 12 },
   popularityStars: { fontSize: 18 },
   emptyText: { textAlign: 'center', fontSize: 16, fontWeight: '500' },
+  proBannerContainer: {
+    marginBottom: 48,
+  },
   proBanner: {
     width: '100%',
     height: 100,
     borderRadius: 12,
+  },
+  proLogoOverlap: {
+    position: 'absolute',
+    bottom: -36,
+    left: 12,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
+  },
+  proLogoInline: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    borderWidth: 3,
     marginBottom: 12,
   },
   verifiedBadge: {

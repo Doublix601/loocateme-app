@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser, triggerLocationSync } from '../components/ApiRequest';
 import { resetOnboarding, resetProfileOnboarding } from '../utils/onboarding';
-import { subscribe } from '../components/EventBus';
+import { subscribe, publish } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { UserContext } from '../components/contexts/UserContext';
@@ -14,6 +14,10 @@ import { useLocale } from '../components/contexts/LocalizationContext';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { DEBUG_CONFIG, setDebugFlag } from '../services/DebugConfig';
 import PremiumService from '../services/PremiumService';
+import PremiumNudgeService from '../services/PremiumNudgeService';
+import { usePremiumAccess } from '../hooks/usePremiumAccess';
+
+const NUDGE_SIGNALS = ['radius_limited', 'profile_views', 'consumables_depleted', 'periodic_home'];
 
 export { DEBUG_CONFIG } from '../services/DebugConfig';
 
@@ -23,6 +27,7 @@ const DebugScreen = () => {
   const { refresh: refreshFlags } = useFeatureFlags();
   const { locale } = useLocale();
   const { user: currentUser } = useContext(UserContext);
+  const { isPremium: nudgeIsPremium, premiumSystemEnabled: nudgePremiumSystemEnabled } = usePremiumAccess();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [users, setUsers] = useState([]);
@@ -55,6 +60,8 @@ const DebugScreen = () => {
   const [boostsRemaining, setBoostsRemaining] = useState(0);
   const [superlikesRemaining, setSuperlikesRemaining] = useState(0);
   const [premiumStatus, setPremiumStatus] = useState('');
+  // Premium nudges debug state
+  const [nudgeState, setNudgeState] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -121,6 +128,47 @@ const DebugScreen = () => {
     }
   };
 
+  const loadNudgeState = async () => {
+    try {
+      await PremiumNudgeService.init();
+      setNudgeState(PremiumNudgeService.getState());
+    } catch (_) {}
+  };
+
+  // Bypass cooldown/plafond pour valider visuellement chaque nudge, mais respecte
+  // toujours le flag premiumEnabled et le statut premium (sinon ce bouton masquerait
+  // un vrai bug de gating au lieu de servir de raccourci QA).
+  const handleForceNudge = async (signalId) => {
+    try {
+      const nudge = await PremiumNudgeService.forceSignal(signalId, {
+        isPremium: nudgeIsPremium,
+        premiumSystemEnabled: nudgePremiumSystemEnabled,
+      });
+      if (!nudge) {
+        Alert.alert(
+          'Non éligible',
+          "Bloqué par le statut premium de l'utilisateur ou le flag premiumEnabled (OFF)."
+        );
+        return;
+      }
+      publish('premium:nudge', nudge);
+      await loadNudgeState();
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de forcer le nudge.');
+    }
+  };
+
+  const handleResetNudges = async () => {
+    try {
+      await PremiumNudgeService.resetAll();
+      await PremiumNudgeService.resetSession();
+      await loadNudgeState();
+      Alert.alert('Réinitialisé', 'Cooldowns et plafond de session des nudges remis à zéro.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de réinitialiser les nudges.');
+    }
+  };
+
   const runAllApiUsers = async () => {
     try {
       setLoading(true);
@@ -167,6 +215,7 @@ const DebugScreen = () => {
     try { runAllApiUsers(); } catch (_) {}
     try { loadFlags(); } catch (_) {}
     try { loadPremiumStatus(); } catch (_) {}
+    try { loadNudgeState(); } catch (_) {}
   }, []);
 
   // Load feature flags from admin endpoint
@@ -553,6 +602,52 @@ const DebugScreen = () => {
             <Text style={[styles.cmdTxt, { color: '#00c2cb' }]}>Rafraîchir les flags</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Nudges Premium (QA) */}
+        {__DEV__ && (
+          <>
+            <Text style={sectionTitleStyle}>Nudges Premium (QA)</Text>
+            <View style={cardStyle}>
+              <Text style={[{ fontSize: 12, marginBottom: 12 }, subTextStyle]}>
+                Force l'affichage d'un nudge en contournant cooldown/plafond (respecte toujours
+                le flag premiumEnabled et le statut premium de l'utilisateur courant).
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                {NUDGE_SIGNALS.map((signalId) => (
+                  <TouchableOpacity
+                    key={signalId}
+                    style={[styles.smallBtn, { backgroundColor: '#00c2cb' }]}
+                    onPress={() => handleForceNudge(signalId)}
+                  >
+                    <Text style={styles.smallBtnTxt}>Forcer: {signalId}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity
+                style={[styles.cmdBtn, { backgroundColor: '#e74c3c', borderColor: 'transparent' }]}
+                onPress={handleResetNudges}
+              >
+                <Text style={styles.cmdTxt}>Réinitialiser les nudges</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.cmdBtn, { marginTop: 10, backgroundColor: 'rgba(0,194,203,0.1)', borderColor: 'transparent' }]}
+                onPress={loadNudgeState}
+              >
+                <Text style={[styles.cmdTxt, { color: '#00c2cb' }]}>Rafraîchir l'état</Text>
+              </TouchableOpacity>
+              {nudgeState && (
+                <View style={[styles.resultBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor }]}>
+                  <Text style={[styles.resultTitle, textStyle]}>État persisté</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 10 }}>
+                    <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.text }]}>
+                      {JSON.stringify(nudgeState, null, 2)}
+                    </Text>
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+          </>
+        )}
 
         {/* Test notifications locales */}
         <Text style={sectionTitleStyle}>Test notifications locales</Text>

@@ -32,6 +32,8 @@ import { trackProfileView, trackSocialClick, createReport, blockUser, getFollowS
 import { publish } from '../components/EventBus';
 import SuperlikeService from '../services/SuperlikeService';
 import PremiumService from '../services/PremiumService';
+import PremiumNudgeService from '../services/PremiumNudgeService';
+import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { Feather } from '@expo/vector-icons';
@@ -50,14 +52,12 @@ const REPORT_CATEGORIES = [
   { value: 'other', label: 'Autre' },
 ];
 
-const UPSELL_COUNTER_KEY = 'premium_upsell_counter';
-const UPSELL_THRESHOLD = 5;
-
 const UserProfileScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const user = route.params?.user;
   const { user: currentUser } = React.useContext(UserContext);
+  const { isPremium: premiumAccessActive, premiumSystemEnabled } = usePremiumAccess();
   const [actionMenuVisible, setActionMenuVisible] = React.useState(false);
   const [reportVisible, setReportVisible] = React.useState(false);
   const [reportCategory, setReportCategory] = React.useState('harassment');
@@ -156,28 +156,15 @@ const UserProfileScreen = () => {
     (async () => {
       try { await trackProfileView(String(targetId)); } catch (_) {}
 
-      // Premium Upsell Logic
+      // Nudge Premium (bannière discrète, cooldown/plafond gérés par PremiumNudgeService)
       try {
-        if (!currentUser?.isPremium) {
-          const countStr = await AsyncStorage.getItem(UPSELL_COUNTER_KEY);
-          let count = parseInt(countStr || '0', 10);
-          count += 1;
-          if (count >= UPSELL_THRESHOLD) {
-            await AsyncStorage.setItem(UPSELL_COUNTER_KEY, '0');
-            Alert.alert(
-              '🔥 Passez Premium !',
-              'Vous avez consulté plusieurs profils. Passez Premium pour voir qui a visité VOTRE profil et débloquer de nombreuses autres fonctionnalités !',
-              [
-                { text: 'Plus tard', style: 'cancel' },
-                { text: "Voir l'offre", onPress: () => navigation.navigate('PremiumPaywall') }
-              ]
-            );
-          } else {
-            await AsyncStorage.setItem(UPSELL_COUNTER_KEY, String(count));
-          }
-        }
+        const nudge = await PremiumNudgeService.bumpCounter('profile_views', 5, {
+          isPremium: premiumAccessActive,
+          premiumSystemEnabled,
+        });
+        if (nudge) publish('premium:nudge', nudge);
       } catch (e) {
-        console.error('[UserProfile] Upsell logic error:', e);
+        console.error('[UserProfile] Nudge logic error:', e);
       }
     })();
   }, [user?._id, user?.id]);

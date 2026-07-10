@@ -21,7 +21,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "me.loocate.app",
       "scheme": "loocateme",
-      "associatedDomains": ["applinks:api.loocate.me"],
+      "associatedDomains": [
+        "applinks:api.loocate.me"
+      ],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -40,7 +42,9 @@
       "package": "me.loocate.app",
       "scheme": "loocateme",
       "googleServicesFile": "./google-services.json",
-      "permissions": ["POST_NOTIFICATIONS"],
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -83,7 +87,9 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-video"
     ],
     "extra": {
       "eas": {
