@@ -44,15 +44,15 @@ export default function PolicyUpdateBanner() {
     <SafeAreaView edges={['top']} style={styles.wrapper} pointerEvents="box-none">
       <View style={[styles.container, { backgroundColor: colors.surface, borderColor: 'rgba(0,0,0,0.08)' }]}>
         <TouchableOpacity style={styles.row} onPress={() => setExpanded((e) => !e)} activeOpacity={0.8}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={expanded ? undefined : 1}>
+          <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={expanded ? undefined : 1}>
             Politique de confidentialité mise à jour (v{update.version}) — voir les changements
           </Text>
           <TouchableOpacity onPress={handleDismiss} disabled={dismissing} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={[styles.close, { color: colors.text }]}>✕</Text>
+            <Text style={[styles.close, { color: colors.textPrimary }]}>✕</Text>
           </TouchableOpacity>
         </TouchableOpacity>
         {expanded && !!update.changelog && (
-          <Text style={[styles.changelog, { color: colors.text }]}>{update.changelog}</Text>
+          <Text style={[styles.changelog, { color: colors.textSecondary }]}>{update.changelog}</Text>
         )}
       </View>
     </SafeAreaView>
