@@ -19,9 +19,16 @@ function StorySlide({ story, onDone, progressAnim }) {
   useEffect(() => {
     if (!isVideo) return undefined;
     player.play();
-    const sub = player.addListener('playToEnd', onDone);
+    const subEnd = player.addListener('playToEnd', onDone);
+    // Si le fichier est corrompu/invalide (transcodage raté, URL expirée après le
+    // TTL 24h des stories) le player ne joue jamais rien : on passe à la story
+    // suivante plutôt que de laisser l'utilisateur bloqué sur un écran figé.
+    const subError = player.addListener('statusChange', ({ status }) => {
+      if (status === 'error') onDone();
+    });
     return () => {
-      sub?.remove();
+      subEnd?.remove();
+      subError?.remove();
       player.pause();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
