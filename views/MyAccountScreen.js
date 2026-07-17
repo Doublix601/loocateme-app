@@ -16,9 +16,11 @@ import {
     Linking,
     Share,
     KeyboardAvoidingView,
+    ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
@@ -375,6 +377,8 @@ const MyAccountScreen = () => {
     const [selectedSocialLink, setSelectedSocialLink] = useState(null);
     const [photoOptionsModalVisible, setPhotoOptionsModalVisible] =
         useState(false);
+    // Which photo action is currently in flight: null | 'camera' | 'gallery' | 'delete'
+    const [photoActionLoading, setPhotoActionLoading] = useState(null);
 
     // Allowed social platforms (must match backend validation)
     const ALLOWED_PLATFORMS = ['instagram', 'facebook', 'x', 'snapchat', 'tiktok', 'linkedin', 'youtube'];
@@ -854,13 +858,12 @@ const MyAccountScreen = () => {
     };
 
     const handleCamera = async () => {
+        if (photoActionLoading) return;
+        if (Platform.OS === 'web') {
+            Alert.alert('Non supporté', "La caméra n'est pas disponible sur le web.");
+            return;
+        }
         try {
-            // Check platform support
-            if (Platform.OS === 'web') {
-                Alert.alert('Non supporté', "La caméra n'est pas disponible sur le web.");
-                return;
-            }
-
             // Request camera permission first
             const { status } = await ImagePicker.requestCameraPermissionsAsync();
             if (status !== 'granted') {
@@ -878,11 +881,45 @@ const MyAccountScreen = () => {
 
             const canceled = result?.canceled ?? result?.cancelled;
             const uri = result?.assets?.[0]?.uri ?? result?.uri;
-            if (!canceled && uri) {
+            if (canceled || !uri) return;
+
+            setPhotoActionLoading('camera');
+            try {
+                const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+                const file = { uri, name, type: 'image/jpeg' };
+                const res = await apiUploadProfilePhoto(file);
+                const updated = res?.user || {};
+                updateUser({
+                    ...user,
+                    photo: updated.profileImageUrl || uri,
+                    username: updated.name ?? user.username,
+                    bio: updated.bio ?? user.bio,
+                });
+                await refreshMyProfile();
+                setPhotoOptionsModalVisible(false);
+            } catch (e2) {
+                Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+            } finally {
+                setPhotoActionLoading(null);
+            }
+        } catch (e) {
+            Alert.alert('Erreur', "Impossible d'ouvrir la caméra.");
+        }
+    };
+
+    const handleGallery = async () => {
+        if (photoActionLoading) return;
+        try {
+            if (Platform.OS === 'web') {
+                // Web: pick and upload as well so backend profileImageUrl stays in sync
+                const result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.8 });
+                const canceled = result?.canceled ?? result?.cancelled;
+                const uri = result?.assets?.[0]?.uri ?? result?.uri;
+                if (canceled || !uri) return;
+
+                setPhotoActionLoading('gallery');
                 try {
-                    const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
-                    const file = { uri, name, type: 'image/jpeg' };
-                    const res = await apiUploadProfilePhoto(file);
+                    const res = await apiUploadProfilePhoto(uri);
                     const updated = res?.user || {};
                     updateUser({
                         ...user,
@@ -891,39 +928,12 @@ const MyAccountScreen = () => {
                         bio: updated.bio ?? user.bio,
                     });
                     await refreshMyProfile();
+                    setPhotoOptionsModalVisible(false);
                 } catch (e2) {
+                    console.error('[MyAccount] Upload photo (web) error', { code: e2?.code, message: e2?.message, status: e2?.status });
                     Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
-                }
-            }
-        } catch (e) {
-            Alert.alert('Erreur', "Impossible d'ouvrir la caméra.");
-        } finally {
-            setPhotoOptionsModalVisible(false);
-        }
-    };
-
-    const handleGallery = async () => {
-        try {
-            if (Platform.OS === 'web') {
-                // Web: pick and upload as well so backend profileImageUrl stays in sync
-                const result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.8 });
-                const canceled = result?.canceled ?? result?.cancelled;
-                const uri = result?.assets?.[0]?.uri ?? result?.uri;
-                if (!canceled && uri) {
-                    try {
-                        const res = await apiUploadProfilePhoto(uri);
-                        const updated = res?.user || {};
-                        updateUser({
-                            ...user,
-                            photo: updated.profileImageUrl || uri,
-                            username: updated.name ?? user.username,
-                            bio: updated.bio ?? user.bio,
-                        });
-                        await refreshMyProfile();
-                    } catch (e2) {
-                        console.error('[MyAccount] Upload photo (web) error', { code: e2?.code, message: e2?.message, status: e2?.status });
-                        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
-                    }
+                } finally {
+                    setPhotoActionLoading(null);
                 }
                 return;
             }
@@ -943,31 +953,46 @@ const MyAccountScreen = () => {
             });
             const canceled = result?.canceled ?? result?.cancelled;
             const uri = result?.assets?.[0]?.uri ?? result?.uri;
-            if (!canceled && uri) {
-                try {
-                    const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
-                    const file = { uri, name, type: 'image/jpeg' };
-                    const res = await apiUploadProfilePhoto(file);
-                    const updated = res?.user || {};
-                    updateUser({
-                        ...user,
-                        photo: updated.profileImageUrl || uri,
-                        username: updated.name ?? user.username,
-                        bio: updated.bio ?? user.bio,
-                    });
-                    await refreshMyProfile();
-                } catch (e2) {
-                    Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
-                }
+            if (canceled || !uri) return;
+
+            setPhotoActionLoading('gallery');
+            try {
+                const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+                const file = { uri, name, type: 'image/jpeg' };
+                const res = await apiUploadProfilePhoto(file);
+                const updated = res?.user || {};
+                updateUser({
+                    ...user,
+                    photo: updated.profileImageUrl || uri,
+                    username: updated.name ?? user.username,
+                    bio: updated.bio ?? user.bio,
+                });
+                await refreshMyProfile();
+                setPhotoOptionsModalVisible(false);
+            } catch (e2) {
+                Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+            } finally {
+                setPhotoActionLoading(null);
             }
         } catch (e) {
             Alert.alert('Erreur', "Impossible d'ouvrir la galerie.");
-        } finally {
-            setPhotoOptionsModalVisible(false);
         }
     };
 
+    const confirmDeletePhoto = () => {
+        if (photoActionLoading) return;
+        Alert.alert(
+            'Supprimer la photo de profil ?',
+            'Cette action est définitive.',
+            [
+                { text: 'Annuler', style: 'cancel' },
+                { text: 'Supprimer', style: 'destructive', onPress: handleDeletePhoto },
+            ],
+        );
+    };
+
     const handleDeletePhoto = async () => {
+        setPhotoActionLoading('delete');
         try {
             const { deleteProfilePhoto: apiDelete } = await import('../components/ApiRequest');
             const res = await apiDelete();
@@ -979,11 +1004,12 @@ const MyAccountScreen = () => {
                 bio: updated.bio ?? user.bio,
             });
             await refreshMyProfile();
+            setPhotoOptionsModalVisible(false);
         } catch (e) {
             console.error('[MyAccount] Delete photo error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
             Alert.alert('Erreur', e?.message || "Impossible de supprimer la photo de profil");
         } finally {
-            setPhotoOptionsModalVisible(false);
+            setPhotoActionLoading(null);
         }
     };
 
@@ -1533,55 +1559,94 @@ const MyAccountScreen = () => {
                     </View>
                 </Modal>
 
-                <Modal visible={photoOptionsModalVisible} transparent={true} animationType="fade">
-                    <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
+                <Modal
+                    visible={photoOptionsModalVisible}
+                    transparent={true}
+                    animationType="slide"
+                    onRequestClose={() => { if (!photoActionLoading) setPhotoOptionsModalVisible(false); }}
+                >
+                    <View style={styles.photoModalOverlay}>
                         <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-                        <Pressable style={StyleSheet.absoluteFill} onPress={() => setPhotoOptionsModalVisible(false)} />
-                        <View style={[styles.modalCard, { backgroundColor: colors.surface }] }>
+                        <Pressable
+                            style={StyleSheet.absoluteFill}
+                            onPress={() => { if (!photoActionLoading) setPhotoOptionsModalVisible(false); }}
+                        />
+                        <View style={[styles.photoModalSheet, { backgroundColor: colors.surface, paddingBottom: insets.bottom + 20 }]}>
+                            <View style={[styles.photoModalHandle, { backgroundColor: colors.border }]} />
                             <TouchableOpacity
-                                style={styles.modalBackButton}
+                                style={styles.photoModalCloseButton}
                                 onPress={() => setPhotoOptionsModalVisible(false)}
+                                disabled={!!photoActionLoading}
                                 hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+                                accessibilityLabel="Fermer"
                             >
-                                <Image
-                                    source={require('../assets/appIcons/backArrow.png')}
-                                    style={styles.modalBackButtonImage}
-                                />
+                                <Ionicons name="close" size={22} color={colors.textSecondary} />
                             </TouchableOpacity>
-                            <Text style={styles.modalTitle}>Photo de profil</Text>
 
-                            <View style={{ alignItems: 'center', marginBottom: height * 0.02 }}>
+                            <Text style={[styles.photoModalTitle, { color: colors.textPrimary }]}>Photo de profil</Text>
+
+                            <View style={styles.photoModalPreviewWrap}>
                                 {user.photo ? (
-                                    <ImageWithPlaceholder uri={user.photo} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
+                                    <ImageWithPlaceholder uri={user.photo} style={[styles.photoModalPreview, { borderColor: colors.border }]} />
                                 ) : (
-                                    <View style={styles.placeholderImage}>
+                                    <View style={[styles.placeholderImage, styles.photoModalPreview, { borderColor: colors.border }]}>
                                         <Image
                                             source={require('../assets/appIcons/userProfile.png')}
-                                            style={styles.placeholderIcon}
+                                            style={[styles.placeholderIcon, { width: Math.min(width * 0.14, 48), height: Math.min(width * 0.14, 48) }]}
                                         />
                                     </View>
                                 )}
                             </View>
 
-                            <View style={styles.actionRow}>
-                                <TouchableOpacity
-                                    onPress={handleCamera}
-                                    style={[styles.iconRoundButton, styles.iconEdit]}
-                                    accessibilityLabel="Prendre une photo">
-                                    <Text style={styles.iconEmoji}>📷</Text>
-                                </TouchableOpacity>
+                            <View style={styles.photoModalActions}>
+                                {Platform.OS !== 'web' && (
+                                    <TouchableOpacity
+                                        onPress={handleCamera}
+                                        disabled={!!photoActionLoading}
+                                        style={[styles.photoModalRow, { borderColor: colors.border, opacity: photoActionLoading && photoActionLoading !== 'camera' ? 0.4 : 1 }]}
+                                        accessibilityLabel="Prendre une photo">
+                                        <View style={[styles.photoModalRowIcon, { backgroundColor: colors.accentSoft }]}>
+                                            {photoActionLoading === 'camera' ? (
+                                                <ActivityIndicator size="small" color={colors.accent} />
+                                            ) : (
+                                                <Ionicons name="camera-outline" size={20} color={colors.accent} />
+                                            )}
+                                        </View>
+                                        <Text style={[styles.photoModalRowLabel, { color: colors.textPrimary }]}>Prendre une photo</Text>
+                                        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+                                    </TouchableOpacity>
+                                )}
                                 <TouchableOpacity
                                     onPress={handleGallery}
-                                    style={[styles.iconRoundButton, styles.iconEdit]}
+                                    disabled={!!photoActionLoading}
+                                    style={[styles.photoModalRow, { borderColor: colors.border, opacity: photoActionLoading && photoActionLoading !== 'gallery' ? 0.4 : 1 }]}
                                     accessibilityLabel="Choisir depuis la galerie">
-                                    <Text style={styles.iconEmoji}>🖼️</Text>
+                                    <View style={[styles.photoModalRowIcon, { backgroundColor: colors.accentSoft }]}>
+                                        {photoActionLoading === 'gallery' ? (
+                                            <ActivityIndicator size="small" color={colors.accent} />
+                                        ) : (
+                                            <Ionicons name="images-outline" size={20} color={colors.accent} />
+                                        )}
+                                    </View>
+                                    <Text style={[styles.photoModalRowLabel, { color: colors.textPrimary }]}>Choisir depuis la galerie</Text>
+                                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
                                 </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={handleDeletePhoto}
-                                    style={[styles.iconRoundButton, styles.iconDelete]}
-                                    accessibilityLabel="Supprimer la photo">
-                                    <Text style={[styles.iconEmoji, { color: isDark ? colors.background : '#fff', textAlign: 'center' }]}>✖</Text>
-                                </TouchableOpacity>
+                                {!!user.photo && (
+                                    <TouchableOpacity
+                                        onPress={confirmDeletePhoto}
+                                        disabled={!!photoActionLoading}
+                                        style={[styles.photoModalRow, { borderColor: colors.border, borderBottomWidth: 0, opacity: photoActionLoading && photoActionLoading !== 'delete' ? 0.4 : 1 }]}
+                                        accessibilityLabel="Supprimer la photo">
+                                        <View style={[styles.photoModalRowIcon, { backgroundColor: isDark ? 'rgba(239,83,80,0.15)' : 'rgba(244,67,54,0.1)' }]}>
+                                            {photoActionLoading === 'delete' ? (
+                                                <ActivityIndicator size="small" color={colors.danger} />
+                                            ) : (
+                                                <Ionicons name="trash-outline" size={20} color={colors.danger} />
+                                            )}
+                                        </View>
+                                        <Text style={[styles.photoModalRowLabel, { color: colors.danger }]}>Supprimer la photo</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
                     </View>
@@ -2045,6 +2110,69 @@ const styles = StyleSheet.create({
         width: 28,
         height: 28,
         tintColor: '#00c2cb',
+    },
+    photoModalOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    photoModalSheet: {
+        width: '100%',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        paddingTop: 10,
+        paddingHorizontal: width * 0.06,
+    },
+    photoModalHandle: {
+        alignSelf: 'center',
+        width: 40,
+        height: 4,
+        borderRadius: 2,
+        marginBottom: 14,
+    },
+    photoModalCloseButton: {
+        position: 'absolute',
+        top: 14,
+        right: 14,
+        zIndex: 1,
+        padding: 6,
+    },
+    photoModalTitle: {
+        fontSize: width * 0.055,
+        fontWeight: '700',
+        textAlign: 'center',
+        marginBottom: height * 0.02,
+    },
+    photoModalPreviewWrap: {
+        alignItems: 'center',
+        marginBottom: height * 0.025,
+    },
+    photoModalPreview: {
+        width: Math.min(width * 0.3, 112),
+        height: Math.min(width * 0.3, 112),
+        borderRadius: Math.min(width * 0.15, 56),
+        borderWidth: 2,
+    },
+    photoModalActions: {
+        marginBottom: 4,
+    },
+    photoModalRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 14,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+    photoModalRowIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 14,
+    },
+    photoModalRowLabel: {
+        flex: 1,
+        fontSize: 16,
+        fontWeight: '500',
     },
     // --- Icônes de partage (entre bio et réseaux sociaux) ---
     shareIconsRow: {
