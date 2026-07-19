@@ -21,6 +21,7 @@ const ProfileCard = ({
   onPress,
 }) => {
   const isBoosted = user?.boostUntil && new Date(user.boostUntil) > new Date();
+  const cotePercent = user?.cotePercent ?? 100;
 
   // Normalise la liste des réseaux sociaux du user.
   const socials = useMemo(() => {
@@ -87,6 +88,11 @@ const ProfileCard = ({
           )}
           {isGhost && (
             <Text style={[styles.boostBadge, { color: palette.textFaint }]}>👻</Text>
+          )}
+          {cotePercent > 0 && (
+            <Text style={[styles.boostBadge, { color: cotePercent === 100 ? '#FF6B35' : palette.textFaint }]}>
+              🔥 {cotePercent}%
+            </Text>
           )}
         </View>
 

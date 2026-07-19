@@ -11,6 +11,7 @@ LogBox.ignoreLogs([
 ]);
 
 import * as Location from 'expo-location';
+import { getCurrentPositionSmart } from './utils/locationHelper';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
@@ -18,6 +19,7 @@ import Purchases from 'react-native-purchases';
 
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
+import DevLocationOverride from './components/DevLocationOverride';
 import PolicyUpdateBanner from './components/PolicyUpdateBanner';
 import PremiumNudgeBanner from './components/PremiumNudgeBanner';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
@@ -187,7 +189,7 @@ function AppShell({ purchasesReady }) {
         const { status: fgStatus } = await Location.getForegroundPermissionsAsync();
 
         if (fgStatus === 'granted') {
-          const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          const pos = await getCurrentPositionSmart();
           if (pos?.coords) {
             LocationSyncService.syncNearbyLocations(pos.coords.latitude, pos.coords.longitude);
           }
@@ -282,6 +284,11 @@ function AppShell({ purchasesReady }) {
           if (!data || !navigationRef.isReady()) return;
           if (data.kind === 'ultra_boost' && data.locationId) {
             navigationRef.navigate('Location', { locationId: data.locationId });
+          } else if (data.kind === 'superlike') {
+            navigationRef.navigate('MainTabs');
+            publish('ui:open_superlike_history');
+          } else if (data.kind === 'cote_expiring') {
+            navigationRef.navigate('MainTabs');
           }
         };
 
@@ -346,6 +353,8 @@ function AppShell({ purchasesReady }) {
           <ActivityIndicator size="large" color="#00c2cb" />
         </View>
       )}
+
+      <DevLocationOverride />
     </View>
   );
 }
@@ -371,8 +380,8 @@ function AppWithReadyStatus() {
     const initPurchases = async () => {
       try {
         const apiKey = Platform.select({
-          ios: 'appl_EXAMPLE_REVENUECAT_API_KEY',
-          android: 'goog_EXAMPLE_REVENUECAT_API_KEY',
+          ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+          android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
         });
         const finalApiKey = __DEV__ ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey;
         await Purchases.configure({ apiKey: finalApiKey });
