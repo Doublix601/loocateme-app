@@ -34,7 +34,7 @@ export const FeatureGate = ({
     if (hideImplicitly) return null;
     return (
       <View style={[styles.gateContainer, style]}>
-        <Text style={[styles.gateText, { color: colors.text, opacity: 0.5 }]}>
+        <Text style={[styles.gateText, { color: colors.textPrimary, opacity: 0.5 }]}>
           Bientôt disponible
         </Text>
       </View>
@@ -51,7 +51,7 @@ export const FeatureGate = ({
         <View style={styles.premiumBadge}>
           <Text style={styles.premiumText}>PREMIUM</Text>
         </View>
-        <Text style={[styles.gateText, { color: colors.text }]}>
+        <Text style={[styles.gateText, { color: colors.textPrimary }]}>
           Réservé aux membres Premium
         </Text>
       </View>

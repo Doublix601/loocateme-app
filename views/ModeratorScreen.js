@@ -95,8 +95,8 @@ const ModeratorScreen = () => {
   const [claimWorking, setClaimWorking] = useState(false);
   const searchDebounceRef = useRef(null);
   const cardStyle = [styles.card, { backgroundColor: cardBg, borderColor: borderColor, borderWidth: 1, shadowColor: isDark ? 'transparent' : '#000' }];
-  const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.text, opacity: 1 }];
-  const textStyle = { color: isDark ? '#fff' : colors.text };
+  const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1 }];
+  const textStyle = { color: isDark ? '#fff' : colors.textPrimary };
   const subTextStyle = { color: isDark ? '#eee' : subTextColor };
 
   // Swipe-back handled natively by React Navigation native stack.
@@ -299,11 +299,11 @@ const ModeratorScreen = () => {
               style={[styles.backIcon, { tintColor: '#00c2cb' }]}
             />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Accès refusé</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Accès refusé</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-          <Text style={[styles.subtitle, { color: colors.text, textAlign: 'center' }]}>Cette section est réservée aux modérateurs.</Text>
+          <Text style={[styles.subtitle, { color: colors.textPrimary, textAlign: 'center' }]}>Cette section est réservée aux modérateurs.</Text>
           <TouchableOpacity style={[styles.primaryButton, { marginTop: 20 }]} onPress={() => navigation.goBack()}>
             <Text style={styles.primaryButtonText}>Retour</Text>
           </TouchableOpacity>
@@ -324,7 +324,7 @@ const ModeratorScreen = () => {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Modération</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Modération</Text>
         <TouchableOpacity onPress={() => (activeTab === 'reports' ? loadReports() : loadClaims())} style={{ padding: 8 }}>
             <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Rafraîchir</Text>
         </TouchableOpacity>
@@ -546,7 +546,7 @@ const ModeratorScreen = () => {
                     <>
                       <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Durée (heures)</Text>
                       <TextInput
-                        style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                        style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
                         keyboardType="numeric"
                         value={durationHours}
                         onChangeText={setDurationHours}
@@ -558,7 +558,7 @@ const ModeratorScreen = () => {
                     <>
                       <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Type d'avertissement</Text>
                       <TextInput
-                        style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                        style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
                         value={warningType}
                         onChangeText={setWarningType}
                         placeholder="Ex: Harcèlement"
@@ -569,7 +569,7 @@ const ModeratorScreen = () => {
 
                   <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Note interne (optionnel)</Text>
                   <TextInput
-                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
                     value={note}
                     onChangeText={setNote}
                     multiline
@@ -617,14 +617,14 @@ const ModeratorScreen = () => {
 
                   <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Durée du ban (heures)</Text>
                   <TextInput
-                    style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
                     keyboardType="numeric"
                     value={banDurationHours}
                     onChangeText={setBanDurationHours}
                   />
                   <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Motif du ban</Text>
                   <TextInput
-                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
                     value={banNote}
                     onChangeText={setBanNote}
                     multiline
@@ -680,7 +680,7 @@ const ModeratorScreen = () => {
                   <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#00c2cb' }]}>Rejeter la candidature</Text>
                   <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Motif (envoyé au candidat)</Text>
                   <TextInput
-                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.text, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
                     value={claimRejectionReason}
                     onChangeText={setClaimRejectionReason}
                     multiline

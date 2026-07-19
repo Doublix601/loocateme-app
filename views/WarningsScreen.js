@@ -49,7 +49,7 @@ const WarningsScreen = () => {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Avertissements</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Avertissements</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -58,34 +58,34 @@ const WarningsScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.infoCard, { backgroundColor: 'rgba(0,194,203,0.1)', borderColor: isDark ? 'rgba(0,194,203,0.3)' : 'rgba(0,194,203,0.2)' }]}>
-          <Text style={[styles.infoText, { color: colors.text }]}>
+          <Text style={[styles.infoText, { color: colors.textPrimary }]}>
             Ce comportement peut entraîner un bannissement temporaire ou définitif de l'application.
           </Text>
         </View>
 
         {warnings.length === 0 ? (
           <View style={{ marginTop: 40, alignItems: 'center' }}>
-            <Text style={[styles.emptyText, { color: colors.text, opacity: 0.5 }]}>Aucun avertissement.</Text>
+            <Text style={[styles.emptyText, { color: colors.textPrimary, opacity: 0.5 }]}>Aucun avertissement.</Text>
           </View>
         ) : (
           warnings.map((entry, index) => (
             <View key={`${entry.at.getTime()}_${index}`} style={[styles.warningCard, { backgroundColor: colors.surface }]}>
               <View style={{ marginBottom: 15 }}>
-                <Text style={[styles.warningLabel, { color: colors.text, opacity: 0.5 }]}>Type d'avertissement</Text>
-                <Text style={[styles.warningValue, { color: colors.text }]}>
+                <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>Type d'avertissement</Text>
+                <Text style={[styles.warningValue, { color: colors.textPrimary }]}>
                     {entry.type || 'Non précisé'}
                 </Text>
               </View>
 
               <View style={{ marginBottom: 15 }}>
-                <Text style={[styles.warningLabel, { color: colors.text, opacity: 0.5 }]}>Raison</Text>
-                <Text style={[styles.warningValue, { color: colors.text, fontWeight: '500' }]}>
+                <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>Raison</Text>
+                <Text style={[styles.warningValue, { color: colors.textPrimary, fontWeight: '500' }]}>
                     {entry.reason || 'Non précisée'}
                 </Text>
               </View>
 
               <View style={{ borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', paddingTop: 10 }}>
-                <Text style={[styles.warningDate, { color: colors.text, opacity: 0.4 }]}>
+                <Text style={[styles.warningDate, { color: colors.textPrimary, opacity: 0.4 }]}>
                     {entry.at.toLocaleString(locale)}
                 </Text>
               </View>

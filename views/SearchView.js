@@ -166,23 +166,23 @@ export default function SearchView() {
         )}
         <View style={styles.rowContent}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[styles.rowText, { color: isDark ? '#fff' : colors.text }]} numberOfLines={1}>{getDisplayName(item)}</Text>
+            <Text style={[styles.rowText, { color: isDark ? '#fff' : colors.textPrimary }]} numberOfLines={1}>{getDisplayName(item)}</Text>
             {item.isGhost && <Text style={{ marginLeft: 6, fontSize: 12 }}>👻</Text>}
           </View>
           {isLocation && (
-            <Text style={{ color: isDark ? '#eee' : colors.text, opacity: isDark ? 0.7 : 0.5, fontSize: 12, marginLeft: 15, marginTop: 2 }}>
+            <Text style={{ color: isDark ? '#eee' : colors.textPrimary, opacity: isDark ? 0.7 : 0.5, fontSize: 12, marginLeft: 15, marginTop: 2 }}>
               {item.city}{item.city && item.distance ? ' • ' : ''}{sharedFormatDistance(item.distance)}
             </Text>
           )}
           {!isLocation && item.isGhost && (
-            <Text style={{ color: isDark ? '#aaa' : colors.text, opacity: 0.7, fontSize: 11, marginLeft: 15, marginTop: 2, fontStyle: 'italic' }}>
+            <Text style={{ color: isDark ? '#aaa' : colors.textPrimary, opacity: 0.7, fontSize: 11, marginLeft: 15, marginTop: 2, fontStyle: 'italic' }}>
               N'est plus sur place
             </Text>
           )}
         </View>
         <Image
             source={require('../assets/appIcons/backArrow.png')}
-            style={{ width: 16, height: 16, tintColor: isDark ? '#fff' : colors.text, opacity: 0.2, transform: [{ rotate: '180deg' }] }}
+            style={{ width: 16, height: 16, tintColor: isDark ? '#fff' : colors.textPrimary, opacity: 0.2, transform: [{ rotate: '180deg' }] }}
         />
       </TouchableOpacity>
     );
@@ -231,7 +231,7 @@ export default function SearchView() {
             onChangeText={setQuery}
             placeholder="Nom d'utilisateur, lieu..."
             placeholderTextColor={isDark ? '#aaa' : '#999'}
-            style={[styles.input, { color: isDark ? '#fff' : colors.text }]}
+            style={[styles.input, { color: isDark ? '#fff' : colors.textPrimary }]}
             returnKeyType="search"
             autoCorrect={false}
             autoCapitalize="none"
@@ -244,7 +244,7 @@ export default function SearchView() {
                 hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
                 accessibilityLabel="Effacer la recherche"
               >
-                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.4, fontSize: 20 }}>ⓧ</Text>
+                  <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.4, fontSize: 20 }}>ⓧ</Text>
               </TouchableOpacity>
           ) : null}
         </View>
@@ -260,7 +260,7 @@ export default function SearchView() {
             ]}
             onPress={() => toggleFilter('users')}
           >
-            <Text style={[styles.filterText, { color: includeUsers ? '#fff' : colors.text }]}>Utilisateurs</Text>
+            <Text style={[styles.filterText, { color: includeUsers ? '#fff' : colors.textPrimary }]}>Utilisateurs</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -272,7 +272,7 @@ export default function SearchView() {
             ]}
             onPress={() => toggleFilter('locations')}
           >
-            <Text style={[styles.filterText, { color: includeLocations ? '#fff' : colors.text }]}>Lieux</Text>
+            <Text style={[styles.filterText, { color: includeLocations ? '#fff' : colors.textPrimary }]}>Lieux</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -280,7 +280,7 @@ export default function SearchView() {
       {loading && results.length === 0 ? (
         <View style={{ marginTop: 40, alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#00c2cb" />
-          <Text style={{ marginTop: 12, color: isDark ? '#fff' : colors.text, opacity: 0.5, fontSize: 13 }}>Recherche en cours…</Text>
+          <Text style={{ marginTop: 12, color: isDark ? '#fff' : colors.textPrimary, opacity: 0.5, fontSize: 13 }}>Recherche en cours…</Text>
         </View>
       ) : (
         <FlatList
@@ -293,7 +293,7 @@ export default function SearchView() {
               <Text style={{ fontSize: 44, marginBottom: 12, opacity: 0.6 }}>
                 {qTrim.length < minChars ? '🔍' : '🤷'}
               </Text>
-              <Text style={{ textAlign: 'center', color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.75 : 0.55, lineHeight: 22, fontSize: 15 }}>
+              <Text style={{ textAlign: 'center', color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.75 : 0.55, lineHeight: 22, fontSize: 15 }}>
                 {qTrim.length < minChars
                   ? 'Tape au moins 2 lettres pour lancer la recherche'
                   : 'Aucun résultat trouvé pour cette recherche.'}

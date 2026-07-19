@@ -483,8 +483,8 @@ const DebugScreen = () => {
     const cardBg = isDark ? 'rgba(255,255,255,0.05)' : colors.surface;
 
   const cardStyle = [styles.card, { backgroundColor: cardBg }];
-  const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.text, opacity: 1 }];
-  const textStyle = { color: isDark ? '#fff' : colors.text };
+  const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1 }];
+  const textStyle = { color: isDark ? '#fff' : colors.textPrimary };
   const subTextStyle = { color: isDark ? '#eee' : subTextColor };
 
   return (
@@ -499,7 +499,7 @@ const DebugScreen = () => {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Debug</Text>
+        <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Debug</Text>
         <TouchableOpacity onPress={() => { runAllApiUsers(); loadFlags(); }} style={{ padding: 8 }}>
             <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Sync</Text>
         </TouchableOpacity>
@@ -639,7 +639,7 @@ const DebugScreen = () => {
                 <View style={[styles.resultBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor }]}>
                   <Text style={[styles.resultTitle, textStyle]}>État persisté</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 10 }}>
-                    <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.text }]}>
+                    <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
                       {JSON.stringify(nudgeState, null, 2)}
                     </Text>
                   </ScrollView>
@@ -675,7 +675,7 @@ const DebugScreen = () => {
         <View style={cardStyle}>
           <Text style={[{ fontSize: 12, marginBottom: 4 }, subTextStyle]}>Token actuel :</Text>
           <TextInput
-            style={[styles.input, { height: 'auto', minHeight: 40, fontSize: 11, color: isDark ? '#fff' : colors.text, backgroundColor: colors.background, padding: 8, borderRadius: 8, borderColor: borderColor, borderWidth: 1 }]}
+            style={[styles.input, { height: 'auto', minHeight: 40, fontSize: 11, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: colors.background, padding: 8, borderRadius: 8, borderColor: borderColor, borderWidth: 1 }]}
             value={currentPushToken}
             multiline
             editable={false}
@@ -738,7 +738,7 @@ const DebugScreen = () => {
             <View style={[styles.resultBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor: borderColor }]}>
               <Text style={[styles.resultTitle, textStyle]}>Réponse envoi</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 10, marginTop: 5 }}>
-                  <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.text }]}>
+                  <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
                       {JSON.stringify(pushResponse, null, 2)}
                   </Text>
               </ScrollView>
@@ -769,7 +769,7 @@ const DebugScreen = () => {
                     style={[styles.resultRow, idx !== results.length - 1 && { borderBottomColor: borderColor }]}
                     onPress={() => setSelectedUser(u)}
                 >
-                  <Text style={[styles.resultName, { color: colors.text }]} numberOfLines={1}>
+                  <Text style={[styles.resultName, { color: colors.textPrimary }]} numberOfLines={1}>
                     {(u.username || u.customName || u.firstName || u.email || 'Utilisateur')}
                   </Text>
                   <View style={[styles.badge, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]}>
@@ -888,7 +888,7 @@ const DebugScreen = () => {
               <Text style={[{ marginBottom: 5 }, subTextStyle]}>Total items: {result.total}</Text>
             )}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 10 }}>
-                <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.text }]}>
+                <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
                     {JSON.stringify(result, null, 2)}
                 </Text>
             </ScrollView>
@@ -961,10 +961,10 @@ const styles = StyleSheet.create({
 // Helper Components
 const LabeledInput = ({ label, colors, isDark, ...props }) => (
   <View style={{ marginBottom: 15 }}>
-    <Text style={{ color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.9 : 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
+    <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
     <TextInput
         {...props}
-        style={[{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: isDark ? '#fff' : colors.text, fontSize: 15 }]}
+        style={[{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: isDark ? '#fff' : colors.textPrimary, fontSize: 15 }]}
         placeholderTextColor={isDark ? '#999' : '#ccc'}
     />
   </View>
@@ -972,12 +972,12 @@ const LabeledInput = ({ label, colors, isDark, ...props }) => (
 
 const LabeledTextArea = ({ label, colors, isDark, ...props }) => (
   <View style={{ marginBottom: 15 }}>
-    <Text style={{ color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.9 : 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
+    <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
     <TextInput
         {...props}
         multiline
         numberOfLines={4}
-        style={[{ minHeight: 80, textAlignVertical: 'top', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: isDark ? '#fff' : colors.text, fontSize: 15 }]}
+        style={[{ minHeight: 80, textAlignVertical: 'top', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: isDark ? '#fff' : colors.textPrimary, fontSize: 15 }]}
         placeholderTextColor={isDark ? '#999' : '#ccc'}
     />
   </View>

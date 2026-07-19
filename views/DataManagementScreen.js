@@ -65,29 +65,29 @@ export default function DataManagementScreen() {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Confidentialité</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>Exporter mes données</Text>
-          <Text style={[styles.cardDesc, { color: colors.text, opacity: 0.7 }]}>Téléchargez une copie de vos informations (profil, réseaux sociaux, paramètres).</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Exporter mes données</Text>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>Téléchargez une copie de vos informations (profil, réseaux sociaux, paramètres).</Text>
           <TouchableOpacity style={styles.primary} disabled={working} onPress={handleExport}>
             <Text style={styles.primaryText}>{working ? 'Veuillez patienter...' : 'Exporter'}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.cardTitle, { color: colors.text }]}>Supprimer mon compte</Text>
-          <Text style={[styles.cardDesc, { color: colors.text, opacity: 0.7 }]}>Supprime définitivement votre compte et toutes les données associées.</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Supprimer mon compte</Text>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>Supprime définitivement votre compte et toutes les données associées.</Text>
           <TextInput
             secureTextEntry
             value={password}
             onChangeText={setPassword}
             placeholder="Confirmez avec votre mot de passe"
             placeholderTextColor={isDark ? '#888' : '#999'}
-            style={[styles.input, { backgroundColor: colors.background, color: colors.text, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
+            style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
           />
           <TouchableOpacity style={styles.danger} disabled={working} onPress={handleDelete}>
             <Text style={styles.dangerText}>Supprimer définitivement</Text>

@@ -19,7 +19,7 @@ export const PremiumGate = ({ children, featureName = 'cette fonctionnalité', s
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }, style]}>
-      <Text style={[styles.title, { color: isDark ? '#fff' : colors.text }]}>
+      <Text style={[styles.title, { color: isDark ? '#fff' : colors.textPrimary }]}>
         💎 Fonctionnalité Premium
       </Text>
       <Text style={[styles.description, { color: isDark ? '#ccc' : colors.textSecondary }]}>

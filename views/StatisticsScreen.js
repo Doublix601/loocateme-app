@@ -203,7 +203,7 @@ export default function StatisticsScreen() {
           />
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.text }]}>Statistiques</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Statistiques</Text>
           {unreadCount > 0 && (
             <View style={styles.unreadBadge}>
               <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
@@ -222,15 +222,15 @@ export default function StatisticsScreen() {
             />
             {!effectiveStatisticsEnabled ? (
               <>
-                <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.text }]}>Bientôt disponible 🚀</Text>
-                <Text style={[styles.paywallText, { color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.9 : 0.7 }]}>
+                <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Bientôt disponible 🚀</Text>
+                <Text style={[styles.paywallText, { color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.7 }]}>
                   Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux.
                 </Text>
               </>
             ) : (
               <>
-                <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.text }]}>Qui te stalke ? 👀</Text>
-                <Text style={[styles.paywallText, { color: isDark ? '#fff' : colors.text, opacity: isDark ? 0.9 : 0.7 }]}>
+                <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Qui te stalke ? 👀</Text>
+                <Text style={[styles.paywallText, { color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.7 }]}>
                   Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
                 </Text>
                 <TouchableOpacity
@@ -242,7 +242,7 @@ export default function StatisticsScreen() {
               </>
             )}
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
-              <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.5 }}>Plus tard</Text>
+              <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.5 }}>Plus tard</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -260,16 +260,16 @@ export default function StatisticsScreen() {
           ) : (
             <>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.text, opacity: 1 }]}>Vues de profil</Text>
+                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1 }]}>Vues de profil</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                   <Text style={[styles.metric, { color: '#00c2cb' }]}>{data?.views ?? 0}</Text>
-                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, marginLeft: 10 }}>vues</Text>
+                  <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.7, marginLeft: 10 }}>vues</Text>
                 </View>
-                <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.5, marginTop: 5, fontSize: 12 }}>sur les 30 derniers jours</Text>
+                <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.5, marginTop: 5, fontSize: 12 }}>sur les 30 derniers jours</Text>
               </View>
 
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.text, opacity: 1, marginBottom: 15 }]}>Clics par réseau</Text>
+                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1, marginBottom: 15 }]}>Clics par réseau</Text>
                 {supportedNetworks.map(({ key, label }, index) => (
                   <View key={key} style={[styles.row, index !== supportedNetworks.length - 1 && { borderBottomWidth: 1, borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
                     <View style={styles.rowLeft}>
@@ -280,7 +280,7 @@ export default function StatisticsScreen() {
                           <View style={[styles.smIcon, { backgroundColor: '#ccc' }]} />
                         )}
                       </View>
-                      <Text style={[styles.rowLabel, { color: isDark ? '#fff' : colors.text }]}>{label}</Text>
+                      <Text style={[styles.rowLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>{label}</Text>
                     </View>
                     <View style={{ backgroundColor: 'rgba(0,194,203,0.1)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 10 }}>
                         <Text style={[styles.rowValue, { color: '#00c2cb' }]}>{getCountFor(key)}</Text>
@@ -290,15 +290,15 @@ export default function StatisticsScreen() {
               </View>
 
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.text, opacity: 1, marginBottom: 15 }]}>Dernières visites</Text>
+                <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1, marginBottom: 15 }]}>Dernières visites</Text>
                 {detailedLoading ? (
                   <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 20 }} />
                 ) : detailedError ? (
-                  <Text style={{ color: isDark ? '#fff' : colors.text, opacity: 0.7, textAlign: 'center' }}>{detailedError}</Text>
+                  <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.7, textAlign: 'center' }}>{detailedError}</Text>
                 ) : detailed.length === 0 ? (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyEmoji}>👻</Text>
-                    <Text style={[styles.emptyTitle, { color: isDark ? '#fff' : colors.text }]}>Personne n'a encore visité ton profil</Text>
+                    <Text style={[styles.emptyTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Personne n'a encore visité ton profil</Text>
                     <Text style={[styles.emptyDesc, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>
                       Continue à explorer des lieux pour être découvert !
                     </Text>
@@ -367,7 +367,7 @@ export default function StatisticsScreen() {
                                 </View>
                                 <View style={{ flex: 1, marginLeft: 14 }}>
                                   <Text
-                                    style={{ color: isDark ? '#fff' : colors.text, fontWeight: '700', fontSize: 15, letterSpacing: isBlurred ? 2 : 0 }}
+                                    style={{ color: isDark ? '#fff' : colors.textPrimary, fontWeight: '700', fontSize: 15, letterSpacing: isBlurred ? 2 : 0 }}
                                     numberOfLines={1}
                                   >
                                     {displayName}
@@ -386,7 +386,7 @@ export default function StatisticsScreen() {
                                 ) : (
                                   <Image
                                     source={require('../assets/appIcons/backArrow.png')}
-                                    style={{ width: 14, height: 14, tintColor: isDark ? '#fff' : colors.text, opacity: 0.25, transform: [{ rotate: '180deg' }] }}
+                                    style={{ width: 14, height: 14, tintColor: isDark ? '#fff' : colors.textPrimary, opacity: 0.25, transform: [{ rotate: '180deg' }] }}
                                   />
                                 )}
                               </TouchableOpacity>
@@ -397,7 +397,7 @@ export default function StatisticsScreen() {
                           {blurredCount > 0 && (
                             <View style={[styles.paywallOverlay, { backgroundColor: isDark ? 'rgba(15,15,26,0.95)' : 'rgba(255,255,255,0.95)' }]}>
                               <Text style={{ fontSize: 28, marginBottom: 6 }}>🔒</Text>
-                              <Text style={[{ fontWeight: '800', fontSize: 15, marginBottom: 4, textAlign: 'center' }, { color: isDark ? '#fff' : colors.text }]}>
+                              <Text style={[{ fontWeight: '800', fontSize: 15, marginBottom: 4, textAlign: 'center' }, { color: isDark ? '#fff' : colors.textPrimary }]}>
                                 {blurredCount} visite{blurredCount > 1 ? 's' : ''} masquée{blurredCount > 1 ? 's' : ''}
                               </Text>
                               <Text style={[{ fontSize: 12, textAlign: 'center', marginBottom: 12 }, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>

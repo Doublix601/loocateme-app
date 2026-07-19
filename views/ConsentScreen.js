@@ -66,7 +66,7 @@ export default function ConsentScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Confidentialité</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
       </View>
 
       {loading ? (
@@ -77,19 +77,19 @@ export default function ConsentScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {!!changelog && (
             <View style={[styles.card, { backgroundColor: colors.surface, borderLeftWidth: 3, borderLeftColor: '#00c2cb' }]}>
-              <Text style={[styles.changelogTitle, { color: colors.text }]}>Ce qui a changé{version ? ` (v${version})` : ''}</Text>
-              <Text style={[styles.policyText, { color: colors.text }]}>{changelog}</Text>
+              <Text style={[styles.changelogTitle, { color: colors.textPrimary }]}>Ce qui a changé{version ? ` (v${version})` : ''}</Text>
+              <Text style={[styles.policyText, { color: colors.textSecondary }]}>{changelog}</Text>
             </View>
           )}
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.policyText, { color: colors.text }]}>{policy}</Text>
+            <Text style={[styles.policyText, { color: colors.textSecondary }]}>{policy}</Text>
           </View>
         </ScrollView>
       )}
 
       <View style={[styles.actions, { backgroundColor: colors.surface }]}>
         <TouchableOpacity style={[styles.button, styles.decline, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]} onPress={handleDecline} disabled={accepting}>
-          <Text style={[styles.buttonText, { color: colors.text, opacity: 0.6 }]}>Refuser</Text>
+          <Text style={[styles.buttonText, { color: colors.textPrimary, opacity: 0.6 }]}>Refuser</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.accept]} onPress={handleAccept} disabled={accepting}>
           <Text style={styles.buttonText}>{accepting ? 'Enregistrement...' : 'Accepter'}</Text>

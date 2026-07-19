@@ -133,7 +133,7 @@ const ChatListScreen = ({ navigation }) => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.accent + '15' }]}>
                     <Text style={{ fontSize: 20, color: colors.accent }}>✕</Text>
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: isDark ? colors.text : colors.accent }]}>Messages</Text>
+                <Text style={[styles.title, { color: isDark ? colors.textPrimary : colors.accent }]}>Messages</Text>
                 <View style={{ width: 40 }} />
             </View>
             <FlatList

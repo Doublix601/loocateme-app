@@ -178,7 +178,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
 
   const bg = isDark ? '#1a1a2e' : colors.background;
   const cardBg = isDark ? 'rgba(255,255,255,0.06)' : colors.surface;
-  const text = isDark ? '#fff' : colors.text;
+  const text = isDark ? '#fff' : colors.textPrimary;
   const sub = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
 
   return (
