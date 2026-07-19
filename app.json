@@ -26,7 +26,13 @@
       ],
       "infoPlist": {
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
+          "NSExceptionDomains": {
+            "loocate.me": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionRequiresForwardSecrecy": true
+            }
+          }
         },
         "UIBackgroundModes": [
           "location",
@@ -35,6 +41,8 @@
         "NSLocationWhenInUseUsageDescription": "Votre position est utilisée pour afficher les utilisateurs autour de vous.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
         "NSLocationAlwaysUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
+        "NSCameraUsageDescription": "LoocateMe utilise votre appareil photo pour prendre une photo de profil ou l'envoyer dans une conversation.",
+        "NSPhotoLibraryUsageDescription": "LoocateMe accède à votre photothèque pour choisir une photo de profil ou l'envoyer dans une conversation.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -43,7 +51,12 @@
       "scheme": "loocateme",
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
       ],
       "intentFilters": [
         {
