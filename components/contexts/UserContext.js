@@ -32,6 +32,8 @@ function mapBackendUser(u = {}) {
     moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
     boostBalance: u.boostBalance || 0,
     boostUntil: u.boostUntil || null,
+    // "Cote" : score de présence (0/25/50/75/100), voir MyAccountScreen
+    cotePercent: typeof u.cotePercent === 'number' ? u.cotePercent : 100,
   };
 }
 

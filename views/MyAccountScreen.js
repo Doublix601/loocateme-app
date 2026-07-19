@@ -43,6 +43,9 @@ import socialMediaIcons from '../constants/socialMediaIcons';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 import SpotlightOverlay from '../components/SpotlightOverlay';
 import { hasSeenProfileOnboarding, markProfileOnboardingDone } from '../utils/onboarding';
+import SuperlikeHistoryModal from '../components/SuperlikeHistoryModal';
+import CoteCard from '../components/CoteCard';
+import { subscribe } from '../components/EventBus';
 
 const { width, height } = Dimensions.get('window');
 const H = height;
@@ -84,6 +87,7 @@ const MyAccountScreen = () => {
     const [showDatePicker, setShowDatePicker] = useState(false);
     // Partage / QR
     const [qrVisible, setQrVisible] = useState(false);
+    const [superlikeHistoryVisible, setSuperlikeHistoryVisible] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastVisible, setToastVisible] = useState(false);
     const [myUserId, setMyUserId] = useState('');
@@ -228,6 +232,15 @@ const MyAccountScreen = () => {
         setSocialLinks(user?.socialMedia || []);
     }, [user?.socialMedia]);
 
+    // Ouvre l'historique des superlikes reçus quand on tape sur la notification push (App.js).
+    useEffect(() => {
+        const unsub = subscribe('ui:open_superlike_history', () => {
+            goToPage(2);
+            setSuperlikeHistoryVisible(true);
+        });
+        return unsub;
+    }, [goToPage]);
+
     // On mount, if socials are empty (e.g., after auto-login), fetch my user from backend and hydrate context
     useEffect(() => {
         let mounted = true;
@@ -252,6 +265,7 @@ const MyAccountScreen = () => {
                         photo: me.profileImageUrl || user?.photo || null,
                         socialMedia: mappedSocial,
                         isPremium: !!me.isPremium,
+                        cotePercent: typeof me.cotePercent === 'number' ? me.cotePercent : (user?.cotePercent ?? 100),
                         role: me.role || user?.role || 'user',
                         premiumTrialEnd: me.premiumTrialEnd || null,
                         consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
@@ -297,6 +311,7 @@ const MyAccountScreen = () => {
                     photo: me.profileImageUrl || user?.photo || null,
                     socialMedia: Array.isArray(me.socialNetworks) ? mapNetworksToSocialMedia(me.socialNetworks) : (user?.socialMedia || []),
                     isPremium: nowPremium,
+                    cotePercent: typeof me.cotePercent === 'number' ? me.cotePercent : (user?.cotePercent ?? 100),
                     role: me.role || user?.role || 'user',
                     premiumTrialEnd: me.premiumTrialEnd || null,
                     consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
@@ -1104,6 +1119,16 @@ const MyAccountScreen = () => {
                             />
                         </View>
 
+                        <CoteCard
+                            percent={user?.cotePercent ?? 100}
+                            colors={colors}
+                            isDark={isDark}
+                            onPress={() => Alert.alert(
+                                'Ta Cote 🔥',
+                                "Ta Cote reflète ton assiduité. Connecte-toi au moins une fois par jour pour la garder à 100%. Si tu rates un jour, elle retombe à 0%, puis remonte de 25% par jour de connexion. Plus elle est haute, plus tu apparais en premier dans la liste des utilisateurs d'un lieu."
+                            )}
+                        />
+
                         <View
                             ref={identityRowRef}
                             style={{
@@ -1273,6 +1298,14 @@ const MyAccountScreen = () => {
                                 accessibilityLabel="Voir mes statistiques"
                             >
                                 <Text style={styles.shareIconEmoji}>📈</Text>
+                            </TouchableOpacity>
+                            {/* Bouton historique des superlikes reçus */}
+                            <TouchableOpacity
+                                style={styles.shareIconBtn}
+                                onPress={() => setSuperlikeHistoryVisible(true)}
+                                accessibilityLabel="Voir les superlikes reçus"
+                            >
+                                <Text style={styles.shareIconEmoji}>⭐</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -1652,6 +1685,11 @@ const MyAccountScreen = () => {
                     </View>
                 </Modal>
             </ScrollView>
+
+            <SuperlikeHistoryModal
+                visible={superlikeHistoryVisible}
+                onClose={() => setSuperlikeHistoryVisible(false)}
+            />
 
             {/* QR Code Modal */}
             <Modal visible={qrVisible} animationType="slide" transparent onRequestClose={() => setQrVisible(false)}>
