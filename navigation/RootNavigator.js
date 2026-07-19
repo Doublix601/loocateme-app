@@ -13,6 +13,7 @@ import ModeratorScreen from '../views/ModeratorScreen';
 import StatisticsScreen from '../views/StatisticsScreen';
 import WarningsScreen from '../views/WarningsScreen';
 import DataManagementScreen from '../views/DataManagementScreen';
+import EditProfileScreen from '../views/EditProfileScreen';
 import PremiumPaywallScreen from '../views/PremiumPaywallScreen';
 import OnboardingScreen from '../views/OnboardingScreen';
 
@@ -43,6 +44,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Statistics" component={StatisticsScreen} />
       <Stack.Screen name="Warnings" component={WarningsScreen} />
       <Stack.Screen name="DataManagement" component={DataManagementScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
 
       {/* Modals */}
       <Stack.Screen

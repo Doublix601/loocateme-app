@@ -26,16 +26,13 @@ import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { BlurView } from 'expo-blur';
 import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { UserContext } from '../components/contexts/UserContext';
-import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser, updateUserStatus as apiUpdateUserStatus, updateDemographics as apiUpdateDemographics } from '../components/ApiRequest';
-import { isAtLeast18 } from '../utils/age';
+import { updateProfile as apiUpdateProfile, uploadProfilePhoto as apiUploadProfilePhoto, upsertSocial as apiUpsertSocial, removeSocial as apiRemoveSocial, getMyUser, updateUserStatus as apiUpdateUserStatus } from '../components/ApiRequest';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import Toast from '../components/Toast';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
-import { useLocale } from '../components/contexts/LocalizationContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
@@ -50,25 +47,11 @@ import { subscribe } from '../components/EventBus';
 const { width, height } = Dimensions.get('window');
 const H = height;
 
-const GENDER_OPTIONS = [
-    { key: 'male', label: 'Garçon' },
-    { key: 'female', label: 'Fille' },
-    { key: 'prefer_not_to_say', label: 'Ne souhaite pas répondre' },
-];
-
-const formatBirthdate = (value) => {
-    if (!value) return null;
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return null;
-    return d.toLocaleDateString('fr-FR');
-};
-
 const MyAccountScreen = () => {
     const navigation = useNavigation();
     const { goToPage, currentPage, lockSwiper, unlockSwiper } = useMainSwiper();
     const { colors, isDark } = useTheme();
     const { isMoon } = useVibe();
-    const { locale } = useLocale();
     const insets = useSafeAreaInsets();
     const skyFillStyle = {
         position: 'absolute',
@@ -84,7 +67,6 @@ const MyAccountScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [editType, setEditType] = useState('');
     const [newValue, setNewValue] = useState('');
-    const [showDatePicker, setShowDatePicker] = useState(false);
     // Partage / QR
     const [qrVisible, setQrVisible] = useState(false);
     const [superlikeHistoryVisible, setSuperlikeHistoryVisible] = useState(false);
@@ -100,14 +82,12 @@ const MyAccountScreen = () => {
     const spotStarted = useRef(false);
     const scrollViewRef = useRef(null);
     const photoRef = useRef(null);
-    const identityRowRef = useRef(null);
     const bioRef = useRef(null);
     const socialRef = useRef(null);
     const statusRef = useRef(null);
 
     const SPOT_STEPS = [
       { ref: photoRef,       borderRadius: 999, title: 'Ta photo de profil',  description: 'Reste appuyé sur ta photo pour la modifier ou en choisir une nouvelle depuis ta galerie.' },
-      { ref: identityRowRef, borderRadius: 14,  title: 'Ton identité',         description: 'Reste appuyé sur Prénom, Nom ou Pseudo pour modifier chaque champ individuellement.' },
       { ref: bioRef,         borderRadius: 16,  title: 'Ta bio',               description: "Reste appuyé sur la bio pour la personnaliser. C'est la première chose que les autres voient." },
       { ref: socialRef,      borderRadius: 16,  title: 'Tes réseaux sociaux',  description: 'Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône pour la modifier ou supprimer.' },
       { ref: statusRef,      borderRadius: 99,  title: 'Ton statut',           description: 'Vert = disponible · Orange = occupé · Rouge = ne pas déranger. Visible par les autres en temps réel.' },
@@ -520,12 +500,7 @@ const MyAccountScreen = () => {
 
     const handleEdit = (type) => {
         setEditType(type);
-        if (type === 'birthdate') {
-            const d = user.birthdate ? new Date(user.birthdate) : new Date(2000, 0, 1);
-            setNewValue(isNaN(d.getTime()) ? new Date(2000, 0, 1) : d);
-        } else {
-            setNewValue(user[type]);
-        }
+        setNewValue(user[type]);
         setModalVisible(true);
     };
 
@@ -558,120 +533,6 @@ const MyAccountScreen = () => {
                     username: updated.username ?? updated.name ?? user.username,
                     bio: updated.bio ?? raw,
                     photo: updated.profileImageUrl ?? user.photo,
-                });
-                await refreshMyProfile();
-            } else if (editType === 'firstName') {
-                let normalized = raw.trim();
-                if (normalized) {
-                    const lower = normalized.toLocaleLowerCase(locale);
-                    normalized = lower.charAt(0).toLocaleUpperCase(locale) + lower.slice(1);
-                }
-                const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
-                if (normalized && !NAME_RE.test(normalized)) {
-                    Alert.alert('Prénom invalide', "Le prénom doit commencer par une majuscule et peut contenir des lettres (accents autorisés), espaces, apostrophes ou tirets.");
-                    return;
-                }
-                // Vérifier règles de combinaison côté client
-                const candidateFirst = normalized;
-                const candidateLast = (user.lastName || '').trim();
-                const candidateCustom = (user.customName || '').trim();
-                const hasCustom = candidateCustom.length > 0;
-                const hasFirst = candidateFirst.length > 0;
-                const hasLast = candidateLast.length > 0;
-                if (!hasCustom && !(hasFirst && hasLast)) {
-                    Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
-                    return;
-                }
-                const res = await apiUpdateProfile({ firstName: candidateFirst });
-                const updated = res?.user || {};
-                updateUser({
-                    ...user,
-                    firstName: updated.firstName ?? candidateFirst,
-                    lastName: updated.lastName ?? user.lastName,
-                    customName: updated.customName ?? user.customName,
-                    username: updated.username ?? updated.name ?? user.username,
-                    bio: updated.bio ?? user.bio,
-                    photo: updated.profileImageUrl ?? user.photo,
-                });
-                await refreshMyProfile();
-            } else if (editType === 'lastName') {
-                let normalized = raw.trim();
-                if (normalized) {
-                    const lower = normalized.toLocaleLowerCase(locale);
-                    normalized = lower.charAt(0).toLocaleUpperCase(locale) + lower.slice(1);
-                }
-                const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
-                if (normalized && !NAME_RE.test(normalized)) {
-                    Alert.alert('Nom invalide', "Le nom doit commencer par une majuscule et peut contenir des lettres (accents autorisés), espaces, apostrophes ou tirets.");
-                    return;
-                }
-                const candidateFirst = (user.firstName || '').trim();
-                const candidateLast = normalized;
-                const candidateCustom = (user.customName || '').trim();
-                const hasCustom = candidateCustom.length > 0;
-                const hasFirst = candidateFirst.length > 0;
-                const hasLast = candidateLast.length > 0;
-                if (!hasCustom && !(hasFirst && hasLast)) {
-                    Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
-                    return;
-                }
-                const res = await apiUpdateProfile({ lastName: candidateLast });
-                const updated = res?.user || {};
-                updateUser({
-                    ...user,
-                    firstName: updated.firstName ?? user.firstName,
-                    lastName: updated.lastName ?? candidateLast,
-                    customName: updated.customName ?? user.customName,
-                    username: updated.username ?? updated.name ?? user.username,
-                    bio: updated.bio ?? user.bio,
-                    photo: updated.profileImageUrl ?? user.photo,
-                });
-                await refreshMyProfile();
-            } else if (editType === 'customName') {
-                const normalized = raw.trim();
-                // Interdire de vider le nom personnalisé si prénom ou nom sont vides
-                const hasFirst = (user.firstName || '').trim().length > 0;
-                const hasLast = (user.lastName || '').trim().length > 0;
-                if (!normalized && (!hasFirst || !hasLast)) {
-                    Alert.alert('Nom personnalisé requis', 'Impossible de supprimer le nom personnalisé tant que le prénom ou le nom est vide.');
-                    return;
-                }
-                const res = await apiUpdateProfile({ customName: normalized });
-                const updated = res?.user || {};
-                updateUser({
-                    ...user,
-                    customName: updated.customName ?? normalized,
-                    username: updated.username ?? updated.name ?? user.username,
-                    bio: updated.bio ?? user.bio,
-                    photo: updated.profileImageUrl ?? user.photo,
-                });
-                await refreshMyProfile();
-            } else if (editType === 'birthdate') {
-                const selectedDate = newValue instanceof Date ? newValue : new Date(newValue);
-                if (isNaN(selectedDate.getTime())) {
-                    Alert.alert('Date invalide', 'Merci de sélectionner une date de naissance valide.');
-                    return;
-                }
-                if (!isAtLeast18(selectedDate)) {
-                    Alert.alert('Âge minimum requis', 'Vous devez avoir au moins 18 ans.');
-                    return;
-                }
-                const isoDate = selectedDate.toISOString().slice(0, 10);
-                const res = await apiUpdateDemographics({ birthdate: isoDate, gender: user.gender || undefined });
-                const updated = res?.user || {};
-                updateUser({
-                    ...user,
-                    birthdate: updated.birthdate ?? isoDate,
-                    privacyPreferences: updated.privacyPreferences ?? user.privacyPreferences,
-                });
-                await refreshMyProfile();
-            } else if (editType === 'gender') {
-                const res = await apiUpdateDemographics({ birthdate: user.birthdate || undefined, gender: newValue || undefined });
-                const updated = res?.user || {};
-                updateUser({
-                    ...user,
-                    gender: updated.gender ?? newValue,
-                    privacyPreferences: updated.privacyPreferences ?? user.privacyPreferences,
                 });
                 await refreshMyProfile();
             }
@@ -1129,100 +990,12 @@ const MyAccountScreen = () => {
                             )}
                         />
 
-                        <View
-                            ref={identityRowRef}
-                            style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            width: '100%',
-                            paddingHorizontal: 15,
-                            marginTop: 15,
-                            gap: 8
-                        }}>
-                            <TouchableOpacity
-                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
-                                onLongPress={() => handleEdit('firstName')}
-                                delayLongPress={300}
-                                activeOpacity={1}
-                            >
-                                <View style={styles.identityLabelRow}>
-                                    <Text style={[styles.identityLabel, labelStyle]}>Prénom</Text>
-                                    <Text style={styles.identityEditHint}>✏️</Text>
-                                </View>
-                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
-                                    {user?.firstName || '—'}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
-                                onLongPress={() => handleEdit('lastName')}
-                                delayLongPress={300}
-                                activeOpacity={1}
-                            >
-                                <View style={styles.identityLabelRow}>
-                                    <Text style={[styles.identityLabel, labelStyle]}>Nom</Text>
-                                    <Text style={styles.identityEditHint}>✏️</Text>
-                                </View>
-                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
-                                    {user?.lastName || '—'}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.identityCard, { flex: 1.5, backgroundColor: colors.surfaceAlt }]}
-                                onLongPress={() => handleEdit('customName')}
-                                delayLongPress={300}
-                                activeOpacity={1}
-                            >
-                                <View style={styles.identityLabelRow}>
-                                    <Text style={[styles.identityLabel, labelStyle]}>Custom</Text>
-                                    <Text style={styles.identityEditHint}>✏️</Text>
-                                </View>
-                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
-                                    {user?.customName || '—'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            width: '100%',
-                            paddingHorizontal: 15,
-                            marginTop: 8,
-                            gap: 8
-                        }}>
-                            <TouchableOpacity
-                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
-                                onLongPress={() => handleEdit('birthdate')}
-                                delayLongPress={300}
-                                activeOpacity={1}
-                            >
-                                <View style={styles.identityLabelRow}>
-                                    <Text style={[styles.identityLabel, labelStyle]}>Date de naissance</Text>
-                                    <Text style={styles.identityEditHint}>✏️</Text>
-                                </View>
-                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
-                                    {formatBirthdate(user?.birthdate) || '—'}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.identityCard, { flex: 1, backgroundColor: colors.surfaceAlt }]}
-                                onLongPress={() => handleEdit('gender')}
-                                delayLongPress={300}
-                                activeOpacity={1}
-                            >
-                                <View style={styles.identityLabelRow}>
-                                    <Text style={[styles.identityLabel, labelStyle]}>Sexe</Text>
-                                    <Text style={styles.identityEditHint}>✏️</Text>
-                                </View>
-                                <Text style={[styles.identityValue, textPrimaryStyle]} numberOfLines={1}>
-                                    {GENDER_OPTIONS.find((o) => o.key === user?.gender)?.label || '—'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity
+                            style={[styles.editButton, { alignSelf: 'center' }]}
+                            onPress={() => navigation.navigate('EditProfile')}
+                        >
+                            <Text style={styles.editButtonText}>Modifier mon profil</Text>
+                        </TouchableOpacity>
 
                         <View ref={bioRef} style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
                             <View style={styles.bioTitleContainer}>
@@ -1344,95 +1117,33 @@ const MyAccountScreen = () => {
                 <Modal visible={modalVisible} transparent={true} animationType="fade">
                     <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
                         <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-                        <Pressable style={StyleSheet.absoluteFill} onPress={() => { setModalVisible(false); setShowDatePicker(false); }} />
+                        <Pressable style={StyleSheet.absoluteFill} onPress={() => setModalVisible(false)} />
                         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
                             <Text style={[styles.modalTitle, textPrimaryStyle]}>
                                 Modifier {
-                                    editType === 'firstName' ? 'le Prénom' :
-                                    editType === 'lastName' ? 'le Nom' :
-                                    editType === 'customName' ? 'le Nom personnalisé' :
                                     editType === 'username' ? "le Nom d'utilisateur" :
                                     editType === 'bio' ? 'la Bio' :
-                                    editType === 'birthdate' ? 'la Date de naissance' :
-                                    editType === 'gender' ? 'le Sexe' :
                                     editType
                                 }
                             </Text>
-                            {editType === 'birthdate' ? (
-                                Platform.OS === 'ios' ? (
-                                    <DateTimePicker
-                                        value={newValue instanceof Date ? newValue : new Date(2000, 0, 1)}
-                                        mode="date"
-                                        display="spinner"
-                                        maximumDate={new Date()}
-                                        onChange={(event, selectedDate) => {
-                                            if (event.type !== 'dismissed' && selectedDate) setNewValue(selectedDate);
-                                        }}
-                                    />
-                                ) : (
-                                    <>
-                                        <TouchableOpacity
-                                            onPress={() => setShowDatePicker(true)}
-                                            style={[styles.modalInput, { borderColor: colors.border, backgroundColor: isDark ? '#0f1115' : '#ffffff', justifyContent: 'center' }]}
-                                        >
-                                            <Text style={{ color: colors.textPrimary }}>
-                                                {newValue instanceof Date ? newValue.toLocaleDateString('fr-FR') : 'Sélectionner une date'}
-                                            </Text>
-                                        </TouchableOpacity>
-                                        {showDatePicker && (
-                                            <DateTimePicker
-                                                value={newValue instanceof Date ? newValue : new Date(2000, 0, 1)}
-                                                mode="date"
-                                                display="default"
-                                                maximumDate={new Date()}
-                                                onChange={(event, selectedDate) => {
-                                                    setShowDatePicker(false);
-                                                    if (event.type !== 'dismissed' && selectedDate) setNewValue(selectedDate);
-                                                }}
-                                            />
-                                        )}
-                                    </>
-                                )
-                            ) : editType === 'gender' ? (
-                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-                                    {GENDER_OPTIONS.map((opt) => (
-                                        <TouchableOpacity
-                                            key={opt.key}
-                                            onPress={() => setNewValue(newValue === opt.key ? '' : opt.key)}
-                                            style={[
-                                                styles.genderPill,
-                                                newValue === opt.key && styles.genderPillActive,
-                                            ]}
-                                        >
-                                            <Text style={newValue === opt.key ? styles.genderPillTextActive : [styles.genderPillText, { color: colors.textSecondary }]}>
-                                                {opt.label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            ) : (
-                                <TextInput
-                                    value={newValue}
-                                    onChangeText={setNewValue}
-                                    placeholder={
-                                        editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" :
-                                        editType === 'firstName' ? "Votre Prénom" :
-                                        editType === 'lastName' ? "Votre Nom" :
-                                        editType === 'customName' ? "Votre Nom personnalisé" :
-                                        'Votre texte'
-                                    }
-                                    placeholderTextColor={isDark ? '#999' : '#666'}
-                                    style={[
-                                        styles.modalInput,
-                                        { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
-                                        editType === 'bio' ? { height: Math.max(height * 0.18, 120), textAlignVertical: 'top', paddingTop: 10 } : null,
-                                    ]}
-                                    multiline={editType === 'bio'}
-                                    numberOfLines={editType === 'bio' ? 6 : 1}
-                                    blurOnSubmit={editType !== 'bio'}
-                                    returnKeyType={editType === 'bio' ? 'default' : 'done'}
-                                />
-                            )}
+                            <TextInput
+                                value={newValue}
+                                onChangeText={setNewValue}
+                                placeholder={
+                                    editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" :
+                                    'Votre texte'
+                                }
+                                placeholderTextColor={isDark ? '#999' : '#666'}
+                                style={[
+                                    styles.modalInput,
+                                    { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
+                                    editType === 'bio' ? { height: Math.max(height * 0.18, 120), textAlignVertical: 'top', paddingTop: 10 } : null,
+                                ]}
+                                multiline={editType === 'bio'}
+                                numberOfLines={editType === 'bio' ? 6 : 1}
+                                blurOnSubmit={editType !== 'bio'}
+                                returnKeyType={editType === 'bio' ? 'default' : 'done'}
+                            />
                             {editType === 'username' ? (
                                 <Text style={styles.modalHint}>Format requis: ^[A-Z][a-z]+$ (exemple: Arnaud)</Text>
                             ) : null}
@@ -1440,7 +1151,7 @@ const MyAccountScreen = () => {
                                 <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>Enregistrer</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                onPress={() => { setModalVisible(false); setShowDatePicker(false); }}
+                                onPress={() => setModalVisible(false)}
                                 style={styles.modalButton}>
                                 <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>Annuler</Text>
                             </TouchableOpacity>
@@ -1930,33 +1641,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: Math.min(width * 0.04, 16),
     },
-    identityCard: {
-        borderRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 4,
-        minHeight: 70,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        elevation: 1,
-    },
-    identityLabel: {
-        fontSize: 10,
-        color: '#00c2cb',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-        fontWeight: '700',
-        marginBottom: 6,
-    },
-    identityValue: {
-        fontSize: 14,
-        fontWeight: '600',
-        textAlign: 'center',
-        width: '100%',
-    },
     socialMediaContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -2031,26 +1715,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         paddingLeft: width * 0.03,
         marginBottom: height * 0.02,
-    },
-    genderPill: {
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.05)',
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.05)',
-    },
-    genderPillActive: {
-        backgroundColor: '#00c2cb',
-        borderColor: '#00c2cb',
-    },
-    genderPillText: {
-        fontSize: 13,
-    },
-    genderPillTextActive: {
-        fontSize: 13,
-        color: '#fff',
-        fontWeight: '600',
     },
     inputWrapper: {
         flexDirection: 'row',
@@ -2363,18 +2027,6 @@ const styles = StyleSheet.create({
         width: 22,
         height: 22,
         tintColor: '#00c2cb',
-    },
-    identityLabelRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-        marginBottom: 2,
-    },
-    identityEditHint: {
-        fontSize: 10,
-        opacity: 0.45,
-        marginLeft: 4,
     },
 });
 
