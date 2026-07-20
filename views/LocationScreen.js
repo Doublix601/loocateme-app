@@ -66,7 +66,7 @@ const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
 const LocationScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { locationId, tertiles, scrollToEvent } = route.params ?? {};
+  const { locationId, tertiles, scrollToEventId } = route.params ?? {};
   const navigateToUser = useNavigateToUser();
 
   const { isMoon } = useVibe();
@@ -83,29 +83,27 @@ const LocationScreen = () => {
   const [pdfViewer, setPdfViewer] = useState(null); // { url, title } | null
   const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
 
-  // Annonce d'événement (Event Boost) : affichée sur la fiche tant que non
-  // expirée. Un seul événement actif à la fois par lieu (cf. backend).
-  const activeEventBoost = useMemo(() => {
-    const eb = location?.activeEventBoost;
-    if (!eb?.title || !eb?.expiresAt) return null;
-    return new Date(eb.expiresAt).getTime() > Date.now() ? eb : null;
-  }, [location?.activeEventBoost]);
-  const eventIsVideo = activeEventBoost?.mediaType === 'video';
-  const eventVideoPlayer = useVideoPlayer(eventIsVideo ? activeEventBoost.mediaUrl : null, (p) => {
-    p.loop = false;
-  });
+  // Événements créés par le pro (palier pro2+, cf. dashboard business) :
+  // affichés tant que non expirés. Plusieurs événements peuvent coexister.
+  // L'Event Boost (palier pro3+) ne fait qu'envoyer une notification pour
+  // l'un d'eux, il ne crée pas de contenu séparé.
+  const activeEvents = useMemo(() => {
+    const now = Date.now();
+    return (location?.events || []).filter((e) => !e.expiresAt || new Date(e.expiresAt).getTime() > now);
+  }, [location?.events]);
 
   const scrollViewRef = useRef(null);
-  const eventSectionY = useRef(null);
+  const eventSectionRefs = useRef({});
   const [hasScrolledToEvent, setHasScrolledToEvent] = useState(false);
 
   useEffect(() => {
-    if (!scrollToEvent || hasScrolledToEvent || !activeEventBoost) return;
-    // eventSectionY n'est mesuré qu'après le premier layout : on retente
-    // brièvement le temps que la section événement soit rendue et mesurée.
+    if (!scrollToEventId || hasScrolledToEvent || activeEvents.length === 0) return;
+    // Les positions ne sont mesurées qu'après le premier layout : on retente
+    // brièvement le temps que la section événements soit rendue et mesurée.
     const timer = setInterval(() => {
-      if (eventSectionY.current != null && scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ y: Math.max(eventSectionY.current - 16, 0), animated: true });
+      const targetY = eventSectionRefs.current[scrollToEventId] ?? eventSectionRefs.current[activeEvents[0]._id];
+      if (targetY != null && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: Math.max(targetY - 16, 0), animated: true });
         setHasScrolledToEvent(true);
         clearInterval(timer);
       }
@@ -115,7 +113,7 @@ const LocationScreen = () => {
       clearInterval(timer);
       clearTimeout(timeout);
     };
-  }, [scrollToEvent, hasScrolledToEvent, activeEventBoost]);
+  }, [scrollToEventId, hasScrolledToEvent, activeEvents]);
 
   // Suivi "vu/non vu" des stories du lieu (persisté localement, façon Instagram :
   // anneau dégradé tant qu'une story plus récente que la dernière consultation existe).
@@ -442,76 +440,16 @@ const LocationScreen = () => {
     return null;
   };
 
-  const renderEventBoostSection = () => {
-    if (!activeEventBoost) return null;
-
-    const eventDateLabel = activeEventBoost.eventDate
-      ? new Date(activeEventBoost.eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
-      : null;
-
-    return (
-      <View
-        onLayout={(e) => { eventSectionY.current = e.nativeEvent.layout.y; }}
-        style={[
-          styles.boostCard,
-          {
-            flexDirection: 'column',
-            alignItems: 'stretch',
-            marginHorizontal: spacing.lg,
-            marginTop: spacing.lg,
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md,
-            borderRadius: radius.lg,
-            backgroundColor: isMoon ? 'rgba(255,61,173,0.08)' : 'rgba(255,61,173,0.10)',
-            borderColor: palette.accent,
-            borderWidth: 1.5,
-          },
-        ]}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={styles.boostIcon}>
-            <Text style={{ fontSize: 22 }}>📅</Text>
-          </View>
-          <View style={{ flex: 1, marginLeft: spacing.md }}>
-            <Text style={[styles.boostTitle, { color: palette.text }]}>{activeEventBoost.title}</Text>
-            {eventDateLabel && (
-              <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>{eventDateLabel}</Text>
-            )}
-          </View>
-        </View>
-        {!!activeEventBoost.body && (
-          <Text style={[styles.boostSubtitle, { color: palette.textMuted, marginTop: spacing.sm }]}>
-            {activeEventBoost.body}
-          </Text>
-        )}
-        {activeEventBoost.mediaUrl && (
-          <View
-            style={{
-              marginTop: spacing.md,
-              borderRadius: radius.md,
-              overflow: 'hidden',
-              aspectRatio: 16 / 9,
-              backgroundColor: '#000',
-            }}
-          >
-            {eventIsVideo ? (
-              <VideoView
-                player={eventVideoPlayer}
-                style={{ width: '100%', height: '100%' }}
-                contentFit="cover"
-                nativeControls
-              />
-            ) : (
-              <Image
-                source={{ uri: activeEventBoost.mediaUrl }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
-            )}
-          </View>
-        )}
-      </View>
-    );
+  const renderEventsSection = () => {
+    if (activeEvents.length === 0) return null;
+    return activeEvents.map((event, idx) => (
+      <EventCard
+        key={event._id}
+        event={event}
+        isFirst={idx === 0}
+        onLayout={(e) => { eventSectionRefs.current[event._id] = e.nativeEvent.layout.y; }}
+      />
+    ));
   };
 
   // ─── Stories & PDF pro (Premium Pro 1/2) ───────────────────────
@@ -796,7 +734,7 @@ const LocationScreen = () => {
         {renderHero()}
         {renderFloatingCard()}
         {renderUltraBoostSection()}
-        {renderEventBoostSection()}
+        {renderEventsSection()}
         {renderProSection()}
         {renderSocialPulse()}
         {renderProfileList()}
@@ -805,6 +743,88 @@ const LocationScreen = () => {
       {renderFixedAction()}
       {renderStoryViewer()}
       {renderPdfViewer()}
+    </View>
+  );
+};
+
+// Carte d'un événement affiché sur la fiche du lieu. Composant séparé (plutôt
+// qu'une fonction render inline) car chaque carte vidéo a besoin de son propre
+// player via useVideoPlayer — un hook ne peut pas être appelé dynamiquement
+// dans une boucle au sein du même composant.
+const EventCard = ({ event, isFirst, onLayout }) => {
+  const { isMoon } = useVibe();
+  const theme = useVibeTheme();
+  const { palette, radius, spacing } = theme;
+  const isVideo = event.mediaType === 'video';
+  const player = useVideoPlayer(isVideo ? event.mediaUrl : null, (p) => {
+    p.loop = false;
+  });
+
+  const eventDateLabel = event.eventDate
+    ? new Date(event.eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+    : null;
+
+  return (
+    <View
+      onLayout={onLayout}
+      style={[
+        styles.boostCard,
+        {
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          marginHorizontal: spacing.lg,
+          marginTop: isFirst ? spacing.lg : spacing.md,
+          paddingHorizontal: spacing.lg,
+          paddingVertical: spacing.md,
+          borderRadius: radius.lg,
+          backgroundColor: isMoon ? 'rgba(255,61,173,0.08)' : 'rgba(255,61,173,0.10)',
+          borderColor: palette.accent,
+          borderWidth: 1.5,
+        },
+      ]}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.boostIcon}>
+          <Text style={{ fontSize: 22 }}>📅</Text>
+        </View>
+        <View style={{ flex: 1, marginLeft: spacing.md }}>
+          <Text style={[styles.boostTitle, { color: palette.text }]}>{event.title}</Text>
+          {eventDateLabel && (
+            <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>{eventDateLabel}</Text>
+          )}
+        </View>
+      </View>
+      {!!event.body && (
+        <Text style={[styles.boostSubtitle, { color: palette.textMuted, marginTop: spacing.sm }]}>
+          {event.body}
+        </Text>
+      )}
+      {event.mediaUrl && (
+        <View
+          style={{
+            marginTop: spacing.md,
+            borderRadius: radius.md,
+            overflow: 'hidden',
+            aspectRatio: 16 / 9,
+            backgroundColor: '#000',
+          }}
+        >
+          {isVideo ? (
+            <VideoView
+              player={player}
+              style={{ width: '100%', height: '100%' }}
+              contentFit="cover"
+              nativeControls
+            />
+          ) : (
+            <Image
+              source={{ uri: event.mediaUrl }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          )}
+        </View>
+      )}
     </View>
   );
 };
