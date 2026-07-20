@@ -760,8 +760,13 @@ const EventCard = ({ event, isFirst, onLayout }) => {
     p.loop = false;
   });
 
-  const eventDateLabel = event.eventDate
-    ? new Date(event.eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+  const eventDateObj = event.eventDate ? new Date(event.eventDate) : null;
+  const eventDateLabel = eventDateObj
+    ? eventDateObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+    : null;
+  const eventDateDay = eventDateObj ? eventDateObj.getDate() : null;
+  const eventDateMonth = eventDateObj
+    ? eventDateObj.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', '').toUpperCase()
     : null;
 
   return (
@@ -784,14 +789,26 @@ const EventCard = ({ event, isFirst, onLayout }) => {
       ]}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={styles.boostIcon}>
-          <Text style={{ fontSize: 22 }}>📅</Text>
-        </View>
+        {eventDateDay ? (
+          <View
+            style={[
+              styles.eventDateBadge,
+              { backgroundColor: palette.accent, borderRadius: radius.md },
+            ]}
+          >
+            <Text style={styles.eventDateBadgeDay}>{eventDateDay}</Text>
+            <Text style={styles.eventDateBadgeMonth}>{eventDateMonth}</Text>
+          </View>
+        ) : (
+          <View style={styles.boostIcon}>
+            <Text style={{ fontSize: 22 }}>📅</Text>
+          </View>
+        )}
         <View style={{ flex: 1, marginLeft: spacing.md }}>
-          <Text style={[styles.boostTitle, { color: palette.text }]}>{event.title}</Text>
           {eventDateLabel && (
-            <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>{eventDateLabel}</Text>
+            <Text style={[styles.eventDateLabel, { color: palette.accent }]}>{eventDateLabel}</Text>
           )}
+          <Text style={[styles.boostTitle, { color: palette.text }]}>{event.title}</Text>
         </View>
       </View>
       {!!event.body && (
@@ -893,6 +910,16 @@ const styles = StyleSheet.create({
   },
   boostTitle: { fontSize: 15, fontWeight: '800' },
   boostSubtitle: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+
+  eventDateBadge: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eventDateBadgeDay: { fontSize: 20, fontWeight: '900', color: '#fff', lineHeight: 22 },
+  eventDateBadgeMonth: { fontSize: 10, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  eventDateLabel: { fontSize: 13, fontWeight: '800', marginBottom: 2, textTransform: 'capitalize' },
 
   storyPlayBadge: {
     position: 'absolute',
