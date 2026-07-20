@@ -298,7 +298,9 @@ function AppShell({ purchasesReady }) {
         if (last) handleResponse(last);
 
         sub = Notifications.addNotificationResponseReceivedListener(handleResponse);
-      } catch (_) {}
+      } catch (e) {
+        console.warn('[App] notification listener setup failed', e?.message || e);
+      }
     })();
     return () => { try { sub?.remove?.(); } catch (_) {} };
   }, []);
