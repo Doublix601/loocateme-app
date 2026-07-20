@@ -274,13 +274,13 @@ const LocationListScreen = () => {
               <View style={item.bannerUrl ? styles.proBannerContainer : null}>
                 {item.bannerUrl && (
                   <ImageWithPlaceholder
-                    uri={item.bannerUrl}
+                    uri={item.bannerThumbUrl || item.bannerUrl}
                     style={styles.proBanner}
                   />
                 )}
                 {item.logoUrl && (
                   <ImageWithPlaceholder
-                    uri={item.logoUrl}
+                    uri={item.logoThumbUrl || item.logoUrl}
                     style={[
                       item.bannerUrl ? styles.proLogoOverlap : styles.proLogoInline,
                       { borderColor: colors.surface },

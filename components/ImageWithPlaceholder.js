@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Image, Animated, Easing, StyleSheet } from 'react-native';
+import { View, Animated, Easing, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { proxifyImageUrl } from './ServerUtils';
 
@@ -46,6 +47,7 @@ export default function ImageWithPlaceholder({ uri, style, placeholderColor = '#
           source={{ uri: finalUri }}
           style={[StyleSheet.absoluteFill, { borderRadius }]}
           resizeMode={resizeMode}
+          cachePolicy="memory-disk"
           onLoadEnd={() => setLoading(false)}
           onError={() => { setError(true); setLoading(false); }}
         />
