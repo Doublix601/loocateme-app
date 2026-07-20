@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Updates from 'expo-updates';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { UserContext } from '../components/contexts/UserContext';
 import { getMyUser } from '../components/ApiRequest';
@@ -109,6 +110,10 @@ export default function PremiumPaywallScreen() {
 
   const handlePurchase = async () => {
     if (purchasing) return;
+    if (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) {
+      Alert.alert('Offres indisponibles', 'Les offres d\'abonnement ne sont pas encore chargées. Réessayez dans quelques instants.');
+      return;
+    }
     setPurchasing(true);
     try {
       const result = await IAPStore.purchaseSubscription(selectedPkg, userId);
@@ -118,11 +123,21 @@ export default function PremiumPaywallScreen() {
           const res = await getMyUser();
           if (res?.user && updateUser) updateUser({ ...user, isPremium: !!res.user.isPremium });
         } catch (_) {}
-        Alert.alert(
-          result.isMock ? '✅ Simulation réussie' : '🎉 Bienvenue !',
-          result.isMock ? 'Abonnement simulé (mode debug).' : 'Votre abonnement Premium est maintenant actif.',
-          [{ text: 'Continuer', onPress: () => onAlreadyPremium ? onAlreadyPremium() : onBack?.() }]
-        );
+
+        if (result.isMock) {
+          Alert.alert(
+            '✅ Simulation réussie',
+            'Abonnement simulé (mode debug).',
+            [{ text: 'Continuer', onPress: () => onAlreadyPremium ? onAlreadyPremium() : onBack?.() }]
+          );
+        } else {
+          onAlreadyPremium ? onAlreadyPremium() : onBack?.();
+          try {
+            await Updates.reloadAsync();
+          } catch (_) {
+            // Reload non disponible (ex. Expo Go) : l'état premium reste à jour via updateUser ci-dessus.
+          }
+        }
       }
     } catch (e) {
       if (!e.userCancelled) Alert.alert('Erreur', e.message || 'Impossible de finaliser l\'achat.');
@@ -156,7 +171,7 @@ export default function PremiumPaywallScreen() {
 
   const bg = isDark ? '#0f0f1a' : colors.background;
   const cardBg = isDark ? 'rgba(255,255,255,0.07)' : colors.surface;
-  const text = isDark ? '#fff' : colors.text;
+  const text = isDark ? '#fff' : colors.textPrimary;
   const sub = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)';
 
   return (
@@ -169,9 +184,14 @@ export default function PremiumPaywallScreen() {
         >
           <Text style={{ fontSize: 16, color: text, fontWeight: '700' }}>✕</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: text }]}>Premium</Text>
+        <View style={{ alignItems: 'center' }}>
+          <Text style={[styles.headerTitle, { color: text }]}>👑 Premium</Text>
+        </View>
         <View style={{ width: 40 }} />
       </View>
+      <Text style={[styles.headerSubtitle, { color: sub }]}>
+        Débloquez toutes les fonctionnalités
+      </Text>
 
       {/* Debug banner */}
       {DEBUG_CONFIG.IAP_DISABLED && (
@@ -238,8 +258,15 @@ export default function PremiumPaywallScreen() {
 
           <TouchableOpacity
             onPress={() => setPeriod('annual')}
-            style={[styles.toggleBtn, period === 'annual' && styles.toggleBtnActive]}
+            style={[
+              styles.toggleBtn,
+              period === 'annual' && styles.toggleBtnActive,
+              period !== 'annual' && styles.toggleBtnRecommended,
+            ]}
           >
+            <View style={styles.recommendedRibbon}>
+              <Text style={styles.recommendedRibbonTxt}>LE PLUS CHOISI</Text>
+            </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
               <Text style={[styles.toggleLabel, { color: period === 'annual' ? '#fff' : sub }]}>Annuel</Text>
               <View style={[
@@ -261,7 +288,9 @@ export default function PremiumPaywallScreen() {
           <Text style={[styles.featuresTitle, { color: sub }]}>TOUT EST INCLUS</Text>
           {FEATURES.map((f, i) => (
             <View key={i} style={[styles.featureRow, i === FEATURES.length - 1 && { marginBottom: 0 }]}>
-              <Text style={styles.checkMark}>✓</Text>
+              <View style={styles.checkMarkCircle}>
+                <Text style={styles.checkMark}>✓</Text>
+              </View>
               <Text style={[styles.featureText, { color: text }]}>{f}</Text>
             </View>
           ))}
@@ -270,21 +299,28 @@ export default function PremiumPaywallScreen() {
         {/* CTA */}
         <TouchableOpacity
           onPress={handlePurchase}
-          disabled={purchasing}
-          style={[styles.cta, { opacity: purchasing ? 0.8 : 1 }, DEBUG_CONFIG.IAP_DISABLED && { backgroundColor: '#f39c12' }]}
+          disabled={purchasing || (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED)}
+          activeOpacity={0.85}
+          style={[
+            styles.cta,
+            { opacity: purchasing || (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) ? 0.5 : 1 },
+            DEBUG_CONFIG.IAP_DISABLED && { backgroundColor: '#f39c12' },
+          ]}
         >
           {purchasing
             ? <ActivityIndicator color="#fff" />
             : <Text style={styles.ctaText}>
                 {DEBUG_CONFIG.IAP_DISABLED
                   ? 'Simuler un abonnement Premium'
-                  : 'Commencer mon essai gratuit 7 jours'}
+                  : !selectedPkg
+                    ? 'Chargement des offres…'
+                    : 'Commencer mon essai gratuit 7 jours'}
               </Text>}
         </TouchableOpacity>
 
         {!DEBUG_CONFIG.IAP_DISABLED && (
           <Text style={[styles.trialSub, { color: sub }]}>
-            {period === 'annual'
+            🔒 {period === 'annual'
               ? `Puis ${annualPrice}/an · Résiliable à tout moment`
               : `Puis ${monthlyPrice}/mois · Résiliable à tout moment`}
           </Text>
@@ -325,7 +361,8 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   closeBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '800' },
+  headerTitle: { fontSize: 20, fontWeight: '900' },
+  headerSubtitle: { fontSize: 13, fontWeight: '600', textAlign: 'center', marginTop: 2 },
   debugBanner: {
     backgroundColor: '#f39c12',
     marginHorizontal: 20,
@@ -355,13 +392,24 @@ const styles = StyleSheet.create({
   toggleRow: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    marginTop: 18,
+    marginTop: 26,
     borderRadius: 18,
     padding: 4,
     gap: 4,
   },
   toggleBtn: { flex: 1, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 8, alignItems: 'center' },
   toggleBtnActive: { backgroundColor: '#00c2cb' },
+  toggleBtnRecommended: { borderWidth: 1.5, borderColor: '#00c2cb' },
+  recommendedRibbon: {
+    position: 'absolute',
+    top: -12,
+    alignSelf: 'center',
+    backgroundColor: '#00c2cb',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  recommendedRibbonTxt: { color: '#fff', fontSize: 9, fontWeight: '900', letterSpacing: 0.3 },
   toggleLabel: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 },
   togglePrice: { fontSize: 17, fontWeight: '800' },
   savingsBadge: { borderRadius: 6, paddingHorizontal: 5, paddingVertical: 2 },
@@ -377,10 +425,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 6,
   },
-  featuresTitle: { fontSize: 10, fontWeight: '800', letterSpacing: 1.2, marginBottom: 14 },
-  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 11 },
-  checkMark: { color: '#00c2cb', fontSize: 15, fontWeight: '900', marginRight: 10, width: 22 },
-  featureText: { fontSize: 15, fontWeight: '500', flex: 1 },
+  featuresTitle: { fontSize: 11, fontWeight: '900', letterSpacing: 1.2, marginBottom: 16 },
+  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
+  checkMarkCircle: {
+    width: 24, height: 24, borderRadius: 12,
+    backgroundColor: 'rgba(0,194,203,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+    marginRight: 12,
+  },
+  checkMark: { color: '#00c2cb', fontSize: 13, fontWeight: '900' },
+  featureText: { fontSize: 15, fontWeight: '600', flex: 1 },
   cta: {
     backgroundColor: '#00c2cb',
     borderRadius: 16,
@@ -395,7 +449,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   ctaText: { color: '#fff', fontSize: 16, fontWeight: '900', letterSpacing: 0.3 },
-  trialSub: { fontSize: 11, textAlign: 'center', marginTop: 8 },
+  trialSub: { fontSize: 12, fontWeight: '600', textAlign: 'center', marginTop: 10 },
   restoreBtn: { alignItems: 'center', paddingVertical: 16 },
   restoreTxt: { fontSize: 14, fontWeight: '600' },
   legal: { fontSize: 10, textAlign: 'center', paddingHorizontal: 24, lineHeight: 15, paddingBottom: 8 },

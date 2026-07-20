@@ -4,6 +4,8 @@ import * as Location from 'expo-location';
 import { post } from '../components/ApiRequest';
 import { UserContext } from '../components/contexts/UserContext';
 import { mapBackendUser } from '../utils/mappers';
+import { getCurrentPositionSmart } from '../utils/locationHelper';
+import { getDevLocationOverride, loadDevLocationOverride } from '../utils/devLocationOverride';
 
 /**
  * Hook pour gérer le "Heartbeat" (battement de cœur) de présence en premier plan.
@@ -35,9 +37,7 @@ export function usePresence(isEnabled) {
         if (typeof lat !== 'number' || typeof lon !== 'number') {
           const { status } = await Location.getForegroundPermissionsAsync();
           if (status !== 'granted') return;
-          const pos = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
+          const pos = await getCurrentPositionSmart({ skipLastKnown: true });
           if (!pos?.coords) return;
           lat = pos.coords.latitude;
           lon = pos.coords.longitude;
@@ -64,6 +64,10 @@ export function usePresence(isEnabled) {
 
     const startWatcher = async () => {
       try {
+        if (__DEV__) {
+          await loadDevLocationOverride();
+          if (getDevLocationOverride()) return; // watchPositionAsync ne peut pas être overridden
+        }
         const { status } = await Location.getForegroundPermissionsAsync();
         if (status !== 'granted') return;
         // Stop any previous watcher before starting a new one

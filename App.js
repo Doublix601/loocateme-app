@@ -284,6 +284,8 @@ function AppShell({ purchasesReady }) {
           if (!data || !navigationRef.isReady()) return;
           if (data.kind === 'ultra_boost' && data.locationId) {
             navigationRef.navigate('Location', { locationId: data.locationId });
+          } else if (data.kind === 'event_boost' && data.locationId) {
+            navigationRef.navigate('Location', { locationId: data.locationId, scrollToEvent: true });
           } else if (data.kind === 'superlike') {
             navigationRef.navigate('MainTabs');
             publish('ui:open_superlike_history');

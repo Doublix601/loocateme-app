@@ -19,6 +19,7 @@ import NightSkyBackground from '../components/NightSkyBackground';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import { getCurrentPositionSmart } from '../utils/locationHelper';
 import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe } from '../components/ApiRequest';
 import { subscribe, publish } from '../components/EventBus';
 import PremiumNudgeService from '../services/PremiumNudgeService';
@@ -48,6 +49,7 @@ const LocationListScreen = () => {
     bottom: -insets.bottom,
   };
   const [loading, setLoading] = useState(false);
+  const [locationError, setLocationError] = useState(false);
   const [locations, setLocations] = useState([]); // backend locations
   const [osmPois, setOsmPois] = useState([]); // overpass locations
   const [filteredOsmPois, setFilteredOsmPois] = useState([]); // vibe-filtered OSM
@@ -289,7 +291,7 @@ const LocationListScreen = () => {
             )}
             <View style={styles.locationHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.text }]}>{item.name}</Text>
+                <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.textPrimary }]}>{item.name}</Text>
                 {item.isPro && (
                   <View style={styles.verifiedBadge}>
                     <Text style={styles.verifiedText}>✓</Text>
@@ -457,27 +459,40 @@ const LocationListScreen = () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.warn('Permission to access location was denied');
+        setLocationError(true);
         if (!silent) setLoading(false);
         return;
       }
 
-      // 1. Démarrer immédiatement avec la dernière position connue pour gagner du temps
-      // (souvent instantané, alors que getCurrentPositionAsync peut prendre 1-5s)
-      let location = await Location.getLastKnownPositionAsync({ maxAge: 600000 }); // 10 min
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      if (!servicesEnabled) {
+        console.warn('Location services are disabled at the OS level (Settings > Location)');
+        setLocationError(true);
+        if (!silent) setLoading(false);
+        return;
+      }
 
-      // 2. Si on n'a pas de position connue récente, on doit attendre la position actuelle
-      if (!location) {
-        location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+      let location;
+      try {
+        // getCurrentPositionSmart applique l'override dev (si défini) et retente en
+        // Accuracy.Low si Balanced échoue (voir utils/locationHelper.js).
+        location = await getCurrentPositionSmart();
+      } catch (locErr) {
+        // Position indisponible (GPS/services de localisation désactivés au niveau OS)
+        console.warn('Location unavailable:', locErr?.message);
+        setLocationError(true);
+        if (!silent) setLoading(false);
+        return;
       }
 
       if (!location) {
         console.warn('Could not determine position');
+        setLocationError(true);
         if (!silent) setLoading(false);
         return;
       }
 
+      setLocationError(false);
       const { latitude, longitude } = location.coords;
       setUserCoords({ latitude, longitude });
 
@@ -689,6 +704,23 @@ const LocationListScreen = () => {
         {renderHeader()}
         {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
+      ) : locationError ? (
+        <ScrollView
+          contentContainerStyle={[styles.listContent, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#00c2cb"]} progressViewOffset={10} />}
+          alwaysBounceVertical
+          bounces
+          overScrollMode="always"
+        >
+          <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>📍</Text>
+          <Text style={[styles.emptyText, { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Localisation indisponible</Text>
+          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, paddingHorizontal: 32, lineHeight: 20 }}>
+            Active les services de localisation dans les réglages de ton appareil pour voir les lieux autour de toi.
+          </Text>
+          <TouchableOpacity onPress={() => fetchNearbyLocations({ vibe })} style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}>
+            <Text style={{ color: '#fff', fontWeight: '600' }}>Réessayer</Text>
+          </TouchableOpacity>
+        </ScrollView>
       ) : visibleItems.length === 0 ? (
         // Etat vide: permettre le pull-to-refresh même sans éléments
         <ScrollView
@@ -699,7 +731,7 @@ const LocationListScreen = () => {
           overScrollMode="always"
         >
           <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🌙</Text>
-          <Text style={[styles.emptyText, { color: colors.text, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Zone calme pour l'instant</Text>
+          <Text style={[styles.emptyText, { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Zone calme pour l'instant</Text>
           <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, paddingHorizontal: 32, lineHeight: 20 }}>
             Aucun lieu actif n'a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.
           </Text>
@@ -712,7 +744,7 @@ const LocationListScreen = () => {
               <Text style={{ color: '#fff', fontWeight: '600' }}>Élargir le périmètre</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { /* future: suggestion flow */ }} style={{ backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#eaeaea' }}>
-              <Text style={{ color: colors.text }}>Suggérer ce lieu</Text>
+              <Text style={{ color: colors.textPrimary }}>Suggérer ce lieu</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

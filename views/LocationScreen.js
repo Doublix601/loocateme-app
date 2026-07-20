@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -12,6 +13,7 @@ import {
   Dimensions,
   Modal,
 } from 'react-native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -64,7 +66,7 @@ const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
 const LocationScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { locationId, tertiles } = route.params ?? {};
+  const { locationId, tertiles, scrollToEvent } = route.params ?? {};
   const navigateToUser = useNavigateToUser();
 
   const { isMoon } = useVibe();
@@ -80,6 +82,40 @@ const LocationScreen = () => {
   const [lastStorySeenAt, setLastStorySeenAt] = useState(null);
   const [pdfViewer, setPdfViewer] = useState(null); // { url, title } | null
   const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
+
+  // Annonce d'événement (Event Boost) : affichée sur la fiche tant que non
+  // expirée. Un seul événement actif à la fois par lieu (cf. backend).
+  const activeEventBoost = useMemo(() => {
+    const eb = location?.activeEventBoost;
+    if (!eb?.title || !eb?.expiresAt) return null;
+    return new Date(eb.expiresAt).getTime() > Date.now() ? eb : null;
+  }, [location?.activeEventBoost]);
+  const eventIsVideo = activeEventBoost?.mediaType === 'video';
+  const eventVideoPlayer = useVideoPlayer(eventIsVideo ? activeEventBoost.mediaUrl : null, (p) => {
+    p.loop = false;
+  });
+
+  const scrollViewRef = useRef(null);
+  const eventSectionY = useRef(null);
+  const [hasScrolledToEvent, setHasScrolledToEvent] = useState(false);
+
+  useEffect(() => {
+    if (!scrollToEvent || hasScrolledToEvent || !activeEventBoost) return;
+    // eventSectionY n'est mesuré qu'après le premier layout : on retente
+    // brièvement le temps que la section événement soit rendue et mesurée.
+    const timer = setInterval(() => {
+      if (eventSectionY.current != null && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: Math.max(eventSectionY.current - 16, 0), animated: true });
+        setHasScrolledToEvent(true);
+        clearInterval(timer);
+      }
+    }, 150);
+    const timeout = setTimeout(() => clearInterval(timer), 3000);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(timeout);
+    };
+  }, [scrollToEvent, hasScrolledToEvent, activeEventBoost]);
 
   // Suivi "vu/non vu" des stories du lieu (persisté localement, façon Instagram :
   // anneau dégradé tant qu'une story plus récente que la dernière consultation existe).
@@ -406,6 +442,78 @@ const LocationScreen = () => {
     return null;
   };
 
+  const renderEventBoostSection = () => {
+    if (!activeEventBoost) return null;
+
+    const eventDateLabel = activeEventBoost.eventDate
+      ? new Date(activeEventBoost.eventDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+      : null;
+
+    return (
+      <View
+        onLayout={(e) => { eventSectionY.current = e.nativeEvent.layout.y; }}
+        style={[
+          styles.boostCard,
+          {
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            marginHorizontal: spacing.lg,
+            marginTop: spacing.lg,
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.md,
+            borderRadius: radius.lg,
+            backgroundColor: isMoon ? 'rgba(255,61,173,0.08)' : 'rgba(255,61,173,0.10)',
+            borderColor: palette.accent,
+            borderWidth: 1.5,
+          },
+        ]}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.boostIcon}>
+            <Text style={{ fontSize: 22 }}>📅</Text>
+          </View>
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
+            <Text style={[styles.boostTitle, { color: palette.text }]}>{activeEventBoost.title}</Text>
+            {eventDateLabel && (
+              <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>{eventDateLabel}</Text>
+            )}
+          </View>
+        </View>
+        {!!activeEventBoost.body && (
+          <Text style={[styles.boostSubtitle, { color: palette.textMuted, marginTop: spacing.sm }]}>
+            {activeEventBoost.body}
+          </Text>
+        )}
+        {activeEventBoost.mediaUrl && (
+          <View
+            style={{
+              marginTop: spacing.md,
+              borderRadius: radius.md,
+              overflow: 'hidden',
+              aspectRatio: 16 / 9,
+              backgroundColor: '#000',
+            }}
+          >
+            {eventIsVideo ? (
+              <VideoView
+                player={eventVideoPlayer}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+                nativeControls
+              />
+            ) : (
+              <Image
+                source={{ uri: activeEventBoost.mediaUrl }}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
+            )}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   // ─── Stories & PDF pro (Premium Pro 1/2) ───────────────────────
   const renderProSection = () => {
     // Max 3 PDF affichés (aligné sur la limite d'ajout côté dashboard business).
@@ -671,6 +779,7 @@ const LocationScreen = () => {
   return (
     <View style={{ flex: 1, backgroundColor: palette.bg }}>
       <ScrollView
+        ref={scrollViewRef}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
         showsVerticalScrollIndicator={false}
@@ -687,6 +796,7 @@ const LocationScreen = () => {
         {renderHero()}
         {renderFloatingCard()}
         {renderUltraBoostSection()}
+        {renderEventBoostSection()}
         {renderProSection()}
         {renderSocialPulse()}
         {renderProfileList()}

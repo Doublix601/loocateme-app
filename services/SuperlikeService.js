@@ -1,9 +1,15 @@
-import { post } from '../components/ApiRequest';
+import { post, get } from '../components/ApiRequest';
 import PremiumService from './PremiumService';
 
 const SuperlikeService = {
   getSuperlikesRemaining() {
     return PremiumService.getSuperlikesRemaining();
+  },
+
+  // Historique des superlikes reçus.
+  async getReceivedHistory() {
+    const res = await get('/premium/superlikes/received');
+    return res?.superlikes || [];
   },
 
   // Envoie un superlike à targetUserId.
