@@ -14,6 +14,7 @@ import {
   Modal,
 } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import ImageView from 'react-native-image-viewing';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -759,6 +760,7 @@ const EventCard = ({ event, isFirst, onLayout }) => {
   const player = useVideoPlayer(isVideo ? event.mediaUrl : null, (p) => {
     p.loop = false;
   });
+  const [isImageViewerVisible, setImageViewerVisible] = useState(false);
 
   const eventDateObj = event.eventDate ? new Date(event.eventDate) : null;
   const eventDateLabel = eventDateObj
@@ -834,13 +836,27 @@ const EventCard = ({ event, isFirst, onLayout }) => {
               nativeControls
             />
           ) : (
-            <Image
-              source={{ uri: event.mediaUrl }}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => setImageViewerVisible(true)}
               style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
+            >
+              <Image
+                source={{ uri: event.mediaUrl }}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
           )}
         </View>
+      )}
+      {!isVideo && event.mediaUrl && (
+        <ImageView
+          images={[{ uri: event.mediaUrl }]}
+          imageIndex={0}
+          visible={isImageViewerVisible}
+          onRequestClose={() => setImageViewerVisible(false)}
+        />
       )}
     </View>
   );
