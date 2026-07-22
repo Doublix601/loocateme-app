@@ -35,6 +35,16 @@ import { OverpassService, isTypeAllowedForVibe } from '../services/OverpassServi
 import VibeFAB from '../components/VibeFAB';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 
+// Score de secours pour interclasser les POI OSM (sans stars/userCount
+// serveur) avec les lieux backend déjà triés par score composite. Constantes
+// dupliquées depuis loocateme_backend/src/config/locationScoring.js — à
+// garder synchronisées si les poids sont retunés côté serveur.
+const DISTANCE_REF_METERS = 800;
+const USERCOUNT_CAP = 8;
+const WEIGHT_DISTANCE = 0.45;
+const WEIGHT_STARS = 0.35;
+const WEIGHT_USERS = 0.20;
+
 const LocationListScreen = () => {
   const navigation = useNavigation();
   const { goToPage } = useMainSwiper();
@@ -186,22 +196,38 @@ const LocationListScreen = () => {
 
   // PulseList ordering: le lieu "Pro Boost" sponsorisé (renvoyé par le backend
   // avec isSponsored:true, un seul possible à la fois) est toujours épinglé en
-  // tête, avant le tri normal par popularité (étoiles) puis distance croissante.
-  // 3★ > 2★ > 1★ > 0★ ; à égalité d'étoiles on trie par nombre d'utilisateurs actifs, puis distance.
+  // tête. Les autres lieux sont déjà triés par score composite côté backend
+  // (cf. location.controller.js : distance + stars + userCount, cf.
+  // config/locationScoring.js pour les poids). On ne retrie PAS ici les lieux
+  // déjà scorés par le serveur — on calcule le même score uniquement pour les
+  // POI OSM fusionnés (`filteredOsmPois`, sans stars/userCount serveur) afin
+  // de les interclasser correctement avec les lieux backend.
+  const scoreForClientRanking = (loc) => {
+    if (typeof loc?.distance !== 'number') return -Infinity;
+    const distanceScore = Math.exp(-loc.distance / DISTANCE_REF_METERS);
+    const starsScore = (loc.stars || 0) / 3;
+    const userScore = Math.min(loc.userCount || 0, USERCOUNT_CAP) / USERCOUNT_CAP;
+    return WEIGHT_DISTANCE * distanceScore + WEIGHT_STARS * starsScore + WEIGHT_USERS * userScore;
+  };
+
   const pulseItems = useMemo(() => {
+    const backendOrder = new Map(locationsWithDistance.map((loc, index) => [loc._id ?? loc.osmId, index]));
     const sorted = [...locationsWithDistance].sort((a, b) => {
       if (a.isSponsored && !b.isSponsored) return -1;
       if (b.isSponsored && !a.isSponsored) return 1;
-      return (
-        (b.stars || 0) - (a.stars || 0) ||
-        (b.userCount || 0) - (a.userCount || 0) ||
-        (a.distance || 0) - (b.distance || 0)
-      );
+      const aIsBackend = backendOrder.has(a._id ?? a.osmId) && a.stars !== undefined;
+      const bIsBackend = backendOrder.has(b._id ?? b.osmId) && b.stars !== undefined;
+      if (aIsBackend && bIsBackend) {
+        return (backendOrder.get(a._id ?? a.osmId) ?? 0) - (backendOrder.get(b._id ?? b.osmId) ?? 0);
+      }
+      return scoreForClientRanking(b) - scoreForClientRanking(a);
     });
-    // Mark first two high-rated items for tall card style
+    // Mark first two items for tall card style (le score composite remplace
+    // déjà la primauté des étoiles ; un filtre stars>=2 réintroduirait la
+    // même distorsion distance/popularité qu'on cherche à corriger).
     let featuredCount = 0;
     return sorted.map((it) => {
-      if (featuredCount < 2 && (it.stars || 0) >= 2) {
+      if (featuredCount < 2) {
         featuredCount++;
         return { ...it, _featuredRank: featuredCount };
       }
