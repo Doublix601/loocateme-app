@@ -73,10 +73,11 @@ const LocationListScreen = () => {
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
-  // Throttle du pull-to-refresh manuel : 1 appel API max par minute, pour
-  // éviter qu'un utilisateur qui tire frénétiquement sur la liste ne
-  // multiplie les requêtes serveur inutilement.
-  const REFRESH_MIN_INTERVAL_MS = 60 * 1000;
+  // Anti double-déclenchement du pull-to-refresh manuel (le backend a déjà
+  // son propre rate-limit + cache 10s, cf. locationsListLimiter côté API) :
+  // on bloque juste les appels quasi simultanés (double tir accidentel du
+  // geste), sans empêcher un refresh légitime après un déplacement réel.
+  const REFRESH_MIN_INTERVAL_MS = 3 * 1000;
   const lastRefreshAtRef = useRef(0);
 
   // Cache mémoire de session par vibe (sun/moon), pour éviter de refetch
