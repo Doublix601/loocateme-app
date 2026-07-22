@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Image, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Canvas, Circle, SweepGradient, vec, BlurMask } from '@shopify/react-native-skia';
+import ImageWithPlaceholder from './ImageWithPlaceholder';
 import {
   useSharedValue,
   withRepeat,
@@ -36,7 +37,6 @@ const SocialPulseAvatar = ({
   const status = user?.status || 'green';
   const statusColor = STATUS_COLORS[status] || STATUS_COLORS.green;
   const isBoosted = user?.boostUntil && new Date(user.boostUntil) > new Date();
-  const cotePercent = user?.cotePercent ?? 100;
 
   const ringWidth = isMoon ? 3 : 2.5;
   const canvasSize = size + ringWidth * 2 + (isMoon ? 8 : 4); // padding pour glow
@@ -127,10 +127,9 @@ const SocialPulseAvatar = ({
           }}
         >
           {user?.profileImageUrl || user?.photo ? (
-            <Image
-              source={{ uri: user.profileImageUrl || user.photo }}
+            <ImageWithPlaceholder
+              uri={user.profileImageUrl || user.photo}
               style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
             />
           ) : (
             <View style={styles.placeholder}>
@@ -154,24 +153,6 @@ const SocialPulseAvatar = ({
             borderColor: isMoon ? '#050505' : '#FFFFFF',
           }}
         />
-        {/* Badge Cote — flamme visible uniquement pour les users à 100% */}
-        {cotePercent === 100 && (
-          <View
-            style={{
-              position: 'absolute',
-              top: photoOffset - 4,
-              left: photoOffset - 4,
-              width: 18,
-              height: 18,
-              borderRadius: 9,
-              backgroundColor: '#050505',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{ fontSize: 11 }}>🔥</Text>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );

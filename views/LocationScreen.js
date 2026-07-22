@@ -31,7 +31,6 @@ import { useBoost } from '../hooks/useBoost';
 import { useLocationData } from '../hooks/useLocationData';
 import { useVibeTheme } from '../hooks/useVibeTheme';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
-import SocialPulseAvatar from '../components/SocialPulseAvatar';
 import StoryRingAvatar from '../components/StoryRingAvatar';
 import StoryViewerModal from '../components/StoryViewerModal';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
@@ -59,7 +58,6 @@ const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
  *
  *  - Header immersif : image de couverture + gradient progressif.
  *  - Floating Info Card : nom, type, popularité, distance, qui chevauche le hero.
- *  - Social Pulse : grille horizontale d'avatars circulaires (statut/néon).
  *  - Liste de ProfileCards condensées (photo, bio, réseaux).
  *  - Bouton d'action fixe en bas avec BlurView.
  *  - Tout pilote par `useVibeTheme` (zéro `if (isMoon)` cosmétique éparpillé).
@@ -599,41 +597,6 @@ const LocationScreen = () => {
     );
   };
 
-  // ─── Social Pulse (grille horizontale d'avatars) ───────────────
-  const renderSocialPulse = () => {
-    if (!users.length) return null;
-    return (
-      <View style={{ marginTop: spacing.xl }}>
-        <View style={[styles.sectionHeader, { paddingHorizontal: spacing.lg }]}>
-          <Text style={typography.h2}>Social Pulse</Text>
-          <Text style={[typography.caption, { textTransform: 'uppercase' }]}>
-            {users.length} actif{users.length > 1 ? 's' : ''}
-          </Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: spacing.lg,
-            paddingVertical: spacing.md,
-            gap: spacing.sm,
-          }}
-        >
-          {users.map((u, i) => (
-            <SocialPulseAvatar
-              key={u._id || i}
-              user={u}
-              size={60}
-              isMoon={isMoon}
-              index={i}
-              onPress={() => navigateToUser(u)}
-            />
-          ))}
-        </ScrollView>
-      </View>
-    );
-  };
-
   // ─── Liste des ProfileCards ────────────────────────────────────
   const renderProfileList = () => (
     <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
@@ -737,7 +700,6 @@ const LocationScreen = () => {
         {renderUltraBoostSection()}
         {renderEventsSection()}
         {renderProSection()}
-        {renderSocialPulse()}
         {renderProfileList()}
       </ScrollView>
 
