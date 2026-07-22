@@ -1,6 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, LayoutAnimation, Platform, UIManager } from 'react-native';
+import {
+  VIBE_AMBIENT_PULSE_MS,
+  VIBE_TRANSITION_DURATION_MS,
+  VIBE_TRANSITION_MIN_MS,
+} from '../vibe/vibeTransition.constants';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -27,7 +32,10 @@ const VibeContext = createContext({
   // Transition API
   transitioningTo: null, // 'sun' | 'moon' | null
   beginVibeTransition: () => {},
-  startVibeLoading: () => {},
+  skipVibeTransition: () => {},
+  // Signal léger (non bloquant) émis quand le basculement automatique horaire
+  // change le vibe pendant que l'app est ouverte, pour un toast de confirmation.
+  ambientVibeShift: null, // { target: 'sun'|'moon', ts: number } | null
 });
 
 export function VibeProvider({ children, onVibeChanged }) {
@@ -35,7 +43,22 @@ export function VibeProvider({ children, onVibeChanged }) {
   const [autoVibe, setAutoVibeState] = useState(getAutoVibe());
   const autoTimer = useRef(null);
   const transitionTimer = useRef(null);
+  const ambientPulseTimer = useRef(null);
   const [transitioningTo, setTransitioningTo] = useState(null);
+  const [ambientVibeShift, setAmbientVibeShift] = useState(null);
+
+  const pulseAmbientVibeShift = useCallback((target) => {
+    if (ambientPulseTimer.current) {
+      try {
+        clearTimeout(ambientPulseTimer.current);
+      } catch (_) {}
+    }
+    setAmbientVibeShift({ target, ts: Date.now() });
+    ambientPulseTimer.current = setTimeout(() => {
+      ambientPulseTimer.current = null;
+      setAmbientVibeShift(null);
+    }, VIBE_AMBIENT_PULSE_MS);
+  }, []);
 
   // Load manual override from storage.
   // Nouveau format: JSON { value: 'sun'|'moon', setAtAuto: 'sun'|'moon' }.
@@ -92,6 +115,7 @@ export function VibeProvider({ children, onVibeChanged }) {
         if (prev !== curr) {
           setManualVibe(null);
           AsyncStorage.removeItem(K_VIBE_KEY).catch(() => {});
+          pulseAmbientVibeShift(curr);
         }
         schedule();
       }, delay);
@@ -108,6 +132,7 @@ export function VibeProvider({ children, onVibeChanged }) {
           // Frontière franchie pendant le sommeil de l'app → on efface l'override.
           setManualVibe(null);
           AsyncStorage.removeItem(K_VIBE_KEY).catch(() => {});
+          pulseAmbientVibeShift(curr);
         }
         return curr;
       });
@@ -117,6 +142,7 @@ export function VibeProvider({ children, onVibeChanged }) {
     const sub = AppState.addEventListener('change', onAppState);
     return () => {
       autoTimer.current && clearTimeout(autoTimer.current);
+      ambientPulseTimer.current && clearTimeout(ambientPulseTimer.current);
       try {
         sub && sub.remove && sub.remove();
       } catch (_) {}
@@ -145,7 +171,7 @@ export function VibeProvider({ children, onVibeChanged }) {
   );
 
   const beginVibeTransition = useCallback(
-    (next, durationMs = 5000) => {
+    (next, durationMs = VIBE_TRANSITION_DURATION_MS) => {
       const target = next === 'moon' ? 'moon' : 'sun';
       // If already in the same vibe and not transitioning, do nothing
       const current = manualVibe || autoVibe;
@@ -164,31 +190,26 @@ export function VibeProvider({ children, onVibeChanged }) {
           await setVibe(target);
           setTransitioningTo(null);
         },
-        Math.max(500, durationMs),
+        Math.max(VIBE_TRANSITION_MIN_MS, durationMs),
       );
     },
     [autoVibe, manualVibe, setVibe, transitioningTo],
   );
 
-  // Start the loading overlay for a fixed duration without changing the vibe
-  // (vibe should already have been switched by the caller, e.g. VibeFAB onPress).
-  const startVibeLoading = useCallback((target, durationMs = 5000) => {
-    const t = target === 'moon' ? 'moon' : 'sun';
+  // Résout immédiatement une transition en cours (affordance "Passer" de
+  // l'overlay) : applique le vibe cible tout de suite sans attendre le timer.
+  const skipVibeTransition = useCallback(() => {
+    if (!transitioningTo) return;
     if (transitionTimer.current) {
       try {
         clearTimeout(transitionTimer.current);
       } catch (_) {}
       transitionTimer.current = null;
     }
-    setTransitioningTo(t);
-    transitionTimer.current = setTimeout(
-      () => {
-        transitionTimer.current = null;
-        setTransitioningTo(null);
-      },
-      Math.max(500, durationMs),
-    );
-  }, []);
+    const target = transitioningTo;
+    setTransitioningTo(null);
+    setVibe(target);
+  }, [transitioningTo, setVibe]);
 
   const setAutoVibe = useCallback(async () => {
     setManualVibe(null);
@@ -213,9 +234,20 @@ export function VibeProvider({ children, onVibeChanged }) {
       auto,
       transitioningTo,
       beginVibeTransition,
-      startVibeLoading,
+      skipVibeTransition,
+      ambientVibeShift,
     }),
-    [vibe, isMoon, setVibe, setAutoVibe, auto, transitioningTo, beginVibeTransition, startVibeLoading],
+    [
+      vibe,
+      isMoon,
+      setVibe,
+      setAutoVibe,
+      auto,
+      transitioningTo,
+      beginVibeTransition,
+      skipVibeTransition,
+      ambientVibeShift,
+    ],
   );
   return <VibeContext.Provider value={value}>{children}</VibeContext.Provider>;
 }

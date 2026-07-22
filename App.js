@@ -30,6 +30,7 @@ import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { VibeProvider, useVibe } from './components/contexts/VibeContext';
 import VibeTransitOverlay from './components/VibeTransitOverlay';
+import VibeAmbientPulse from './components/VibeAmbientPulse';
 import { LocationSyncService } from './services/LocationSyncService';
 import { LocationService, ScanMode } from './services/LocationService';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
@@ -421,6 +422,7 @@ function AppShell({ purchasesReady }) {
           <RootNavigator />
         )}
         <VibeTransitOverlay />
+        <VibeAmbientPulse />
       </NavigationContainer>
 
       <PolicyUpdateBanner />

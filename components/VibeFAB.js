@@ -11,11 +11,12 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
+import { VIBE_SPIN_DURATION_MS, VIBE_TRANSITION_DURATION_MS } from './vibe/vibeTransition.constants';
 
 // Total duration of the 360° pre-loading micro-animation (ms).
 // Kept in the 400–600ms range to feel snappy yet perceptible.
-const SPIN_DURATION_MS = 500;
-const LOADING_DURATION_MS = 5000;
+const SPIN_DURATION_MS = VIBE_SPIN_DURATION_MS;
+const LOADING_DURATION_MS = VIBE_TRANSITION_DURATION_MS;
 
 export default function VibeFAB() {
   const { isMoon, beginVibeTransition } = useVibe();
@@ -65,7 +66,7 @@ export default function VibeFAB() {
     // 1) Haptique de fin de rotation, AVANT l'overlay → l'utilisateur ressent
     //    la fin propre du geste, puis le chargement s'affiche.
     fireEndOfSpinHaptic();
-    // 2) Lance l'interstitiel de chargement (8s) une fois la rotation terminée.
+    // 2) Lance l'interstitiel de chargement une fois la rotation terminée.
     triggerLoading(target);
   };
 
@@ -86,7 +87,7 @@ export default function VibeFAB() {
     rotation.value = 0;
 
     // 3) Spin 0 → 360° on the native thread, then fire the haptic and trigger
-    //    the 8s loading overlay — strictly AFTER the rotation completes.
+    //    the loading overlay — strictly AFTER the rotation completes.
     rotation.value = withTiming(360, { duration: SPIN_DURATION_MS, easing: Easing.inOut(Easing.cubic) }, (finished) => {
       if (finished) runOnJS(onSpinComplete)(target);
     });

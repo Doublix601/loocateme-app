@@ -1,78 +1,85 @@
-import React, { useEffect, useMemo } from 'react';
-import { Dimensions, StyleSheet, View, Text } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AccessibilityInfo, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
-  Easing,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
-  withRepeat,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { useVibe } from './contexts/VibeContext';
+import SunDisk from './vibe/SunDisk';
+import MoonDisk from './vibe/MoonDisk';
+import StarField from './vibe/StarField';
+import ShootingStar from './vibe/ShootingStar';
+import CloudBand from './vibe/CloudBand';
+import {
+  VIBE_CONTENT_STAGGER_MS,
+  VIBE_EASING,
+  VIBE_REDUCED_MOTION_DURATION_MS,
+  VIBE_TRANSITION_DURATION_MS,
+} from './vibe/vibeTransition.constants';
 
 const { width, height } = Dimensions.get('window');
 
-function useStars(count = 36) {
-  return useMemo(() => {
-    const arr = [];
-    for (let i = 0; i < count; i += 1) {
-      arr.push({
-        id: i,
-        left: Math.random() * width,
-        top: Math.random() * height,
-        size: 1 + Math.random() * 2,
-        delay: Math.floor(Math.random() * 1200),
-        duration: 1200 + Math.floor(Math.random() * 1800),
-      });
-    }
-    return arr;
-  }, [count]);
-}
+const DAY_GRADIENT = ['#C9E3F2', '#A7CFE6', '#8FBDD9'];
+const DAY_GRADIENT_LOCATIONS = [0, 0.55, 1];
+const NIGHT_GRADIENT = ['#0B1026', '#1B2735'];
 
-function Star({ size = 2, left = 0, top = 0, delay = 0, duration = 1600 }) {
-  const opacity = useSharedValue(0.3);
+function useReduceMotion() {
+  const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0.25, { duration, easing: Easing.inOut(Easing.quad) }),
-        ),
-        -1,
-        true,
-      ),
-    );
-  }, [delay, duration]);
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-  return (
-    <Animated.View style={[styles.star, style, { width: size, height: size, left, top, borderRadius: size / 2 }]} />
-  );
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((enabled) => mounted && setReduceMotion(!!enabled))
+      .catch(() => {});
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', (enabled) => setReduceMotion(!!enabled));
+    return () => {
+      mounted = false;
+      try {
+        sub && sub.remove && sub.remove();
+      } catch (_) {}
+    };
+  }, []);
+  return reduceMotion;
 }
 
 export default function VibeTransitOverlay() {
-  const { transitioningTo } = useVibe();
+  const { transitioningTo, skipVibeTransition } = useVibe();
   const goingToMoon = transitioningTo === 'moon';
+  const reduceMotion = useReduceMotion();
+  const duration = reduceMotion ? VIBE_REDUCED_MOTION_DURATION_MS : VIBE_TRANSITION_DURATION_MS;
 
-  // Fade control for crossfading gradients and content
   const prog = useSharedValue(0);
   useEffect(() => {
     if (transitioningTo) {
       prog.value = 0;
-      // Transition stretched to 5s for immersive interstitial
-      prog.value = withTiming(1, { duration: 5000, easing: Easing.inOut(Easing.cubic) });
+      prog.value = withTiming(1, { duration, easing: VIBE_EASING });
     } else {
       prog.value = 0;
     }
-  }, [transitioningTo]);
+  }, [transitioningTo, duration]);
 
   const dayFade = useAnimatedStyle(() => ({ opacity: goingToMoon ? 1 - prog.value : prog.value }));
   const nightFade = useAnimatedStyle(() => ({ opacity: goingToMoon ? prog.value : 1 - prog.value }));
   const contentFade = useAnimatedStyle(() => ({ opacity: prog.value }));
 
-  const stars = useStars(goingToMoon ? 42 : 24);
+  // Le disque qui "part" glisse et s'estompe sous l'horizon ; celui qui
+  // "arrive" glisse et apparaît depuis le bas — un vrai coucher/lever.
+  const settingStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(prog.value, [0, 0.6, 1], [1, 0.15, 0]),
+    transform: [{ translateY: interpolate(prog.value, [0, 1], [0, 140]) }],
+  }));
+  const risingStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(prog.value, [0, 0.4, 1], [0, 0.3, 1]),
+    transform: [{ translateY: interpolate(prog.value, [0, 1], [140, 0]) }],
+  }));
+  const cloudFade = useAnimatedStyle(() => ({
+    opacity: interpolate(prog.value, [0, 0.65, 1], [goingToMoon ? 0.5 : 0, goingToMoon ? 0.15 : 0.5, goingToMoon ? 0 : 0.5]),
+  }));
+
+  const starCount = goingToMoon ? 22 : 0;
 
   if (!transitioningTo) return null;
 
@@ -96,27 +103,44 @@ export default function VibeTransitOverlay() {
     <View pointerEvents="auto" style={styles.overlay} onStartShouldSetResponder={() => true}>
       {/* Base gradients crossfading */}
       <Animated.View style={[styles.absoluteFill, dayFade]}>
-        {/* Dawn tilt: emphasize cooler sky blues over warm yellows */}
         <LinearGradient
-          colors={['#A8D8FF', '#87CEEB']}
+          colors={DAY_GRADIENT}
+          locations={DAY_GRADIENT_LOCATIONS}
           style={styles.absoluteFill}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
         />
+        {!reduceMotion && (
+          <Animated.View style={[styles.absoluteFill, cloudFade]} pointerEvents="none">
+            <CloudBand topRatio={0.14} scale={0.9} duration={26000} opacity={0.55} screenWidth={width} screenHeight={height} />
+            <CloudBand topRatio={0.32} scale={0.7} duration={32000} delay={-8000} opacity={0.4} screenWidth={width} screenHeight={height} />
+          </Animated.View>
+        )}
       </Animated.View>
       <Animated.View style={[styles.absoluteFill, nightFade]}>
         <LinearGradient
-          colors={['#0B1026', '#1B2735']}
+          colors={NIGHT_GRADIENT}
           style={styles.absoluteFill}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
-        {/* Stars for night */}
-        {goingToMoon &&
-          stars.map((s) => (
-            <Star key={s.id} size={s.size} left={s.left} top={s.top} delay={s.delay} duration={s.duration} />
-          ))}
+        {!reduceMotion && starCount > 0 && <StarField count={starCount} width={width} height={height} />}
+        {!reduceMotion && goingToMoon && (
+          <ShootingStar seed={1} screenWidth={width} screenHeight={height} once initialDelayMs={Math.round(duration * 0.65)} />
+        )}
       </Animated.View>
+
+      {/* Disques soleil/lune : coucher/lever réel piloté par prog */}
+      {!reduceMotion && (
+        <>
+          <Animated.View style={goingToMoon ? settingStyle : risingStyle} pointerEvents="none">
+            <SunDisk size={84} top={height * 0.16} right={width * 0.14} animate={false} />
+          </Animated.View>
+          <Animated.View style={goingToMoon ? risingStyle : settingStyle} pointerEvents="none">
+            <MoonDisk size={72} top={height * 0.16} right={width * 0.14} animate={false} />
+          </Animated.View>
+        </>
+      )}
 
       {/* Center content */}
       <Animated.View style={[styles.centerContent, contentFade]} pointerEvents="none">
@@ -124,22 +148,49 @@ export default function VibeTransitOverlay() {
         <Text style={styles.subtitle}>{sub}</Text>
         <View style={styles.pillsRow}>
           {items.map((it, idx) => (
-            <StaggeredPill key={idx} index={idx} icon={it.icon} label={it.label} />
+            <StaggeredPill key={idx} index={idx} icon={it.icon} label={it.label} reduceMotion={reduceMotion} />
           ))}
         </View>
       </Animated.View>
+
+      <SkipButton onPress={skipVibeTransition} />
     </View>
   );
 }
 
-function StaggeredPill({ index = 0, icon, label }) {
+function SkipButton({ onPress }) {
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(10);
   useEffect(() => {
-    const d = 200 + index * 120;
-    opacity.value = withDelay(d, withTiming(1, { duration: 600 }));
-    translateY.value = withDelay(d, withTiming(0, { duration: 600 }));
-  }, [index]);
+    opacity.value = withDelay(400, withTiming(1, { duration: 300 }));
+  }, []);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  return (
+    <Animated.View style={[styles.skipWrap, style]}>
+      <TouchableOpacity
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel="Passer la transition"
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        style={styles.skipButton}
+      >
+        <Text style={styles.skipText}>Passer</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+function StaggeredPill({ index = 0, icon, label, reduceMotion }) {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(reduceMotion ? 0 : 10);
+  useEffect(() => {
+    if (reduceMotion) {
+      opacity.value = withTiming(1, { duration: 200 });
+      return;
+    }
+    const d = 650 + index * VIBE_CONTENT_STAGGER_MS;
+    opacity.value = withDelay(d, withTiming(1, { duration: 400 }));
+    translateY.value = withDelay(d, withTiming(0, { duration: 400 }));
+  }, [index, reduceMotion]);
   const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ translateY: translateY.value }] }));
   return (
     <Animated.View style={[styles.pill, style]}>
@@ -209,8 +260,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
   },
-  star: {
+  skipWrap: {
     position: 'absolute',
-    backgroundColor: '#ffffff',
+    bottom: 56,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  skipButton: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  skipText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
