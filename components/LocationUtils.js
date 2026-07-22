@@ -105,10 +105,6 @@ export function formatLocationType(type) {
   // remplace les séparateurs `_` / `-` par des espaces, on met en majuscules,
   // puis on rajoute l'emoji à la fin (ou 📍 par défaut).
   const emoji = extractEmoji(key) || '📍';
-  const text = stripEmoji(key)
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLocaleUpperCase('fr-FR');
+  const text = stripEmoji(key).replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim().toLocaleUpperCase('fr-FR');
   return text ? `${text} ${emoji}` : `LIEU ${emoji}`;
 }

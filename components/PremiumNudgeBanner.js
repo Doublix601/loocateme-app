@@ -25,7 +25,11 @@ export default function PremiumNudgeBanner() {
       setNudge(payload);
       PremiumNudgeService.recordShown(payload.id).catch(() => {});
     });
-    return () => { try { unsub && unsub(); } catch (_) {} };
+    return () => {
+      try {
+        unsub && unsub();
+      } catch (_) {}
+    };
   }, []);
 
   const handleDismiss = () => {
@@ -53,13 +57,21 @@ export default function PremiumNudgeBanner() {
       >
         <View style={styles.row}>
           <View style={{ flex: 1, marginRight: 10 }}>
-            <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>{nudge.title}</Text>
-            <Text style={[styles.message, { color: colors.textSecondary }]} numberOfLines={2}>{nudge.message}</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
+              {nudge.title}
+            </Text>
+            <Text style={[styles.message, { color: colors.textSecondary }]} numberOfLines={2}>
+              {nudge.message}
+            </Text>
           </View>
           <View style={[styles.cta, { backgroundColor: colors.accent }]}>
             <Text style={styles.ctaText}>Voir</Text>
           </View>
-          <TouchableOpacity onPress={handleDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={handleDismiss}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.closeBtn}
+          >
             <Text style={[styles.close, { color: colors.textMuted }]}>✕</Text>
           </TouchableOpacity>
         </View>

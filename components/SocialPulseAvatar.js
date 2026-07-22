@@ -2,13 +2,7 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Canvas, Circle, SweepGradient, vec, BlurMask } from '@shopify/react-native-skia';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
-import {
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  Easing,
-  useDerivedValue,
-} from 'react-native-reanimated';
+import { useSharedValue, withRepeat, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
 
 const STATUS_COLORS = {
   green: '#4CAF50',
@@ -27,13 +21,7 @@ const STATUS_COLORS = {
  *
  *  Statut → glow couleur lorsqu'en mode MOON (tâche : signaler la disponibilité).
  */
-const SocialPulseAvatar = ({
-  user,
-  size = 64,
-  onPress,
-  isMoon = false,
-  index = 0,
-}) => {
+const SocialPulseAvatar = ({ user, size = 64, onPress, isMoon = false, index = 0 }) => {
   const status = user?.status || 'green';
   const statusColor = STATUS_COLORS[status] || STATUS_COLORS.green;
   const isBoosted = user?.boostUntil && new Date(user.boostUntil) > new Date();
@@ -48,25 +36,19 @@ const SocialPulseAvatar = ({
   React.useEffect(() => {
     if (!isMoon) return;
     phase.value = (index % 5) * 0.2;
-    phase.value = withRepeat(
-      withTiming(phase.value + 1, { duration: 6000, easing: Easing.linear }),
-      -1,
-      false
-    );
+    phase.value = withRepeat(withTiming(phase.value + 1, { duration: 6000, easing: Easing.linear }), -1, false);
   }, [isMoon, index, phase]);
 
   // Skia ne peut pas lire directement les SV — on calcule via useDerivedValue.
   const colors = useMemo(
-    () => (isBoosted
-      ? ['#FFD700', '#FFA500', '#FFD700', '#FFA500', '#FFD700']
-      : ['#2DBDFF', '#FF3DAD', '#8A4BFF', '#2DBDFF', '#FF3DAD', '#2DBDFF']
-    ),
-    [isBoosted]
+    () =>
+      isBoosted
+        ? ['#FFD700', '#FFA500', '#FFD700', '#FFA500', '#FFD700']
+        : ['#2DBDFF', '#FF3DAD', '#8A4BFF', '#2DBDFF', '#FF3DAD', '#2DBDFF'],
+    [isBoosted],
   );
 
-  const transform = useDerivedValue(() => [
-    { rotate: phase.value * 2 * Math.PI },
-  ]);
+  const transform = useDerivedValue(() => [{ rotate: phase.value * 2 * Math.PI }]);
 
   const renderRing = () => {
     if (isMoon) {
@@ -127,10 +109,7 @@ const SocialPulseAvatar = ({
           }}
         >
           {user?.profileImageUrl || user?.photo ? (
-            <ImageWithPlaceholder
-              uri={user.profileImageUrl || user.photo}
-              style={{ width: '100%', height: '100%' }}
-            />
+            <ImageWithPlaceholder uri={user.profileImageUrl || user.photo} style={{ width: '100%', height: '100%' }} />
           ) : (
             <View style={styles.placeholder}>
               <Text style={styles.placeholderText}>

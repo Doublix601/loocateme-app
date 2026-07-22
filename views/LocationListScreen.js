@@ -43,7 +43,7 @@ const DISTANCE_REF_METERS = 800;
 const USERCOUNT_CAP = 8;
 const WEIGHT_DISTANCE = 0.45;
 const WEIGHT_STARS = 0.35;
-const WEIGHT_USERS = 0.20;
+const WEIGHT_USERS = 0.2;
 
 const LocationListScreen = () => {
   const navigation = useNavigation();
@@ -100,7 +100,7 @@ const LocationListScreen = () => {
     sun: { zoneKey: null, fetchedAt: 0, locations: [], osmPois: [], displayLimit: MIN_LOCATIONS, hasMore: true },
     moon: { zoneKey: null, fetchedAt: 0, locations: [], osmPois: [], displayLimit: MIN_LOCATIONS, hasMore: true },
   });
-  const getZoneKey = (lat, lon) => (lat == null || lon == null) ? null : `${lat}:${lon}`;
+  const getZoneKey = (lat, lon) => (lat == null || lon == null ? null : `${lat}:${lon}`);
   const readVibeCache = (v, zoneKey) => {
     const entry = vibeCacheRef.current[v];
     if (!entry || zoneKey == null || entry.zoneKey !== zoneKey) return null;
@@ -128,7 +128,7 @@ const LocationListScreen = () => {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           });
-        }
+        },
       );
     };
 
@@ -144,7 +144,7 @@ const LocationListScreen = () => {
   useEffect(() => {
     const task = () => {
       try {
-        const next = Array.isArray(osmPois) ? osmPois.filter(p => isTypeAllowedForVibe(p?.type, vibe)) : [];
+        const next = Array.isArray(osmPois) ? osmPois.filter((p) => isTypeAllowedForVibe(p?.type, vibe)) : [];
         setFilteredOsmPois(next);
       } catch (_) {}
     };
@@ -152,7 +152,11 @@ const LocationListScreen = () => {
     // Defer heavy filtering until after transition animations
     if (transitioningTo) {
       const handle = InteractionManager.runAfterInteractions(task);
-      return () => { try { handle?.cancel?.(); } catch (_) {} };
+      return () => {
+        try {
+          handle?.cancel?.();
+        } catch (_) {}
+      };
     }
     task();
   }, [osmPois, vibe, transitioningTo]);
@@ -167,29 +171,27 @@ const LocationListScreen = () => {
   }, [locations]);
 
   const locationsWithDistance = useMemo(() => {
-    const merged = [...filteredLocations, ...filteredOsmPois].reduce((acc, it) => {
-      // Dédoublonnage robuste : on privilégie l'osmId s'il existe, sinon l'id MongoDB.
-      // Cela permet de fusionner un lieu backend synchronisé (qui a un osmId)
-      // avec son équivalent brut provenant d'Overpass.
-      const key = it?.osmId ? `osm:${it.osmId}` : it?._id;
-      if (!key) return acc;
-      if (acc.map.has(key)) return acc; // dedupe
-      acc.map.set(key, it);
-      acc.list.push(it);
-      return acc;
-    }, { map: new Map(), list: [] }).list;
+    const merged = [...filteredLocations, ...filteredOsmPois].reduce(
+      (acc, it) => {
+        // Dédoublonnage robuste : on privilégie l'osmId s'il existe, sinon l'id MongoDB.
+        // Cela permet de fusionner un lieu backend synchronisé (qui a un osmId)
+        // avec son équivalent brut provenant d'Overpass.
+        const key = it?.osmId ? `osm:${it.osmId}` : it?._id;
+        if (!key) return acc;
+        if (acc.map.has(key)) return acc; // dedupe
+        acc.map.set(key, it);
+        acc.list.push(it);
+        return acc;
+      },
+      { map: new Map(), list: [] },
+    ).list;
 
     if (!userCoords) return merged;
 
-    return merged.map(loc => {
+    return merged.map((loc) => {
       const coords = loc?.location?.coordinates;
       if (!Array.isArray(coords) || coords.length < 2) return loc;
-      const distance = calculateDistance(
-        userCoords.latitude,
-        userCoords.longitude,
-        coords[1],
-        coords[0]
-      );
+      const distance = calculateDistance(userCoords.latitude, userCoords.longitude, coords[1], coords[0]);
       return { ...loc, distance };
     });
   }, [filteredLocations, filteredOsmPois, userCoords]);
@@ -271,7 +273,9 @@ const LocationListScreen = () => {
         fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, limit: MIN_LOCATIONS, vibe });
       }
       // Remonter en haut de liste
-      try { flatListRef.current?.scrollToOffset?.({ offset: 0, animated: false }); } catch (_) {}
+      try {
+        flatListRef.current?.scrollToOffset?.({ offset: 0, animated: false });
+      } catch (_) {}
     }
   }, [vibe]);
 
@@ -281,12 +285,12 @@ const LocationListScreen = () => {
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
     const set = visibleSetRef.current;
     const next = new Set();
-    (viewableItems || []).forEach(v => {
+    (viewableItems || []).forEach((v) => {
       if (typeof v?.index === 'number') next.add(v.index);
     });
     // remplacer le set
     visibleSetRef.current = next;
-    setVisibleTick(t => t + 1);
+    setVisibleTick((t) => t + 1);
   }).current;
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
@@ -298,12 +302,14 @@ const LocationListScreen = () => {
         <TouchableOpacity
           style={[
             styles.locationCard,
-            { backgroundColor: colors.surface, marginBottom: isUserHere ? 0 : 16,
+            {
+              backgroundColor: colors.surface,
+              marginBottom: isUserHere ? 0 : 16,
               borderWidth: isMoon ? 1.5 : 0,
               borderColor: isMoon ? 'rgba(255,45,168,0.35)' : 'transparent',
               shadowColor: isMoon ? '#2dbdff' : '#000',
-              shadowOpacity: isMoon ? 0.45 : (isDark ? 0.2 : 0.08),
-            }
+              shadowOpacity: isMoon ? 0.45 : isDark ? 0.2 : 0.08,
+            },
           ]}
           onPress={async () => {
             // POI Overpass non persisté: on l'upsert en base avant d'ouvrir l'écran
@@ -325,7 +331,10 @@ const LocationListScreen = () => {
                   const seeded = res?.location;
                   if (seeded && seeded._id) {
                     const merged = { ...item, ...seeded };
-                    navigation.navigate('Location', { locationId: merged._id || merged.id, tertiles: merged.tertiles || null });
+                    navigation.navigate('Location', {
+                      locationId: merged._id || merged.id,
+                      tertiles: merged.tertiles || null,
+                    });
                     return;
                   }
                 }
@@ -343,10 +352,7 @@ const LocationListScreen = () => {
             {item.isPro && (item.bannerUrl || item.logoUrl) && (
               <View style={item.bannerUrl ? styles.proBannerContainer : null}>
                 {item.bannerUrl && (
-                  <ImageWithPlaceholder
-                    uri={item.bannerThumbUrl || item.bannerUrl}
-                    style={styles.proBanner}
-                  />
+                  <ImageWithPlaceholder uri={item.bannerThumbUrl || item.bannerUrl} style={styles.proBanner} />
                 )}
                 {item.logoUrl && (
                   <ImageWithPlaceholder
@@ -361,7 +367,9 @@ const LocationListScreen = () => {
             )}
             <View style={styles.locationHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.textPrimary }]}>{item.name}</Text>
+                <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.textPrimary }]}>
+                  {item.name}
+                </Text>
                 {item.isPro && (
                   <View style={styles.verifiedBadge}>
                     <Text style={styles.verifiedText}>✓</Text>
@@ -374,9 +382,7 @@ const LocationListScreen = () => {
                 )}
               </View>
               {isUserHere ? (
-                <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>
-                  Actuellement ici
-                </Text>
+                <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>Actuellement ici</Text>
               ) : (
                 item.distance !== undefined && (
                   <Text style={[styles.distanceText, { color: colors.textSecondary }]}>
@@ -395,24 +401,36 @@ const LocationListScreen = () => {
               <View style={styles.avatarStack}>
                 {(item.activeUsers || []).map((u, index) => {
                   const isUserBoosted = u.boostUntil && new Date(u.boostUntil) > new Date();
-                  const isGhost = u.location && u.location.updatedAt && new Date(u.location.updatedAt) < new Date(Date.now() - 5 * 60 * 1000) && isUserBoosted;
+                  const isGhost =
+                    u.location &&
+                    u.location.updatedAt &&
+                    new Date(u.location.updatedAt) < new Date(Date.now() - 5 * 60 * 1000) &&
+                    isUserBoosted;
 
                   return (
-                    <View key={u._id} style={[styles.avatarWrapper, {
-                      marginLeft: index === 0 ? 0 : -12,
-                      borderColor: isUserBoosted ? '#FFD700' : colors.surface,
-                      backgroundColor: isDark ? '#333' : '#eee',
-                      opacity: isGhost ? 0.6 : 1,
-                      borderWidth: isUserBoosted ? 1.5 : 1
-                    }]}>
-                      <ImageWithPlaceholder
-                        uri={u.profileImageUrl}
-                        style={styles.smallAvatar}
+                    <View
+                      key={u._id}
+                      style={[
+                        styles.avatarWrapper,
+                        {
+                          marginLeft: index === 0 ? 0 : -12,
+                          borderColor: isUserBoosted ? '#FFD700' : colors.surface,
+                          backgroundColor: isDark ? '#333' : '#eee',
+                          opacity: isGhost ? 0.6 : 1,
+                          borderWidth: isUserBoosted ? 1.5 : 1,
+                        },
+                      ]}
+                    >
+                      <ImageWithPlaceholder uri={u.profileImageUrl} style={styles.smallAvatar} />
+                      <View
+                        style={[
+                          styles.statusDotSmall,
+                          {
+                            backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
+                            borderColor: colors.surface,
+                          },
+                        ]}
                       />
-                      <View style={[styles.statusDotSmall, {
-                        backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
-                        borderColor: colors.surface
-                      }]} />
                     </View>
                   );
                 })}
@@ -438,7 +456,13 @@ const LocationListScreen = () => {
       // Neon vibe: apply animated gradient border to all cards in Night mode
       if (isMoon) {
         return (
-          <AnimatedGradientBorder borderRadius={20} index={index} active={isActive} marginBottom={16} colors={["#ff2da8", "#2dbdff", "#ff2da8", "#2dbdff", "#ff2da8"]}>
+          <AnimatedGradientBorder
+            borderRadius={20}
+            index={index}
+            active={isActive}
+            marginBottom={16}
+            colors={['#ff2da8', '#2dbdff', '#ff2da8', '#2dbdff', '#ff2da8']}
+          >
             {card}
           </AnimatedGradientBorder>
         );
@@ -469,12 +493,12 @@ const LocationListScreen = () => {
       }
 
       // On attend une frame pour laisser respirer l'UI
-      await new Promise(resolve => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
       if (!active) return;
 
       // Attendre que les interactions (animations) soient finies avant de charger Overpass
       // car c'est une requête lourde qui peut ralentir le thread JS au moment du rendu.
-      await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
+      await new Promise((resolve) => InteractionManager.runAfterInteractions(resolve));
       if (!active) return;
 
       try {
@@ -485,9 +509,10 @@ const LocationListScreen = () => {
         }
       } catch (_) {}
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [roundedLat, roundedLon, vibe]);
-
 
   useEffect(() => {
     fetchNearbyLocations();
@@ -496,7 +521,10 @@ const LocationListScreen = () => {
     const unsub = subscribe('api:mutation', ({ path }) => {
       // Rafraîchir la liste suite aux mutations liées à la position MAIS sans renvoyer un POST
       // pour éviter une boucle infinie (mitraillette à requêtes).
-      if (path && (path.includes('/users/location') || path.includes('/user/location') || path.includes('/user/heartbeat'))) {
+      if (
+        path &&
+        (path.includes('/users/location') || path.includes('/user/location') || path.includes('/user/heartbeat'))
+      ) {
         fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true });
       }
     });
@@ -505,7 +533,6 @@ const LocationListScreen = () => {
   }, []);
 
   // Scroll position is preserved automatically by React Navigation's native stack.
-
 
   const getStars = (item, starIsDark) => {
     const starsCount = item?.stars || 0;
@@ -524,7 +551,9 @@ const LocationListScreen = () => {
     }
 
     // Default to 1 grey star for 0 stars
-    return <Text style={{ color: starIsDark ? '#FFFFFF' : '#ccc', opacity: starIsDark ? 0.3 : 1, fontSize: 18 }}>★</Text>;
+    return (
+      <Text style={{ color: starIsDark ? '#FFFFFF' : '#ccc', opacity: starIsDark ? 0.3 : 1, fontSize: 18 }}>★</Text>
+    );
   };
 
   const fetchNearbyLocations = async (options = {}) => {
@@ -592,7 +621,10 @@ const LocationListScreen = () => {
             }
             // radius_limited n'a rien retourné (hors cooldown ou pas plafonné) : on
             // laisse une chance au rappel périodique, moins prioritaire.
-            const periodicNudge = await PremiumNudgeService.evaluate('periodic_home', { isPremium, premiumSystemEnabled });
+            const periodicNudge = await PremiumNudgeService.evaluate('periodic_home', {
+              isPremium,
+              premiumSystemEnabled,
+            });
             if (periodicNudge) publish('premium:nudge', periodicNudge);
           } catch (_) {
             // Signal purement observationnel : ne doit jamais impacter la liste principale.
@@ -605,7 +637,11 @@ const LocationListScreen = () => {
       const tasks = [];
 
       if (!skipUpdateMyLocation) {
-        tasks.push(updateMyLocation({ lat: latitude, lon: longitude }).catch(err => console.error('Error updating my location:', err)));
+        tasks.push(
+          updateMyLocation({ lat: latitude, lon: longitude }).catch((err) =>
+            console.error('Error updating my location:', err),
+          ),
+        );
       }
 
       tasks.push(getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe }));
@@ -627,10 +663,7 @@ const LocationListScreen = () => {
         setLocations(normalized);
         setHasMore(hasMoreResult);
 
-        const zoneKey = getZoneKey(
-          Math.round(latitude * 1000) / 1000,
-          Math.round(longitude * 1000) / 1000
-        );
+        const zoneKey = getZoneKey(Math.round(latitude * 1000) / 1000, Math.round(longitude * 1000) / 1000);
         writeVibeCache(currentVibe, {
           zoneKey,
           locations: normalized,
@@ -642,7 +675,6 @@ const LocationListScreen = () => {
       // NOTE: On a supprimé l'appel OverpassService.fetchAround ici
       // car il est déjà géré par le useEffect([roundedLat, roundedLon, vibe])
       // qui se déclenchera suite au setUserCoords(...) ci-dessus.
-
     } catch (e) {
       console.error('Error fetching locations:', e);
     } finally {
@@ -702,7 +734,9 @@ const LocationListScreen = () => {
   const handleRetryLoadMore = () => {
     setLoadMoreError(false);
     // Relance immédiate
-    setTimeout(() => { handleLoadMore(); }, 0);
+    setTimeout(() => {
+      handleLoadMore();
+    }, 0);
   };
 
   // Footer dynamique : spinner pendant le chargement, message de fin lorsque le
@@ -742,7 +776,8 @@ const LocationListScreen = () => {
       return (
         <View style={{ paddingVertical: 16, alignItems: 'center' }}>
           <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', fontStyle: 'italic' }}>
-            Vous avez exploré tous les lieux actifs à proximité. Déplacez-vous ou faites une recherche pour en voir plus.
+            Vous avez exploré tous les lieux actifs à proximité. Déplacez-vous ou faites une recherche pour en voir
+            plus.
           </Text>
         </View>
       );
@@ -750,25 +785,28 @@ const LocationListScreen = () => {
     return null;
   };
 
-
   const renderHeader = () => (
-    <View style={[
-      styles.header,
-      {
-        backgroundColor: colors.surface,
-        paddingTop: insets.top + 10,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        elevation: isDark ? 0 : 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.3 : 0.1,
-        shadowRadius: 10,
-        borderBottomWidth: isDark ? 1 : 0,
-        borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent'
-      }
-    ]}>
-      <Text style={[styles.headerTitle, { color: '#00c2cb', flex: 1 }]} numberOfLines={1}>Lieux à proximité</Text>
+    <View
+      style={[
+        styles.header,
+        {
+          backgroundColor: colors.surface,
+          paddingTop: insets.top + 10,
+          borderBottomLeftRadius: 30,
+          borderBottomRightRadius: 30,
+          elevation: isDark ? 0 : 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isDark ? 0.3 : 0.1,
+          shadowRadius: 10,
+          borderBottomWidth: isDark ? 1 : 0,
+          borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent',
+        },
+      ]}
+    >
+      <Text style={[styles.headerTitle, { color: '#00c2cb', flex: 1 }]} numberOfLines={1}>
+        Lieux à proximité
+      </Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity
           onPress={() => goToPage(0)}
@@ -784,7 +822,10 @@ const LocationListScreen = () => {
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
           accessibilityLabel="Mon compte"
         >
-          <Image source={require('../assets/appIcons/userProfile.png')} style={[styles.profileIcon, { tintColor: '#00c2cb' }]} />
+          <Image
+            source={require('../assets/appIcons/userProfile.png')}
+            style={[styles.profileIcon, { tintColor: '#00c2cb' }]}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -793,95 +834,167 @@ const LocationListScreen = () => {
   return (
     <View style={{ flex: 1 }}>
       {/* Fond cohérent avec la vibe (même palette que l'interstitiel) */}
-      {isMoon ? (
-        <NightSkyBackground style={skyFillStyle} />
-      ) : (
-        <DaySkyBackground style={skyFillStyle} />
-      )}
+      {isMoon ? <NightSkyBackground style={skyFillStyle} /> : <DaySkyBackground style={skyFillStyle} />}
       <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
         {renderHeader()}
         {loading && !refreshing ? (
-        <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
-      ) : locationError ? (
-        <ScrollView
-          contentContainerStyle={[styles.listContent, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#00c2cb"]} progressViewOffset={10} />}
-          alwaysBounceVertical
-          bounces
-          overScrollMode="always"
-        >
-          <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>📍</Text>
-          <Text style={[styles.emptyText, { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Localisation indisponible</Text>
-          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, paddingHorizontal: 32, lineHeight: 20 }}>
-            Active les services de localisation dans les réglages de ton appareil pour voir les lieux autour de toi.
-          </Text>
-          <TouchableOpacity onPress={() => fetchNearbyLocations({ vibe })} style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}>
-            <Text style={{ color: '#fff', fontWeight: '600' }}>Réessayer</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      ) : visibleItems.length === 0 ? (
-        // Etat vide: permettre le pull-to-refresh même sans éléments
-        <ScrollView
-          contentContainerStyle={[styles.listContent, { flexGrow: 1, justifyContent: 'center', alignItems: 'center' }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#00c2cb"]} progressViewOffset={10} />}
-          alwaysBounceVertical
-          bounces
-          overScrollMode="always"
-        >
-          <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🌙</Text>
-          <Text style={[styles.emptyText, { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' }]}>Zone calme pour l'instant</Text>
-          <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, paddingHorizontal: 32, lineHeight: 20 }}>
-            Aucun lieu actif n'a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <TouchableOpacity onPress={() => {
-              if (userCoords) {
-                OverpassService.fetchAround({ lat: userCoords.latitude, lon: userCoords.longitude, radius: 3000, force: true, vibe }).then(setOsmPois).catch(()=>{});
-              }
-            }} style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}>
-              <Text style={{ color: '#fff', fontWeight: '600' }}>Élargir le périmètre</Text>
+          <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
+        ) : locationError ? (
+          <ScrollView
+            contentContainerStyle={[
+              styles.listContent,
+              { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
+            ]}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#00c2cb']}
+                progressViewOffset={10}
+              />
+            }
+            alwaysBounceVertical
+            bounces
+            overScrollMode="always"
+          >
+            <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>📍</Text>
+            <Text
+              style={[
+                styles.emptyText,
+                { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' },
+              ]}
+            >
+              Localisation indisponible
+            </Text>
+            <Text
+              style={{
+                color: colors.textSecondary,
+                textAlign: 'center',
+                marginBottom: 20,
+                paddingHorizontal: 32,
+                lineHeight: 20,
+              }}
+            >
+              Active les services de localisation dans les réglages de ton appareil pour voir les lieux autour de toi.
+            </Text>
+            <TouchableOpacity
+              onPress={() => fetchNearbyLocations({ vibe })}
+              style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '600' }}>Réessayer</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { /* future: suggestion flow */ }} style={{ backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#eaeaea' }}>
-              <Text style={{ color: colors.textPrimary }}>Suggérer ce lieu</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={visibleItems}
-          keyExtractor={(item) => item._id || item.osmId || String(item.name)}
-          renderItem={renderLocation}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          onScroll={(event) => {
-            currentScrollOffset.current = event.nativeEvent.contentOffset.y;
-          }}
-          scrollEventThrottle={16}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#00c2cb"]}
-              // Décale le spinner sous l'en‑tête sur Android si besoin
-              progressViewOffset={10}
-            />
-          }
-          // Optimization for performance
-          initialNumToRender={8}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-          removeClippedSubviews={Platform.OS === 'android'}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.4}
-          ListFooterComponent={renderListFooter}
-          // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
-          contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
-          // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
-          bounces
-          overScrollMode="always"
-        />
-      )}
+          </ScrollView>
+        ) : visibleItems.length === 0 ? (
+          // Etat vide: permettre le pull-to-refresh même sans éléments
+          <ScrollView
+            contentContainerStyle={[
+              styles.listContent,
+              { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
+            ]}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#00c2cb']}
+                progressViewOffset={10}
+              />
+            }
+            alwaysBounceVertical
+            bounces
+            overScrollMode="always"
+          >
+            <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🌙</Text>
+            <Text
+              style={[
+                styles.emptyText,
+                { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' },
+              ]}
+            >
+              Zone calme pour l'instant
+            </Text>
+            <Text
+              style={{
+                color: colors.textSecondary,
+                textAlign: 'center',
+                marginBottom: 20,
+                paddingHorizontal: 32,
+                lineHeight: 20,
+              }}
+            >
+              Aucun lieu actif n'a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (userCoords) {
+                    OverpassService.fetchAround({
+                      lat: userCoords.latitude,
+                      lon: userCoords.longitude,
+                      radius: 3000,
+                      force: true,
+                      vibe,
+                    })
+                      .then(setOsmPois)
+                      .catch(() => {});
+                  }
+                }}
+                style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}
+              >
+                <Text style={{ color: '#fff', fontWeight: '600' }}>Élargir le périmètre</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  /* future: suggestion flow */
+                }}
+                style={{
+                  backgroundColor: colors.surface,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#eaeaea',
+                }}
+              >
+                <Text style={{ color: colors.textPrimary }}>Suggérer ce lieu</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={visibleItems}
+            keyExtractor={(item) => item._id || item.osmId || String(item.name)}
+            renderItem={renderLocation}
+            onViewableItemsChanged={onViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            onScroll={(event) => {
+              currentScrollOffset.current = event.nativeEvent.contentOffset.y;
+            }}
+            scrollEventThrottle={16}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#00c2cb']}
+                // Décale le spinner sous l'en‑tête sur Android si besoin
+                progressViewOffset={10}
+              />
+            }
+            // Optimization for performance
+            initialNumToRender={8}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            removeClippedSubviews={Platform.OS === 'android'}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.4}
+            ListFooterComponent={renderListFooter}
+            // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
+            contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
+            // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
+            bounces
+            overScrollMode="always"
+          />
+        )}
       </SafeAreaView>
       <VibeFAB />
     </View>
@@ -909,7 +1022,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 194, 203, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10
+    marginRight: 10,
   },
   headerProfileButton: {
     width: 44,

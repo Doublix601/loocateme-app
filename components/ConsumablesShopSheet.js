@@ -1,7 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView,
-  Animated, ActivityIndicator, Alert, Platform,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  ScrollView,
+  Animated,
+  ActivityIndicator,
+  Alert,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from './contexts/ThemeContext';
@@ -60,7 +68,9 @@ async function loadHistory() {
   try {
     const raw = await AsyncStorage.getItem(HISTORY_KEY);
     return raw ? JSON.parse(raw) : [];
-  } catch (_) { return []; }
+  } catch (_) {
+    return [];
+  }
 }
 
 async function addToHistory(entry) {
@@ -95,7 +105,9 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
   useEffect(() => {
     if (!visible) return;
     refresh();
-    IAPStore.getOfferings().then(setOfferings).catch(() => {});
+    IAPStore.getOfferings()
+      .then(setOfferings)
+      .catch(() => {});
     Animated.spring(slideAnim, { toValue: 0, useNativeDriver: true, tension: 80, friction: 12 }).start();
     return () => {};
   }, [visible]);
@@ -104,7 +116,10 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
   // la bannière globale, pour éviter d'empiler deux interruptions concurrentes au
   // moment où l'utilisateur vient déjà de manquer de boosts/superlikes.
   useEffect(() => {
-    if (!visible || isPremium) { setNudge(null); return; }
+    if (!visible || isPremium) {
+      setNudge(null);
+      return;
+    }
     PremiumNudgeService.evaluate('consumables_depleted', { isPremium, premiumSystemEnabled })
       .then(setNudge)
       .catch(() => setNudge(null));
@@ -137,9 +152,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
     setPurchasing(pack.id);
     try {
       // Trouver le package RevenueCat correspondant
-      const rcPkg = offerings?.availablePackages?.find(
-        (p) => p.product?.identifier === pack.id
-      ) ?? null;
+      const rcPkg = offerings?.availablePackages?.find((p) => p.product?.identifier === pack.id) ?? null;
 
       let result;
       if (rcPkg) {
@@ -150,7 +163,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
         else await PremiumService.addSuperlikes(pack.qty);
         result = { success: true, isMock: true };
       } else {
-        Alert.alert('Non disponible', 'Ce pack n\'est pas encore disponible dans le store.');
+        Alert.alert('Non disponible', "Ce pack n'est pas encore disponible dans le store.");
         return;
       }
 
@@ -169,7 +182,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
       }
     } catch (e) {
       if (!e.userCancelled) {
-        Alert.alert('Erreur', e.message || 'Impossible de finaliser l\'achat.');
+        Alert.alert('Erreur', e.message || "Impossible de finaliser l'achat.");
       }
     } finally {
       setPurchasing(null);
@@ -210,22 +223,24 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
         )}
 
         {/* Compteurs actuels */}
-        <View style={[styles.countersRow, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
+        <View
+          style={[styles.countersRow, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}
+        >
           <View style={styles.counter}>
             <Text style={styles.counterEmoji}>🔥</Text>
             <Text style={[styles.counterNum, { color: text }]}>{boosts}</Text>
             <Text style={[styles.counterLabel, { color: sub }]}>boost{boosts !== 1 ? 's' : ''}</Text>
           </View>
-          <View style={[styles.counterDivider, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]} />
+          <View
+            style={[styles.counterDivider, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }]}
+          />
           <View style={styles.counter}>
             <Text style={styles.counterEmoji}>⭐</Text>
             <Text style={[styles.counterNum, { color: text }]}>{superlikes}</Text>
             <Text style={[styles.counterLabel, { color: sub }]}>superlike{superlikes !== 1 ? 's' : ''}</Text>
           </View>
           <TouchableOpacity onPress={handleRefresh} style={styles.refreshBtn} disabled={refreshing}>
-            {refreshing
-              ? <ActivityIndicator size="small" color="#00c2cb" />
-              : <Text style={{ fontSize: 18 }}>🔄</Text>}
+            {refreshing ? <ActivityIndicator size="small" color="#00c2cb" /> : <Text style={{ fontSize: 18 }}>🔄</Text>}
           </TouchableOpacity>
         </View>
 
@@ -250,14 +265,14 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
                 </View>
                 <TouchableOpacity
                   onPress={() => handlePurchase(pack)}
-                  disabled={!!purchasing || DEBUG_CONFIG.IAP_DISABLED && false}
+                  disabled={!!purchasing || (DEBUG_CONFIG.IAP_DISABLED && false)}
                   style={[styles.packBtn, (isBuying || (purchasing && purchasing !== pack.id)) && { opacity: 0.5 }]}
                 >
-                  {isBuying
-                    ? <ActivityIndicator size="small" color="#fff" />
-                    : <Text style={styles.packBtnText}>
-                        {DEBUG_CONFIG.IAP_DISABLED ? 'Simuler' : pack.price}
-                      </Text>}
+                  {isBuying ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.packBtnText}>{DEBUG_CONFIG.IAP_DISABLED ? 'Simuler' : pack.price}</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             );
@@ -268,12 +283,23 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
             <>
               <Text style={[styles.sectionTitle, { color: sub, marginTop: 24 }]}>3 DERNIERS ACHATS</Text>
               {history.map((h, idx) => (
-                <View key={idx} style={[styles.histRow, { borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' }]}>
+                <View
+                  key={idx}
+                  style={[
+                    styles.histRow,
+                    { borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' },
+                  ]}
+                >
                   <Text style={{ fontSize: 20, marginRight: 12 }}>{h.emoji}</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={[{ fontWeight: '700', fontSize: 14 }, { color: text }]}>{h.label}</Text>
                     <Text style={[{ fontSize: 12 }, { color: sub }]}>
-                      {new Date(h.at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(h.at).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                       {h.mock ? ' · simulation' : ''}
                     </Text>
                   </View>

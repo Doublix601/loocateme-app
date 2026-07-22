@@ -28,7 +28,14 @@ import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserContext } from '../components/contexts/UserContext';
-import { trackProfileView, trackSocialClick, createReport, blockUser, getFollowStatus as apiGetFollowStatus, createFollowRequest as apiCreateFollowRequest } from '../components/ApiRequest';
+import {
+  trackProfileView,
+  trackSocialClick,
+  createReport,
+  blockUser,
+  getFollowStatus as apiGetFollowStatus,
+  createFollowRequest as apiCreateFollowRequest,
+} from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
 import SuperlikeService from '../services/SuperlikeService';
 import PremiumService from '../services/PremiumService';
@@ -81,7 +88,7 @@ const UserProfileScreen = () => {
   };
 
   // Dynamic scaling based on number of social networks to avoid scrolling and fill the page reasonably
-  const socialsArr = (user?.socialMedias ?? user?.socialMedia ?? []);
+  const socialsArr = user?.socialMedias ?? user?.socialMedia ?? [];
   const socialCountForScale = Array.isArray(socialsArr) ? socialsArr.length : 0;
   const computeScale = (count) => {
     if (count <= 0) return 1.1;
@@ -108,10 +115,7 @@ const UserProfileScreen = () => {
   const minBoxWidth = Math.min(maxBoxWidth, Math.round(width * 0.92));
   const desiredBoxWidth = Math.max(
     minBoxWidth,
-    Math.min(
-      maxBoxWidth,
-      Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack
-    )
+    Math.min(maxBoxWidth, Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack),
   );
 
   // Swipe-back handled natively by React Navigation native stack.
@@ -146,7 +150,6 @@ const UserProfileScreen = () => {
     return v;
   };
 
-
   // Track a profile view when this screen mounts or when the viewed user changes
   React.useEffect(() => {
     const targetId = user?._id || user?.id;
@@ -154,7 +157,9 @@ const UserProfileScreen = () => {
     if (!targetId) return;
     if (myId && String(myId) === String(targetId)) return; // don't track self
     (async () => {
-      try { await trackProfileView(String(targetId)); } catch (_) {}
+      try {
+        await trackProfileView(String(targetId));
+      } catch (_) {}
 
       // Nudge Premium (bannière discrète, cooldown/plafond gérés par PremiumNudgeService)
       try {
@@ -190,7 +195,9 @@ const UserProfileScreen = () => {
         if (targetId) {
           await trackSocialClick(String(targetId), mapPlatform(platform));
           // Notifier le reste de l'app qu'un clic social a été tracké
-          try { publish('social_click_tracked', { platform: mapPlatform(platform), targetUserId: String(targetId) }); } catch (_) {}
+          try {
+            publish('social_click_tracked', { platform: mapPlatform(platform), targetUserId: String(targetId) });
+          } catch (_) {}
         }
       } catch (_) {}
 
@@ -214,7 +221,7 @@ const UserProfileScreen = () => {
             await Linking.openURL(webUrl);
             return;
           } catch (e2) {
-            Alert.alert('Impossible d\'ouvrir Instagram', "Veuillez réessayer plus tard.");
+            Alert.alert("Impossible d'ouvrir Instagram", 'Veuillez réessayer plus tard.');
             return;
           }
         }
@@ -287,7 +294,13 @@ const UserProfileScreen = () => {
   }, []);
 
   const displayName = React.useMemo(() => {
-    return user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username) || user?.name || (user?.email ? String(user.email).split('@')[0] : '') || 'Utilisateur';
+    return (
+      user?.customName ||
+      (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username) ||
+      user?.name ||
+      (user?.email ? String(user.email).split('@')[0] : '') ||
+      'Utilisateur'
+    );
   }, [user]);
 
   // Compute distance on the fly if not provided (e.g., when coming from search)
@@ -299,8 +312,7 @@ const UserProfileScreen = () => {
     const dLon = toRad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }, []);
@@ -327,7 +339,7 @@ const UserProfileScreen = () => {
       if (diffSec < 60) return "À l'instant";
       if (diffMin < 60) return `Il y a ${diffMin} min`;
       if (diffHr < 24) return `Il y a ${diffHr} h`;
-      if (diffDay === 1) return "Hier";
+      if (diffDay === 1) return 'Hier';
       return `Il y a ${diffDay} j`;
     } catch (_) {
       return null;
@@ -354,11 +366,31 @@ const UserProfileScreen = () => {
     })();
   }, [user, distanceBetweenMeters, formatDistance]);
 
+  // Charger l'état de suivi au montage
+  React.useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      if (!user?._id && !user?.id) return;
+      try {
+        const targetId = user._id || user.id;
+        const res = await apiGetFollowStatus(targetId);
+        const st = res?.status || 'none';
+        if (mounted) setFollowStatus(st);
+      } catch (_) {
+        if (mounted) setFollowStatus('none');
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [user?._id, user?.id]);
+
   const handleBlockUser = async () => {
     if (!user?._id) return;
     Alert.alert(
-      'Bloquer cet utilisateur ?'
-      , 'Vous ne verrez plus cet utilisateur et il ne pourra plus vous contacter.',
+      'Bloquer cet utilisateur ?',
+      'Vous ne verrez plus cet utilisateur et il ne pourra plus vous contacter.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -374,7 +406,7 @@ const UserProfileScreen = () => {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -404,7 +436,6 @@ const UserProfileScreen = () => {
     }
   };
 
-
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -416,29 +447,13 @@ const UserProfileScreen = () => {
     );
   }
 
-  // Charger l'état de suivi au montage
-  React.useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (!user?._id && !user?.id) return;
-      try {
-        const targetId = user._id || user.id;
-        const res = await apiGetFollowStatus(targetId);
-        const st = res?.status || 'none';
-        if (mounted) setFollowStatus(st);
-      } catch (_) {
-        if (mounted) setFollowStatus('none');
-      }
-    };
-    load();
-    return () => { mounted = false; };
-  }, [user?._id, user?.id]);
-
   const handleMessagePress = async () => {
     if (!user) return;
     if (followStatus === 'accepted') {
       // Chat désactivé
-      try { Alert.alert('Indisponible', 'La messagerie a été désactivée.'); } catch (_) {}
+      try {
+        Alert.alert('Indisponible', 'La messagerie a été désactivée.');
+      } catch (_) {}
       return;
     }
     if (followStatus === 'pending') return; // désactivé
@@ -448,7 +463,9 @@ const UserProfileScreen = () => {
       await apiCreateFollowRequest(user._id || user.id);
       setFollowStatus('pending');
     } catch (e) {
-      try { Alert.alert('Erreur', e?.message || "Impossible d'envoyer la demande"); } catch (_) {}
+      try {
+        Alert.alert('Erreur', e?.message || "Impossible d'envoyer la demande");
+      } catch (_) {}
     } finally {
       setFollowLoading(false);
     }
@@ -471,10 +488,10 @@ const UserProfileScreen = () => {
       } else if (result.reason === 'no_superlikes') {
         publish('ui:open_consumables', { type: 'superlike' });
       } else {
-        Alert.alert('Erreur', 'Impossible d\'envoyer le superlike.');
+        Alert.alert('Erreur', "Impossible d'envoyer le superlike.");
       }
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible d\'envoyer le superlike.');
+      Alert.alert('Erreur', e?.message || "Impossible d'envoyer le superlike.");
     } finally {
       setSuperlikeLoading(false);
     }
@@ -482,316 +499,399 @@ const UserProfileScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      {isMoon ? (
-        <NightSkyBackground style={skyFillStyle} />
-      ) : (
-        <DaySkyBackground style={skyFillStyle} />
-      )}
+      {isMoon ? <NightSkyBackground style={skyFillStyle} /> : <DaySkyBackground style={skyFillStyle} />}
       <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
-      <TouchableOpacity
-        style={[styles.backButton, { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
-        onPress={() => navigation.goBack()}
-        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-        accessibilityLabel="Retour"
-      >
-        <Image
-          source={require('../assets/appIcons/backArrow.png')}
-          style={styles.backButtonImage}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.menuButton, { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' }]}
-        onPress={() => setActionMenuVisible(true)}
-        hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-        accessibilityLabel="Plus d'options"
-      >
-        <Text style={styles.menuButtonText}>⋯</Text>
-      </TouchableOpacity>
-      {/* Bouton Suivre/Message en icône seule (lien) */}
-      <TouchableOpacity
-        style={[
-          styles.followIconButton,
-          {
-            top: insets.top + 56,
-            backgroundColor: followStatus === 'accepted' ? colors.accent : colors.surfaceAlt,
-            borderColor: colors.accent,
-            opacity: (followLoading || followStatus === 'pending') ? 0.6 : 1,
-          },
-        ]}
-        onPress={handleMessagePress}
-        disabled={followLoading || followStatus === 'pending'}
-        hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-        accessibilityLabel={followStatus === 'accepted' ? 'Ouvrir la conversation' : followStatus === 'pending' ? 'Demande en attente' : 'Envoyer une demande de suivi'}
-      >
-        {followLoading ? (
-          <ActivityIndicator color={followStatus === 'accepted' ? '#fff' : colors.accent} />
-        ) : (
-          <Feather
-            name="link-2"
-            size={22}
-            color={followStatus === 'accepted' ? '#fff' : colors.accent}
-          />
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.backButton,
+            { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' },
+          ]}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+          accessibilityLabel="Retour"
+        >
+          <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backButtonImage} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.menuButton,
+            { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' },
+          ]}
+          onPress={() => setActionMenuVisible(true)}
+          hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+          accessibilityLabel="Plus d'options"
+        >
+          <Text style={styles.menuButtonText}>⋯</Text>
+        </TouchableOpacity>
+        {/* Bouton Suivre/Message en icône seule (lien) */}
+        <TouchableOpacity
+          style={[
+            styles.followIconButton,
+            {
+              top: insets.top + 56,
+              backgroundColor: followStatus === 'accepted' ? colors.accent : colors.surfaceAlt,
+              borderColor: colors.accent,
+              opacity: followLoading || followStatus === 'pending' ? 0.6 : 1,
+            },
+          ]}
+          onPress={handleMessagePress}
+          disabled={followLoading || followStatus === 'pending'}
+          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+          accessibilityLabel={
+            followStatus === 'accepted'
+              ? 'Ouvrir la conversation'
+              : followStatus === 'pending'
+                ? 'Demande en attente'
+                : 'Envoyer une demande de suivi'
+          }
+        >
+          {followLoading ? (
+            <ActivityIndicator color={followStatus === 'accepted' ? '#fff' : colors.accent} />
+          ) : (
+            <Feather name="link-2" size={22} color={followStatus === 'accepted' ? '#fff' : colors.accent} />
+          )}
+        </TouchableOpacity>
 
-      {/* Superlike button */}
-      <TouchableOpacity
-        style={[
-          styles.superlikeButton,
-          {
-            top: insets.top + 110,
-            backgroundColor: superlikeSent
-              ? 'rgba(255,215,0,0.2)'
-              : superlikeBalance > 0
-                ? 'rgba(255,215,0,0.12)'
-                : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
-            borderColor: superlikeSent ? '#FFD700' : 'rgba(255,215,0,0.4)',
-            opacity: (superlikeLoading || superlikeSent) ? 0.75 : 1,
-          },
-        ]}
-        onPress={handleSuperlike}
-        disabled={superlikeLoading || superlikeSent}
-        hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-        accessibilityLabel="Envoyer un superlike"
-      >
-        {superlikeLoading ? (
-          <ActivityIndicator size="small" color="#FFD700" />
-        ) : (
-          <Text style={{ fontSize: 20 }}>{superlikeSent ? '✓' : '⭐'}</Text>
-        )}
-        {superlikeBalance > 0 && !superlikeSent && (
-          <View style={styles.superlikeBadge}>
-            <Text style={styles.superlikeBadgeText}>{superlikeBalance}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+        {/* Superlike button */}
+        <TouchableOpacity
+          style={[
+            styles.superlikeButton,
+            {
+              top: insets.top + 110,
+              backgroundColor: superlikeSent
+                ? 'rgba(255,215,0,0.2)'
+                : superlikeBalance > 0
+                  ? 'rgba(255,215,0,0.12)'
+                  : isDark
+                    ? 'rgba(255,255,255,0.08)'
+                    : 'rgba(0,0,0,0.05)',
+              borderColor: superlikeSent ? '#FFD700' : 'rgba(255,215,0,0.4)',
+              opacity: superlikeLoading || superlikeSent ? 0.75 : 1,
+            },
+          ]}
+          onPress={handleSuperlike}
+          disabled={superlikeLoading || superlikeSent}
+          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+          accessibilityLabel="Envoyer un superlike"
+        >
+          {superlikeLoading ? (
+            <ActivityIndicator size="small" color="#FFD700" />
+          ) : (
+            <Text style={{ fontSize: 20 }}>{superlikeSent ? '✓' : '⭐'}</Text>
+          )}
+          {superlikeBalance > 0 && !superlikeSent && (
+            <View style={styles.superlikeBadge}>
+              <Text style={styles.superlikeBadgeText}>{superlikeBalance}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: width * 0.05, paddingTop: height * 0.06, paddingBottom: Math.max(24, height * 0.06) + insets.bottom, flexGrow: 1 }}>
-
-        <View style={styles.userInfoContainer}>
-          <View style={styles.profileHeader}>
-            <View style={[styles.imgUsernameSplitBox, { backgroundColor: colors.surfaceAlt, width: desiredBoxWidth, paddingHorizontal: boxHorizontalPadding }]}>
-              <View style={styles.userProfilePictureContainer}>
-                {user.photo ? (
-                  <ImageWithPlaceholder uri={user.photo} style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]} />
-                ) : (
-                  <View style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}>
-                    <Image
-                      source={require('../assets/appIcons/userProfile.png')}
-                      style={[styles.placeholderIcon, { width: placeholderIconSize, height: placeholderIconSize }]}
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: width * 0.05,
+            paddingTop: height * 0.06,
+            paddingBottom: Math.max(24, height * 0.06) + insets.bottom,
+            flexGrow: 1,
+          }}
+        >
+          <View style={styles.userInfoContainer}>
+            <View style={styles.profileHeader}>
+              <View
+                style={[
+                  styles.imgUsernameSplitBox,
+                  {
+                    backgroundColor: colors.surfaceAlt,
+                    width: desiredBoxWidth,
+                    paddingHorizontal: boxHorizontalPadding,
+                  },
+                ]}
+              >
+                <View style={styles.userProfilePictureContainer}>
+                  {user.photo ? (
+                    <ImageWithPlaceholder
+                      uri={user.photo}
+                      style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
                     />
-                  </View>
-                )}
-              </View>
-              <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                <Text style={[styles.usernameUnderPhoto, isDark && styles.usernameUnderPhotoDark, { fontSize: usernameFont }]}>{displayName}</Text>
-                {/* Traffic Light UI for Status (Read-only) */}
-                <View style={styles.statusSelector}>
-                  <View style={[styles.statusCircle, { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.1 }]} />
-                  <View style={[styles.statusCircle, { backgroundColor: '#FF9800', opacity: user.status === 'orange' ? 1 : 0.1 }]} />
-                  <View style={[styles.statusCircle, { backgroundColor: '#4CAF50', opacity: (user.status === 'green' || !user.status) ? 1 : 0.1 }]} />
-                </View>
-                {/* Mesure invisible en une seule ligne */}
-                <Text
-                  style={[styles.usernameUnderPhoto, { fontSize: usernameFont, position: 'absolute', opacity: 0 }]}
-                  numberOfLines={1}
-                  onLayout={(e) => {
-                    const w = e?.nativeEvent?.layout?.width || 0;
-                    if (w && Math.abs(w - measuredNameWidth) > 0.5) setMeasuredNameWidth(w);
-                  }}
-                >
-                  {displayName}
-                </Text>
-              </View>
-            </View>
-
-            <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
-              <View style={styles.bioTitleContainer}>
-                <Text style={[styles.label, isDark && styles.labelDark, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
-              </View>
-              <View style={styles.bioTextContainer}>
-                {(() => {
-                  const bioText = String(user?.bio || '').trim();
-                  const isEmpty = bioText.length === 0;
-                  return (
-                    <Text
-                      style={[
-                        styles.value,
-                        isDark && styles.valueDark,
-                        {
-                          fontSize: bioFont,
-                          textAlign: 'left',
-                          width: '100%',
-                          color: isEmpty ? colors.textMuted : colors.textPrimary,
-                          fontStyle: isEmpty ? 'italic' : 'normal',
-                          lineHeight: bioFont * 1.4
-                        },
-                      ]}
-                    >
-                      {isEmpty ? 'Aucune bio renseignée.' : bioText}
-                    </Text>
-                  );
-                })()}
-              </View>
-            </View>
-
-
-            {user.updatedAt && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.025 }}>
-                <View style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
-                  <Text style={[styles.distanceText, { color: colors.accent }]}>{formatLastSeen(user.updatedAt)}</Text>
-                </View>
-              </View>
-            )}
-
-          </View>
-
-          <View style={styles.socialMediaContainer}>
-            {(() => {
-              const isMe = String(currentUser?._id || currentUser?.id) === String(user?._id || user?.id);
-              if (!isMe && (user.status === 'orange' || user.status === 'red')) {
-                return (
-                  <Text style={[styles.orangeStatusText, { color: colors.textSecondary }]}>
-                    L'utilisateur ne partage pas ses réseaux sociaux
-                  </Text>
-                );
-              }
-              const socials = user.socialMedias ?? user.socialMedia ?? [];
-              return socials.length > 0 ? (
-                socials.map((social, index) => {
-                  // Supporte différents schémas d'objets provenant de diverses sources
-                  // - Backend: { type, handle }
-                  // - Ancien front: { platform, username }
-                  // - Très ancien: { socialMedia, identifier }
-                  const rawPlatform = social.platform ?? social.type ?? social.socialMedia;
-                  const canonPlatform = (() => {
-                    const v = String(rawPlatform || '').toLowerCase();
-                    if (v === 'twitter' || v === 'twitter.com' || v === 'x.com') return 'x';
-                    if (v === 'yt' || v === 'youtu.be' || v === 'youtube.com') return 'youtube';
-                    if (v === 'fb' || v === 'facebook.com') return 'facebook';
-                    if (v === 'ig' || v === 'insta' || v === 'instagram.com') return 'instagram';
-                    if (v === 'tt' || v === 'tiktok.com') return 'tiktok';
-                    if (v === 'snap' || v === 'snapchat.com') return 'snapchat';
-                    return rawPlatform;
-                  })();
-                  const iconSrc = canonPlatform ? socialMediaIcons[canonPlatform] : undefined;
-                  if (!iconSrc) return null;
-                  return (
-                    <TouchableOpacity
-                      key={index}
-                      style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}
-                      onPress={() => {
-                        // Support de plusieurs schémas: username | handle | link | identifier
-                        const handle = social.username || social.handle || social.link || social.identifier || '';
-                        openSocial(canonPlatform, handle);
-                      }}
+                  ) : (
+                    <View
+                      style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
                     >
                       <Image
-                        source={iconSrc}
-                        style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
+                        source={require('../assets/appIcons/userProfile.png')}
+                        style={[styles.placeholderIcon, { width: placeholderIconSize, height: placeholderIconSize }]}
                       />
-                    </TouchableOpacity>
-                  );
-                })
-              ) : (
-                <Text style={[styles.value, isDark && styles.valueDark, { color: colors.textSecondary }]}>Aucun réseau social</Text>
-              );
-            })()}
-          </View>
-        </View>
-      </ScrollView>
-
-      <Modal transparent visible={actionMenuVisible} animationType="fade" onRequestClose={() => setActionMenuVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => setActionMenuVisible(false)}>
-          <View style={styles.modalBackdrop}>
-            <TouchableWithoutFeedback>
-              <View style={[styles.menuCard, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Actions</Text>
-                <TouchableOpacity style={styles.menuAction} onPress={handleBlockUser}>
-                  <Text style={styles.menuActionText}>Bloquer</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.menuAction}
-                  onPress={() => {
-                    setActionMenuVisible(false);
-                    setReportVisible(true);
-                  }}
-                >
-                  <Text style={styles.menuActionText}>Signaler</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.menuAction, styles.menuCancel]} onPress={() => setActionMenuVisible(false)}>
-                  <Text style={styles.menuCancelText}>Annuler</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-
-      <Modal transparent visible={reportVisible} animationType="fade" onRequestClose={() => setReportVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setReportVisible(false); }}>
-          <View style={styles.modalBackdrop}>
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ width: '100%' }}
-              >
-                <ScrollView
-                  contentContainerStyle={[styles.reportCard, { backgroundColor: colors.surface }]}
-                  keyboardShouldPersistTaps="handled"
-                >
-                  <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Signaler un utilisateur</Text>
-                  <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>Les signalements abusifs peuvent entraîner des sanctions. Merci d'être honnête.</Text>
-
-                  <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Catégorie</Text>
-                  <View style={styles.categoryGrid}>
-                    {REPORT_CATEGORIES.map((cat) => {
-                      const selected = reportCategory === cat.value;
-                      return (
-                        <TouchableOpacity
-                          key={cat.value}
-                          style={[styles.categoryChip, selected && styles.categoryChipSelected]}
-                          onPress={() => setReportCategory(cat.value)}
-                        >
-                          <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>{cat.label}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
+                    </View>
+                  )}
+                </View>
+                <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                  <Text
+                    style={[
+                      styles.usernameUnderPhoto,
+                      isDark && styles.usernameUnderPhotoDark,
+                      { fontSize: usernameFont },
+                    ]}
+                  >
+                    {displayName}
+                  </Text>
+                  {/* Traffic Light UI for Status (Read-only) */}
+                  <View style={styles.statusSelector}>
+                    <View
+                      style={[
+                        styles.statusCircle,
+                        { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.1 },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.statusCircle,
+                        { backgroundColor: '#FF9800', opacity: user.status === 'orange' ? 1 : 0.1 },
+                      ]}
+                    />
+                    <View
+                      style={[
+                        styles.statusCircle,
+                        { backgroundColor: '#4CAF50', opacity: user.status === 'green' || !user.status ? 1 : 0.1 },
+                      ]}
+                    />
                   </View>
+                  {/* Mesure invisible en une seule ligne */}
+                  <Text
+                    style={[styles.usernameUnderPhoto, { fontSize: usernameFont, position: 'absolute', opacity: 0 }]}
+                    numberOfLines={1}
+                    onLayout={(e) => {
+                      const w = e?.nativeEvent?.layout?.width || 0;
+                      if (w && Math.abs(w - measuredNameWidth) > 0.5) setMeasuredNameWidth(w);
+                    }}
+                  >
+                    {displayName}
+                  </Text>
+                </View>
+              </View>
 
-                  <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Motif</Text>
-                  <TextInput
-                    style={[styles.modalInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
-                    placeholder="Expliquez brièvement le motif"
-                    placeholderTextColor={colors.textSecondary}
-                    value={reportReason}
-                    onChangeText={setReportReason}
-                  />
+              <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
+                <View style={styles.bioTitleContainer}>
+                  <Text style={[styles.label, isDark && styles.labelDark, { marginBottom: 0, fontWeight: '700' }]}>
+                    Bio
+                  </Text>
+                </View>
+                <View style={styles.bioTextContainer}>
+                  {(() => {
+                    const bioText = String(user?.bio || '').trim();
+                    const isEmpty = bioText.length === 0;
+                    return (
+                      <Text
+                        style={[
+                          styles.value,
+                          isDark && styles.valueDark,
+                          {
+                            fontSize: bioFont,
+                            textAlign: 'left',
+                            width: '100%',
+                            color: isEmpty ? colors.textMuted : colors.textPrimary,
+                            fontStyle: isEmpty ? 'italic' : 'normal',
+                            lineHeight: bioFont * 1.4,
+                          },
+                        ]}
+                      >
+                        {isEmpty ? 'Aucune bio renseignée.' : bioText}
+                      </Text>
+                    );
+                  })()}
+                </View>
+              </View>
 
-                  <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Description (optionnelle)</Text>
-                  <TextInput
-                    style={[styles.modalInput, styles.modalTextarea, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg }]}
-                    placeholder="Détails supplémentaires"
-                    placeholderTextColor={colors.textSecondary}
-                    value={reportDescription}
-                    onChangeText={setReportDescription}
-                    multiline
-                  />
+              {user.updatedAt && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.025 }}>
+                  <View
+                    style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}
+                  >
+                    <Text style={[styles.distanceText, { color: colors.accent }]}>
+                      {formatLastSeen(user.updatedAt)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
-                  <TouchableOpacity style={styles.modalButton} onPress={handleSubmitReport} disabled={reportSubmitting}>
-                    <Text style={styles.modalButtonText}>{reportSubmitting ? 'Envoi...' : 'Envoyer le signalement'}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalButton, styles.deleteButton]} onPress={() => setReportVisible(false)} disabled={reportSubmitting}>
-                    <Text style={styles.modalButtonText}>Annuler</Text>
-                  </TouchableOpacity>
-                </ScrollView>
-              </KeyboardAvoidingView>
-            </TouchableWithoutFeedback>
+            <View style={styles.socialMediaContainer}>
+              {(() => {
+                const isMe = String(currentUser?._id || currentUser?.id) === String(user?._id || user?.id);
+                if (!isMe && (user.status === 'orange' || user.status === 'red')) {
+                  return (
+                    <Text style={[styles.orangeStatusText, { color: colors.textSecondary }]}>
+                      L'utilisateur ne partage pas ses réseaux sociaux
+                    </Text>
+                  );
+                }
+                const socials = user.socialMedias ?? user.socialMedia ?? [];
+                return socials.length > 0 ? (
+                  socials.map((social, index) => {
+                    // Supporte différents schémas d'objets provenant de diverses sources
+                    // - Backend: { type, handle }
+                    // - Ancien front: { platform, username }
+                    // - Très ancien: { socialMedia, identifier }
+                    const rawPlatform = social.platform ?? social.type ?? social.socialMedia;
+                    const canonPlatform = (() => {
+                      const v = String(rawPlatform || '').toLowerCase();
+                      if (v === 'twitter' || v === 'twitter.com' || v === 'x.com') return 'x';
+                      if (v === 'yt' || v === 'youtu.be' || v === 'youtube.com') return 'youtube';
+                      if (v === 'fb' || v === 'facebook.com') return 'facebook';
+                      if (v === 'ig' || v === 'insta' || v === 'instagram.com') return 'instagram';
+                      if (v === 'tt' || v === 'tiktok.com') return 'tiktok';
+                      if (v === 'snap' || v === 'snapchat.com') return 'snapchat';
+                      return rawPlatform;
+                    })();
+                    const iconSrc = canonPlatform ? socialMediaIcons[canonPlatform] : undefined;
+                    if (!iconSrc) return null;
+                    return (
+                      <TouchableOpacity
+                        key={index}
+                        style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}
+                        onPress={() => {
+                          // Support de plusieurs schémas: username | handle | link | identifier
+                          const handle = social.username || social.handle || social.link || social.identifier || '';
+                          openSocial(canonPlatform, handle);
+                        }}
+                      >
+                        <Image
+                          source={iconSrc}
+                          style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
+                        />
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  <Text style={[styles.value, isDark && styles.valueDark, { color: colors.textSecondary }]}>
+                    Aucun réseau social
+                  </Text>
+                );
+              })()}
+            </View>
           </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+        </ScrollView>
 
-    </SafeAreaView>
+        <Modal
+          transparent
+          visible={actionMenuVisible}
+          animationType="fade"
+          onRequestClose={() => setActionMenuVisible(false)}
+        >
+          <TouchableWithoutFeedback onPress={() => setActionMenuVisible(false)}>
+            <View style={styles.modalBackdrop}>
+              <TouchableWithoutFeedback>
+                <View style={[styles.menuCard, { backgroundColor: colors.surface }]}>
+                  <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Actions</Text>
+                  <TouchableOpacity style={styles.menuAction} onPress={handleBlockUser}>
+                    <Text style={styles.menuActionText}>Bloquer</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.menuAction}
+                    onPress={() => {
+                      setActionMenuVisible(false);
+                      setReportVisible(true);
+                    }}
+                  >
+                    <Text style={styles.menuActionText}>Signaler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.menuAction, styles.menuCancel]}
+                    onPress={() => setActionMenuVisible(false)}
+                  >
+                    <Text style={styles.menuCancelText}>Annuler</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+
+        <Modal transparent visible={reportVisible} animationType="fade" onRequestClose={() => setReportVisible(false)}>
+          <TouchableWithoutFeedback
+            onPress={() => {
+              Keyboard.dismiss();
+              setReportVisible(false);
+            }}
+          >
+            <View style={styles.modalBackdrop}>
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
+                  <ScrollView
+                    contentContainerStyle={[styles.reportCard, { backgroundColor: colors.surface }]}
+                    keyboardShouldPersistTaps="handled"
+                  >
+                    <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Signaler un utilisateur</Text>
+                    <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>
+                      Les signalements abusifs peuvent entraîner des sanctions. Merci d'être honnête.
+                    </Text>
+
+                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Catégorie</Text>
+                    <View style={styles.categoryGrid}>
+                      {REPORT_CATEGORIES.map((cat) => {
+                        const selected = reportCategory === cat.value;
+                        return (
+                          <TouchableOpacity
+                            key={cat.value}
+                            style={[styles.categoryChip, selected && styles.categoryChipSelected]}
+                            onPress={() => setReportCategory(cat.value)}
+                          >
+                            <Text style={[styles.categoryChipText, selected && styles.categoryChipTextSelected]}>
+                              {cat.label}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Motif</Text>
+                    <TextInput
+                      style={[
+                        styles.modalInput,
+                        { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg },
+                      ]}
+                      placeholder="Expliquez brièvement le motif"
+                      placeholderTextColor={colors.textSecondary}
+                      value={reportReason}
+                      onChangeText={setReportReason}
+                    />
+
+                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Description (optionnelle)</Text>
+                    <TextInput
+                      style={[
+                        styles.modalInput,
+                        styles.modalTextarea,
+                        { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg },
+                      ]}
+                      placeholder="Détails supplémentaires"
+                      placeholderTextColor={colors.textSecondary}
+                      value={reportDescription}
+                      onChangeText={setReportDescription}
+                      multiline
+                    />
+
+                    <TouchableOpacity
+                      style={styles.modalButton}
+                      onPress={handleSubmitReport}
+                      disabled={reportSubmitting}
+                    >
+                      <Text style={styles.modalButtonText}>
+                        {reportSubmitting ? 'Envoi...' : 'Envoyer le signalement'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modalButton, styles.deleteButton]}
+                      onPress={() => setReportVisible(false)}
+                      disabled={reportSubmitting}
+                    >
+                      <Text style={styles.modalButtonText}>Annuler</Text>
+                    </TouchableOpacity>
+                  </ScrollView>
+                </KeyboardAvoidingView>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      </SafeAreaView>
     </View>
   );
 };

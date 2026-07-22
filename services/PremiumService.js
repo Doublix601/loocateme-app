@@ -103,8 +103,7 @@ const PremiumService = {
 
       const wasFree = _state.subscriptionStatus === 'free';
       _state.subscriptionStatus = user.isPremium ? 'premium_monthly' : 'free';
-      _state.boostsRemaining =
-        typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
+      _state.boostsRemaining = typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
 
       if (typeof user.superlikeBalance === 'number') {
         _state.superlikesRemaining = user.superlikeBalance;
@@ -133,8 +132,7 @@ const PremiumService = {
   _updateFromUser(user) {
     if (!user) return;
     _state.subscriptionStatus = user.isPremium ? 'premium_monthly' : 'free';
-    _state.boostsRemaining =
-      typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
+    _state.boostsRemaining = typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
     if (typeof user.superlikeBalance === 'number') {
       _state.superlikesRemaining = user.superlikeBalance;
     }

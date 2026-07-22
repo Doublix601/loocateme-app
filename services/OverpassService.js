@@ -4,14 +4,14 @@
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 
 // Minimum interval between two real network calls (regardless of bbox)
-const MIN_INTERVAL_MS = 30 * 1000;        // 30s
+const MIN_INTERVAL_MS = 30 * 1000; // 30s
 // After a failure, do not retry before this backoff window
-const FAILURE_BACKOFF_MS = 60 * 1000;     // 60s (erreurs génériques)
+const FAILURE_BACKOFF_MS = 60 * 1000; // 60s (erreurs génériques)
 // Backoff plus long pour les erreurs serveur Overpass (5xx, ex: 504 Gateway Timeout).
 // L'API publique Overpass étant régulièrement surchargée, on évite de la marteler.
 const SERVER_ERROR_BACKOFF_MS = 5 * 60 * 1000; // 5 min
 // Per-request timeout (doit être >= au [timeout:N] envoyé à Overpass ci-dessous)
-const REQUEST_TIMEOUT_MS = 20 * 1000;     // 20s
+const REQUEST_TIMEOUT_MS = 20 * 1000; // 20s
 // Timeout demandé au serveur Overpass (en secondes). On le garde légèrement
 // inférieur au timeout client pour laisser le temps à la réponse de revenir.
 const OVERPASS_SERVER_TIMEOUT_S = 18;
@@ -30,8 +30,15 @@ const CATEGORIES_BY_VIBE = {
     amenity: ['bar', 'pub', 'biergarten', 'nightclub', 'restaurant', 'cinema', 'fast_food', 'food_court'],
     leisure: ['bowling_alley'],
     backend: [
-      'Bar 🍺', 'Boîte de nuit 💃', 'Restaurant 🍴', 'Cinéma 🎬',
-      'Fast food 🍔', 'Bowling 🎳', 'Rooftop 🌆', 'Karaoké 🎤', 'Club de jeux 🎮',
+      'Bar 🍺',
+      'Boîte de nuit 💃',
+      'Restaurant 🍴',
+      'Cinéma 🎬',
+      'Fast food 🍔',
+      'Bowling 🎳',
+      'Rooftop 🌆',
+      'Karaoké 🎤',
+      'Club de jeux 🎮',
       'TEST 🤖',
     ],
   },
@@ -39,9 +46,19 @@ const CATEGORIES_BY_VIBE = {
     amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'school', 'marketplace', 'museum'],
     leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach'],
     backend: [
-      'Café ☕', 'Coworking 🧑‍💻', 'Salle de sport 🏋️', 'Centre sportif 🏟️',
-      'Parc 🌳', 'Plage 🏖️', "Parc d'attractions 🎢", 'Bibliothèque 📚',
-      'Éducation 🎓', 'Glacier 🍦', 'Marché 🛒', 'Musée 🏛️', 'Brunch 🥞',
+      'Café ☕',
+      'Coworking 🧑‍💻',
+      'Salle de sport 🏋️',
+      'Centre sportif 🏟️',
+      'Parc 🌳',
+      'Plage 🏖️',
+      "Parc d'attractions 🎢",
+      'Bibliothèque 📚',
+      'Éducation 🎓',
+      'Glacier 🍦',
+      'Marché 🛒',
+      'Musée 🏛️',
+      'Brunch 🥞',
       'TEST 🤖',
     ],
   },
@@ -76,7 +93,6 @@ export function isTypeAllowedForVibe(type, vibe) {
   const v = normalizeVibe(vibe);
   return ALLOWED_TYPES_BY_VIBE[v].has(type);
 }
-
 
 // Round coordinates to ~110m precision to stabilize cache key against tiny GPS jitter
 function roundCoord(v) {
@@ -122,22 +138,24 @@ async function fetchOverpass(query) {
 }
 
 function normalize(elements = []) {
-  return (elements || []).filter(e => e && e.type === 'node' && e.tags?.name).map(e => {
-    const name = e.tags.name;
-    const type = e.tags?.amenity || e.tags?.leisure || 'poi';
-    return {
-      _id: `osm:${e.id}`,
-      osmId: e.id,
-      name,
-      type,
-      location: { type: 'Point', coordinates: [e.lon, e.lat] },
-      userCount: 0,
-      activeUsers: [],
-      stars: 0,
-      isPromoted: false,
-      source: 'osm',
-    };
-  });
+  return (elements || [])
+    .filter((e) => e && e.type === 'node' && e.tags?.name)
+    .map((e) => {
+      const name = e.tags.name;
+      const type = e.tags?.amenity || e.tags?.leisure || 'poi';
+      return {
+        _id: `osm:${e.id}`,
+        osmId: e.id,
+        name,
+        type,
+        location: { type: 'Point', coordinates: [e.lon, e.lat] },
+        userCount: 0,
+        activeUsers: [],
+        stars: 0,
+        isPromoted: false,
+        source: 'osm',
+      };
+    });
 }
 
 export const OverpassService = {
@@ -164,7 +182,11 @@ export const OverpassService = {
 
     // Deduplicate concurrent calls
     if (inflight) {
-      try { return await inflight; } catch (_) { return lastResult.pois || []; }
+      try {
+        return await inflight;
+      } catch (_) {
+        return lastResult.pois || [];
+      }
     }
 
     inflight = (async () => {
@@ -183,8 +205,8 @@ export const OverpassService = {
         // backoff plus long pour ne pas re-cogner une API déjà surchargée.
         const msg = String(e?.message || '');
         const is5xx = /Overpass HTTP 5\d\d/.test(msg);
-        lastFailureAt = Date.now() + (is5xx ? (SERVER_ERROR_BACKOFF_MS - FAILURE_BACKOFF_MS) : 0);
-        const label = e?.name === 'AbortError' ? 'timeout' : (e?.name || 'Error');
+        lastFailureAt = Date.now() + (is5xx ? SERVER_ERROR_BACKOFF_MS - FAILURE_BACKOFF_MS : 0);
+        const label = e?.name === 'AbortError' ? 'timeout' : e?.name || 'Error';
         console.warn(`[OverpassService] fetchAround failed (${label}): ${msg || e}`);
         return lastResult.pois || [];
       } finally {
@@ -193,5 +215,5 @@ export const OverpassService = {
     })();
 
     return inflight;
-  }
+  },
 };

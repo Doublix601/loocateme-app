@@ -5,7 +5,7 @@ import { subscribe } from '../components/EventBus';
 /**
  * Hook réutilisable pour gérer les données d'un lieu (Location) et sa liste d'utilisateurs.
  * Gère le chargement initial, le rafraîchissement manuel et l'auto-rafraîchissement sur mutation.
- * 
+ *
  * @param {string} locationId - L'ID du lieu à charger
  * @returns {object} { location, users, loading, refreshing, refresh }
  */
@@ -16,26 +16,29 @@ export function useLocationData(locationId) {
   const [users, setUsers] = useState([]);
   const [monthlyUsers, setMonthlyUsers] = useState(0);
 
-  const fetchDetails = useCallback(async (isRefreshing = false) => {
-    if (!locationId) return;
-    try {
-      if (!isRefreshing) setLoading(true);
-      const res = await getLocationById(locationId);
-      if (res && res.location) {
-        const loc = res.location;
-        const userCount = res.users?.length || 0;
-        const stars = typeof loc.stars === 'number' ? loc.stars : parseInt(loc.stars, 10) || 0;
+  const fetchDetails = useCallback(
+    async (isRefreshing = false) => {
+      if (!locationId) return;
+      try {
+        if (!isRefreshing) setLoading(true);
+        const res = await getLocationById(locationId);
+        if (res && res.location) {
+          const loc = res.location;
+          const userCount = res.users?.length || 0;
+          const stars = typeof loc.stars === 'number' ? loc.stars : parseInt(loc.stars, 10) || 0;
 
-        setLocation({ ...loc, stars, userCount });
-        setUsers(res.users || []);
-        setMonthlyUsers(typeof res.monthlyUsers === 'number' ? res.monthlyUsers : loc.popularity || 0);
+          setLocation({ ...loc, stars, userCount });
+          setUsers(res.users || []);
+          setMonthlyUsers(typeof res.monthlyUsers === 'number' ? res.monthlyUsers : loc.popularity || 0);
+        }
+      } catch (e) {
+        console.error('[useLocationData] Error:', e);
+      } finally {
+        if (!isRefreshing) setLoading(false);
       }
-    } catch (e) {
-      console.error('[useLocationData] Error:', e);
-    } finally {
-      if (!isRefreshing) setLoading(false);
-    }
-  }, [locationId]);
+    },
+    [locationId],
+  );
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
@@ -63,6 +66,6 @@ export function useLocationData(locationId) {
     monthlyUsers,
     loading,
     refreshing,
-    refresh
+    refresh,
   };
 }

@@ -1,19 +1,20 @@
 import Purchases from 'react-native-purchases';
+import { logger } from '../utils/logger';
 import { DEBUG_CONFIG } from './DebugConfig';
 import PremiumService from './PremiumService';
 import { post } from '../components/ApiRequest';
 
 // Quantités accordées par pack consommable
 const CONSUMABLE_GRANTS = {
-  loocateme_boost_pack_1:       { boosts: 1,  superlikes: 0 },
-  loocateme_boost_pack_5:       { boosts: 5,  superlikes: 0 },
-  loocateme_superlike_pack_3:   { boosts: 0,  superlikes: 3 },
-  loocateme_superlike_pack_10:  { boosts: 0,  superlikes: 10 },
+  loocateme_boost_pack_1: { boosts: 1, superlikes: 0 },
+  loocateme_boost_pack_5: { boosts: 5, superlikes: 0 },
+  loocateme_superlike_pack_3: { boosts: 0, superlikes: 3 },
+  loocateme_superlike_pack_10: { boosts: 0, superlikes: 10 },
 };
 
 function _log(event) {
   try {
-    console.log('[IAP Analytics]', JSON.stringify(event));
+    logger.log('[IAP Analytics]', JSON.stringify(event));
     // TODO: brancher sur votre SDK analytics (Amplitude, Mixpanel, etc.)
   } catch (_) {}
 }
@@ -48,10 +49,18 @@ const IAPStore = {
   // Achat d'un abonnement (monthly / yearly).
   async purchaseSubscription(pkg, userId) {
     if (DEBUG_CONFIG.IAP_DISABLED) {
-      console.log('[DEBUG] IAP disabled — subscription purchase simulated via trial');
-      try { await post('/premium/trial/start', {}); } catch (_) {}
+      logger.log('[DEBUG] IAP disabled — subscription purchase simulated via trial');
+      try {
+        await post('/premium/trial/start', {});
+      } catch (_) {}
       await PremiumService.refreshFromBackend();
-      _log({ product_id: pkg?.product?.identifier ?? 'simulated', timestamp: Date.now(), user_id: userId, success: true, debug: true });
+      _log({
+        product_id: pkg?.product?.identifier ?? 'simulated',
+        timestamp: Date.now(),
+        user_id: userId,
+        success: true,
+        debug: true,
+      });
       return { success: true, isMock: true };
     }
     try {
@@ -67,7 +76,13 @@ const IAPStore = {
         await PremiumService.refreshFromBackend();
         return { success: true, isMock: true };
       }
-      _log({ product_id: pkg?.product?.identifier, timestamp: Date.now(), user_id: userId, success: false, error: e.message });
+      _log({
+        product_id: pkg?.product?.identifier,
+        timestamp: Date.now(),
+        user_id: userId,
+        success: false,
+        error: e.message,
+      });
       throw e;
     }
   },
@@ -78,7 +93,7 @@ const IAPStore = {
     const grant = CONSUMABLE_GRANTS[productId] ?? null;
 
     if (DEBUG_CONFIG.IAP_DISABLED) {
-      console.log('[DEBUG] IAP disabled — consumable purchase simulated');
+      logger.log('[DEBUG] IAP disabled — consumable purchase simulated');
       if (grant) {
         if (grant.boosts > 0) await PremiumService.addBoosts(grant.boosts);
         if (grant.superlikes > 0) await PremiumService.addSuperlikes(grant.superlikes);
@@ -111,7 +126,7 @@ const IAPStore = {
   // Restauration des achats existants (App Store / Play Store).
   async restorePurchases(userId) {
     if (DEBUG_CONFIG.IAP_DISABLED) {
-      console.log('[DEBUG] IAP disabled — restore simulated');
+      logger.log('[DEBUG] IAP disabled — restore simulated');
       await PremiumService.refreshFromBackend();
       return { success: true, isMock: true };
     }

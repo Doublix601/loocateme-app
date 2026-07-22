@@ -27,12 +27,7 @@ const ThemedText = ({ style, type = 'primary', ...props }) => {
     }
   };
 
-  return (
-    <Text
-      style={[{ color: getTextColor() }, style]}
-      {...props}
-    />
-  );
+  return <Text style={[{ color: getTextColor() }, style]} {...props} />;
 };
 
 export default ThemedText;

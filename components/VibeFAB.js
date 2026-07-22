@@ -24,7 +24,6 @@ export default function VibeFAB() {
   // Optional dependency: expo-haptics. Fallback to no-op when not installed.
   const Haptics = React.useMemo(() => {
     try {
-      // eslint-disable-next-line global-require
       return require('expo-haptics');
     } catch (_) {
       return {
@@ -49,7 +48,9 @@ export default function VibeFAB() {
     // Lance l'overlay de chargement ET diffère le changement de thème jusqu'à la fin
     // de cet overlay (cf. beginVibeTransition dans VibeContext).
     // Ordre désiré : 1) rotation 360°, 2) écran de chargement, 3) thème changé.
-    try { beginVibeTransition(target, LOADING_DURATION_MS); } catch (_) {}
+    try {
+      beginVibeTransition(target, LOADING_DURATION_MS);
+    } catch (_) {}
   };
 
   const fireEndOfSpinHaptic = () => {
@@ -86,13 +87,9 @@ export default function VibeFAB() {
 
     // 3) Spin 0 → 360° on the native thread, then fire the haptic and trigger
     //    the 8s loading overlay — strictly AFTER the rotation completes.
-    rotation.value = withTiming(
-      360,
-      { duration: SPIN_DURATION_MS, easing: Easing.inOut(Easing.cubic) },
-      (finished) => {
-        if (finished) runOnJS(onSpinComplete)(target);
-      }
-    );
+    rotation.value = withTiming(360, { duration: SPIN_DURATION_MS, easing: Easing.inOut(Easing.cubic) }, (finished) => {
+      if (finished) runOnJS(onSpinComplete)(target);
+    });
 
     // 4) Cross-fade icons around the 180° mark (mid-spin) — purement visuel,
     //    aucun haptique ici (l'haptique est réservé à la fin du 360°).
@@ -138,12 +135,16 @@ const FAB_SIZE = 56; // ≥ 44x44 ergonomic minimum
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    left: 0, right: 0, bottom: 24,
+    left: 0,
+    right: 0,
+    bottom: 24,
     alignItems: 'center',
   },
   fab: {
-    width: FAB_SIZE, height: FAB_SIZE,
-    alignItems: 'center', justifyContent: 'center',
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: FAB_SIZE / 2,
     ...Platform.select({
       ios: {
@@ -155,7 +156,9 @@ const styles = StyleSheet.create({
     }),
   },
   iconBox: {
-    width: 28, height: 28,
-    alignItems: 'center', justifyContent: 'center',
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

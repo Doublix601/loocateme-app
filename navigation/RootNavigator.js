@@ -23,7 +23,12 @@ export default function RootNavigator() {
   return (
     <Stack.Navigator
       initialRouteName="Login"
-      screenOptions={{ headerShown: false, gestureEnabled: true, animation: 'slide_from_right', fullScreenGestureEnabled: true }}
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        animation: 'slide_from_right',
+        fullScreenGestureEnabled: true,
+      }}
     >
       {/* Auth */}
       <Stack.Screen name="Login" component={LoginScreen} />
@@ -47,11 +52,7 @@ export default function RootNavigator() {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
 
       {/* Modals */}
-      <Stack.Screen
-        name="PremiumPaywall"
-        component={PremiumPaywallScreen}
-        options={{ presentation: 'modal' }}
-      />
+      <Stack.Screen name="PremiumPaywall" component={PremiumPaywallScreen} options={{ presentation: 'modal' }} />
     </Stack.Navigator>
   );
 }

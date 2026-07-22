@@ -1,14 +1,5 @@
 import React, { useContext, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-  Image,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { UserContext } from '../components/contexts/UserContext';
@@ -16,7 +7,6 @@ import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 
 const { width, height } = Dimensions.get('window');
-
 
 const WarningsScreen = () => {
   const navigation = useNavigation();
@@ -53,11 +43,16 @@ const WarningsScreen = () => {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.infoCard, { backgroundColor: 'rgba(0,194,203,0.1)', borderColor: isDark ? 'rgba(0,194,203,0.3)' : 'rgba(0,194,203,0.2)' }]}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <View
+          style={[
+            styles.infoCard,
+            {
+              backgroundColor: 'rgba(0,194,203,0.1)',
+              borderColor: isDark ? 'rgba(0,194,203,0.3)' : 'rgba(0,194,203,0.2)',
+            },
+          ]}
+        >
           <Text style={[styles.infoText, { color: colors.textPrimary }]}>
             Ce comportement peut entraîner un bannissement temporaire ou définitif de l'application.
           </Text>
@@ -69,24 +64,33 @@ const WarningsScreen = () => {
           </View>
         ) : (
           warnings.map((entry, index) => (
-            <View key={`${entry.at.getTime()}_${index}`} style={[styles.warningCard, { backgroundColor: colors.surface }]}>
+            <View
+              key={`${entry.at.getTime()}_${index}`}
+              style={[styles.warningCard, { backgroundColor: colors.surface }]}
+            >
               <View style={{ marginBottom: 15 }}>
-                <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>Type d'avertissement</Text>
-                <Text style={[styles.warningValue, { color: colors.textPrimary }]}>
-                    {entry.type || 'Non précisé'}
+                <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>
+                  Type d'avertissement
                 </Text>
+                <Text style={[styles.warningValue, { color: colors.textPrimary }]}>{entry.type || 'Non précisé'}</Text>
               </View>
 
               <View style={{ marginBottom: 15 }}>
                 <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>Raison</Text>
                 <Text style={[styles.warningValue, { color: colors.textPrimary, fontWeight: '500' }]}>
-                    {entry.reason || 'Non précisée'}
+                  {entry.reason || 'Non précisée'}
                 </Text>
               </View>
 
-              <View style={{ borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', paddingTop: 10 }}>
+              <View
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  paddingTop: 10,
+                }}
+              >
                 <Text style={[styles.warningDate, { color: colors.textPrimary, opacity: 0.4 }]}>
-                    {entry.at.toLocaleString(locale)}
+                  {entry.at.toLocaleString(locale)}
                 </Text>
               </View>
             </View>

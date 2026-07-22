@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, ScrollView, Image, Platform, Dimensions } from 'react-native';
+import { logger } from '../utils/logger';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  TextInput,
+  ScrollView,
+  Image,
+  Platform,
+  Dimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { exportMyData, deleteMyAccount, logout, clearApiCache } from '../components/ApiRequest';
@@ -18,8 +30,8 @@ export default function DataManagementScreen() {
       setWorking(true);
       const data = await exportMyData();
       // For simplicity in RN, just show a success and log the JSON in console.
-      console.log('My data export:', data);
-      Alert.alert('Export des données', "Votre export a été généré. Il a été affiché dans la console.");
+      logger.log('My data export:', data);
+      Alert.alert('Export des données', 'Votre export a été généré. Il a été affiché dans la console.');
     } catch (e) {
       Alert.alert('Erreur', "Impossible d'exporter vos données maintenant. Réessayez.");
     } finally {
@@ -35,21 +47,25 @@ export default function DataManagementScreen() {
     Alert.alert('Confirmation', 'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?', [
       { text: 'Annuler', style: 'cancel' },
       {
-        text: 'Supprimer', style: 'destructive', onPress: async () => {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
           try {
             setWorking(true);
             await deleteMyAccount({ password });
             await logout();
             Alert.alert('Compte supprimé', 'Votre compte et vos données ont été supprimés.');
-            try { clearApiCache(); } catch (_) {}
+            try {
+              clearApiCache();
+            } catch (_) {}
             navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
           } catch (e) {
-            Alert.alert('Erreur', "Suppression impossible. Mot de passe invalide ou problème serveur.");
+            Alert.alert('Erreur', 'Suppression impossible. Mot de passe invalide ou problème serveur.');
           } finally {
             setWorking(false);
           }
-        }
-      }
+        },
+      },
     ]);
   };
 
@@ -72,7 +88,9 @@ export default function DataManagementScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Exporter mes données</Text>
-          <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>Téléchargez une copie de vos informations (profil, réseaux sociaux, paramètres).</Text>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>
+            Téléchargez une copie de vos informations (profil, réseaux sociaux, paramètres).
+          </Text>
           <TouchableOpacity style={styles.primary} disabled={working} onPress={handleExport}>
             <Text style={styles.primaryText}>{working ? 'Veuillez patienter...' : 'Exporter'}</Text>
           </TouchableOpacity>
@@ -80,14 +98,23 @@ export default function DataManagementScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Supprimer mon compte</Text>
-          <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>Supprime définitivement votre compte et toutes les données associées.</Text>
+          <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>
+            Supprime définitivement votre compte et toutes les données associées.
+          </Text>
           <TextInput
             secureTextEntry
             value={password}
             onChangeText={setPassword}
             placeholder="Confirmez avec votre mot de passe"
             placeholderTextColor={isDark ? '#888' : '#999'}
-            style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.background,
+                color: colors.textPrimary,
+                borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+              },
+            ]}
           />
           <TouchableOpacity style={styles.danger} disabled={working} onPress={handleDelete}>
             <Text style={styles.dangerText}>Supprimer définitivement</Text>
@@ -146,5 +173,12 @@ const styles = StyleSheet.create({
   primaryText: { color: '#fff', fontWeight: '800', fontSize: 16 },
   danger: { backgroundColor: '#ff4444', paddingVertical: 14, borderRadius: 12, alignItems: 'center' },
   dangerText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  input: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 15, fontSize: 15 },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    marginBottom: 15,
+    fontSize: 15,
+  },
 });

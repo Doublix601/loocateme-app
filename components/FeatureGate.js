@@ -1,23 +1,17 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from './contexts/ThemeContext';
 
 /**
  * FeatureGate
  * Composant wrapper pour gérer l'accès aux fonctionnalités Premium ou restreintes.
- * 
+ *
  * @param {string} feature - Nom de la fonctionnalité (ex: 'statistics')
  * @param {function} fallback - Composant ou fonction de rendu alternatif
  * @param {boolean} hideImplicitly - Si true, le composant est caché sans message s'il n'y a pas d'accès
  */
-export const FeatureGate = ({ 
-  children, 
-  feature = 'statistics', 
-  fallback, 
-  hideImplicitly = false,
-  style
-}) => {
+export const FeatureGate = ({ children, feature = 'statistics', fallback, hideImplicitly = false, style }) => {
   const { hasStatsAccess, effectiveStatisticsEnabled } = usePremiumAccess();
   const { colors } = useTheme();
 
@@ -34,9 +28,7 @@ export const FeatureGate = ({
     if (hideImplicitly) return null;
     return (
       <View style={[styles.gateContainer, style]}>
-        <Text style={[styles.gateText, { color: colors.textPrimary, opacity: 0.5 }]}>
-          Bientôt disponible
-        </Text>
+        <Text style={[styles.gateText, { color: colors.textPrimary, opacity: 0.5 }]}>Bientôt disponible</Text>
       </View>
     );
   }
@@ -51,9 +43,7 @@ export const FeatureGate = ({
         <View style={styles.premiumBadge}>
           <Text style={styles.premiumText}>PREMIUM</Text>
         </View>
-        <Text style={[styles.gateText, { color: colors.textPrimary }]}>
-          Réservé aux membres Premium
-        </Text>
+        <Text style={[styles.gateText, { color: colors.textPrimary }]}>Réservé aux membres Premium</Text>
       </View>
     );
   }
@@ -88,5 +78,5 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 10,
     fontWeight: '900',
-  }
+  },
 });

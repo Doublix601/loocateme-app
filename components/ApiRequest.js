@@ -1,4 +1,5 @@
 // Simple API client for loocateme backend
+import { logger } from '../utils/logger';
 // Base URL of the backend API
 import { getServerAddress } from './ServerUtils';
 import Constants from 'expo-constants';
@@ -19,7 +20,12 @@ const PUSH_TOKEN_KEY = 'loocateme_push_token';
 // In-memory access token holder. Persisted via AsyncStorage for auto-login.
 let accessToken = null;
 let loggedBaseUrlOnce = false;
-const APP_VERSION = (Constants?.expoConfig?.version || Constants?.manifest2?.extra?.expoClient?.version || Constants?.manifest?.version || process.env.EXPO_APP_VERSION || '0.0.0');
+const APP_VERSION =
+  Constants?.expoConfig?.version ||
+  Constants?.manifest2?.extra?.expoClient?.version ||
+  Constants?.manifest?.version ||
+  process.env.EXPO_APP_VERSION ||
+  '0.0.0';
 
 // --- Lightweight cache for GET requests to avoid spamming the API on navigation ---
 // Key format: `${method}:${url}` (method is uppercased)
@@ -28,826 +34,940 @@ const apiCache = new Map();
 const inflightRequests = new Map();
 
 export function clearApiCache() {
-    try { apiCache.clear(); } catch (_) {}
+  try {
+    apiCache.clear();
+  } catch (_) {}
 }
 
 export function invalidateApiCacheByPrefix(prefix = '') {
-    if (!prefix) return;
-    const p = String(prefix);
-    for (const key of apiCache.keys()) {
-        if (key.includes(p)) apiCache.delete(key);
-    }
+  if (!prefix) return;
+  const p = String(prefix);
+  for (const key of apiCache.keys()) {
+    if (key.includes(p)) apiCache.delete(key);
+  }
 }
 
 export function setAccessToken(token) {
-    accessToken = token || null;
-    // Fire-and-forget persistence
-    if (token) {
-        AsyncStorage.setItem(ACCESS_TOKEN_KEY, token).catch(() => {});
-    } else {
-        AsyncStorage.removeItem(ACCESS_TOKEN_KEY).catch(() => {});
-    }
+  accessToken = token || null;
+  // Fire-and-forget persistence
+  if (token) {
+    AsyncStorage.setItem(ACCESS_TOKEN_KEY, token).catch(() => {});
+  } else {
+    AsyncStorage.removeItem(ACCESS_TOKEN_KEY).catch(() => {});
+  }
 }
 
 export function getAccessToken() {
-    return accessToken;
+  return accessToken;
 }
 
 export async function initApiFromStorage() {
-    try {
-        const stored = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
-        if (stored) {
-            accessToken = stored;
-            return stored;
-        }
-        return null;
-    } catch {
-        return null;
+  try {
+    const stored = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+    if (stored) {
+      accessToken = stored;
+      return stored;
     }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function get(path, options = {}) {
-    return request(path, { ...options, method: 'GET' });
+  return request(path, { ...options, method: 'GET' });
 }
 
 export async function post(path, body, options = {}) {
-    return request(path, { ...options, method: 'POST', body });
+  return request(path, { ...options, method: 'POST', body });
 }
 
 export async function put(path, body, options = {}) {
-    return request(path, { ...options, method: 'PUT', body });
+  return request(path, { ...options, method: 'PUT', body });
 }
 
 export async function patch(path, body, options = {}) {
-    return request(path, { ...options, method: 'PATCH', body });
+  return request(path, { ...options, method: 'PATCH', body });
 }
 
 export async function del(path, options = {}) {
-    return request(path, { ...options, method: 'DELETE' });
+  return request(path, { ...options, method: 'DELETE' });
 }
 
-async function request(path, { method = 'GET', body, headers = {}, formData = null, retry = true, includeCredentials = false, timeoutMs, suppressAuthHandling = false, cache: cacheMode = 'default', ttlMs = 30000 } = {}) {
-    if (!loggedBaseUrlOnce) {
-        console.log(`[API] Using BASE_URL: ${BASE_URL}`);
-        loggedBaseUrlOnce = true;
-    }
-    // Prepare request init upfront so we can safely append headers below
-    const init = {
-        method,
-        headers: { ...headers },
-    };
+async function request(
+  path,
+  {
+    method = 'GET',
+    body,
+    headers = {},
+    formData = null,
+    retry = true,
+    includeCredentials = false,
+    timeoutMs,
+    suppressAuthHandling = false,
+    cache: cacheMode = 'default',
+    ttlMs = 30000,
+  } = {},
+) {
+  if (!loggedBaseUrlOnce) {
+    logger.log(`[API] Using BASE_URL: ${BASE_URL}`);
+    loggedBaseUrlOnce = true;
+  }
+  // Prepare request init upfront so we can safely append headers below
+  const init = {
+    method,
+    headers: { ...headers },
+  };
 
-    // Enforce shouldReload parameter on all API calls except login/signup (backend requirement)
-    const isLoginOrSignup = typeof path === 'string' && (path.startsWith('/auth/login') || path.startsWith('/auth/signup'));
-    let url = `${BASE_URL}${path}`;
-    if (!isLoginOrSignup) {
-        const joiner = url.includes('?') ? '&' : '?';
-        url = `${url}${joiner}shouldReload=1`;
-        init.headers['X-Should-Reload'] = '1';
-    }
+  // Enforce shouldReload parameter on all API calls except login/signup (backend requirement)
+  const isLoginOrSignup =
+    typeof path === 'string' && (path.startsWith('/auth/login') || path.startsWith('/auth/signup'));
+  let url = `${BASE_URL}${path}`;
+  if (!isLoginOrSignup) {
+    const joiner = url.includes('?') ? '&' : '?';
+    url = `${url}${joiner}shouldReload=1`;
+    init.headers['X-Should-Reload'] = '1';
+  }
 
-    // Only include credentials when explicitly required (e.g., refresh/logout)
-    if (includeCredentials) {
-        init.credentials = 'include';
-    }
+  // Only include credentials when explicitly required (e.g., refresh/logout)
+  if (includeCredentials) {
+    init.credentials = 'include';
+  }
 
-    // Always send current app version so le backend peut imposer une version minimale
+  // Always send current app version so le backend peut imposer une version minimale
+  try {
+    init.headers['X-App-Version'] = APP_VERSION;
+  } catch (_) {}
+
+  if (accessToken) {
+    init.headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  if (formData) {
+    // Let the browser set multipart/form-data boundary
+    init.body = formData;
+  } else if (body !== undefined) {
+    init.headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(body);
+  }
+
+  const isGet = String(method).toUpperCase() === 'GET';
+  const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(method).toUpperCase());
+
+  // Auto-invalidate cache on mutation
+  if (isMutation) {
     try {
-        init.headers['X-App-Version'] = APP_VERSION;
+      apiCache.clear();
+      // Also notify the UI that data has likely changed
+      publish('api:mutation', { path, method });
+    } catch (_) {}
+  }
+
+  const cacheKey = `${String(method).toUpperCase()}:${url}`;
+  const inflightKey = `${cacheKey}|${cacheMode}`;
+
+  // Serve from cache for GET requests unless explicit reload is requested
+  if (isGet && cacheMode !== 'reload') {
+    const cached = apiCache.get(cacheKey);
+    if (cached && cached.expiry > Date.now()) {
+      return cached.data;
+    }
+  }
+
+  // Dedupe in-flight GET requests
+  if (isGet && inflightRequests.has(inflightKey)) {
+    return inflightRequests.get(inflightKey);
+  }
+
+  let res;
+  let controller;
+  let timeoutId;
+  const doFetchWithTimeout = async (targetUrl) => {
+    let localController;
+    let localTimeoutId;
+    const localInit = { ...init };
+    if (typeof AbortController !== 'undefined' && timeoutMs && timeoutMs > 0) {
+      localController = new AbortController();
+      localInit.signal = localController.signal;
+    }
+    const fetchPromise = fetch(targetUrl, localInit);
+    let racePromise = fetchPromise;
+    if (timeoutMs && timeoutMs > 0) {
+      const timeoutPromise = new Promise((_, reject) => {
+        localTimeoutId = setTimeout(() => {
+          const err = new Error('Délai dépassé');
+          err.code = 'TIMEOUT';
+          err.status = 0;
+          try {
+            localController && localController.abort && localController.abort();
+          } catch {}
+          reject(err);
+        }, timeoutMs);
+      });
+      racePromise = Promise.race([fetchPromise, timeoutPromise]);
+    }
+    try {
+      const response = await racePromise;
+      if (localTimeoutId) {
+        try {
+          clearTimeout(localTimeoutId);
+        } catch {}
+      }
+      return response;
+    } catch (e) {
+      if (localTimeoutId) {
+        try {
+          clearTimeout(localTimeoutId);
+        } catch {}
+      }
+      throw e;
+    }
+  };
+
+  const runRequest = (async () => {
+    try {
+      // First attempt
+      res = await doFetchWithTimeout(url);
+    } catch (networkErr) {
+      // Forward TIMEOUT/Abort as-is
+      if (
+        networkErr &&
+        (networkErr.code === 'TIMEOUT' ||
+          networkErr.name === 'AbortError' ||
+          networkErr.message?.toLowerCase().includes('aborted'))
+      ) {
+        if (networkErr.code !== 'TIMEOUT') {
+          const err = new Error('Délai dépassé');
+          err.code = 'TIMEOUT';
+          err.status = 0;
+          throw err;
+        }
+        throw networkErr;
+      }
+      // If network error, try protocol fallback (http <-> https) for same host once
+      try {
+        const u = new URL(url);
+        // Disable fallback for local development (IP addresses or localhost)
+        const isLocal = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || /^192\.168\./.test(u.hostname);
+
+        if (isLocal) {
+          throw networkErr; // Skip fallback
+        }
+
+        const toggledProtocol = u.protocol === 'http:' ? 'https:' : 'http:';
+        const fallbackUrl = `${toggledProtocol}//${u.host}${u.pathname}${u.search}${u.hash}`;
+        if (u.protocol === 'https:') {
+          // Silent retry for https -> http fallback
+          res = await doFetchWithTimeout(fallbackUrl);
+        } else {
+          console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });
+          res = await doFetchWithTimeout(fallbackUrl);
+        }
+      } catch (_fallbackErr) {
+        console.error('[API] Network error (no fallback succeeded)', {
+          url,
+          method,
+          error: networkErr?.message || networkErr,
+        });
+        throw networkErr;
+      }
+    }
+
+    // Attempt refresh on 401 once (only for non-auth endpoints)
+    const isAuthPath = typeof path === 'string' && path.startsWith('/auth/');
+    // Do NOT attempt refresh on native platforms (RN) because backend uses httpOnly cookies → web-only
+    const canAttemptRefresh = Platform && Platform.OS === 'web';
+    if (res.status === 401 && retry && accessToken && !isAuthPath && canAttemptRefresh) {
+      try {
+        const refreshed = await refreshAccessToken();
+        if (refreshed?.accessToken) {
+          accessToken = refreshed.accessToken;
+          // Persist refreshed token
+          AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken).catch(() => {});
+          return request(path, { method, body, headers, formData, retry: false });
+        }
+      } catch (refreshErr) {
+        console.error('[API] Refresh token failed', {
+          url: `${BASE_URL}/auth/refresh`,
+          status: refreshErr?.status,
+          error: refreshErr?.message || refreshErr,
+        });
+      }
+    }
+
+    // If backend signals UI reload (abonnement changé), publish event and clear cache
+    try {
+      const headerReload = res?.headers?.get && res.headers.get('X-UI-Reload');
+      if (headerReload === '1') {
+        try {
+          clearApiCache();
+        } catch (_) {}
+        try {
+          publish('ui:reload');
+        } catch (_) {}
+      }
     } catch (_) {}
 
-    if (accessToken) {
-        init.headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-
-    if (formData) {
-        // Let the browser set multipart/form-data boundary
-        init.body = formData;
-    } else if (body !== undefined) {
-        init.headers['Content-Type'] = 'application/json';
-        init.body = JSON.stringify(body);
-    }
-
-    const isGet = String(method).toUpperCase() === 'GET';
-    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(method).toUpperCase());
-
-    // Auto-invalidate cache on mutation
-    if (isMutation) {
-        try {
-            apiCache.clear();
-            // Also notify the UI that data has likely changed
-            publish('api:mutation', { path, method });
-        } catch (_) {}
-    }
-
-    const cacheKey = `${String(method).toUpperCase()}:${url}`;
-    const inflightKey = `${cacheKey}|${cacheMode}`;
-
-    // Serve from cache for GET requests unless explicit reload is requested
-    if (isGet && cacheMode !== 'reload') {
-        const cached = apiCache.get(cacheKey);
-        if (cached && cached.expiry > Date.now()) {
-            return cached.data;
-        }
-    }
-
-    // Dedupe in-flight GET requests
-    if (isGet && inflightRequests.has(inflightKey)) {
-        return inflightRequests.get(inflightKey);
-    }
-
-    let res;
-    let controller;
-    let timeoutId;
-    const doFetchWithTimeout = async (targetUrl) => {
-        let localController;
-        let localTimeoutId;
-        const localInit = { ...init };
-        if (typeof AbortController !== 'undefined' && timeoutMs && timeoutMs > 0) {
-            localController = new AbortController();
-            localInit.signal = localController.signal;
-        }
-        const fetchPromise = fetch(targetUrl, localInit);
-        let racePromise = fetchPromise;
-        if (timeoutMs && timeoutMs > 0) {
-            const timeoutPromise = new Promise((_, reject) => {
-                localTimeoutId = setTimeout(() => {
-                    const err = new Error('Délai dépassé');
-                    err.code = 'TIMEOUT';
-                    err.status = 0;
-                    try { localController && localController.abort && localController.abort(); } catch {}
-                    reject(err);
-                }, timeoutMs);
-            });
-            racePromise = Promise.race([fetchPromise, timeoutPromise]);
-        }
-        try {
-            const response = await racePromise;
-            if (localTimeoutId) { try { clearTimeout(localTimeoutId); } catch {} }
-            return response;
-        } catch (e) {
-            if (localTimeoutId) { try { clearTimeout(localTimeoutId); } catch {} }
-            throw e;
-        }
-    };
-
-    const runRequest = (async () => {
-        try {
-            // First attempt
-            res = await doFetchWithTimeout(url);
-        } catch (networkErr) {
-        // Forward TIMEOUT/Abort as-is
-        if (networkErr && (networkErr.code === 'TIMEOUT' || networkErr.name === 'AbortError' || networkErr.message?.toLowerCase().includes('aborted'))) {
-            if (networkErr.code !== 'TIMEOUT') {
-                const err = new Error('Délai dépassé');
-                err.code = 'TIMEOUT';
-                err.status = 0;
-                throw err;
-            }
-            throw networkErr;
-        }
-            // If network error, try protocol fallback (http <-> https) for same host once
-            try {
-                const u = new URL(url);
-                // Disable fallback for local development (IP addresses or localhost)
-                const isLocal = u.hostname === 'localhost' || u.hostname === '127.0.0.1' || /^192\.168\./.test(u.hostname);
-
-                if (isLocal) {
-                    throw networkErr; // Skip fallback
-                }
-
-                const toggledProtocol = u.protocol === 'http:' ? 'https:' : 'http:';
-                const fallbackUrl = `${toggledProtocol}//${u.host}${u.pathname}${u.search}${u.hash}`;
-                if (u.protocol === 'https:') {
-                    // Silent retry for https -> http fallback
-                    res = await doFetchWithTimeout(fallbackUrl);
-                } else {
-                    console.warn('[API] Network error, retrying with protocol fallback', { from: url, to: fallbackUrl, method });
-                    res = await doFetchWithTimeout(fallbackUrl);
-                }
-            } catch (_fallbackErr) {
-                console.error('[API] Network error (no fallback succeeded)', { url, method, error: networkErr?.message || networkErr });
-                throw networkErr;
-            }
-        }
-
-        // Attempt refresh on 401 once (only for non-auth endpoints)
-        const isAuthPath = typeof path === 'string' && path.startsWith('/auth/');
-        // Do NOT attempt refresh on native platforms (RN) because backend uses httpOnly cookies → web-only
-        const canAttemptRefresh = Platform && Platform.OS === 'web';
-        if (res.status === 401 && retry && accessToken && !isAuthPath && canAttemptRefresh) {
-            try {
-                const refreshed = await refreshAccessToken();
-                if (refreshed?.accessToken) {
-                    accessToken = refreshed.accessToken;
-                    // Persist refreshed token
-                    AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken).catch(() => {});
-                    return request(path, { method, body, headers, formData, retry: false });
-                }
-            } catch (refreshErr) {
-                console.error('[API] Refresh token failed', { url: `${BASE_URL}/auth/refresh`, status: refreshErr?.status, error: refreshErr?.message || refreshErr });
-            }
-        }
-
-        // If backend signals UI reload (abonnement changé), publish event and clear cache
-        try {
-            const headerReload = res?.headers?.get && res.headers.get('X-UI-Reload');
-            if (headerReload === '1') {
-                try { clearApiCache(); } catch (_) {}
-                try { publish('ui:reload'); } catch (_) {}
-            }
-        } catch (_) {}
-
-        // Parse JSON or throw error
-        let data = null;
-        const text = await res.text();
-        try {
-            data = text ? JSON.parse(text) : null;
-        } catch (_e) {
-            // ignore, keep raw text
-            data = text;
-        }
-
-        if (!res.ok) {
-            console.error('[API] Request failed', { url, method, status: res.status, code: data?.code, message: data?.message, response: data });
-
-            // Version minimale requise par le backend
-            if (res.status === 426) {
-                try {
-                    publish('force_update_required', {
-                        status: 426,
-                        details: data?.details || null,
-                        message: data?.message || "Veuillez mettre à jour l'application pour continuer."
-                    });
-                } catch (_) {}
-            }
-
-        // Detect authentication/user-not-found errors and auto-logout
-        const code = data?.code;
-        const msg = (data?.message || '').toString().toLowerCase();
-        // AUTH_MISSING means this specific request carried no token — this can legitimately
-        // happen for a not-yet-authenticated user, or as a startup race before the persisted
-        // token has been reloaded into memory. It must NOT force a global logout, otherwise a
-        // racy unauthenticated call at boot can wipe out a perfectly valid stored session.
-        // Only treat 401 as an authentication status. 403s are feature/business restrictions in our app.
-        const isAuthStatus = res.status === 401 && code !== 'AUTH_MISSING';
-        // Do not treat REFRESH_INVALID as a standalone trigger (avoid logging out on failed /auth/refresh)
-        const isAuthCode = code === 'AUTH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
-        const isUserNotFound404 = res.status === 404 && (code === 'NOT_FOUND' || msg.includes('user not found')) && path.startsWith('/users');
-        // Do NOT treat business 403 restrictions as auth errors
-        const nonAuthForbiddenCodes = new Set(['INVISIBLE', 'PREMIUM_REQUIRED', 'PLAN_REQUIRED', 'PAYWALL', 'PLAN_DOWNGRADED']);
-        const isNonAuthForbidden = res.status === 403 && (nonAuthForbiddenCodes.has(String(code)) || msg.includes('premium'));
-        const shouldGlobalLogout = ((isAuthStatus && !isNonAuthForbidden) || isAuthCode || isUserNotFound404) && !suppressAuthHandling && !isAuthPath;
-        if (shouldGlobalLogout) {
-            try {
-                await logout();
-            } finally {
-                publish('auth:logout', { reason: isUserNotFound404 ? 'USER_NOT_FOUND' : 'AUTH', status: res.status, code: code || null, path });
-            }
-        }
-
-            const err = new Error(data?.message || `Request failed with ${res.status}`);
-            err.status = res.status;
-            err.code = data?.code;
-            err.details = data?.details;
-            err.response = data;
-            throw err;
-        }
-
-        // Cache successful GET responses
-        if (isGet && cacheMode !== 'reload') {
-            const expiry = Date.now() + Math.max(0, ttlMs || 0);
-            try { apiCache.set(cacheKey, { expiry, data }); } catch (_) {}
-        }
-        return data;
-    })();
-
-    if (isGet) {
-        inflightRequests.set(inflightKey, runRequest);
-    }
-
+    // Parse JSON or throw error
+    let data = null;
+    const text = await res.text();
     try {
-        return await runRequest;
-    } finally {
-        if (isGet) inflightRequests.delete(inflightKey);
+      data = text ? JSON.parse(text) : null;
+    } catch (_e) {
+      // ignore, keep raw text
+      data = text;
     }
+
+    if (!res.ok) {
+      console.error('[API] Request failed', {
+        url,
+        method,
+        status: res.status,
+        code: data?.code,
+        message: data?.message,
+        response: data,
+      });
+
+      // Version minimale requise par le backend
+      if (res.status === 426) {
+        try {
+          publish('force_update_required', {
+            status: 426,
+            details: data?.details || null,
+            message: data?.message || "Veuillez mettre à jour l'application pour continuer.",
+          });
+        } catch (_) {}
+      }
+
+      // Detect authentication/user-not-found errors and auto-logout
+      const code = data?.code;
+      const msg = (data?.message || '').toString().toLowerCase();
+      // AUTH_MISSING means this specific request carried no token — this can legitimately
+      // happen for a not-yet-authenticated user, or as a startup race before the persisted
+      // token has been reloaded into memory. It must NOT force a global logout, otherwise a
+      // racy unauthenticated call at boot can wipe out a perfectly valid stored session.
+      // Only treat 401 as an authentication status. 403s are feature/business restrictions in our app.
+      const isAuthStatus = res.status === 401 && code !== 'AUTH_MISSING';
+      // Do not treat REFRESH_INVALID as a standalone trigger (avoid logging out on failed /auth/refresh)
+      const isAuthCode = code === 'AUTH_INVALID' || code === 'UNAUTHORIZED' || code === 'USER_NOT_FOUND';
+      const isUserNotFound404 =
+        res.status === 404 && (code === 'NOT_FOUND' || msg.includes('user not found')) && path.startsWith('/users');
+      // Do NOT treat business 403 restrictions as auth errors
+      const nonAuthForbiddenCodes = new Set([
+        'INVISIBLE',
+        'PREMIUM_REQUIRED',
+        'PLAN_REQUIRED',
+        'PAYWALL',
+        'PLAN_DOWNGRADED',
+      ]);
+      const isNonAuthForbidden =
+        res.status === 403 && (nonAuthForbiddenCodes.has(String(code)) || msg.includes('premium'));
+      const shouldGlobalLogout =
+        ((isAuthStatus && !isNonAuthForbidden) || isAuthCode || isUserNotFound404) &&
+        !suppressAuthHandling &&
+        !isAuthPath;
+      if (shouldGlobalLogout) {
+        try {
+          await logout();
+        } finally {
+          publish('auth:logout', {
+            reason: isUserNotFound404 ? 'USER_NOT_FOUND' : 'AUTH',
+            status: res.status,
+            code: code || null,
+            path,
+          });
+        }
+      }
+
+      const err = new Error(data?.message || `Request failed with ${res.status}`);
+      err.status = res.status;
+      err.code = data?.code;
+      err.details = data?.details;
+      err.response = data;
+      throw err;
+    }
+
+    // Cache successful GET responses
+    if (isGet && cacheMode !== 'reload') {
+      const expiry = Date.now() + Math.max(0, ttlMs || 0);
+      try {
+        apiCache.set(cacheKey, { expiry, data });
+      } catch (_) {}
+    }
+    return data;
+  })();
+
+  if (isGet) {
+    inflightRequests.set(inflightKey, runRequest);
+  }
+
+  try {
+    return await runRequest;
+  } finally {
+    if (isGet) inflightRequests.delete(inflightKey);
+  }
 }
 
 // AUTH
-export async function signup({ email, password, username, firstName = '', lastName = '', customName = '', birthdate, gender }) {
-    const data = await request('/auth/signup', {
-        method: 'POST',
-        body: { email, password, username, firstName, lastName, customName, birthdate, gender },
-    });
-    if (data?.accessToken) setAccessToken(data.accessToken);
-    try { publish('auth:login', { user: data?.user || null }); } catch (_) {}
-    return data;
+export async function signup({
+  email,
+  password,
+  username,
+  firstName = '',
+  lastName = '',
+  customName = '',
+  birthdate,
+  gender,
+}) {
+  const data = await request('/auth/signup', {
+    method: 'POST',
+    body: { email, password, username, firstName, lastName, customName, birthdate, gender },
+  });
+  if (data?.accessToken) setAccessToken(data.accessToken);
+  try {
+    publish('auth:login', { user: data?.user || null });
+  } catch (_) {}
+  return data;
 }
 
 export async function login({ email, password }) {
-    const data = await request('/auth/login', {
-        method: 'POST',
-        body: { email, password },
-        timeoutMs: 5000,
-        retry: false,
-        suppressAuthHandling: true,
-    });
-    if (data?.accessToken) setAccessToken(data.accessToken);
-    try { publish('auth:login', { user: data?.user || null }); } catch (_) {}
-    return data;
+  const data = await request('/auth/login', {
+    method: 'POST',
+    body: { email, password },
+    timeoutMs: 5000,
+    retry: false,
+    suppressAuthHandling: true,
+  });
+  if (data?.accessToken) setAccessToken(data.accessToken);
+  try {
+    publish('auth:login', { user: data?.user || null });
+  } catch (_) {}
+  return data;
 }
 
 export async function socialLogin({ provider, idToken, user }) {
-    const data = await request('/auth/social-login', {
-        method: 'POST',
-        body: { provider, idToken, user },
-    });
-    if (data?.accessToken) setAccessToken(data.accessToken);
-    try { publish('auth:login', { user: data?.user || null }); } catch (_) {}
-    return data;
+  const data = await request('/auth/social-login', {
+    method: 'POST',
+    body: { provider, idToken, user },
+  });
+  if (data?.accessToken) setAccessToken(data.accessToken);
+  try {
+    publish('auth:login', { user: data?.user || null });
+  } catch (_) {}
+  return data;
 }
 
 export async function refreshAccessToken() {
-    // Uses httpOnly cookie set by backend (works on web; RN native may not include cookies)
-    const data = await request('/auth/refresh', { method: 'POST', retry: false, includeCredentials: true });
-    return data;
+  // Uses httpOnly cookie set by backend (works on web; RN native may not include cookies)
+  const data = await request('/auth/refresh', { method: 'POST', retry: false, includeCredentials: true });
+  return data;
 }
 
 export async function logout() {
+  try {
+    let pushToken = null;
     try {
-        let pushToken = null;
-        try {
-            pushToken = await AsyncStorage.getItem(PUSH_TOKEN_KEY);
-        } catch (_) {}
-        if (pushToken) {
-            try {
-                await request('/push/unregister-token', {
-                    method: 'POST',
-                    body: { token: pushToken },
-                    retry: false,
-                    suppressAuthHandling: true,
-                });
-            } catch (e) {
-                console.warn('[API] Push unregister failed', e?.message || e);
-            }
-        }
-        await request('/auth/logout', { method: 'POST', includeCredentials: true, retry: false, suppressAuthHandling: true });
-    } catch (e) {
-        console.error('[API] Logout error', e);
-    } finally {
-        setAccessToken(null);
-        try { await AsyncStorage.removeItem(ACCESS_TOKEN_KEY); } catch {}
-        try { await AsyncStorage.removeItem(PUSH_TOKEN_KEY); } catch {}
-        try { publish('auth:logout', { reason: 'USER_REQUEST' }); } catch (_) {}
+      pushToken = await AsyncStorage.getItem(PUSH_TOKEN_KEY);
+    } catch (_) {}
+    if (pushToken) {
+      try {
+        await request('/push/unregister-token', {
+          method: 'POST',
+          body: { token: pushToken },
+          retry: false,
+          suppressAuthHandling: true,
+        });
+      } catch (e) {
+        console.warn('[API] Push unregister failed', e?.message || e);
+      }
     }
+    await request('/auth/logout', {
+      method: 'POST',
+      includeCredentials: true,
+      retry: false,
+      suppressAuthHandling: true,
+    });
+  } catch (e) {
+    console.error('[API] Logout error', e);
+  } finally {
+    setAccessToken(null);
+    try {
+      await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+    } catch {}
+    try {
+      await AsyncStorage.removeItem(PUSH_TOKEN_KEY);
+    } catch {}
+    try {
+      publish('auth:logout', { reason: 'USER_REQUEST' });
+    } catch (_) {}
+  }
 }
 
 export async function forgotPassword(email) {
-    return request('/auth/forgot-password', { method: 'POST', body: { email } });
+  return request('/auth/forgot-password', { method: 'POST', body: { email } });
 }
 
 // USERS
 export async function getMyUser() {
-    // Always bypass cache to avoid stale profile (socials, photo, premium, etc.)
-    return request('/users/me', { method: 'GET', cache: 'reload' });
+  // Always bypass cache to avoid stale profile (socials, photo, premium, etc.)
+  return request('/users/me', { method: 'GET', cache: 'reload' });
 }
 
 export async function getUserById(userId) {
-    const id = String(userId || '');
-    if (!id) throw new Error('userId requis');
-    return request(`/users/${encodeURIComponent(id)}`, { method: 'GET', cache: 'reload' });
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/users/${encodeURIComponent(id)}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function updateMyLocation({ lat, lon }) {
-    return request('/users/location', { method: 'POST', body: { lat, lon } });
+  return request('/users/location', { method: 'POST', body: { lat, lon } });
 }
 
 export async function getUsersAroundMe({ lat, lon, radius = 2000 }) {
-    const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
-    return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
+  const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
+  return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
 }
 
 export async function getPopularUsers({ limit = 10 } = {}) {
-    const qs = new URLSearchParams({ limit: String(limit) });
-    return request(`/users/popular?${qs.toString()}`, { method: 'GET' });
+  const qs = new URLSearchParams({ limit: String(limit) });
+  return request(`/users/popular?${qs.toString()}`, { method: 'GET' });
 }
 
 export async function getLocations({ lat, lon, limit, vibe } = {}) {
-    const params = { lat: String(lat), lon: String(lon) };
-    if (limit != null) params.limit = String(limit);
-    if (vibe) params.vibe = String(vibe);
-    const qs = new URLSearchParams(params);
-    return request(`/locations?${qs.toString()}`, { method: 'GET' });
+  const params = { lat: String(lat), lon: String(lon) };
+  if (limit != null) params.limit = String(limit);
+  if (vibe) params.vibe = String(vibe);
+  const qs = new URLSearchParams(params);
+  return request(`/locations?${qs.toString()}`, { method: 'GET' });
 }
 
 export async function getLocationById(id) {
-    // Always bypass cache to avoid stale location info/photos on refresh
-    return request(`/locations/${id}`, { method: 'GET', cache: 'reload' });
+  // Always bypass cache to avoid stale location info/photos on refresh
+  return request(`/locations/${id}`, { method: 'GET', cache: 'reload' });
 }
 
 // Seed unitaire d'un POI Overpass (id `osm:<osmId>`) côté backend pour qu'il
 // soit ensuite récupérable par `getLocationById`. À appeler juste avant
 // d'ouvrir l'écran de détail d'un lieu OSM affiché dans la liste.
 export async function seedOsmLocation({ osmId, name, type, lat, lon }) {
-    return request('/locations/osm-seed', {
-        method: 'POST',
-        body: { osmId, name, type, lat, lon },
-    });
+  return request('/locations/osm-seed', {
+    method: 'POST',
+    body: { osmId, name, type, lat, lon },
+  });
 }
 
 export async function updateUserStatus(status) {
-    return request('/profile/status', {
-        method: 'PATCH',
-        body: { status },
-    });
+  return request('/profile/status', {
+    method: 'PATCH',
+    body: { status },
+  });
 }
 
 export async function searchUsers({ q, limit = 10, lat, lon, includeUsers = true, includeLocations = true }) {
-    const params = { q: String(q || ''), limit: String(limit) };
-    if (lat) params.lat = String(lat);
-    if (lon) params.lon = String(lon);
-    if (includeUsers === false) params.includeUsers = 'false';
-    if (includeLocations === false) params.includeLocations = 'false';
-    const qs = new URLSearchParams(params);
-    // Use cache reload to minimize stale results in DebugScreen searches
-    return request(`/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+  const params = { q: String(q || ''), limit: String(limit) };
+  if (lat) params.lat = String(lat);
+  if (lon) params.lon = String(lon);
+  if (includeUsers === false) params.includeUsers = 'false';
+  if (includeLocations === false) params.includeLocations = 'false';
+  const qs = new URLSearchParams(params);
+  // Use cache reload to minimize stale results in DebugScreen searches
+  return request(`/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
 // PREMIUM & IAP
 export async function startPremiumTrial() {
-    return request('/premium/trial/start', { method: 'POST' });
+  return request('/premium/trial/start', { method: 'POST' });
 }
 
 export async function verifyPurchase(isMock = false) {
-    return request('/premium/verify', {
-        method: 'POST',
-        body: { isMock }
-    });
+  return request('/premium/verify', {
+    method: 'POST',
+    body: { isMock },
+  });
 }
 
 // PROFILE
 export async function updateProfile({ username, firstName, lastName, customName, bio }) {
-    const body = {};
-    if (username !== undefined) body.username = username;
-    if (firstName !== undefined) body.firstName = firstName;
-    if (lastName !== undefined) body.lastName = lastName;
-    if (customName !== undefined) body.customName = customName;
-    if (bio !== undefined) body.bio = bio;
-    return request('/profile', { method: 'PUT', body });
+  const body = {};
+  if (username !== undefined) body.username = username;
+  if (firstName !== undefined) body.firstName = firstName;
+  if (lastName !== undefined) body.lastName = lastName;
+  if (customName !== undefined) body.customName = customName;
+  if (bio !== undefined) body.bio = bio;
+  return request('/profile', { method: 'PUT', body });
 }
 
 function guessMimeFromName(name = '') {
-    const lower = String(name).toLowerCase();
-    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-    if (lower.endsWith('.png')) return 'image/png';
-    if (lower.endsWith('.webp')) return 'image/webp';
-    if (lower.endsWith('.gif')) return 'image/gif';
-    return 'application/octet-stream';
+  const lower = String(name).toLowerCase();
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  return 'application/octet-stream';
 }
 
 function normalizeUploadFile(input) {
-    // Accepts:
-    // - { uri, name, type }
-    // - ImagePicker asset { uri, fileName/name, mimeType/type }
-    // - string uri
-    if (!input) return null;
-    if (typeof input === 'string') {
-        const uri = input;
-        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
-        const type = guessMimeFromName(name);
-        return { uri, name, type };
-    }
-    const uri = input.uri || input.url;
-    const name = input.name || input.fileName || (uri ? uri.split('/').pop() : `photo_${Date.now()}.jpg`);
-    const type = input.type || input.mimeType || guessMimeFromName(name);
-    if (!uri) return null;
+  // Accepts:
+  // - { uri, name, type }
+  // - ImagePicker asset { uri, fileName/name, mimeType/type }
+  // - string uri
+  if (!input) return null;
+  if (typeof input === 'string') {
+    const uri = input;
+    const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+    const type = guessMimeFromName(name);
     return { uri, name, type };
+  }
+  const uri = input.uri || input.url;
+  const name = input.name || input.fileName || (uri ? uri.split('/').pop() : `photo_${Date.now()}.jpg`);
+  const type = input.type || input.mimeType || guessMimeFromName(name);
+  if (!uri) return null;
+  return { uri, name, type };
 }
 
 export async function uploadProfilePhoto(file) {
-    const part = normalizeUploadFile(file);
-    if (!part) {
-        const err = new Error('Invalid file');
-        err.code = 'INVALID_FILE';
-        throw err;
-    }
-    // Optimize image before upload to reduce payload size
-    let optimized = part;
-    try {
-        optimized = await optimizeImageForUpload(part, { maxWidth: 720, maxHeight: 720, quality: 0.8 });
-    } catch (_e) {
-        // ignore optimization failures, send original
-    }
-    const form = new FormData();
-    form.append('photo', optimized);
-    return request('/profile/photo', { method: 'POST', formData: form });
+  const part = normalizeUploadFile(file);
+  if (!part) {
+    const err = new Error('Invalid file');
+    err.code = 'INVALID_FILE';
+    throw err;
+  }
+  // Optimize image before upload to reduce payload size
+  let optimized = part;
+  try {
+    optimized = await optimizeImageForUpload(part, { maxWidth: 720, maxHeight: 720, quality: 0.8 });
+  } catch (_e) {
+    // ignore optimization failures, send original
+  }
+  const form = new FormData();
+  form.append('photo', optimized);
+  return request('/profile/photo', { method: 'POST', formData: form });
 }
 
 export async function deleteProfilePhoto() {
-    return request('/profile/photo', { method: 'DELETE' });
+  return request('/profile/photo', { method: 'DELETE' });
 }
 
 // SOCIAL
 export async function upsertSocial({ type, handle }) {
-    const data = await request('/social', { method: 'PUT', body: { type, handle } });
-    // Clear GET cache so subsequent getMyUser or lists reflect latest socials immediately
-    try { clearApiCache(); } catch (_) {}
-    return data;
+  const data = await request('/social', { method: 'PUT', body: { type, handle } });
+  // Clear GET cache so subsequent getMyUser or lists reflect latest socials immediately
+  try {
+    clearApiCache();
+  } catch (_) {}
+  return data;
 }
 
 export async function removeSocial(type) {
-    const data = await request(`/social/${encodeURIComponent(type)}`, { method: 'DELETE' });
-    // Clear GET cache so subsequent getMyUser or lists reflect latest socials immediately
-    try { clearApiCache(); } catch (_) {}
-    return data;
+  const data = await request(`/social/${encodeURIComponent(type)}`, { method: 'DELETE' });
+  // Clear GET cache so subsequent getMyUser or lists reflect latest socials immediately
+  try {
+    clearApiCache();
+  } catch (_) {}
+  return data;
 }
 
 // EVENTS & STATS & PUSH & PREMIUM
 export async function trackProfileView(targetUserId) {
-    return request('/events/profile-view', { method: 'POST', body: { targetUserId } });
+  return request('/events/profile-view', { method: 'POST', body: { targetUserId } });
 }
 
 export async function trackSocialClick(targetUserId, socialNetwork) {
-    return request('/events/social-click', { method: 'POST', body: { targetUserId, socialNetwork } });
+  return request('/events/social-click', { method: 'POST', body: { targetUserId, socialNetwork } });
 }
 
 export async function trackUserSearch(query) {
-    return request('/events/user-search', { method: 'POST', body: { query } });
+  return request('/events/user-search', { method: 'POST', body: { query } });
 }
 
 export async function trackLocationView(locationId) {
-    return request('/events/location-view', { method: 'POST', body: { locationId } });
+  return request('/events/location-view', { method: 'POST', body: { locationId } });
 }
 
 export async function updateDemographics({ birthdate, gender }) {
-    return request('/profile/demographics', { method: 'PUT', body: { birthdate, gender } });
+  return request('/profile/demographics', { method: 'PUT', body: { birthdate, gender } });
 }
 
 export async function getStatsOverview(range = '30d') {
-    const qs = new URLSearchParams({ range });
-    return request(`/stats/overview?${qs.toString()}`, { method: 'GET' });
+  const qs = new URLSearchParams({ range });
+  return request(`/stats/overview?${qs.toString()}`, { method: 'GET' });
 }
 
 export async function getDetailedProfileViews(limit = 50) {
-    const qs = new URLSearchParams({ limit: String(limit) });
-    return request(`/stats/profile-views/detailed?${qs.toString()}`, { method: 'GET' });
+  const qs = new URLSearchParams({ limit: String(limit) });
+  return request(`/stats/profile-views/detailed?${qs.toString()}`, { method: 'GET' });
 }
 
 export async function registerPushToken({ token, platform = 'unknown' }) {
-    const res = await request('/push/register-token', { method: 'POST', body: { token, platform } });
-    try { await AsyncStorage.setItem(PUSH_TOKEN_KEY, String(token)); } catch (_) {}
-    return res;
+  const res = await request('/push/register-token', { method: 'POST', body: { token, platform } });
+  try {
+    await AsyncStorage.setItem(PUSH_TOKEN_KEY, String(token));
+  } catch (_) {}
+  return res;
 }
 
 export async function unregisterPushToken({ token }) {
-    if (!token) return { success: false, skipped: true };
-    return request('/push/unregister-token', { method: 'POST', body: { token }, retry: false, suppressAuthHandling: true });
+  if (!token) return { success: false, skipped: true };
+  return request('/push/unregister-token', {
+    method: 'POST',
+    body: { token },
+    retry: false,
+    suppressAuthHandling: true,
+  });
 }
 
 // REPORTS & BLOCKS
 export async function createReport({ reportedUserId, category, reason, description }) {
-    return request('/reports', {
-        method: 'POST',
-        body: { reportedUserId, category, reason, description },
-    });
+  return request('/reports', {
+    method: 'POST',
+    body: { reportedUserId, category, reason, description },
+  });
 }
 
 export async function getReports({ status = 'pending', page = 1, limit = 50 } = {}) {
-    const qs = new URLSearchParams({ status, page: String(page), limit: String(limit) });
-    return request(`/reports?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+  const qs = new URLSearchParams({ status, page: String(page), limit: String(limit) });
+  return request(`/reports?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function actOnReport(reportId, { action, target, durationHours, note, warningType } = {}) {
-    const id = String(reportId || '');
-    if (!id) throw new Error('reportId requis');
-    return request(`/reports/${encodeURIComponent(id)}/action`, {
-        method: 'POST',
-        body: { action, target, durationHours, note, warningType },
-    });
+  const id = String(reportId || '');
+  if (!id) throw new Error('reportId requis');
+  return request(`/reports/${encodeURIComponent(id)}/action`, {
+    method: 'POST',
+    body: { action, target, durationHours, note, warningType },
+  });
 }
 
 export async function searchModerationUsers({ q, limit = 10 }) {
-    const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) });
-    return request(`/reports/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+  const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) });
+  return request(`/reports/users/search?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function moderateUser(userId, { action, count, durationHours, note } = {}) {
-    const id = String(userId || '');
-    if (!id) throw new Error('userId requis');
-    const body = { action };
-    if (typeof count === 'number') body.count = count;
-    if (typeof durationHours === 'number') body.durationHours = durationHours;
-    if (typeof note === 'string') body.note = note;
-    return request(`/reports/users/${encodeURIComponent(id)}/moderate`, {
-        method: 'POST',
-        body,
-    });
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  const body = { action };
+  if (typeof count === 'number') body.count = count;
+  if (typeof durationHours === 'number') body.durationHours = durationHours;
+  if (typeof note === 'string') body.note = note;
+  return request(`/reports/users/${encodeURIComponent(id)}/moderate`, {
+    method: 'POST',
+    body,
+  });
 }
 
 export async function getBlockedUsers() {
-    return request('/blocks', { method: 'GET' });
+  return request('/blocks', { method: 'GET' });
 }
 
 // COMPTES PRO — modération des candidatures (ModeratorScreen)
 export async function getBusinessClaims({ status = 'pending', page = 1, limit = 50 } = {}) {
-    const qs = new URLSearchParams({ status, page: String(page), limit: String(limit) });
-    return request(`/business-claims?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+  const qs = new URLSearchParams({ status, page: String(page), limit: String(limit) });
+  return request(`/business-claims?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function actOnBusinessClaim(claimId, { action, rejectionReason } = {}) {
-    const id = String(claimId || '');
-    if (!id) throw new Error('claimId requis');
-    return request(`/business-claims/${encodeURIComponent(id)}/action`, {
-        method: 'POST',
-        body: { action, rejectionReason },
-    });
+  const id = String(claimId || '');
+  if (!id) throw new Error('claimId requis');
+  return request(`/business-claims/${encodeURIComponent(id)}/action`, {
+    method: 'POST',
+    body: { action, rejectionReason },
+  });
 }
 
 export async function blockUser(targetUserId) {
-    return request('/blocks', { method: 'POST', body: { targetUserId } });
+  return request('/blocks', { method: 'POST', body: { targetUserId } });
 }
 
 export async function unblockUser(blockId) {
-    const id = String(blockId || '');
-    if (!id) throw new Error('blockId requis');
-    return request(`/blocks/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  const id = String(blockId || '');
+  if (!id) throw new Error('blockId requis');
+  return request(`/blocks/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 // Convenience: initialize from a provided token (manual init)
 export function initApi({ token } = {}) {
-    if (token) setAccessToken(token);
-    return { setAccessToken, getAccessToken };
+  if (token) setAccessToken(token);
+  return { setAccessToken, getAccessToken };
 }
-
 
 // GDPR
 export async function getPrivacyPolicy() {
-    return request('/gdpr/policy', { method: 'GET' });
+  return request('/gdpr/policy', { method: 'GET' });
 }
 
 // Compares the user's accepted/seen policy version against the latest
 // published one. `blocking: true` means a MAJOR update requires re-consent;
 // `hasUnseenUpdate: true` means a MINOR update can be shown as a dismissible banner.
 export async function getPolicyStatus() {
-    return request('/gdpr/policy-status', { method: 'GET' });
+  return request('/gdpr/policy-status', { method: 'GET' });
 }
 
 // Explicitly accepts the latest published policy version (blocking modal, MAJOR bump).
 export async function acceptPolicyVersion() {
-    return request('/gdpr/policy/accept', { method: 'PUT' });
+  return request('/gdpr/policy/accept', { method: 'PUT' });
 }
 
 // Marks the latest published policy version as "seen" (dismiss the MINOR update banner).
 export async function markPolicyVersionSeen() {
-    return request('/gdpr/policy/seen', { method: 'PUT' });
+  return request('/gdpr/policy/seen', { method: 'PUT' });
 }
 
 export async function updateConsent({ accepted, version = 'v1', analytics = false, marketing = false }) {
-    return request('/gdpr/consent', { method: 'PUT', body: { accepted, version, analytics, marketing } });
+  return request('/gdpr/consent', { method: 'PUT', body: { accepted, version, analytics, marketing } });
 }
 
 export async function exportMyData() {
-    // Returns JSON; in RN you can present it or save to file if needed
-    return request('/gdpr/export', { method: 'POST' });
+  // Returns JSON; in RN you can present it or save to file if needed
+  return request('/gdpr/export', { method: 'POST' });
 }
 
 export async function deleteMyAccount({ password }) {
-    return request('/gdpr/account', { method: 'DELETE', body: { password }, retry: false });
+  return request('/gdpr/account', { method: 'DELETE', body: { password }, retry: false });
 }
 
 // ADMIN / DEBUG
 export async function getAllUsers({ page = 1, limit = 100 } = {}) {
-    const p = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
-    // Bypass cache to always fetch fresh data for admin listings used by DebugScreen
-    return request(`/admin/users?${p}`, { method: 'GET', cache: 'reload' });
+  const p = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
+  // Bypass cache to always fetch fresh data for admin listings used by DebugScreen
+  return request(`/admin/users?${p}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function setUserPremium(userId, isPremium) {
-    const id = String(userId || '');
-    if (!id) throw new Error('userId requis');
-    return request(`/admin/users/${encodeURIComponent(id)}/role`, {
-        method: 'PUT',
-        body: { isPremium: !!isPremium },
-    });
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/admin/users/${encodeURIComponent(id)}/role`, {
+    method: 'PUT',
+    body: { isPremium: !!isPremium },
+  });
 }
 
 // ADMIN: push de test/unifié
 export async function sendAdminPush(options = {}) {
-    // options: { userIds, tokens, title, body, data, imageUrl, sound, badge, androidChannelId, priority, collapseKey, mutableContent, contentAvailable }
-    return request('/admin/push/send', { method: 'POST', body: options, cache: 'reload' });
+  // options: { userIds, tokens, title, body, data, imageUrl, sound, badge, androidChannelId, priority, collapseKey, mutableContent, contentAvailable }
+  return request('/admin/push/send', { method: 'POST', body: options, cache: 'reload' });
 }
 
 // FEATURE FLAGS
 export async function getFeatureFlags({ cache = 'default', ttlMs = 30000 } = {}) {
-    // Public endpoint - no auth required
-    return request('/settings/flags', { method: 'GET', cache, ttlMs });
+  // Public endpoint - no auth required
+  return request('/settings/flags', { method: 'GET', cache, ttlMs });
 }
 
 // ADMIN: Get all feature flags with details
 export async function getAdminFlags() {
-    return request('/admin/flags', { method: 'GET', cache: 'reload' });
+  return request('/admin/flags', { method: 'GET', cache: 'reload' });
 }
 
 // ADMIN: Update a feature flag
 export async function setFeatureFlag(key, enabled) {
-    return request(`/admin/flags/${encodeURIComponent(key)}`, {
-        method: 'PUT',
-        body: { enabled: !!enabled },
-    });
+  return request(`/admin/flags/${encodeURIComponent(key)}`, {
+    method: 'PUT',
+    body: { enabled: !!enabled },
+  });
 }
 
 // ADMIN: Update user role (admin/moderator/user)
 export async function setUserRole(userId, role) {
-    const id = String(userId || '');
-    if (!id) throw new Error('userId requis');
-    return request(`/admin/users/${encodeURIComponent(id)}/user-role`, {
-        method: 'PUT',
-        body: { role },
-    });
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/admin/users/${encodeURIComponent(id)}/user-role`, {
+    method: 'PUT',
+    body: { role },
+  });
 }
 
 // ADMIN: Unban user
 export async function unbanUser(userId) {
-    const id = String(userId || '');
-    if (!id) throw new Error('userId requis');
-    return request(`/admin/users/${encodeURIComponent(id)}/unban`, {
-        method: 'PUT',
-    });
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/admin/users/${encodeURIComponent(id)}/unban`, {
+    method: 'PUT',
+  });
 }
 
 export async function triggerLocationSync() {
-    return request('/admin/sync-locations', { method: 'POST' });
+  return request('/admin/sync-locations', { method: 'POST' });
 }
 
 // FOLLOW / RELATIONS
 export async function getFollowStatus(targetUserId) {
-    const id = String(targetUserId || '');
-    if (!id) throw new Error('targetUserId requis');
-    return request(`/follow/status/${encodeURIComponent(id)}`, { method: 'GET', cache: 'reload' });
+  const id = String(targetUserId || '');
+  if (!id) throw new Error('targetUserId requis');
+  return request(`/follow/status/${encodeURIComponent(id)}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function createFollowRequest(targetUserId) {
-    return request('/follow/request', { method: 'POST', body: { targetUserId } });
+  return request('/follow/request', { method: 'POST', body: { targetUserId } });
 }
 
 export async function listFollowRequests({ type = 'incoming' } = {}) {
-    const qs = new URLSearchParams({ type: String(type || 'incoming') });
-    return request(`/follow/requests?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+  const qs = new URLSearchParams({ type: String(type || 'incoming') });
+  return request(`/follow/requests?${qs.toString()}`, { method: 'GET', cache: 'reload' });
 }
 
 export async function acceptFollowRequest(requestId) {
-    const id = String(requestId || '');
-    if (!id) throw new Error('requestId requis');
-    return request(`/follow/requests/${encodeURIComponent(id)}/accept`, { method: 'POST' });
+  const id = String(requestId || '');
+  if (!id) throw new Error('requestId requis');
+  return request(`/follow/requests/${encodeURIComponent(id)}/accept`, { method: 'POST' });
 }
 
 export async function declineFollowRequest(requestId) {
-    const id = String(requestId || '');
-    if (!id) throw new Error('requestId requis');
-    return request(`/follow/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' });
+  const id = String(requestId || '');
+  if (!id) throw new Error('requestId requis');
+  return request(`/follow/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' });
 }
 
 // CHAT
 export async function listConversations() {
-    return request('/chat/conversations', { method: 'GET', cache: 'reload' });
+  return request('/chat/conversations', { method: 'GET', cache: 'reload' });
 }
 
 export async function getConversationMessages(conversationId, { before, limit = 20 } = {}) {
-    const id = String(conversationId || '');
-    if (!id) throw new Error('conversationId requis');
-    const qs = new URLSearchParams({ limit: String(limit || 20) });
-    if (before) qs.set('before', String(before));
-    return request(`/chat/conversations/${encodeURIComponent(id)}/messages?${qs.toString()}`, { method: 'GET', cache: 'reload' });
+  const id = String(conversationId || '');
+  if (!id) throw new Error('conversationId requis');
+  const qs = new URLSearchParams({ limit: String(limit || 20) });
+  if (before) qs.set('before', String(before));
+  return request(`/chat/conversations/${encodeURIComponent(id)}/messages?${qs.toString()}`, {
+    method: 'GET',
+    cache: 'reload',
+  });
 }
 
-export async function sendChatMessage({ conversationId, targetUserId, type = 'text', text = '', mediaUrl = '', thumbnailUrl = '' } = {}) {
-    const body = { type, text, mediaUrl, thumbnailUrl };
-    if (conversationId) body.conversationId = conversationId;
-    if (targetUserId) body.targetUserId = targetUserId;
-    return request('/chat/messages', { method: 'POST', body });
+export async function sendChatMessage({
+  conversationId,
+  targetUserId,
+  type = 'text',
+  text = '',
+  mediaUrl = '',
+  thumbnailUrl = '',
+} = {}) {
+  const body = { type, text, mediaUrl, thumbnailUrl };
+  if (conversationId) body.conversationId = conversationId;
+  if (targetUserId) body.targetUserId = targetUserId;
+  return request('/chat/messages', { method: 'POST', body });
 }
 
 export async function markConversationRead(conversationId, { messageId } = {}) {
-    const id = String(conversationId || '');
-    if (!id) throw new Error('conversationId requis');
-    return request(`/chat/conversations/${encodeURIComponent(id)}/read`, { method: 'POST', body: { messageId } });
+  const id = String(conversationId || '');
+  if (!id) throw new Error('conversationId requis');
+  return request(`/chat/conversations/${encodeURIComponent(id)}/read`, { method: 'POST', body: { messageId } });
 }
 
 export async function uploadChatMedia({ media, thumbnail } = {}) {
-    if (!media) throw new Error('media requis');
-    const formData = new FormData();
-    formData.append('media', {
-        uri: media.uri,
-        name: media.name || `media_${Date.now()}`,
-        type: media.type || 'application/octet-stream',
+  if (!media) throw new Error('media requis');
+  const formData = new FormData();
+  formData.append('media', {
+    uri: media.uri,
+    name: media.name || `media_${Date.now()}`,
+    type: media.type || 'application/octet-stream',
+  });
+  if (thumbnail?.uri) {
+    formData.append('thumbnail', {
+      uri: thumbnail.uri,
+      name: thumbnail.name || `thumb_${Date.now()}`,
+      type: thumbnail.type || 'image/jpeg',
     });
-    if (thumbnail?.uri) {
-        formData.append('thumbnail', {
-            uri: thumbnail.uri,
-            name: thumbnail.name || `thumb_${Date.now()}`,
-            type: thumbnail.type || 'image/jpeg',
-        });
-    }
-    return request('/chat/media', { method: 'POST', formData });
+  }
+  return request('/chat/media', { method: 'POST', formData });
 }
-

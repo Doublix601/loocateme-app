@@ -1,5 +1,17 @@
 import { useState, useContext } from 'react';
-import { TextInput, TouchableOpacity, StyleSheet, View, useWindowDimensions, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { logger } from '../utils/logger';
+import {
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { login as apiLogin, setAccessToken, getPolicyStatus } from '../components/ApiRequest';
@@ -13,257 +25,280 @@ import { publish } from '../components/EventBus';
 import { mapBackendUser } from '../utils/mappers';
 
 const LoginScreen = () => {
-    const navigation = useNavigation();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    const { width, height } = useWindowDimensions(); // Récupère les dimensions de l'écran
-    const { updateUser } = useContext(UserContext);
-    const { colors, isDark } = useTheme();
-    const styles = useStyles(getStyles);
-    const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions(); // Récupère les dimensions de l'écran
+  const { updateUser } = useContext(UserContext);
+  const { colors, isDark } = useTheme();
+  const styles = useStyles(getStyles);
+  const insets = useSafeAreaInsets();
 
-    const handleLoginPress = async () => {
+  const handleLoginPress = async () => {
+    try {
+      setLoading(true);
+      const res = await apiLogin({ email, password });
+      if (res?.accessToken) setAccessToken(res.accessToken);
+      if (res?.user && updateUser) {
         try {
-            setLoading(true);
-            const res = await apiLogin({ email, password });
-            if (res?.accessToken) setAccessToken(res.accessToken);
-            if (res?.user && updateUser) {
-                try {
-                    const mapped = mapBackendUser(res.user);
-                    updateUser(mapped);
-                } catch (mapErr) {
-                    console.error('[LoginScreen] map user error', mapErr);
-                }
-            }
-            const user = res?.user;
-            const consentAccepted = !!(user?.consent?.accepted);
-            let policyBlocking = false;
-            if (consentAccepted) {
-                try {
-                    const status = await getPolicyStatus();
-                    policyBlocking = !!status?.blocking;
-                } catch (_) { /* fail-open: don't block login on a network error */ }
-            }
-            if (consentAccepted && !policyBlocking) {
-                await navigateAfterAuth(navigation);
-                setTimeout(() => publish('userlist:refresh'), 1000);
-            } else {
-                navigation.reset({ index: 0, routes: [{ name: 'Consent' }] });
-            }
-        } catch (e) {
-            console.error('[LoginScreen] Login error', { code: e?.code, message: e?.message, status: e?.status, details: e?.details, response: e?.response });
-            if (e?.code === 'EMAIL_NOT_VERIFIED' || e?.status === 403 && (e?.response?.code === 'EMAIL_NOT_VERIFIED')) {
-                Alert.alert(
-                    'Email non vérifié',
-                    "Votre adresse email n'a pas encore été vérifiée. Nous venons de vous renvoyer un email de confirmation. Veuillez cliquer sur le lien pour activer votre compte, puis réessayez."
-                );
-            } else {
-                Alert.alert('Authentification échouée', 'Impossible de vous connecter. Vérifiez vos identifiants et réessayez.');
-            }
-        } finally {
-            setLoading(false);
+          const mapped = mapBackendUser(res.user);
+          updateUser(mapped);
+        } catch (mapErr) {
+          console.error('[LoginScreen] map user error', mapErr);
         }
-    };
+      }
+      const user = res?.user;
+      const consentAccepted = !!user?.consent?.accepted;
+      let policyBlocking = false;
+      if (consentAccepted) {
+        try {
+          const status = await getPolicyStatus();
+          policyBlocking = !!status?.blocking;
+        } catch (_) {
+          /* fail-open: don't block login on a network error */
+        }
+      }
+      if (consentAccepted && !policyBlocking) {
+        await navigateAfterAuth(navigation);
+        setTimeout(() => publish('userlist:refresh'), 1000);
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'Consent' }] });
+      }
+    } catch (e) {
+      console.error('[LoginScreen] Login error', {
+        code: e?.code,
+        message: e?.message,
+        status: e?.status,
+        details: e?.details,
+        response: e?.response,
+      });
+      if (e?.code === 'EMAIL_NOT_VERIFIED' || (e?.status === 403 && e?.response?.code === 'EMAIL_NOT_VERIFIED')) {
+        Alert.alert(
+          'Email non vérifié',
+          "Votre adresse email n'a pas encore été vérifiée. Nous venons de vous renvoyer un email de confirmation. Veuillez cliquer sur le lien pour activer votre compte, puis réessayez.",
+        );
+      } else {
+        Alert.alert(
+          'Authentification échouée',
+          'Impossible de vous connecter. Vérifiez vos identifiants et réessayez.',
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <SafeAreaView style={styles.container} edges={['left', 'right']}>
-            <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-                <ThemedText style={styles.headerTitle}>Connexion</ThemedText>
+  return (
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
+        <ThemedText style={styles.headerTitle}>Connexion</ThemedText>
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1, alignSelf: 'stretch' }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+      >
+        <ScrollView
+          style={{ flex: 1, alignSelf: 'stretch' }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 20,
+            paddingBottom: 20,
+            paddingTop: 0,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <AppLogo width={width * 0.4} height={width * 0.4} style={styles.logo} />
+
+          <View style={styles.card}>
+            <ThemedText style={styles.cardTitle}>Bon retour parmi nous !</ThemedText>
+            <ThemedText style={styles.cardSubtitle} type="secondary">
+              Connectez-vous pour continuer
+            </ThemedText>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.placeholder}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+              returnKeyType="next"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Mot de passe"
+              placeholderTextColor={colors.placeholder}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              returnKeyType="done"
+            />
+
+            <TouchableOpacity onPress={handleLoginPress} style={styles.button} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <ThemedText style={styles.buttonText} type="white">
+                  Se connecter
+                </ThemedText>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}
+              style={{ marginTop: 20, alignSelf: 'center' }}
+            >
+              <ThemedText style={[styles.linkText, { fontSize: width * 0.035 }]} type={isDark ? 'white' : 'accent'}>
+                Mot de passe oublié ?
+              </ThemedText>
+            </TouchableOpacity>
+
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <ThemedText style={styles.dividerText} type="secondary">
+                OU
+              </ThemedText>
+              <View style={styles.divider} />
             </View>
 
-            <KeyboardAvoidingView
-                style={{ flex: 1, alignSelf: 'stretch' }}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-            >
-                <ScrollView
-                    style={{ flex: 1, alignSelf: 'stretch' }}
-                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 20, paddingTop: 0 }}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                >
-                    <AppLogo
-                        width={width * 0.4}
-                        height={width * 0.4}
-                        style={styles.logo}
-                    />
+            <SocialAuthButton type="google" onPress={() => logger.log('Google login')} loading={false} />
+            {Platform.OS === 'ios' && (
+              <SocialAuthButton type="apple" onPress={() => logger.log('Apple login')} loading={false} />
+            )}
+          </View>
 
-                    <View style={styles.card}>
-                        <ThemedText style={styles.cardTitle}>Bon retour parmi nous !</ThemedText>
-                        <ThemedText style={styles.cardSubtitle} type="secondary">Connectez-vous pour continuer</ThemedText>
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Email"
-                            placeholderTextColor={colors.placeholder}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
-                            value={email}
-                            onChangeText={setEmail}
-                            returnKeyType="next"
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Mot de passe"
-                            placeholderTextColor={colors.placeholder}
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                            returnKeyType="done"
-                        />
-
-                        <TouchableOpacity onPress={handleLoginPress} style={styles.button} disabled={loading}>
-                            {loading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <ThemedText style={styles.buttonText} type="white">Se connecter</ThemedText>
-                            )}
-                        </TouchableOpacity>
-
-                        <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} style={{ marginTop: 20, alignSelf: 'center' }}>
-                            <ThemedText style={[styles.linkText, { fontSize: width * 0.035 }]} type={isDark ? 'white' : 'accent'}>Mot de passe oublié ?</ThemedText>
-                        </TouchableOpacity>
-
-                        <View style={styles.dividerContainer}>
-                            <View style={styles.divider} />
-                            <ThemedText style={styles.dividerText} type="secondary">OU</ThemedText>
-                            <View style={styles.divider} />
-                        </View>
-
-                        <SocialAuthButton
-                            type="google"
-                            onPress={() => console.log('Google login')}
-                            loading={false}
-                        />
-                        {Platform.OS === 'ios' && (
-                            <SocialAuthButton
-                                type="apple"
-                                onPress={() => console.log('Apple login')}
-                                loading={false}
-                            />
-                        )}
-                    </View>
-
-                    <TouchableOpacity onPress={() => navigation.navigate('Signup')} style={{ marginTop: 30, alignSelf: 'center' }}>
-                        <ThemedText style={[styles.linkText, { fontSize: width * 0.04 }]} type={isDark ? 'white' : 'secondary'}>Pas encore de compte ? <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>Créer un compte</ThemedText></ThemedText>
-                    </TouchableOpacity>
-                </ScrollView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
-    );
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Signup')}
+            style={{ marginTop: 30, alignSelf: 'center' }}
+          >
+            <ThemedText style={[styles.linkText, { fontSize: width * 0.04 }]} type={isDark ? 'white' : 'secondary'}>
+              Pas encore de compte ?{' '}
+              <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>Créer un compte</ThemedText>
+            </ThemedText>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 };
 
-const getStyles = ({ colors, isDark }) => StyleSheet.create({
+const getStyles = ({ colors, isDark }) =>
+  StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: colors.background,
+      flex: 1,
+      backgroundColor: colors.background,
     },
     header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'android' ? 40 : 10,
-        paddingBottom: 20,
-        backgroundColor: colors.surface,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
-        elevation: isDark ? 0 : 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.3 : 0.1,
-        shadowRadius: 10,
-        borderBottomWidth: isDark ? 1 : 0,
-        borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent',
-        zIndex: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 20,
+      paddingTop: Platform.OS === 'android' ? 40 : 10,
+      paddingBottom: 20,
+      backgroundColor: colors.surface,
+      borderBottomLeftRadius: 30,
+      borderBottomRightRadius: 30,
+      elevation: isDark ? 0 : 5,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 10,
+      borderBottomWidth: isDark ? 1 : 0,
+      borderBottomColor: isDark ? 'rgba(255,255,255,0.05)' : 'transparent',
+      zIndex: 10,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: '800',
-        color: '#00c2cb',
-        letterSpacing: -0.5,
+      fontSize: 24,
+      fontWeight: '800',
+      color: '#00c2cb',
+      letterSpacing: -0.5,
     },
     logo: {
-        resizeMode: 'contain',
-        alignSelf: 'center',
-        marginBottom: 10,
-        backgroundColor: 'transparent',
+      resizeMode: 'contain',
+      alignSelf: 'center',
+      marginBottom: 10,
+      backgroundColor: 'transparent',
     },
     card: {
-        backgroundColor: colors.surface,
-        borderRadius: 20,
-        padding: 25,
-        marginBottom: 15,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
-        width: '100%',
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: 25,
+      marginBottom: 15,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 5,
+      width: '100%',
     },
     cardTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        textAlign: 'center',
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginBottom: 8,
+      textAlign: 'center',
     },
     cardSubtitle: {
-        fontSize: 14,
-        marginBottom: 25,
-        textAlign: 'center',
-        opacity: 0.7,
+      fontSize: 14,
+      marginBottom: 25,
+      textAlign: 'center',
+      opacity: 0.7,
     },
     input: {
-        height: 55,
-        borderWidth: 1,
-        borderRadius: 15,
-        marginBottom: 15,
-        paddingHorizontal: 15,
-        width: '100%',
-        fontSize: 16,
-        backgroundColor: colors.inputBackground,
-        color: colors.textPrimary,
-        borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+      height: 55,
+      borderWidth: 1,
+      borderRadius: 15,
+      marginBottom: 15,
+      paddingHorizontal: 15,
+      width: '100%',
+      fontSize: 16,
+      backgroundColor: colors.inputBackground,
+      color: colors.textPrimary,
+      borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     },
     button: {
-        width: '100%',
-        paddingVertical: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: colors.accent,
-        borderRadius: 15,
-        marginTop: 10,
-        marginBottom: 20,
-        elevation: 3,
-        shadowColor: colors.accent,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+      width: '100%',
+      paddingVertical: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.accent,
+      borderRadius: 15,
+      marginTop: 10,
+      marginBottom: 20,
+      elevation: 3,
+      shadowColor: colors.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
     },
     buttonText: {
-        fontSize: 18,
-        fontWeight: 'bold',
+      fontSize: 18,
+      fontWeight: 'bold',
     },
     linkText: {
-        textAlign: 'center',
+      textAlign: 'center',
     },
     dividerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 20,
     },
     divider: {
-        flex: 1,
-        height: 1,
-        backgroundColor: 'rgba(0,0,0,0.1)',
+      flex: 1,
+      height: 1,
+      backgroundColor: 'rgba(0,0,0,0.1)',
     },
     dividerText: {
-        marginHorizontal: 10,
-        fontSize: 12,
-        fontWeight: 'bold',
+      marginHorizontal: 10,
+      fontSize: 12,
+      fontWeight: 'bold',
     },
-});
+  });
 
 export default LoginScreen;

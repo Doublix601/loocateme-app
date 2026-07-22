@@ -60,14 +60,18 @@ const CoteCard = ({ percent = 100, colors, isDark, onPress }) => {
               style={[
                 styles.segment,
                 {
-                  backgroundColor: safePercent >= level ? levelColor(level) : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+                  backgroundColor:
+                    safePercent >= level ? levelColor(level) : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
                 },
               ]}
             />
           ))}
         </View>
 
-        <Text style={[styles.hint, { color: isDark ? 'rgba(255,255,255,0.6)' : colors.textSecondary }]} numberOfLines={2}>
+        <Text
+          style={[styles.hint, { color: isDark ? 'rgba(255,255,255,0.6)' : colors.textSecondary }]}
+          numberOfLines={2}
+        >
           {message}
         </Text>
       </TouchableOpacity>

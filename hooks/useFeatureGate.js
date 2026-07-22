@@ -38,7 +38,7 @@ export function useFeatureGate() {
       case 'extended_radius':
         hasAccess = premiumAccess.isPremium;
         title = 'Rayon étendu Premium';
-        message = 'Passez Premium pour explorer jusqu\'à 2 km autour de vous (500 m en version gratuite).';
+        message = "Passez Premium pour explorer jusqu'à 2 km autour de vous (500 m en version gratuite).";
         break;
 
       default:
@@ -54,6 +54,6 @@ export function useFeatureGate() {
 
   return {
     ...premiumAccess,
-    checkAccess
+    checkAccess,
   };
 }

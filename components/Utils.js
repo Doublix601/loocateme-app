@@ -28,7 +28,6 @@ function isPasswordComplex(password) {
   );
 }
 
-
 // Is valid username
 function isValidUsername(username) {
   // Regular expression to ensure the username is 3-32 characters long and contains only letters

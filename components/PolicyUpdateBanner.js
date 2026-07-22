@@ -28,12 +28,21 @@ export default function PolicyUpdateBanner() {
     };
     check();
     const unsub = subscribe('userlist:refresh', check);
-    return () => { mounted = false; try { unsub && unsub(); } catch (_) {} };
+    return () => {
+      mounted = false;
+      try {
+        unsub && unsub();
+      } catch (_) {}
+    };
   }, []);
 
   const handleDismiss = async () => {
     setDismissing(true);
-    try { await markPolicyVersionSeen(); } catch (_) { /* ignore, will retry on next check */ }
+    try {
+      await markPolicyVersionSeen();
+    } catch (_) {
+      /* ignore, will retry on next check */
+    }
     setUpdate(null);
     setDismissing(false);
   };
@@ -47,7 +56,11 @@ export default function PolicyUpdateBanner() {
           <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={expanded ? undefined : 1}>
             Politique de confidentialité mise à jour (v{update.version}) — voir les changements
           </Text>
-          <TouchableOpacity onPress={handleDismiss} disabled={dismissing} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity
+            onPress={handleDismiss}
+            disabled={dismissing}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Text style={[styles.close, { color: colors.textPrimary }]}>✕</Text>
           </TouchableOpacity>
         </TouchableOpacity>

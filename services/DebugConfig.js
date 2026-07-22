@@ -3,7 +3,7 @@
 // pour éviter les dépendances circulaires.
 
 export const DEBUG_CONFIG = {
-  IAP_DISABLED: false,  // true → aucun appel Apple/Google, achat simulé immédiatement
+  IAP_DISABLED: false, // true → aucun appel Apple/Google, achat simulé immédiatement
   FORCE_PREMIUM: false, // true → isPremium() retourne toujours true
 };
 

@@ -1,9 +1,33 @@
 import React, { useRef, useState, useEffect, useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, TextInput, Switch, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  TextInput,
+  Switch,
+  Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
-import { getAllUsers, setUserPremium, searchUsers, invalidateApiCacheByPrefix, sendAdminPush, registerPushToken, getAdminFlags, setFeatureFlag, setUserRole, unbanUser, triggerLocationSync } from '../components/ApiRequest';
+import {
+  getAllUsers,
+  setUserPremium,
+  searchUsers,
+  invalidateApiCacheByPrefix,
+  sendAdminPush,
+  registerPushToken,
+  getAdminFlags,
+  setFeatureFlag,
+  setUserRole,
+  unbanUser,
+  triggerLocationSync,
+} from '../components/ApiRequest';
 import { resetOnboarding, resetProfileOnboarding } from '../utils/onboarding';
 import { subscribe, publish } from '../components/EventBus';
 import { sendLocalNotification } from '../components/notifications';
@@ -145,10 +169,7 @@ const DebugScreen = () => {
         premiumSystemEnabled: nudgePremiumSystemEnabled,
       });
       if (!nudge) {
-        Alert.alert(
-          'Non éligible',
-          "Bloqué par le statut premium de l'utilisateur ou le flag premiumEnabled (OFF)."
-        );
+        Alert.alert('Non éligible', "Bloqué par le statut premium de l'utilisateur ou le flag premiumEnabled (OFF).");
         return;
       }
       publish('premium:nudge', nudge);
@@ -191,10 +212,16 @@ const DebugScreen = () => {
       // Optimistic update
       setUsers((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, isPremium } : u)));
       setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, isPremium } : u)));
-      setSelectedUser((prev) => (prev && String(prev._id || prev.id) === String(userId) ? { ...prev, isPremium } : prev));
+      setSelectedUser((prev) =>
+        prev && String(prev._id || prev.id) === String(userId) ? { ...prev, isPremium } : prev,
+      );
       // Invalidate admin cache to avoid stale data and refetch
-      try { invalidateApiCacheByPrefix('/api/admin'); } catch (_) {}
-      try { await runAllApiUsers(); } catch (_) {}
+      try {
+        invalidateApiCacheByPrefix('/api/admin');
+      } catch (_) {}
+      try {
+        await runAllApiUsers();
+      } catch (_) {}
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de changer le rôle.');
     } finally {
@@ -205,17 +232,31 @@ const DebugScreen = () => {
   // Réagir au signal global de reload UI pour rafraîchir les listes (utile si on modifie son propre plan)
   useEffect(() => {
     const off = subscribe('ui:reload', () => {
-      try { runAllApiUsers(); } catch (_) {}
+      try {
+        runAllApiUsers();
+      } catch (_) {}
     });
-    return () => { try { off && off(); } catch (_) {} };
+    return () => {
+      try {
+        off && off();
+      } catch (_) {}
+    };
   }, []);
 
   // Charger systématiquement des données fraîches à l'ouverture de l'écran
   useEffect(() => {
-    try { runAllApiUsers(); } catch (_) {}
-    try { loadFlags(); } catch (_) {}
-    try { loadPremiumStatus(); } catch (_) {}
-    try { loadNudgeState(); } catch (_) {}
+    try {
+      runAllApiUsers();
+    } catch (_) {}
+    try {
+      loadFlags();
+    } catch (_) {}
+    try {
+      loadPremiumStatus();
+    } catch (_) {}
+    try {
+      loadNudgeState();
+    } catch (_) {}
   }, []);
 
   // Load feature flags from admin endpoint
@@ -260,8 +301,12 @@ const DebugScreen = () => {
       setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, role } : u)));
       setSelectedUser((prev) => (prev && String(prev._id || prev.id) === String(userId) ? { ...prev, role } : prev));
       // Invalidate admin cache and refetch
-      try { invalidateApiCacheByPrefix('/api/admin'); } catch (_) {}
-      try { await runAllApiUsers(); } catch (_) {}
+      try {
+        invalidateApiCacheByPrefix('/api/admin');
+      } catch (_) {}
+      try {
+        await runAllApiUsers();
+      } catch (_) {}
       Alert.alert('Succès', `Rôle mis à jour: ${role}`);
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de changer le rôle.');
@@ -274,23 +319,64 @@ const DebugScreen = () => {
     try {
       setLoading(true);
       await unbanUser(userId);
-      setUsers((prev) => prev.map((u) => (String(u._id) === String(userId) ? {
-        ...u,
-        moderation: { ...(u.moderation || {}), bannedUntil: null, bannedPermanent: false, bannedAt: null, bannedBy: null, banReason: '' },
-      } : u)));
-      setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? {
-        ...u,
-        moderation: { ...(u.moderation || {}), bannedUntil: null, bannedPermanent: false, bannedAt: null, bannedBy: null, banReason: '' },
-      } : u)));
-      setSelectedUser((prev) => (prev && String(prev._id || prev.id) === String(userId) ? {
-        ...prev,
-        moderation: { ...(prev.moderation || {}), bannedUntil: null, bannedPermanent: false, bannedAt: null, bannedBy: null, banReason: '' },
-      } : prev));
-      try { invalidateApiCacheByPrefix('/api/admin'); } catch (_) {}
-      try { await runAllApiUsers(); } catch (_) {}
+      setUsers((prev) =>
+        prev.map((u) =>
+          String(u._id) === String(userId)
+            ? {
+                ...u,
+                moderation: {
+                  ...(u.moderation || {}),
+                  bannedUntil: null,
+                  bannedPermanent: false,
+                  bannedAt: null,
+                  bannedBy: null,
+                  banReason: '',
+                },
+              }
+            : u,
+        ),
+      );
+      setResults((prev) =>
+        prev.map((u) =>
+          String(u._id) === String(userId)
+            ? {
+                ...u,
+                moderation: {
+                  ...(u.moderation || {}),
+                  bannedUntil: null,
+                  bannedPermanent: false,
+                  bannedAt: null,
+                  bannedBy: null,
+                  banReason: '',
+                },
+              }
+            : u,
+        ),
+      );
+      setSelectedUser((prev) =>
+        prev && String(prev._id || prev.id) === String(userId)
+          ? {
+              ...prev,
+              moderation: {
+                ...(prev.moderation || {}),
+                bannedUntil: null,
+                bannedPermanent: false,
+                bannedAt: null,
+                bannedBy: null,
+                banReason: '',
+              },
+            }
+          : prev,
+      );
+      try {
+        invalidateApiCacheByPrefix('/api/admin');
+      } catch (_) {}
+      try {
+        await runAllApiUsers();
+      } catch (_) {}
       Alert.alert('Succès', 'Utilisateur débanni.');
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible de lever le ban.");
+      Alert.alert('Erreur', e?.message || 'Impossible de lever le ban.');
     } finally {
       setLoading(false);
     }
@@ -323,7 +409,11 @@ const DebugScreen = () => {
   useEffect(() => {
     const q = String(query || '').trim();
     if (debRef.current) clearTimeout(debRef.current);
-    if (!q) { setResults([]); setSearching(false); return; }
+    if (!q) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
     debRef.current = setTimeout(async () => {
       try {
         setSearching(true);
@@ -336,7 +426,9 @@ const DebugScreen = () => {
         setSearching(false);
       }
     }, 250);
-    return () => { if (debRef.current) clearTimeout(debRef.current); };
+    return () => {
+      if (debRef.current) clearTimeout(debRef.current);
+    };
   }, [query]);
 
   async function ensureLocalNotifSetup() {
@@ -373,7 +465,7 @@ const DebugScreen = () => {
     } catch (e) {
       Alert.alert(
         'Module manquant',
-        "Le module 'expo-notifications' n'est pas installé. Exécute: npx expo install expo-notifications"
+        "Le module 'expo-notifications' n'est pas installé. Exécute: npx expo install expo-notifications",
       );
       return false;
     }
@@ -401,17 +493,13 @@ const DebugScreen = () => {
         try {
           await sendLocalNotification(content, { delaySeconds: delay });
 
-          const msg = delay > 0
-              ? `Notification programmée dans ${delay}s`
-              : 'Notification affichée immédiatement';
+          const msg = delay > 0 ? `Notification programmée dans ${delay}s` : 'Notification affichée immédiatement';
           Alert.alert('Succès', msg);
-
         } catch (err) {
-          console.error("Détails erreur native:", err);
+          console.error('Détails erreur native:', err);
           Alert.alert('Erreur Native', err.message);
         }
-      }
-      else if (Platform.OS === 'web') {
+      } else if (Platform.OS === 'web') {
         // Fallback Web
         if (typeof window !== 'undefined' && 'Notification' in window) {
           if (window.Notification.permission !== 'granted') {
@@ -431,12 +519,12 @@ const DebugScreen = () => {
             deliverWeb();
           }
         } else {
-          Alert.alert('Non supporté', "Notifications non disponibles sur ce navigateur.");
+          Alert.alert('Non supporté', 'Notifications non disponibles sur ce navigateur.');
         }
       }
     } catch (e) {
       console.error(e);
-      Alert.alert('Erreur', e?.message || "Une erreur inconnue est survenue");
+      Alert.alert('Erreur', e?.message || 'Une erreur inconnue est survenue');
     } finally {
       setSendingLocal(false);
     }
@@ -448,7 +536,11 @@ const DebugScreen = () => {
       setPushResponse(null);
       let extra = {};
       if (pushData && pushData.trim()) {
-        try { extra = JSON.parse(pushData); } catch (_) { extra = {}; }
+        try {
+          extra = JSON.parse(pushData);
+        } catch (_) {
+          extra = {};
+        }
       }
       if (pushDeepLink && pushDeepLink.trim()) {
         extra = { ...extra, deepLink: pushDeepLink.trim() };
@@ -478,9 +570,9 @@ const DebugScreen = () => {
     }
   };
 
-    const borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)';
-    const subTextColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
-    const cardBg = isDark ? 'rgba(255,255,255,0.05)' : colors.surface;
+  const borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)';
+  const subTextColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
+  const cardBg = isDark ? 'rgba(255,255,255,0.05)' : colors.surface;
 
   const cardStyle = [styles.card, { backgroundColor: cardBg }];
   const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1 }];
@@ -489,9 +581,17 @@ const DebugScreen = () => {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: borderColor, borderBottomWidth: 1 }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: borderColor, borderBottomWidth: 1 },
+        ]}
+      >
         <TouchableOpacity
-          style={[styles.backButtonCircular, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
+          style={[
+            styles.backButtonCircular,
+            { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' },
+          ]}
           onPress={() => navigation.goBack()}
         >
           <Image
@@ -500,8 +600,14 @@ const DebugScreen = () => {
           />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Debug</Text>
-        <TouchableOpacity onPress={() => { runAllApiUsers(); loadFlags(); }} style={{ padding: 8 }}>
-            <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Sync</Text>
+        <TouchableOpacity
+          onPress={() => {
+            runAllApiUsers();
+            loadFlags();
+          }}
+          style={{ padding: 8 }}
+        >
+          <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Sync</Text>
         </TouchableOpacity>
       </View>
 
@@ -518,7 +624,10 @@ const DebugScreen = () => {
                 </View>
                 <Switch
                   value={iapDisabled}
-                  onValueChange={(v) => { setDebugFlag('IAP_DISABLED', v); setIapDisabled(v); }}
+                  onValueChange={(v) => {
+                    setDebugFlag('IAP_DISABLED', v);
+                    setIapDisabled(v);
+                  }}
                   trackColor={{ false: '#3e3e3e', true: '#f39c12' }}
                   thumbColor="#fff"
                 />
@@ -530,7 +639,10 @@ const DebugScreen = () => {
                 </View>
                 <Switch
                   value={forcePremium}
-                  onValueChange={(v) => { setDebugFlag('FORCE_PREMIUM', v); setForcePremium(v); }}
+                  onValueChange={(v) => {
+                    setDebugFlag('FORCE_PREMIUM', v);
+                    setForcePremium(v);
+                  }}
                   trackColor={{ false: '#3e3e3e', true: '#2ecc71' }}
                   thumbColor="#fff"
                 />
@@ -540,7 +652,12 @@ const DebugScreen = () => {
 
           {/* Consumables status */}
           <View style={{ paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: borderColor }}>
-            <Text style={[{ fontSize: 11, fontWeight: '800', letterSpacing: 0.8, marginBottom: 12, textTransform: 'uppercase' }, subTextStyle]}>
+            <Text
+              style={[
+                { fontSize: 11, fontWeight: '800', letterSpacing: 0.8, marginBottom: 12, textTransform: 'uppercase' },
+                subTextStyle,
+              ]}
+            >
               État des consommables
             </Text>
             <View style={{ flexDirection: 'row', gap: 24, alignItems: 'center' }}>
@@ -555,7 +672,19 @@ const DebugScreen = () => {
                 <Text style={[{ fontSize: 11 }, subTextStyle]}>superlikes</Text>
               </View>
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <View style={[styles.badge, { backgroundColor: premiumStatus === 'Premium actif' ? '#2ecc71' : premiumStatus === 'Essai gratuit' ? '#f39c12' : '#3498db' }]}>
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor:
+                        premiumStatus === 'Premium actif'
+                          ? '#2ecc71'
+                          : premiumStatus === 'Essai gratuit'
+                            ? '#f39c12'
+                            : '#3498db',
+                    },
+                  ]}
+                >
                   <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{premiumStatus || '—'}</Text>
                 </View>
                 <TouchableOpacity onPress={loadPremiumStatus} style={{ marginTop: 8 }}>
@@ -566,7 +695,10 @@ const DebugScreen = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.cmdBtn, { backgroundColor: '#e74c3c', borderColor: 'transparent', marginTop: 12, marginBottom: 0 }]}
+            style={[
+              styles.cmdBtn,
+              { backgroundColor: '#e74c3c', borderColor: 'transparent', marginTop: 12, marginBottom: 0 },
+            ]}
             onPress={handleResetConsumables}
           >
             <Text style={styles.cmdTxt}>Réinitialiser consommables</Text>
@@ -598,7 +730,14 @@ const DebugScreen = () => {
               </View>
             ))
           )}
-          <TouchableOpacity style={[styles.cmdBtn, { marginTop: 12, backgroundColor: 'rgba(0,194,203,0.1)', borderColor: 'transparent' }]} onPress={loadFlags} disabled={flagsLoading}>
+          <TouchableOpacity
+            style={[
+              styles.cmdBtn,
+              { marginTop: 12, backgroundColor: 'rgba(0,194,203,0.1)', borderColor: 'transparent' },
+            ]}
+            onPress={loadFlags}
+            disabled={flagsLoading}
+          >
             <Text style={[styles.cmdTxt, { color: '#00c2cb' }]}>Rafraîchir les flags</Text>
           </TouchableOpacity>
         </View>
@@ -609,8 +748,8 @@ const DebugScreen = () => {
             <Text style={sectionTitleStyle}>Nudges Premium (QA)</Text>
             <View style={cardStyle}>
               <Text style={[{ fontSize: 12, marginBottom: 12 }, subTextStyle]}>
-                Force l'affichage d'un nudge en contournant cooldown/plafond (respecte toujours
-                le flag premiumEnabled et le statut premium de l'utilisateur courant).
+                Force l'affichage d'un nudge en contournant cooldown/plafond (respecte toujours le flag premiumEnabled
+                et le statut premium de l'utilisateur courant).
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
                 {NUDGE_SIGNALS.map((signalId) => (
@@ -630,15 +769,31 @@ const DebugScreen = () => {
                 <Text style={styles.cmdTxt}>Réinitialiser les nudges</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.cmdBtn, { marginTop: 10, backgroundColor: 'rgba(0,194,203,0.1)', borderColor: 'transparent' }]}
+                style={[
+                  styles.cmdBtn,
+                  { marginTop: 10, backgroundColor: 'rgba(0,194,203,0.1)', borderColor: 'transparent' },
+                ]}
                 onPress={loadNudgeState}
               >
                 <Text style={[styles.cmdTxt, { color: '#00c2cb' }]}>Rafraîchir l'état</Text>
               </TouchableOpacity>
               {nudgeState && (
-                <View style={[styles.resultBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor }]}>
+                <View
+                  style={[
+                    styles.resultBox,
+                    { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor },
+                  ]}
+                >
                   <Text style={[styles.resultTitle, textStyle]}>État persisté</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 10 }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{
+                      backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)',
+                      borderRadius: 10,
+                      padding: 10,
+                    }}
+                  >
                     <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
                       {JSON.stringify(nudgeState, null, 2)}
                     </Text>
@@ -652,21 +807,58 @@ const DebugScreen = () => {
         {/* Test notifications locales */}
         <Text style={sectionTitleStyle}>Test notifications locales</Text>
         <View style={cardStyle}>
-          <LabeledInput label="Titre" value={locTitle} onChangeText={setLocTitle} placeholder="Titre" colors={colors} isDark={isDark} />
-          <LabeledInput label="Message" value={locBody} onChangeText={setLocBody} placeholder="Texte de la notification" colors={colors} isDark={isDark} />
-          <LabeledInput label="Deep link" value={locDeepLink} onChangeText={setLocDeepLink} placeholder="ex: loocate://home" colors={colors} isDark={isDark} />
+          <LabeledInput
+            label="Titre"
+            value={locTitle}
+            onChangeText={setLocTitle}
+            placeholder="Titre"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledInput
+            label="Message"
+            value={locBody}
+            onChangeText={setLocBody}
+            placeholder="Texte de la notification"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledInput
+            label="Deep link"
+            value={locDeepLink}
+            onChangeText={setLocDeepLink}
+            placeholder="ex: loocate://home"
+            colors={colors}
+            isDark={isDark}
+          />
           <View style={{ flexDirection: 'row' }}>
             <View style={{ width: 140 }}>
-              <LabeledInput label="Délai (s)" value={String(locDelaySec)} onChangeText={setLocDelaySec} placeholder="0" keyboardType="numeric" colors={colors} isDark={isDark} />
+              <LabeledInput
+                label="Délai (s)"
+                value={String(locDelaySec)}
+                onChangeText={setLocDelaySec}
+                placeholder="0"
+                keyboardType="numeric"
+                colors={colors}
+                isDark={isDark}
+              />
             </View>
           </View>
-          <TouchableOpacity style={[styles.cmdBtn, sendingLocal ? styles.btnDisabled : null, { backgroundColor: '#00c2cb', borderColor: 'transparent' }]} onPress={onSendLocalNotification} disabled={sendingLocal}>
+          <TouchableOpacity
+            style={[
+              styles.cmdBtn,
+              sendingLocal ? styles.btnDisabled : null,
+              { backgroundColor: '#00c2cb', borderColor: 'transparent' },
+            ]}
+            onPress={onSendLocalNotification}
+            disabled={sendingLocal}
+          >
             <Text style={styles.cmdTxt}>
               {sendingLocal
                 ? 'Envoi…'
-                : (parseInt(String(locDelaySec || '0'), 10) > 0
+                : parseInt(String(locDelaySec || '0'), 10) > 0
                   ? `Programmer dans ${parseInt(String(locDelaySec || '0'), 10)}s`
-                  : 'Afficher maintenant')}
+                  : 'Afficher maintenant'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -675,13 +867,30 @@ const DebugScreen = () => {
         <View style={cardStyle}>
           <Text style={[{ fontSize: 12, marginBottom: 4 }, subTextStyle]}>Token actuel :</Text>
           <TextInput
-            style={[styles.input, { height: 'auto', minHeight: 40, fontSize: 11, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: colors.background, padding: 8, borderRadius: 8, borderColor: borderColor, borderWidth: 1 }]}
+            style={[
+              styles.input,
+              {
+                height: 'auto',
+                minHeight: 40,
+                fontSize: 11,
+                color: isDark ? '#fff' : colors.textPrimary,
+                backgroundColor: colors.background,
+                padding: 8,
+                borderRadius: 8,
+                borderColor: borderColor,
+                borderWidth: 1,
+              },
+            ]}
             value={currentPushToken}
             multiline
             editable={false}
           />
           <TouchableOpacity
-            style={[styles.cmdBtn, registering ? styles.btnDisabled : null, { marginTop: 10, backgroundColor: '#4a90e2', borderColor: 'transparent' }]}
+            style={[
+              styles.cmdBtn,
+              registering ? styles.btnDisabled : null,
+              { marginTop: 10, backgroundColor: '#4a90e2', borderColor: 'transparent' },
+            ]}
             onPress={onForceRegister}
             disabled={registering}
           >
@@ -692,62 +901,184 @@ const DebugScreen = () => {
 
         <Text style={sectionTitleStyle}>Test notifications (push)</Text>
         <View style={cardStyle}>
-          <LabeledInput label="Titre" value={pushTitle} onChangeText={setPushTitle} placeholder="Titre" colors={colors} isDark={isDark} />
-          <LabeledInput label="Message" value={pushBody} onChangeText={setPushBody} placeholder="Texte du push" colors={colors} isDark={isDark} />
-          <LabeledInput label="Deep link" value={pushDeepLink} onChangeText={setPushDeepLink} placeholder="ex: loocate://home" colors={colors} isDark={isDark} />
-          <LabeledInput label="Tokens (CSV)" value={pushTokens} onChangeText={setPushTokens} placeholder="token1,token2" colors={colors} isDark={isDark} />
-          <LabeledInput label="User IDs (CSV)" value={pushUserIds} onChangeText={setPushUserIds} placeholder="id1,id2" colors={colors} isDark={isDark} />
-          <LabeledInput label="Image URL" value={pushImageUrl} onChangeText={setPushImageUrl} placeholder="https://..." colors={colors} isDark={isDark} />
+          <LabeledInput
+            label="Titre"
+            value={pushTitle}
+            onChangeText={setPushTitle}
+            placeholder="Titre"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledInput
+            label="Message"
+            value={pushBody}
+            onChangeText={setPushBody}
+            placeholder="Texte du push"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledInput
+            label="Deep link"
+            value={pushDeepLink}
+            onChangeText={setPushDeepLink}
+            placeholder="ex: loocate://home"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledInput
+            label="Tokens (CSV)"
+            value={pushTokens}
+            onChangeText={setPushTokens}
+            placeholder="token1,token2"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledInput
+            label="User IDs (CSV)"
+            value={pushUserIds}
+            onChangeText={setPushUserIds}
+            placeholder="id1,id2"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledInput
+            label="Image URL"
+            value={pushImageUrl}
+            onChangeText={setPushImageUrl}
+            placeholder="https://..."
+            colors={colors}
+            isDark={isDark}
+          />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
-              <LabeledInput label="Son" value={pushSound} onChangeText={setPushSound} placeholder="default" colors={colors} isDark={isDark} />
+              <LabeledInput
+                label="Son"
+                value={pushSound}
+                onChangeText={setPushSound}
+                placeholder="default"
+                colors={colors}
+                isDark={isDark}
+              />
             </View>
             <View style={{ width: 120 }}>
-              <LabeledInput label="Badge" value={String(pushBadge)} onChangeText={setPushBadge} placeholder="ex: 1" keyboardType="numeric" colors={colors} isDark={isDark} />
+              <LabeledInput
+                label="Badge"
+                value={String(pushBadge)}
+                onChangeText={setPushBadge}
+                placeholder="ex: 1"
+                keyboardType="numeric"
+                colors={colors}
+                isDark={isDark}
+              />
             </View>
           </View>
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
-              <LabeledInput label="Channel" value={pushChannelId} onChangeText={setPushChannelId} placeholder="default" colors={colors} isDark={isDark} />
+              <LabeledInput
+                label="Channel"
+                value={pushChannelId}
+                onChangeText={setPushChannelId}
+                placeholder="default"
+                colors={colors}
+                isDark={isDark}
+              />
             </View>
             <View style={{ flex: 1 }}>
-              <LabeledInput label="Priorité" value={pushPriority} onChangeText={setPushPriority} placeholder="high|normal" colors={colors} isDark={isDark} />
+              <LabeledInput
+                label="Priorité"
+                value={pushPriority}
+                onChangeText={setPushPriority}
+                placeholder="high|normal"
+                colors={colors}
+                isDark={isDark}
+              />
             </View>
           </View>
 
-          <LabeledInput label="Collapse key" value={pushCollapseKey} onChangeText={setPushCollapseKey} placeholder="clé de regroupement" colors={colors} isDark={isDark} />
-          <LabeledTextArea label="Data JSON (optionnel)" value={pushData} onChangeText={setPushData} placeholder='{"kind":"demo"}' colors={colors} isDark={isDark} />
+          <LabeledInput
+            label="Collapse key"
+            value={pushCollapseKey}
+            onChangeText={setPushCollapseKey}
+            placeholder="clé de regroupement"
+            colors={colors}
+            isDark={isDark}
+          />
+          <LabeledTextArea
+            label="Data JSON (optionnel)"
+            value={pushData}
+            onChangeText={setPushData}
+            placeholder='{"kind":"demo"}'
+            colors={colors}
+            isDark={isDark}
+          />
 
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 10 }}>
-            <TouchableOpacity onPress={() => setPushMutable(v => !v)} style={[styles.smallBtn, { flex: 1, backgroundColor: pushMutable ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}>
+            <TouchableOpacity
+              onPress={() => setPushMutable((v) => !v)}
+              style={[styles.smallBtn, { flex: 1, backgroundColor: pushMutable ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}
+            >
               <Text style={styles.smallBtnTxt}>Mutable: {pushMutable ? 'ON' : 'OFF'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setPushContentAvail(v => !v)} style={[styles.smallBtn, { flex: 1, backgroundColor: pushContentAvail ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}>
+            <TouchableOpacity
+              onPress={() => setPushContentAvail((v) => !v)}
+              style={[styles.smallBtn, { flex: 1, backgroundColor: pushContentAvail ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}
+            >
               <Text style={styles.smallBtnTxt}>Avail: {pushContentAvail ? 'ON' : 'OFF'}</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={[styles.cmdBtn, sendingPush ? styles.btnDisabled : null, { backgroundColor: '#00c2cb', borderColor: 'transparent', marginTop: 15 }]} onPress={onSendPush} disabled={sendingPush}>
+          <TouchableOpacity
+            style={[
+              styles.cmdBtn,
+              sendingPush ? styles.btnDisabled : null,
+              { backgroundColor: '#00c2cb', borderColor: 'transparent', marginTop: 15 },
+            ]}
+            onPress={onSendPush}
+            disabled={sendingPush}
+          >
             <Text style={styles.cmdTxt}>{sendingPush ? 'Envoi…' : 'Envoyer la notification'}</Text>
           </TouchableOpacity>
 
-        {/* Result blocks */}
+          {/* Result blocks */}
           {pushResponse && (
-            <View style={[styles.resultBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor: borderColor }]}>
+            <View
+              style={[
+                styles.resultBox,
+                { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor: borderColor },
+              ]}
+            >
               <Text style={[styles.resultTitle, textStyle]}>Réponse envoi</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 10, marginTop: 5 }}>
-                  <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                      {JSON.stringify(pushResponse, null, 2)}
-                  </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{
+                  backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)',
+                  borderRadius: 10,
+                  padding: 10,
+                  marginTop: 5,
+                }}
+              >
+                <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
+                  {JSON.stringify(pushResponse, null, 2)}
+                </Text>
               </ScrollView>
             </View>
           )}
         </View>
 
         <Text style={sectionTitleStyle}>Recherche utilisateur (debug)</Text>
-        <View style={[styles.searchBar, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : colors.surface, borderColor: borderColor, borderWidth: 1 }]}>
+        <View
+          style={[
+            styles.searchBar,
+            {
+              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : colors.surface,
+              borderColor: borderColor,
+              borderWidth: 1,
+            },
+          ]}
+        >
           <Text style={[{ marginRight: 10 }, textStyle]}>🔎</Text>
           <TextInput
             value={query}
@@ -765,15 +1096,17 @@ const DebugScreen = () => {
             <View style={[styles.resultsBox, { backgroundColor: colors.surface, borderColor: borderColor }]}>
               {results.map((u, idx) => (
                 <TouchableOpacity
-                    key={String(u._id || u.id)}
-                    style={[styles.resultRow, idx !== results.length - 1 && { borderBottomColor: borderColor }]}
-                    onPress={() => setSelectedUser(u)}
+                  key={String(u._id || u.id)}
+                  style={[styles.resultRow, idx !== results.length - 1 && { borderBottomColor: borderColor }]}
+                  onPress={() => setSelectedUser(u)}
                 >
                   <Text style={[styles.resultName, { color: colors.textPrimary }]} numberOfLines={1}>
-                    {(u.username || u.customName || u.firstName || u.email || 'Utilisateur')}
+                    {u.username || u.customName || u.firstName || u.email || 'Utilisateur'}
                   </Text>
                   <View style={[styles.badge, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]}>
-                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{u.isPremium ? 'Premium' : 'Free'}</Text>
+                    <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                      {u.isPremium ? 'Premium' : 'Free'}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -785,14 +1118,19 @@ const DebugScreen = () => {
           <View style={[styles.selectedBox, { backgroundColor: colors.surface, borderColor: '#00c2cb' }]}>
             <Text style={[styles.selectedTitle, subTextStyle]}>Utilisateur sélectionné</Text>
             <Text style={[styles.selectedName, textStyle]} numberOfLines={1}>
-              {(selectedUser.username || selectedUser.customName || selectedUser.firstName || selectedUser.email || 'Utilisateur')}
+              {selectedUser.username ||
+                selectedUser.customName ||
+                selectedUser.firstName ||
+                selectedUser.email ||
+                'Utilisateur'}
             </Text>
 
             {(() => {
               const mod = selectedUser.moderation || {};
               const bannedPermanent = !!mod.bannedPermanent;
               const bannedUntil = mod.bannedUntil ? new Date(mod.bannedUntil) : null;
-              const bannedUntilActive = bannedUntil && !isNaN(bannedUntil.getTime()) && bannedUntil.getTime() > Date.now();
+              const bannedUntilActive =
+                bannedUntil && !isNaN(bannedUntil.getTime()) && bannedUntil.getTime() > Date.now();
               const isBanned = bannedPermanent || bannedUntilActive;
               const banLabel = bannedPermanent
                 ? 'Ban définitif'
@@ -817,12 +1155,20 @@ const DebugScreen = () => {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>
               <View style={[styles.badge, { backgroundColor: selectedUser.isPremium ? '#2ecc71' : '#3498db' }]}>
-                <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{selectedUser.isPremium ? 'Premium' : 'Free'}</Text>
+                <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+                  {selectedUser.isPremium ? 'Premium' : 'Free'}
+                </Text>
               </View>
-              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#2ecc71' }]} onPress={() => togglePremium(selectedUser._id || selectedUser.id, true)}>
+              <TouchableOpacity
+                style={[styles.smallBtn, { backgroundColor: '#2ecc71' }]}
+                onPress={() => togglePremium(selectedUser._id || selectedUser.id, true)}
+              >
                 <Text style={styles.smallBtnTxt}>Set Premium</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#3498db' }]} onPress={() => togglePremium(selectedUser._id || selectedUser.id, false)}>
+              <TouchableOpacity
+                style={[styles.smallBtn, { backgroundColor: '#3498db' }]}
+                onPress={() => togglePremium(selectedUser._id || selectedUser.id, false)}
+              >
                 <Text style={styles.smallBtnTxt}>Set Free</Text>
               </TouchableOpacity>
             </View>
@@ -831,13 +1177,22 @@ const DebugScreen = () => {
               <View style={[styles.badge, { backgroundColor: '#e67e22' }]}>
                 <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{selectedUser.role || 'user'}</Text>
               </View>
-              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#c0392b' }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'admin')}>
+              <TouchableOpacity
+                style={[styles.smallBtn, { backgroundColor: '#c0392b' }]}
+                onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'admin')}
+              >
                 <Text style={styles.smallBtnTxt}>Admin</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#8e44ad' }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'moderator')}>
+              <TouchableOpacity
+                style={[styles.smallBtn, { backgroundColor: '#8e44ad' }]}
+                onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'moderator')}
+              >
                 <Text style={styles.smallBtnTxt}>Mod</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#7f8c8d' }]} onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'user')}>
+              <TouchableOpacity
+                style={[styles.smallBtn, { backgroundColor: '#7f8c8d' }]}
+                onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'user')}
+              >
                 <Text style={styles.smallBtnTxt}>User</Text>
               </TouchableOpacity>
             </View>
@@ -845,52 +1200,90 @@ const DebugScreen = () => {
         )}
 
         <Text style={[sectionTitleStyle, { marginTop: 25 }]}>Actions Globales</Text>
-        <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]} onPress={handleResetOnboarding}>
+        <TouchableOpacity
+          style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]}
+          onPress={handleResetOnboarding}
+        >
           <Text style={styles.cmdTxt}>Réinitialiser l'onboarding (slides)</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]} onPress={handleResetProfileOnboarding}>
+        <TouchableOpacity
+          style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]}
+          onPress={handleResetProfileOnboarding}
+        >
           <Text style={styles.cmdTxt}>Réinitialiser l'onboarding profil (coach marks)</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#8e44ad', borderColor: 'transparent' }]} onPress={handleSyncLocations} disabled={loading}>
+        <TouchableOpacity
+          style={[styles.cmdBtn, { backgroundColor: '#8e44ad', borderColor: 'transparent' }]}
+          onPress={handleSyncLocations}
+          disabled={loading}
+        >
           <Text style={styles.cmdTxt}>Recalculer les étoiles des lieux (30j)</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.cmdBtn, { backgroundColor: '#00c2cb', borderColor: 'transparent' }]} onPress={runAllApiUsers} disabled={loading}>
+        <TouchableOpacity
+          style={[styles.cmdBtn, { backgroundColor: '#00c2cb', borderColor: 'transparent' }]}
+          onPress={runAllApiUsers}
+          disabled={loading}
+        >
           <Text style={styles.cmdTxt}>Lister tous les utilisateurs (API)</Text>
         </TouchableOpacity>
 
-        {loading && (
-          <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 15 }} />
-        )}
+        {loading && <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 15 }} />}
 
         {users.length > 0 && (
-          <View style={[styles.usersBox, { backgroundColor: colors.surface, borderColor: borderColor, borderWidth: 1 }]}>
+          <View
+            style={[styles.usersBox, { backgroundColor: colors.surface, borderColor: borderColor, borderWidth: 1 }]}
+          >
             {users.slice(0, 20).map((u, idx) => (
-              <View key={String(u._id || u.id)} style={[styles.userRow, idx !== Math.min(users.length, 20) - 1 && { borderBottomColor: borderColor, borderBottomWidth: 1 }]}>
+              <View
+                key={String(u._id || u.id)}
+                style={[
+                  styles.userRow,
+                  idx !== Math.min(users.length, 20) - 1 && { borderBottomColor: borderColor, borderBottomWidth: 1 },
+                ]}
+              >
                 <Text style={[styles.userName, textStyle]} numberOfLines={1}>
                   {u.username || u.customName || u.firstName || u.email || 'Utilisateur'}
                 </Text>
-                <TouchableOpacity style={[styles.smallBtn, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]} onPress={() => togglePremium(u._id || u.id, !u.isPremium)}>
+                <TouchableOpacity
+                  style={[styles.smallBtn, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]}
+                  onPress={() => togglePremium(u._id || u.id, !u.isPremium)}
+                >
                   <Text style={styles.smallBtnTxt}>{u.isPremium ? 'Premium' : 'Free'}</Text>
                 </TouchableOpacity>
               </View>
             ))}
-            {users.length > 20 && <Text style={[{ textAlign: 'center', padding: 10 }, subTextStyle]}>Affichage limité aux 20 premiers</Text>}
+            {users.length > 20 && (
+              <Text style={[{ textAlign: 'center', padding: 10 }, subTextStyle]}>Affichage limité aux 20 premiers</Text>
+            )}
           </View>
         )}
 
         {result && (
-          <View style={[styles.resultBox, { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor: borderColor }]}>
+          <View
+            style={[
+              styles.resultBox,
+              { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor: borderColor },
+            ]}
+          >
             <Text style={[styles.resultTitle, textStyle]}>Dernier résultat JSON</Text>
             {typeof result.total !== 'undefined' && (
               <Text style={[{ marginBottom: 5 }, subTextStyle]}>Total items: {result.total}</Text>
             )}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)', borderRadius: 10, padding: 10 }}>
-                <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                    {JSON.stringify(result, null, 2)}
-                </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{
+                backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)',
+                borderRadius: 10,
+                padding: 10,
+              }}
+            >
+              <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
+                {JSON.stringify(result, null, 2)}
+              </Text>
             </ScrollView>
           </View>
         )}
@@ -931,20 +1324,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backIcon: { width: 24, height: 24 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', marginTop: 25, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.6 },
-  card: { borderRadius: 20, padding: 20, marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 5 },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 25,
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    opacity: 0.6,
+  },
+  card: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+  },
   flagRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1 },
   flagKey: { fontSize: 16, fontWeight: '700' },
   flagDesc: { fontSize: 12, marginTop: 2 },
-  searchBar: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderRadius: 15, paddingHorizontal: 15, paddingVertical: 10 },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
   input: { flex: 1, fontSize: 16 },
   resultsBox: { borderRadius: 15, marginTop: 10, borderWidth: 1, overflow: 'hidden' },
-  resultRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 15, borderBottomWidth: 1 },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+  },
   resultName: { flex: 1, fontWeight: '600' },
-  selectedBox: { borderRadius: 20, padding: 20, borderWidth: 2, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  selectedBox: {
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 2,
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   selectedTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', marginBottom: 5 },
   selectedName: { fontSize: 18, fontWeight: '800', marginBottom: 10 },
-  cmdBtn: { padding: 16, borderRadius: 15, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)', marginBottom: 10, flexDirection: 'row', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
+  cmdBtn: {
+    padding: 16,
+    borderRadius: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
   cmdTxt: { fontWeight: '700', fontSize: 15, color: '#fff' },
   btnDisabled: { opacity: 0.5 },
   resultBox: { borderRadius: 15, padding: 15, borderWidth: 1, marginTop: 15 },
@@ -954,31 +1401,83 @@ const styles = StyleSheet.create({
   userRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 5 },
   userName: { flex: 1, fontSize: 14, fontWeight: '600' },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  smallBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  smallBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   smallBtnTxt: { color: '#fff', fontSize: 12, fontWeight: '800' },
 });
 
 // Helper Components
 const LabeledInput = ({ label, colors, isDark, ...props }) => (
   <View style={{ marginBottom: 15 }}>
-    <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
+    <Text
+      style={{
+        color: isDark ? '#fff' : colors.textPrimary,
+        opacity: isDark ? 0.9 : 0.5,
+        fontSize: 12,
+        fontWeight: '700',
+        marginBottom: 5,
+        textTransform: 'uppercase',
+      }}
+    >
+      {label}
+    </Text>
     <TextInput
-        {...props}
-        style={[{ borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: isDark ? '#fff' : colors.textPrimary, fontSize: 15 }]}
-        placeholderTextColor={isDark ? '#999' : '#ccc'}
+      {...props}
+      style={[
+        {
+          borderWidth: 1,
+          borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)',
+          backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+          borderRadius: 12,
+          paddingHorizontal: 15,
+          paddingVertical: 12,
+          color: isDark ? '#fff' : colors.textPrimary,
+          fontSize: 15,
+        },
+      ]}
+      placeholderTextColor={isDark ? '#999' : '#ccc'}
     />
   </View>
 );
 
 const LabeledTextArea = ({ label, colors, isDark, ...props }) => (
   <View style={{ marginBottom: 15 }}>
-    <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.5, fontSize: 12, fontWeight: '700', marginBottom: 5, textTransform: 'uppercase' }}>{label}</Text>
+    <Text
+      style={{
+        color: isDark ? '#fff' : colors.textPrimary,
+        opacity: isDark ? 0.9 : 0.5,
+        fontSize: 12,
+        fontWeight: '700',
+        marginBottom: 5,
+        textTransform: 'uppercase',
+      }}
+    >
+      {label}
+    </Text>
     <TextInput
-        {...props}
-        multiline
-        numberOfLines={4}
-        style={[{ minHeight: 80, textAlignVertical: 'top', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderRadius: 12, paddingHorizontal: 15, paddingVertical: 12, color: isDark ? '#fff' : colors.textPrimary, fontSize: 15 }]}
-        placeholderTextColor={isDark ? '#999' : '#ccc'}
+      {...props}
+      multiline
+      numberOfLines={4}
+      style={[
+        {
+          minHeight: 80,
+          textAlignVertical: 'top',
+          borderWidth: 1,
+          borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)',
+          backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+          borderRadius: 12,
+          paddingHorizontal: 15,
+          paddingVertical: 12,
+          color: isDark ? '#fff' : colors.textPrimary,
+          fontSize: 15,
+        },
+      ]}
+      placeholderTextColor={isDark ? '#999' : '#ccc'}
     />
   </View>
 );

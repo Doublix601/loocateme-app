@@ -29,7 +29,15 @@ function mapBackendUser(u = {}) {
     status: u.status || 'green',
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
-    moderation: u.moderation || { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    moderation: u.moderation || {
+      warningsCount: 0,
+      lastWarningAt: null,
+      lastWarningReason: '',
+      lastWarningType: '',
+      warningsHistory: [],
+      bannedUntil: null,
+      bannedPermanent: false,
+    },
     boostBalance: u.boostBalance || 0,
     boostUntil: u.boostUntil || null,
     // "Cote" : score de présence (0/25/50/75/100), voir MyAccountScreen
@@ -56,7 +64,15 @@ export const UserProvider = ({ children }) => {
     status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
     privacyPreferences: { analytics: false, marketing: false },
-    moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+    moderation: {
+      warningsCount: 0,
+      lastWarningAt: null,
+      lastWarningReason: '',
+      lastWarningType: '',
+      warningsHistory: [],
+      bannedUntil: null,
+      bannedPermanent: false,
+    },
     boostBalance: 0,
     boostUntil: null,
   });
@@ -75,19 +91,22 @@ export const UserProvider = ({ children }) => {
       try {
         const savedStatus = await AsyncStorage.getItem('user_status');
         if (savedStatus && !cancelled) {
-          setUser(prev => ({ ...prev, status: savedStatus }));
+          setUser((prev) => ({ ...prev, status: savedStatus }));
         }
 
         const token = getAccessToken && getAccessToken();
         if (!token) return;
         // If already hydrated with socials and photo, skip initial fetch
-        const looksHydrated = (user?.socialMedia?.length || 0) > 0 || !!user?.photo || (user?.bio && user.bio.length > 0);
+        const looksHydrated =
+          (user?.socialMedia?.length || 0) > 0 || !!user?.photo || (user?.bio && user.bio.length > 0);
         if (looksHydrated) return;
         const res = await getMyUser();
         const me = res?.user;
         if (!cancelled && me) {
           setUser(mapBackendUser(me));
-          try { await registerCurrentDevicePushToken(); } catch (_) {}
+          try {
+            await registerCurrentDevicePushToken();
+          } catch (_) {}
         }
       } catch (e) {
         console.error('[UserContext] Auto-hydration failed', { code: e?.code, message: e?.message, status: e?.status });
@@ -97,8 +116,8 @@ export const UserProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  // only run once on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Reset user state on global auth logout and re-hydrate on login
@@ -121,7 +140,15 @@ export const UserProvider = ({ children }) => {
         status: 'green',
         consent: { accepted: false, version: '', consentAt: null },
         privacyPreferences: { analytics: false, marketing: false },
-        moderation: { warningsCount: 0, lastWarningAt: null, lastWarningReason: '', lastWarningType: '', warningsHistory: [], bannedUntil: null, bannedPermanent: false },
+        moderation: {
+          warningsCount: 0,
+          lastWarningAt: null,
+          lastWarningReason: '',
+          lastWarningType: '',
+          warningsHistory: [],
+          bannedUntil: null,
+          bannedPermanent: false,
+        },
         boostBalance: 0,
         boostUntil: null,
       });
@@ -131,7 +158,9 @@ export const UserProvider = ({ children }) => {
         const res = await getMyUser();
         const me = res?.user;
         if (me) setUser(mapBackendUser(me));
-        try { await registerCurrentDevicePushToken(); } catch (_) {}
+        try {
+          await registerCurrentDevicePushToken();
+        } catch (_) {}
       } catch (e) {
         // silent
       }
@@ -142,17 +171,19 @@ export const UserProvider = ({ children }) => {
         const res = await getMyUser();
         const me = res?.user;
         if (me) setUser(mapBackendUser(me));
-        try { await registerCurrentDevicePushToken(); } catch (_) {}
+        try {
+          await registerCurrentDevicePushToken();
+        } catch (_) {}
       } catch (_) {}
     });
-    return () => { offLogout(); offLogin(); offUiReload(); };
+    return () => {
+      offLogout();
+      offLogin();
+      offUiReload();
+    };
   }, []);
 
   const value = useMemo(() => ({ user, updateUser }), [user, updateUser]);
 
-  return (
-    <UserContext.Provider value={value}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };

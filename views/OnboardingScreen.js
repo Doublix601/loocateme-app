@@ -1,8 +1,5 @@
 import React, { useRef, useState } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, FlatList,
-  Dimensions, Animated, StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Animated, StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,7 +12,7 @@ const SLIDES = [
     key: 'welcome',
     emoji: '🌍',
     title: 'Bienvenue sur LoocateMe',
-    desc: 'Découvre en temps réel les lieux animés autour de toi et les personnes qui s\'y trouvent.',
+    desc: "Découvre en temps réel les lieux animés autour de toi et les personnes qui s'y trouvent.",
     gradient: ['#0A0617', '#1B1030'],
     accent: '#FF3DAD',
     accentAlt: '#8A4BFF',
@@ -24,7 +21,7 @@ const SLIDES = [
     key: 'vibe',
     emoji: '☀️🌙',
     title: 'Jour & Nuit',
-    desc: 'Bascule entre le mode Jour (cafés, parcs, sport…) et le mode Nuit (bars, restos, boîtes…). L\'app s\'adapte à ton envie du moment.',
+    desc: "Bascule entre le mode Jour (cafés, parcs, sport…) et le mode Nuit (bars, restos, boîtes…). L'app s'adapte à ton envie du moment.",
     gradient: ['#0A1628', '#0D2340'],
     accent: '#3DA9FF',
     accentAlt: '#00C2CB',
@@ -51,7 +48,7 @@ const SLIDES = [
     key: 'stars',
     emoji: '⭐',
     title: 'Les étoiles de popularité',
-    desc: 'Chaque lieu reçoit 1 à 3 étoiles selon sa fréquentation réelle sur les 30 derniers jours. Plus c\'est animé, plus ça brille.',
+    desc: "Chaque lieu reçoit 1 à 3 étoiles selon sa fréquentation réelle sur les 30 derniers jours. Plus c'est animé, plus ça brille.",
     gradient: ['#1A1200', '#2A1E00'],
     accent: '#F1C40F',
     accentAlt: '#FF8C00',
@@ -134,7 +131,7 @@ export default function OnboardingScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.cta}
           >
-            <Text style={styles.ctaTxt}>{isLast ? 'C\'est parti 🚀' : 'Suivant'}</Text>
+            <Text style={styles.ctaTxt}>{isLast ? "C'est parti 🚀" : 'Suivant'}</Text>
           </LinearGradient>
         </TouchableOpacity>
 

@@ -78,12 +78,13 @@ export async function sendLocalNotification(content, { delaySeconds = 0 } = {}) 
   };
 
   // Correction du Trigger : ajout explicite du type
-  const trigger = delay > 0
+  const trigger =
+    delay > 0
       ? {
-        type: 'timeInterval', // Correction pour l'erreur "trigger object invalid"
-        seconds: delay,
-        repeats: false
-      }
+          type: 'timeInterval', // Correction pour l'erreur "trigger object invalid"
+          seconds: delay,
+          repeats: false,
+        }
       : null;
 
   return Notifications.scheduleNotificationAsync({

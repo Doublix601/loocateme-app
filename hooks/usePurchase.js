@@ -30,7 +30,7 @@ export const usePurchase = () => {
 
   const purchasePackage = async (pkg) => {
     if (!purchasesReady) {
-      Alert.alert('Patientez...', 'Le service d\'achat est en cours d\'initialisation.');
+      Alert.alert('Patientez...', "Le service d'achat est en cours d'initialisation.");
       return { success: false };
     }
     setLoading(true);
@@ -81,6 +81,6 @@ export const usePurchase = () => {
     loading,
     error,
     purchasePackage,
-    refreshOfferings: fetchOfferings
+    refreshOfferings: fetchOfferings,
   };
 };

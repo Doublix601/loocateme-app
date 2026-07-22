@@ -17,7 +17,9 @@ async function autoStopAndMakeInvisible() {
     const started = await Location.hasStartedLocationUpdatesAsync(TASK_NAME);
     if (started) await Location.stopLocationUpdatesAsync(TASK_NAME);
   } catch {}
-  try { await AsyncStorage.removeItem(STORAGE_START_KEY); } catch {}
+  try {
+    await AsyncStorage.removeItem(STORAGE_START_KEY);
+  } catch {}
   try {
     await setVisibility(false);
     await AsyncStorage.setItem(STORAGE_AUTO_INVISIBLE_KEY, '1');
@@ -113,7 +115,9 @@ export async function stopBackgroundLocation() {
     const started = await Location.hasStartedLocationUpdatesAsync(TASK_NAME);
     if (started) await Location.stopLocationUpdatesAsync(TASK_NAME);
   } catch {}
-  try { await AsyncStorage.removeItem(STORAGE_START_KEY); } catch {}
+  try {
+    await AsyncStorage.removeItem(STORAGE_START_KEY);
+  } catch {}
 }
 
 export const BGLocKeys = { STORAGE_AUTO_INVISIBLE_KEY };

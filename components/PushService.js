@@ -19,7 +19,9 @@ export async function sendTokenToBackend(token, platform = 'unknown') {
   if (!token) return { ok: false, reason: 'EMPTY' };
   try {
     await registerPushToken({ token, platform });
-    try { await AsyncStorage.setItem(PUSH_TOKEN_KEY, String(token)); } catch (_) {}
+    try {
+      await AsyncStorage.setItem(PUSH_TOKEN_KEY, String(token));
+    } catch (_) {}
     return { ok: true };
   } catch (e) {
     console.warn('[PushService] register token failed', e?.message || e);
@@ -35,7 +37,7 @@ export async function registerCurrentDevicePushToken() {
     const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
     const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
     const token = res?.data || res?.token || String(res);
-    const platform = Platform.OS === 'ios' ? 'ios' : (Platform.OS === 'android' ? 'android' : 'unknown');
+    const platform = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'unknown';
     return await sendTokenToBackend(token, platform);
   } catch (e) {
     console.warn('[PushService] registerCurrentDevicePushToken failed', e?.message || e);
@@ -48,7 +50,9 @@ export async function unregisterCurrentDevicePushToken() {
     const token = await AsyncStorage.getItem(PUSH_TOKEN_KEY);
     if (!token) return { ok: false, reason: 'EMPTY' };
     await unregisterPushToken({ token });
-    try { await AsyncStorage.removeItem(PUSH_TOKEN_KEY); } catch (_) {}
+    try {
+      await AsyncStorage.removeItem(PUSH_TOKEN_KEY);
+    } catch (_) {}
     return { ok: true };
   } catch (e) {
     console.warn('[PushService] unregister token failed', e?.message || e);

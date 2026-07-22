@@ -20,6 +20,10 @@ export function publish(event, payload) {
   const set = listeners.get(event);
   if (!set || set.size === 0) return;
   [...set].forEach((cb) => {
-    try { cb(payload); } catch (e) { /* noop */ }
+    try {
+      cb(payload);
+    } catch (e) {
+      /* noop */
+    }
   });
 }

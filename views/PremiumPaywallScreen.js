@@ -1,7 +1,15 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions,
-  ActivityIndicator, Alert, Platform, Linking,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Linking,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,10 +26,18 @@ const { width } = Dimensions.get('window');
 
 const SLIDES = [
   { emoji: '👀', title: 'Qui te visite ?', desc: 'Découvre en temps réel qui consulte ton profil.' },
-  { emoji: '🔥', title: 'Boosts de visibilité', desc: 'Remonte en tête de liste pendant 30 min dans ton établissement.' },
-  { emoji: '⭐', title: 'Superlikes', desc: 'Montre un intérêt particulier à quelqu\'un que tu remarques.' },
-  { emoji: '🫥', title: 'Mode invisible', desc: 'Disparais de la liste des utilisateurs proches quand tu le souhaites.' },
-  { emoji: '🗺️', title: 'Rayon étendu', desc: 'Explore jusqu\'à 2 km autour de toi (500 m en version gratuite).' },
+  {
+    emoji: '🔥',
+    title: 'Boosts de visibilité',
+    desc: 'Remonte en tête de liste pendant 30 min dans ton établissement.',
+  },
+  { emoji: '⭐', title: 'Superlikes', desc: "Montre un intérêt particulier à quelqu'un que tu remarques." },
+  {
+    emoji: '🫥',
+    title: 'Mode invisible',
+    desc: 'Disparais de la liste des utilisateurs proches quand tu le souhaites.',
+  },
+  { emoji: '🗺️', title: 'Rayon étendu', desc: "Explore jusqu'à 2 km autour de toi (500 m en version gratuite)." },
   { emoji: '📊', title: 'Statistiques avancées', desc: 'Suis tes vues et clics sur tous tes réseaux sociaux.' },
 ];
 
@@ -30,7 +46,7 @@ const FEATURES = [
   'Boosts de visibilité (1 pack offert)',
   'Superlikes (3/semaine offerts)',
   'Mode invisible',
-  'Rayon de recherche jusqu\'à 2 km',
+  "Rayon de recherche jusqu'à 2 km",
   'Statistiques avancées',
   'Notifications enrichies',
 ];
@@ -73,7 +89,9 @@ export default function PremiumPaywallScreen() {
         if (me.isPremium) onAlreadyPremium ? onAlreadyPremium() : onBack?.();
       } catch (_) {}
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -83,11 +101,17 @@ export default function PremiumPaywallScreen() {
         if (res?.user?.isPremium) onAlreadyPremium ? onAlreadyPremium() : onBack?.();
       } catch (_) {}
     });
-    return () => { try { off?.(); } catch (_) {} };
+    return () => {
+      try {
+        off?.();
+      } catch (_) {}
+    };
   }, []);
 
   useEffect(() => {
-    IAPStore.getOfferings().then(setOfferings).catch(() => {});
+    IAPStore.getOfferings()
+      .then(setOfferings)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -111,7 +135,10 @@ export default function PremiumPaywallScreen() {
   const handlePurchase = async () => {
     if (purchasing) return;
     if (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) {
-      Alert.alert('Offres indisponibles', 'Les offres d\'abonnement ne sont pas encore chargées. Réessayez dans quelques instants.');
+      Alert.alert(
+        'Offres indisponibles',
+        "Les offres d'abonnement ne sont pas encore chargées. Réessayez dans quelques instants.",
+      );
       return;
     }
     setPurchasing(true);
@@ -125,11 +152,9 @@ export default function PremiumPaywallScreen() {
         } catch (_) {}
 
         if (result.isMock) {
-          Alert.alert(
-            '✅ Simulation réussie',
-            'Abonnement simulé (mode debug).',
-            [{ text: 'Continuer', onPress: () => onAlreadyPremium ? onAlreadyPremium() : onBack?.() }]
-          );
+          Alert.alert('✅ Simulation réussie', 'Abonnement simulé (mode debug).', [
+            { text: 'Continuer', onPress: () => (onAlreadyPremium ? onAlreadyPremium() : onBack?.()) },
+          ]);
         } else {
           onAlreadyPremium ? onAlreadyPremium() : onBack?.();
           try {
@@ -140,7 +165,7 @@ export default function PremiumPaywallScreen() {
         }
       }
     } catch (e) {
-      if (!e.userCancelled) Alert.alert('Erreur', e.message || 'Impossible de finaliser l\'achat.');
+      if (!e.userCancelled) Alert.alert('Erreur', e.message || "Impossible de finaliser l'achat.");
     } finally {
       setPurchasing(false);
     }
@@ -159,7 +184,7 @@ export default function PremiumPaywallScreen() {
           Alert.alert('✅ Achats restaurés', 'Votre abonnement Premium est actif.');
           onAlreadyPremium ? onAlreadyPremium() : onBack?.();
         } else {
-          Alert.alert('Aucun achat trouvé', 'Aucun abonnement actif n\'a pu être restauré.');
+          Alert.alert('Aucun achat trouvé', "Aucun abonnement actif n'a pu être restauré.");
         }
       }
     } catch (e) {
@@ -189,9 +214,7 @@ export default function PremiumPaywallScreen() {
         </View>
         <View style={{ width: 40 }} />
       </View>
-      <Text style={[styles.headerSubtitle, { color: sub }]}>
-        Débloquez toutes les fonctionnalités
-      </Text>
+      <Text style={[styles.headerSubtitle, { color: sub }]}>Débloquez toutes les fonctionnalités</Text>
 
       {/* Debug banner */}
       {DEBUG_CONFIG.IAP_DISABLED && (
@@ -201,7 +224,6 @@ export default function PremiumPaywallScreen() {
       )}
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 44 }}>
-
         {/* Carousel */}
         <ScrollView
           ref={carouselRef}
@@ -269,10 +291,12 @@ export default function PremiumPaywallScreen() {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
               <Text style={[styles.toggleLabel, { color: period === 'annual' ? '#fff' : sub }]}>Annuel</Text>
-              <View style={[
-                styles.savingsBadge,
-                { backgroundColor: period === 'annual' ? 'rgba(255,255,255,0.28)' : '#00c2cb' },
-              ]}>
+              <View
+                style={[
+                  styles.savingsBadge,
+                  { backgroundColor: period === 'annual' ? 'rgba(255,255,255,0.28)' : '#00c2cb' },
+                ]}
+              >
                 <Text style={styles.savingsTxt}>-{FALLBACK.savings}%</Text>
               </View>
             </View>
@@ -307,20 +331,23 @@ export default function PremiumPaywallScreen() {
             DEBUG_CONFIG.IAP_DISABLED && { backgroundColor: '#f39c12' },
           ]}
         >
-          {purchasing
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.ctaText}>
-                {DEBUG_CONFIG.IAP_DISABLED
-                  ? 'Simuler un abonnement Premium'
-                  : !selectedPkg
-                    ? 'Chargement des offres…'
-                    : 'Commencer mon essai gratuit 7 jours'}
-              </Text>}
+          {purchasing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.ctaText}>
+              {DEBUG_CONFIG.IAP_DISABLED
+                ? 'Simuler un abonnement Premium'
+                : !selectedPkg
+                  ? 'Chargement des offres…'
+                  : 'Commencer mon essai gratuit 7 jours'}
+            </Text>
+          )}
         </TouchableOpacity>
 
         {!DEBUG_CONFIG.IAP_DISABLED && (
           <Text style={[styles.trialSub, { color: sub }]}>
-            🔒 {period === 'annual'
+            🔒{' '}
+            {period === 'annual'
               ? `Puis ${annualPrice}/an · Résiliable à tout moment`
               : `Puis ${monthlyPrice}/mois · Résiliable à tout moment`}
           </Text>
@@ -328,20 +355,28 @@ export default function PremiumPaywallScreen() {
 
         {/* Restore */}
         <TouchableOpacity onPress={handleRestore} disabled={restoring} style={styles.restoreBtn}>
-          {restoring
-            ? <ActivityIndicator size="small" color="#00c2cb" />
-            : <Text style={[styles.restoreTxt, { color: '#00c2cb' }]}>Restaurer mes achats</Text>}
+          {restoring ? (
+            <ActivityIndicator size="small" color="#00c2cb" />
+          ) : (
+            <Text style={[styles.restoreTxt, { color: '#00c2cb' }]}>Restaurer mes achats</Text>
+          )}
         </TouchableOpacity>
 
         {/* Legal */}
         <Text style={[styles.legal, { color: sub }]}>
-          {'L\'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. ' +
-           'Gérez vos abonnements dans les réglages de l\'App Store / Google Play. '}
-          <Text style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL('https://loocateme.com/privacy')}>
+          {"L'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. " +
+            "Gérez vos abonnements dans les réglages de l'App Store / Google Play. "}
+          <Text
+            style={{ textDecorationLine: 'underline' }}
+            onPress={() => Linking.openURL('https://loocateme.com/privacy')}
+          >
             Politique de confidentialité
           </Text>
           {' · '}
-          <Text style={{ textDecorationLine: 'underline' }} onPress={() => Linking.openURL('https://loocateme.com/terms')}>
+          <Text
+            style={{ textDecorationLine: 'underline' }}
+            onPress={() => Linking.openURL('https://loocateme.com/terms')}
+          >
             CGU
           </Text>
         </Text>
@@ -387,7 +422,14 @@ const styles = StyleSheet.create({
   slideEmoji: { fontSize: 52, marginBottom: 12 },
   slideTitle: { fontSize: 20, fontWeight: '800', marginBottom: 8, textAlign: 'center' },
   slideDesc: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
-  dots: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 14, marginBottom: 4 },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 14,
+    marginBottom: 4,
+  },
   dot: { height: 6, borderRadius: 3 },
   toggleRow: {
     flexDirection: 'row',
@@ -428,9 +470,12 @@ const styles = StyleSheet.create({
   featuresTitle: { fontSize: 11, fontWeight: '900', letterSpacing: 1.2, marginBottom: 16 },
   featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   checkMarkCircle: {
-    width: 24, height: 24, borderRadius: 12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(0,194,203,0.15)',
-    justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   checkMark: { color: '#00c2cb', fontSize: 13, fontWeight: '900' },

@@ -17,7 +17,9 @@ let backgroundTimer = null;
 
 function clearBgTimer() {
   if (backgroundTimer) {
-    try { clearTimeout(backgroundTimer); } catch (_) {}
+    try {
+      clearTimeout(backgroundTimer);
+    } catch (_) {}
   }
   backgroundTimer = null;
 }
@@ -60,7 +62,9 @@ async function immediateCheckIn() {
   try {
     await updateMyLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
     // Nudge UI proactively (also ApiRequest will emit api:mutation)
-    try { publish('userlist:refresh'); } catch (_) {}
+    try {
+      publish('userlist:refresh');
+    } catch (_) {}
     return true;
   } catch (e) {
     console.warn('[LocationService] immediateCheckIn failed', e?.message || e);
@@ -71,10 +75,16 @@ async function immediateCheckIn() {
 export const LocationService = {
   // Utility to mark cold-start handled (used by App.js)
   markColdStartDone: async () => {
-    try { await AsyncStorage.setItem(K_COLD_START_DONE, '1'); } catch (_) {}
+    try {
+      await AsyncStorage.setItem(K_COLD_START_DONE, '1');
+    } catch (_) {}
   },
   hasColdStartRun: async () => {
-    try { return (await AsyncStorage.getItem(K_COLD_START_DONE)) === '1'; } catch (_) { return false; }
+    try {
+      return (await AsyncStorage.getItem(K_COLD_START_DONE)) === '1';
+    } catch (_) {
+      return false;
+    }
   },
 
   cancelBackgroundStay: () => {

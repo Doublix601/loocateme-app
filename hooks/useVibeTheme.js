@@ -27,8 +27,8 @@ export function useVibeTheme() {
           textFaint: 'rgba(255,255,255,0.45)',
           border: 'rgba(255,255,255,0.10)',
           borderStrong: 'rgba(255,255,255,0.22)',
-          accent: '#FF3DAD',          // rose LoocateMe
-          accentAlt: '#3DA9FF',       // bleu LoocateMe
+          accent: '#FF3DAD', // rose LoocateMe
+          accentAlt: '#3DA9FF', // bleu LoocateMe
           accentSoft: 'rgba(255,61,173,0.18)',
           gradient: ['#FF3DAD', '#8A4BFF', '#3DA9FF'], // sweep néon
           heroGradient: ['rgba(5,5,5,0)', 'rgba(5,5,5,0.55)', 'rgba(5,5,5,1)'],

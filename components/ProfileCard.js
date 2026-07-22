@@ -24,11 +24,7 @@ const ProfileCard = ({
 
   // Normalise la liste des réseaux sociaux du user.
   const socials = useMemo(() => {
-    const raw =
-      user?.socialMediaList ||
-      user?.socials ||
-      user?.socialMedia ||
-      [];
+    const raw = user?.socialMediaList || user?.socials || user?.socialMedia || [];
     if (!Array.isArray(raw)) return [];
     return raw
       .map((s) => {
@@ -66,42 +62,23 @@ const ProfileCard = ({
         shadows.card,
       ]}
     >
-      <SocialPulseAvatar
-        user={user}
-        size={54}
-        isMoon={isMoon}
-        index={index}
-        onPress={onPress}
-      />
+      <SocialPulseAvatar user={user} size={54} isMoon={isMoon} index={index} onPress={onPress} />
 
       <View style={{ flex: 1, marginLeft: spacing.md }}>
         <View style={styles.row}>
-          <Text
-            style={[styles.name, { color: palette.text }]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.name, { color: palette.text }]} numberOfLines={1}>
             {user?.customName || user?.username || 'Anonyme'}
           </Text>
-          {isBoosted && (
-            <Text style={[styles.boostBadge, { color: '#FFD700' }]}>⚡</Text>
-          )}
-          {isGhost && (
-            <Text style={[styles.boostBadge, { color: palette.textFaint }]}>👻</Text>
-          )}
+          {isBoosted && <Text style={[styles.boostBadge, { color: '#FFD700' }]}>⚡</Text>}
+          {isGhost && <Text style={[styles.boostBadge, { color: palette.textFaint }]}>👻</Text>}
         </View>
 
         {isGhost ? (
-          <Text
-            numberOfLines={1}
-            style={[styles.bio, { color: palette.textFaint, fontStyle: 'italic' }]}
-          >
+          <Text numberOfLines={1} style={[styles.bio, { color: palette.textFaint, fontStyle: 'italic' }]}>
             N'est plus sur place (Boost actif)
           </Text>
         ) : user?.bio ? (
-          <Text
-            numberOfLines={2}
-            style={[styles.bio, { color: palette.textMuted }]}
-          >
+          <Text numberOfLines={2} style={[styles.bio, { color: palette.textMuted }]}>
             {user.bio}
           </Text>
         ) : null}
@@ -114,23 +91,15 @@ const ProfileCard = ({
                 style={[
                   styles.socialChip,
                   {
-                    backgroundColor: isMoon
-                      ? 'rgba(255,255,255,0.08)'
-                      : 'rgba(14,17,22,0.06)',
+                    backgroundColor: isMoon ? 'rgba(255,255,255,0.08)' : 'rgba(14,17,22,0.06)',
                   },
                 ]}
               >
-                <Image
-                  source={socialMediaIcons[platform]}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
+                <Image source={socialMediaIcons[platform]} style={styles.socialIcon} resizeMode="contain" />
               </View>
             ))}
             {socials.length > 4 && (
-              <Text style={[styles.moreText, { color: palette.textFaint }]}>
-                +{socials.length - 4}
-              </Text>
+              <Text style={[styles.moreText, { color: palette.textFaint }]}>+{socials.length - 4}</Text>
             )}
           </View>
         )}

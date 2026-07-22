@@ -1,7 +1,15 @@
 import React, { useEffect, useMemo } from 'react';
 import { Dimensions, StyleSheet, View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { useVibe } from './contexts/VibeContext';
 
 const { width, height } = Dimensions.get('window');
@@ -31,11 +39,11 @@ function Star({ size = 2, left = 0, top = 0, delay = 0, duration = 1600 }) {
       withRepeat(
         withSequence(
           withTiming(1, { duration, easing: Easing.inOut(Easing.quad) }),
-          withTiming(0.25, { duration, easing: Easing.inOut(Easing.quad) })
+          withTiming(0.25, { duration, easing: Easing.inOut(Easing.quad) }),
         ),
         -1,
-        true
-      )
+        true,
+      ),
     );
   }, [delay, duration]);
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
@@ -89,14 +97,25 @@ export default function VibeTransitOverlay() {
       {/* Base gradients crossfading */}
       <Animated.View style={[styles.absoluteFill, dayFade]}>
         {/* Dawn tilt: emphasize cooler sky blues over warm yellows */}
-        <LinearGradient colors={["#A8D8FF", "#87CEEB"]} style={styles.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+        <LinearGradient
+          colors={['#A8D8FF', '#87CEEB']}
+          style={styles.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
       </Animated.View>
       <Animated.View style={[styles.absoluteFill, nightFade]}>
-        <LinearGradient colors={["#0B1026", "#1B2735"]} style={styles.absoluteFill} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+        <LinearGradient
+          colors={['#0B1026', '#1B2735']}
+          style={styles.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
         {/* Stars for night */}
-        {goingToMoon && stars.map((s) => (
-          <Star key={s.id} size={s.size} left={s.left} top={s.top} delay={s.delay} duration={s.duration} />
-        ))}
+        {goingToMoon &&
+          stars.map((s) => (
+            <Star key={s.id} size={s.size} left={s.left} top={s.top} delay={s.delay} duration={s.duration} />
+          ))}
       </Animated.View>
 
       {/* Center content */}
@@ -124,7 +143,9 @@ function StaggeredPill({ index = 0, icon, label }) {
   const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ translateY: translateY.value }] }));
   return (
     <Animated.View style={[styles.pill, style]}>
-      <Text style={styles.pillText}>{icon} {label}</Text>
+      <Text style={styles.pillText}>
+        {icon} {label}
+      </Text>
     </Animated.View>
   );
 }
@@ -132,15 +153,27 @@ function StaggeredPill({ index = 0, icon, label }) {
 const styles = StyleSheet.create({
   overlay: {
     position: 'absolute',
-    left: 0, right: 0, top: 0, bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     zIndex: 999,
   },
   absoluteFill: {
-    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   centerContent: {
-    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
-    alignItems: 'center', justifyContent: 'center',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 24,

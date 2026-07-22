@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../utils/logger';
 import { post } from '../components/ApiRequest';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
@@ -26,9 +27,7 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -55,24 +54,27 @@ export const LocationSyncService = {
               const movedM = haversineMeters(pLat, pLon, lat, lon);
               nearLastSync = movedM < SIGNIFICANT_MOVE_M;
             }
-          } catch (_) { /* parse error → on force la resync */ nearLastSync = false; }
+          } catch (_) {
+            /* parse error → on force la resync */ nearLastSync = false;
+          }
         } else {
           // Pas de position connue → on force une resync pour repeupler avec
           // la position courante (utile pour les utilisateurs déjà sur v3).
           nearLastSync = false;
         }
         if (withinTtl && nearLastSync) {
-          console.log('[LocationSyncService] Sync already done today in the same area, skipping.');
+          logger.log('[LocationSyncService] Sync already done today in the same area, skipping.');
           return;
         }
       }
 
-      console.log(`[LocationSyncService] Starting sync for position: ${lat}, ${lon} (radius ${OVERPASS_RADIUS_M}m)`);
+      logger.log(`[LocationSyncService] Starting sync for position: ${lat}, ${lon} (radius ${OVERPASS_RADIUS_M}m)`);
 
       // 2. Préparer la requête Overpass (rayon de 50 km).
       // Catégories alignées sur les enum Location.type côté backend, couvrant
       // les deux vibes (jour/nuit) pour garantir un minimum de lieux affichables.
-      const AMENITY_RE = 'bar|pub|nightclub|library|university|college|school|food_court|cinema|ice_cream|restaurant|cafe|fast_food|gym';
+      const AMENITY_RE =
+        'bar|pub|nightclub|library|university|college|school|food_court|cinema|ice_cream|restaurant|cafe|fast_food|gym';
       const LEISURE_RE = 'fitness_centre|beach_resort|theme_park|sports_centre|bowling_alley|stadium|pitch';
       const query = `
 [out:json];
@@ -97,7 +99,7 @@ out center;
       }
 
       const data = await response.json();
-      console.log(`[LocationSyncService] Found ${data.elements?.length || 0} elements.`);
+      logger.log(`[LocationSyncService] Found ${data.elements?.length || 0} elements.`);
 
       if (!data.elements || data.elements.length === 0) {
         return;
@@ -126,9 +128,10 @@ out center;
           else if (amenity === 'fast_food' || amenity === 'food_court') type = 'Fast food 🍔';
           else if (amenity === 'gym' || leisure === 'fitness_centre') type = 'Salle de sport 🏋️';
           else if (leisure === 'beach_resort') type = 'Plage 🏖️';
-          else if (leisure === 'theme_park') type = 'Parc d\'attractions 🎢';
+          else if (leisure === 'theme_park') type = "Parc d'attractions 🎢";
           else if (amenity === 'library') type = 'Bibliothèque 📚';
-          else if (leisure === 'sports_centre' || leisure === 'stadium' || leisure === 'pitch') type = 'Centre sportif 🏟️';
+          else if (leisure === 'sports_centre' || leisure === 'stadium' || leisure === 'pitch')
+            type = 'Centre sportif 🏟️';
           else if (leisure === 'bowling_alley') type = 'Bowling 🎳';
           else if (amenity === 'university' || amenity === 'college' || amenity === 'school') type = 'Éducation 🎓';
           else if (amenity === 'cinema') type = 'Cinéma 🎬';
@@ -159,8 +162,7 @@ out center;
       // 6. Enregistrer la date ET la position de la sync réussie
       await AsyncStorage.setItem(LAST_SYNC_KEY, now.toISOString());
       await AsyncStorage.setItem(LAST_SYNC_POS_KEY, JSON.stringify({ lat, lon }));
-      console.log('[LocationSyncService] Sync completed and date/position saved.');
-
+      logger.log('[LocationSyncService] Sync completed and date/position saved.');
     } catch (error) {
       console.error('[LocationSyncService] Error during sync:', error);
     }

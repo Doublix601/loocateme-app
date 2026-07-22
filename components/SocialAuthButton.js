@@ -21,7 +21,7 @@ const SocialAuthButton = ({ type, onPress, loading, disabled }) => {
       backgroundColor: isDark ? '#333333' : '#FFFFFF',
       textColor: isDark ? '#FFFFFF' : '#333333',
       border: isDark ? 'transparent' : '#DDD',
-    }
+    },
   };
 
   const current = config[type];
@@ -36,7 +36,7 @@ const SocialAuthButton = ({ type, onPress, loading, disabled }) => {
           backgroundColor: current.backgroundColor,
           borderColor: current.border || 'transparent',
           borderWidth: current.border ? 1 : 0,
-        }
+        },
       ]}
     >
       {loading ? (
@@ -44,9 +44,7 @@ const SocialAuthButton = ({ type, onPress, loading, disabled }) => {
       ) : (
         <View style={styles.content}>
           <Ionicons name={current.icon} size={20} color={current.textColor} style={styles.icon} />
-          <ThemedText style={[styles.text, { color: current.textColor }]}>
-            {current.text}
-          </ThemedText>
+          <ThemedText style={[styles.text, { color: current.textColor }]}>{current.text}</ThemedText>
         </View>
       )}
     </TouchableOpacity>

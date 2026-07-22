@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext, useRef } from 'react';
+import { logger } from '../utils/logger';
 import {
   View,
   Text,
@@ -18,7 +19,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { getReports, actOnReport, searchModerationUsers, moderateUser, getBusinessClaims, actOnBusinessClaim } from '../components/ApiRequest';
+import {
+  getReports,
+  actOnReport,
+  searchModerationUsers,
+  moderateUser,
+  getBusinessClaims,
+  actOnBusinessClaim,
+} from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 import { UserContext } from '../components/contexts/UserContext';
@@ -32,10 +40,10 @@ const { width, height } = Dimensions.get('window');
 const formatName = (u) => {
   if (!u) return 'Inconnu';
   return (
-    String(u.customName || '').trim()
-    || String(u.firstName || '').trim()
-    || String(u.username || '').trim()
-    || 'Inconnu'
+    String(u.customName || '').trim() ||
+    String(u.firstName || '').trim() ||
+    String(u.username || '').trim() ||
+    'Inconnu'
   );
 };
 
@@ -94,7 +102,10 @@ const ModeratorScreen = () => {
   const [claimRejectionReason, setClaimRejectionReason] = useState('');
   const [claimWorking, setClaimWorking] = useState(false);
   const searchDebounceRef = useRef(null);
-  const cardStyle = [styles.card, { backgroundColor: cardBg, borderColor: borderColor, borderWidth: 1, shadowColor: isDark ? 'transparent' : '#000' }];
+  const cardStyle = [
+    styles.card,
+    { backgroundColor: cardBg, borderColor: borderColor, borderWidth: 1, shadowColor: isDark ? 'transparent' : '#000' },
+  ];
   const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1 }];
   const textStyle = { color: isDark ? '#fff' : colors.textPrimary };
   const subTextStyle = { color: isDark ? '#eee' : subTextColor };
@@ -131,7 +142,7 @@ const ModeratorScreen = () => {
       setClaimsLoading(true);
       setClaimsError('');
       const res = await getBusinessClaims({ status: 'pending', page: 1, limit: 50 });
-      console.log('[ModeratorScreen] business-claims response', JSON.stringify(res));
+      logger.log('[ModeratorScreen] business-claims response', JSON.stringify(res));
       setClaims(Array.isArray(res?.items) ? res.items : []);
     } catch (e) {
       setClaimsError(e?.message || 'Impossible de charger les candidatures.');
@@ -178,7 +189,7 @@ const ModeratorScreen = () => {
     setActionType(type);
     setActionTarget('reported');
     setDurationHours('24');
-    const categoryLabel = report?.category ? (CATEGORY_LABELS[report.category] || report.category) : '';
+    const categoryLabel = report?.category ? CATEGORY_LABELS[report.category] || report.category : '';
     setWarningType(categoryLabel || '');
     setNote('');
     setActionVisible(true);
@@ -196,7 +207,7 @@ const ModeratorScreen = () => {
         action: actionType,
         target: actionType === 'dismiss' ? undefined : actionTarget,
         durationHours: actionType === 'ban_temp' ? Number(durationHours) : undefined,
-        warningType: actionType === 'warn' ? (warningType.trim() || undefined) : undefined,
+        warningType: actionType === 'warn' ? warningType.trim() || undefined : undefined,
         note: note.trim() || undefined,
       });
       setActionVisible(false);
@@ -253,7 +264,7 @@ const ModeratorScreen = () => {
       [
         { text: 'Annuler', style: 'cancel' },
         { text: 'Approuver', onPress: () => submitClaimAction(claim._id, 'approve') },
-      ]
+      ],
     );
   };
 
@@ -269,7 +280,10 @@ const ModeratorScreen = () => {
       await actOnBusinessClaim(claimId, { action, rejectionReason });
       setClaimRejectVisible(false);
       await loadClaims();
-      Alert.alert('Succès', action === 'approve' ? 'Compte pro créé, email d\'activation envoyé.' : 'Candidature rejetée.');
+      Alert.alert(
+        'Succès',
+        action === 'approve' ? "Compte pro créé, email d'activation envoyé." : 'Candidature rejetée.',
+      );
     } catch (e) {
       Alert.alert('Erreur', e?.message || "Impossible d'appliquer cette action.");
     } finally {
@@ -288,7 +302,7 @@ const ModeratorScreen = () => {
 
   if (!user || !['admin', 'moderator'].includes(user.role)) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} >
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { backgroundColor: colors.surface }]}>
           <TouchableOpacity
             style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.1)' }]}
@@ -303,7 +317,9 @@ const ModeratorScreen = () => {
           <View style={{ width: 40 }} />
         </View>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-          <Text style={[styles.subtitle, { color: colors.textPrimary, textAlign: 'center' }]}>Cette section est réservée aux modérateurs.</Text>
+          <Text style={[styles.subtitle, { color: colors.textPrimary, textAlign: 'center' }]}>
+            Cette section est réservée aux modérateurs.
+          </Text>
           <TouchableOpacity style={[styles.primaryButton, { marginTop: 20 }]} onPress={() => navigation.goBack()}>
             <Text style={styles.primaryButtonText}>Retour</Text>
           </TouchableOpacity>
@@ -313,10 +329,18 @@ const ModeratorScreen = () => {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} >
-      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: borderColor, borderBottomWidth: 1 }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.surface, borderBottomColor: borderColor, borderBottomWidth: 1 },
+        ]}
+      >
         <TouchableOpacity
-          style={[styles.backButtonCircular, { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' }]}
+          style={[
+            styles.backButtonCircular,
+            { backgroundColor: isDark ? 'rgba(0,194,203,0.2)' : 'rgba(0,194,203,0.1)' },
+          ]}
           onPress={() => navigation.goBack()}
         >
           <Image
@@ -325,8 +349,11 @@ const ModeratorScreen = () => {
           />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Modération</Text>
-        <TouchableOpacity onPress={() => (activeTab === 'reports' ? loadReports() : loadClaims())} style={{ padding: 8 }}>
-            <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Rafraîchir</Text>
+        <TouchableOpacity
+          onPress={() => (activeTab === 'reports' ? loadReports() : loadClaims())}
+          style={{ padding: 8 }}
+        >
+          <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Rafraîchir</Text>
         </TouchableOpacity>
       </View>
 
@@ -351,174 +378,239 @@ const ModeratorScreen = () => {
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {activeTab === 'reports' && (
-        <>
-        <View style={styles.searchSection}>
-            <Text style={sectionTitleStyle}>Recherche utilisateur</Text>
-            <View style={[styles.searchBar, { borderColor: borderColor, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : colors.surface, borderWidth: 1 }]}>
-            <Text style={[{ marginRight: 10 }, textStyle]}>🔎</Text>
-            <TextInput
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                placeholder="Nom, username..."
-                placeholderTextColor={isDark ? '#999' : subTextColor}
-                style={[styles.searchInput, textStyle]}
-            />
-            </View>
-            {searching ? (
-            <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 8 }} />
-            ) : searchError ? (
-            <Text style={[styles.error, { color: '#ff4d4d' }]}>{searchError}</Text>
-            ) : searchResults.length > 0 ? (
-            <View style={[styles.resultsBox, { borderColor: borderColor, backgroundColor: colors.surface, borderWidth: 1 }]}>
-                {searchResults.map((u, idx) => {
-                const mod = u?.moderation || {};
-                const warningsCount = typeof mod.warningsCount === 'number' ? mod.warningsCount : (Array.isArray(mod.warningsHistory) ? mod.warningsHistory.length : 0);
-                return (
-                    <TouchableOpacity
-                    key={String(u.id)}
-                    style={[styles.resultRow, idx !== searchResults.length - 1 && { borderBottomColor: borderColor, borderBottomWidth: 1 }]}
-                    onLongPress={() => openUserModeration(u)}
-                    >
-                    <View style={{ flex: 1 }}>
-                        <Text style={[styles.resultName, textStyle]} numberOfLines={1}>
-                        {formatName(u)}
-                        </Text>
-                        <Text style={[styles.resultMeta, subTextStyle]} numberOfLines={1}>
-                        {u.email || '—'}
-                        </Text>
-                    </View>
-                    <View style={styles.resultBadges}>
-                        <View style={[styles.badge, { backgroundColor: '#f39c12' }]}>
+          <>
+            <View style={styles.searchSection}>
+              <Text style={sectionTitleStyle}>Recherche utilisateur</Text>
+              <View
+                style={[
+                  styles.searchBar,
+                  {
+                    borderColor: borderColor,
+                    backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : colors.surface,
+                    borderWidth: 1,
+                  },
+                ]}
+              >
+                <Text style={[{ marginRight: 10 }, textStyle]}>🔎</Text>
+                <TextInput
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Nom, username..."
+                  placeholderTextColor={isDark ? '#999' : subTextColor}
+                  style={[styles.searchInput, textStyle]}
+                />
+              </View>
+              {searching ? (
+                <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 8 }} />
+              ) : searchError ? (
+                <Text style={[styles.error, { color: '#ff4d4d' }]}>{searchError}</Text>
+              ) : searchResults.length > 0 ? (
+                <View
+                  style={[
+                    styles.resultsBox,
+                    { borderColor: borderColor, backgroundColor: colors.surface, borderWidth: 1 },
+                  ]}
+                >
+                  {searchResults.map((u, idx) => {
+                    const mod = u?.moderation || {};
+                    const warningsCount =
+                      typeof mod.warningsCount === 'number'
+                        ? mod.warningsCount
+                        : Array.isArray(mod.warningsHistory)
+                          ? mod.warningsHistory.length
+                          : 0;
+                    return (
+                      <TouchableOpacity
+                        key={String(u.id)}
+                        style={[
+                          styles.resultRow,
+                          idx !== searchResults.length - 1 && { borderBottomColor: borderColor, borderBottomWidth: 1 },
+                        ]}
+                        onLongPress={() => openUserModeration(u)}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.resultName, textStyle]} numberOfLines={1}>
+                            {formatName(u)}
+                          </Text>
+                          <Text style={[styles.resultMeta, subTextStyle]} numberOfLines={1}>
+                            {u.email || '—'}
+                          </Text>
+                        </View>
+                        <View style={styles.resultBadges}>
+                          <View style={[styles.badge, { backgroundColor: '#f39c12' }]}>
                             <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{warningsCount} av.</Text>
-                        </View>
-                        <View style={[styles.badge, { backgroundColor: '#34495e' }]}>
+                          </View>
+                          <View style={[styles.badge, { backgroundColor: '#34495e' }]}>
                             <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{getBanLabel(mod)}</Text>
+                          </View>
                         </View>
-                    </View>
-                    </TouchableOpacity>
-                );
-                })}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : null}
+              <Text style={[styles.helperText, subTextStyle]}>
+                Appui long sur un utilisateur pour gérer ses avertissements ou son ban.
+              </Text>
             </View>
-            ) : null}
-            <Text style={[styles.helperText, subTextStyle]}>Appui long sur un utilisateur pour gérer ses avertissements ou son ban.</Text>
-        </View>
 
-        <Text style={[sectionTitleStyle, { marginBottom: 15 }]}>Signalements en attente</Text>
-        {loading ? (
-            <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
-        ) : error ? (
-            <Text style={[styles.error, { color: '#ff6b6b', textAlign: 'center' }]}>{error}</Text>
-        ) : reports.length === 0 ? (
-            <View style={[styles.card, { backgroundColor: cardBg, alignItems: 'center', borderColor: borderColor, borderWidth: 1 }]}>
+            <Text style={[sectionTitleStyle, { marginBottom: 15 }]}>Signalements en attente</Text>
+            {loading ? (
+              <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
+            ) : error ? (
+              <Text style={[styles.error, { color: '#ff6b6b', textAlign: 'center' }]}>{error}</Text>
+            ) : reports.length === 0 ? (
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: cardBg, alignItems: 'center', borderColor: borderColor, borderWidth: 1 },
+                ]}
+              >
                 <Text style={subTextStyle}>Aucun signalement en attente.</Text>
-            </View>
-        ) : (
-            reports.map((rep) => (
+              </View>
+            ) : (
+              reports.map((rep) => (
                 <View key={rep.id} style={cardStyle}>
-                <TouchableOpacity
+                  <TouchableOpacity
                     style={styles.cardTitleButton}
                     onPress={() => {
-                    if (rep?.reported?.id) navigateToUser(rep.reported);
+                      if (rep?.reported?.id) navigateToUser(rep.reported);
                     }}
                     disabled={!rep?.reported?.id}
-                >
-                    <Text style={[styles.cardTitle, textStyle]}>
-                    {formatName(rep.reported)}
+                  >
+                    <Text style={[styles.cardTitle, textStyle]}>{formatName(rep.reported)}</Text>
+                  </TouchableOpacity>
+                  <View style={{ marginTop: 5 }}>
+                    <Text style={[styles.cardMeta, textStyle]}>
+                      Signalé par: <Text style={[{ fontWeight: '600' }, textStyle]}>{formatName(rep.reporter)}</Text>
                     </Text>
-                </TouchableOpacity>
-                <View style={{ marginTop: 5 }}>
-                    <Text style={[styles.cardMeta, textStyle]}>Signalé par: <Text style={[{ fontWeight: '600' }, textStyle]}>{formatName(rep.reporter)}</Text></Text>
                     <Text style={[styles.cardMeta, subTextStyle]}>Date: {formatDate(rep.createdAt, locale)}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                        <View style={{ backgroundColor: 'rgba(0,194,203,0.1)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 8 }}>
-                            <Text style={{ color: '#00c2cb', fontSize: 12, fontWeight: '700' }}>{rep.category}</Text>
-                        </View>
-                        <Text style={[textStyle, { opacity: 0.7, fontSize: 13 }]}>{rep.reason}</Text>
+                      <View
+                        style={{
+                          backgroundColor: 'rgba(0,194,203,0.1)',
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderRadius: 8,
+                          marginRight: 8,
+                        }}
+                      >
+                        <Text style={{ color: '#00c2cb', fontSize: 12, fontWeight: '700' }}>{rep.category}</Text>
+                      </View>
+                      <Text style={[textStyle, { opacity: 0.7, fontSize: 13 }]}>{rep.reason}</Text>
                     </View>
                     {rep.description ? (
-                    <Text style={[styles.cardMeta, textStyle, { marginTop: 8, fontStyle: 'italic' }]}>"{rep.description}"</Text>
+                      <Text style={[styles.cardMeta, textStyle, { marginTop: 8, fontStyle: 'italic' }]}>
+                        "{rep.description}"
+                      </Text>
                     ) : null}
-                    <Text style={[styles.pendingCount, { color: '#f39c12' }]}>{rep.pendingCountForReported ?? 0} signalement(s) total</Text>
-                </View>
+                    <Text style={[styles.pendingCount, { color: '#f39c12' }]}>
+                      {rep.pendingCountForReported ?? 0} signalement(s) total
+                    </Text>
+                  </View>
 
-                <View style={styles.actionsRow}>
+                  <View style={styles.actionsRow}>
                     <TouchableOpacity style={styles.actionBtn} onPress={() => openAction(rep, 'warn')}>
-                    <Text style={styles.actionBtnText}>Avertir</Text>
+                      <Text style={styles.actionBtnText}>Avertir</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.actionBtn} onPress={() => openAction(rep, 'ban_temp')}>
-                    <Text style={styles.actionBtnText}>Ban temp</Text>
+                      <Text style={styles.actionBtnText}>Ban temp</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.actionBtn} onPress={() => openAction(rep, 'ban_permanent')}>
-                    <Text style={styles.actionBtnText}>Ban def</Text>
+                      <Text style={styles.actionBtnText}>Ban def</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.actionBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]} onPress={() => openAction(rep, 'dismiss')}>
-                    <Text style={[styles.actionBtnText, textStyle, { opacity: 0.6 }]}>Rejeter</Text>
+                    <TouchableOpacity
+                      style={[
+                        styles.actionBtn,
+                        { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                      ]}
+                      onPress={() => openAction(rep, 'dismiss')}
+                    >
+                      <Text style={[styles.actionBtnText, textStyle, { opacity: 0.6 }]}>Rejeter</Text>
                     </TouchableOpacity>
+                  </View>
                 </View>
-                </View>
-            ))
-        )}
-        </>
+              ))
+            )}
+          </>
         )}
 
         {activeTab === 'claims' && (
-        <>
-        <Text style={[sectionTitleStyle, { marginBottom: 15 }]}>Demandes de compte pro en attente</Text>
-        {claimsLoading ? (
-            <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
-        ) : claimsError ? (
-            <Text style={[styles.error, { color: '#ff6b6b', textAlign: 'center' }]}>{claimsError}</Text>
-        ) : claims.length === 0 ? (
-            <View style={[styles.card, { backgroundColor: cardBg, alignItems: 'center', borderColor: borderColor, borderWidth: 1 }]}>
+          <>
+            <Text style={[sectionTitleStyle, { marginBottom: 15 }]}>Demandes de compte pro en attente</Text>
+            {claimsLoading ? (
+              <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
+            ) : claimsError ? (
+              <Text style={[styles.error, { color: '#ff6b6b', textAlign: 'center' }]}>{claimsError}</Text>
+            ) : claims.length === 0 ? (
+              <View
+                style={[
+                  styles.card,
+                  { backgroundColor: cardBg, alignItems: 'center', borderColor: borderColor, borderWidth: 1 },
+                ]}
+              >
                 <Text style={subTextStyle}>Aucune demande en attente.</Text>
-            </View>
-        ) : (
-            claims.map((claim) => (
+              </View>
+            ) : (
+              claims.map((claim) => (
                 <View key={claim._id} style={cardStyle}>
-                    <Text style={[styles.cardTitle, textStyle]}>{claim.locationId?.name || 'Lieu inconnu'}</Text>
-                    <Text style={[styles.cardMeta, subTextStyle]}>
-                        {[claim.locationId?.type, claim.locationId?.city].filter(Boolean).join(' · ')}
+                  <Text style={[styles.cardTitle, textStyle]}>{claim.locationId?.name || 'Lieu inconnu'}</Text>
+                  <Text style={[styles.cardMeta, subTextStyle]}>
+                    {[claim.locationId?.type, claim.locationId?.city].filter(Boolean).join(' · ')}
+                  </Text>
+                  <View style={{ marginTop: 8 }}>
+                    <Text style={[styles.cardMeta, textStyle]}>
+                      Candidat: <Text style={{ fontWeight: '600' }}>{claim.applicantName}</Text>
                     </Text>
-                    <View style={{ marginTop: 8 }}>
-                        <Text style={[styles.cardMeta, textStyle]}>Candidat: <Text style={{ fontWeight: '600' }}>{claim.applicantName}</Text></Text>
-                        <Text style={[styles.cardMeta, subTextStyle]}>{claim.applicantEmail}{claim.applicantPhone ? ` · ${claim.applicantPhone}` : ''}</Text>
-                        <Text style={[styles.cardMeta, subTextStyle]}>Reçu le {formatDate(claim.createdAt, locale)}</Text>
-                    </View>
+                    <Text style={[styles.cardMeta, subTextStyle]}>
+                      {claim.applicantEmail}
+                      {claim.applicantPhone ? ` · ${claim.applicantPhone}` : ''}
+                    </Text>
+                    <Text style={[styles.cardMeta, subTextStyle]}>Reçu le {formatDate(claim.createdAt, locale)}</Text>
+                  </View>
 
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
-                        {(claim.documents || []).map((doc, idx) => (
-                            <DocumentViewer
-                                key={idx}
-                                path={`/business-claims/${claim._id}/documents/${idx}`}
-                                label={DOC_TYPE_LABELS[doc.type] || doc.type}
-                            />
-                        ))}
-                    </View>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+                    {(claim.documents || []).map((doc, idx) => (
+                      <DocumentViewer
+                        key={idx}
+                        path={`/business-claims/${claim._id}/documents/${idx}`}
+                        label={DOC_TYPE_LABELS[doc.type] || doc.type}
+                      />
+                    ))}
+                  </View>
 
-                    <View style={styles.actionsRow}>
-                        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#2ecc71' }]} onPress={() => approveClaim(claim)}>
-                            <Text style={styles.actionBtnText}>Approuver</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#ff4444' }]} onPress={() => openRejectClaim(claim)}>
-                            <Text style={styles.actionBtnText}>Rejeter</Text>
-                        </TouchableOpacity>
-                    </View>
+                  <View style={styles.actionsRow}>
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { backgroundColor: '#2ecc71' }]}
+                      onPress={() => approveClaim(claim)}
+                    >
+                      <Text style={styles.actionBtnText}>Approuver</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { backgroundColor: '#ff4444' }]}
+                      onPress={() => openRejectClaim(claim)}
+                    >
+                      <Text style={styles.actionBtnText}>Rejeter</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-            ))
-        )}
-        </>
+              ))
+            )}
+          </>
         )}
       </ScrollView>
 
       {/* Action Modal */}
       <Modal transparent visible={actionVisible} animationType="fade" onRequestClose={() => setActionVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setActionVisible(false); }}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setActionVisible(false);
+          }}
+        >
           <View style={styles.modalBackdrop}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ width: '100%' }}
-              >
+              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
                 <ScrollView
                   contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]}
                   keyboardShouldPersistTaps="handled"
@@ -527,26 +619,71 @@ const ModeratorScreen = () => {
                   <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Cible de l'action</Text>
                   <View style={styles.targetRow}>
                     <TouchableOpacity
-                      style={[styles.targetChip, { backgroundColor: colors.background, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }, actionTarget === 'reported' && { borderColor: '#00c2cb', backgroundColor: 'rgba(0,194,203,0.1)' }]}
+                      style={[
+                        styles.targetChip,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                        },
+                        actionTarget === 'reported' && {
+                          borderColor: '#00c2cb',
+                          backgroundColor: 'rgba(0,194,203,0.1)',
+                        },
+                      ]}
                       onPress={() => setActionTarget('reported')}
                       disabled={actionType === 'dismiss'}
                     >
-                      <Text style={[styles.targetChipText, textStyle, actionTarget === 'reported' && { color: '#00c2cb', fontWeight: 'bold' }]}>Accusé</Text>
+                      <Text
+                        style={[
+                          styles.targetChipText,
+                          textStyle,
+                          actionTarget === 'reported' && { color: '#00c2cb', fontWeight: 'bold' },
+                        ]}
+                      >
+                        Accusé
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.targetChip, { backgroundColor: colors.background, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }, actionTarget === 'reporter' && { borderColor: '#00c2cb', backgroundColor: 'rgba(0,194,203,0.1)' }]}
+                      style={[
+                        styles.targetChip,
+                        {
+                          backgroundColor: colors.background,
+                          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                        },
+                        actionTarget === 'reporter' && {
+                          borderColor: '#00c2cb',
+                          backgroundColor: 'rgba(0,194,203,0.1)',
+                        },
+                      ]}
                       onPress={() => setActionTarget('reporter')}
                       disabled={actionType === 'dismiss'}
                     >
-                      <Text style={[styles.targetChipText, textStyle, actionTarget === 'reporter' && { color: '#00c2cb', fontWeight: 'bold' }]}>Rapporteur</Text>
+                      <Text
+                        style={[
+                          styles.targetChipText,
+                          textStyle,
+                          actionTarget === 'reporter' && { color: '#00c2cb', fontWeight: 'bold' },
+                        ]}
+                      >
+                        Rapporteur
+                      </Text>
                     </TouchableOpacity>
                   </View>
 
                   {actionType === 'ban_temp' && (
                     <>
-                      <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Durée (heures)</Text>
+                      <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>
+                        Durée (heures)
+                      </Text>
                       <TextInput
-                        style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                        style={[
+                          styles.modalInput,
+                          {
+                            borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                            color: isDark ? '#fff' : colors.textPrimary,
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                          },
+                        ]}
                         keyboardType="numeric"
                         value={durationHours}
                         onChangeText={setDurationHours}
@@ -556,9 +693,18 @@ const ModeratorScreen = () => {
 
                   {actionType === 'warn' && (
                     <>
-                      <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Type d'avertissement</Text>
+                      <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>
+                        Type d'avertissement
+                      </Text>
                       <TextInput
-                        style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                        style={[
+                          styles.modalInput,
+                          {
+                            borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                            color: isDark ? '#fff' : colors.textPrimary,
+                            backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                          },
+                        ]}
                         value={warningType}
                         onChangeText={setWarningType}
                         placeholder="Ex: Harcèlement"
@@ -567,9 +713,19 @@ const ModeratorScreen = () => {
                     </>
                   )}
 
-                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Note interne (optionnel)</Text>
+                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>
+                    Note interne (optionnel)
+                  </Text>
                   <TextInput
-                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[
+                      styles.modalInput,
+                      styles.modalTextarea,
+                      {
+                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                        color: isDark ? '#fff' : colors.textPrimary,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      },
+                    ]}
                     value={note}
                     onChangeText={setNote}
                     multiline
@@ -579,7 +735,14 @@ const ModeratorScreen = () => {
                     <TouchableOpacity style={styles.primaryButton} onPress={submitAction} disabled={working}>
                       <Text style={styles.primaryButtonText}>{working ? 'Traitement...' : 'Confirmer'}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.primaryButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]} onPress={() => setActionVisible(false)} disabled={working}>
+                    <TouchableOpacity
+                      style={[
+                        styles.primaryButton,
+                        { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                      ]}
+                      onPress={() => setActionVisible(false)}
+                      disabled={working}
+                    >
                       <Text style={[styles.primaryButtonText, textStyle, { opacity: 0.6 }]}>Annuler</Text>
                     </TouchableOpacity>
                   </View>
@@ -591,40 +754,76 @@ const ModeratorScreen = () => {
       </Modal>
 
       {/* User Management Modal */}
-      <Modal transparent visible={moderationVisible} animationType="fade" onRequestClose={() => setModerationVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setModerationVisible(false); }}>
+      <Modal
+        transparent
+        visible={moderationVisible}
+        animationType="fade"
+        onRequestClose={() => setModerationVisible(false)}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setModerationVisible(false);
+          }}
+        >
           <View style={styles.modalBackdrop}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ width: '100%' }}
-              >
-                <ScrollView contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]} keyboardShouldPersistTaps="handled">
+              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
+                <ScrollView
+                  contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]}
+                  keyboardShouldPersistTaps="handled"
+                >
                   <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#00c2cb' }]}>Gestion utilisateur</Text>
 
-                  <View style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderRadius: 15, padding: 15, marginBottom: 15 }}>
-                    <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5, marginTop: 0 }]}>Utilisateur</Text>
+                  <View
+                    style={{
+                      backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      borderRadius: 15,
+                      padding: 15,
+                      marginBottom: 15,
+                    }}
+                  >
+                    <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5, marginTop: 0 }]}>
+                      Utilisateur
+                    </Text>
                     <Text style={[styles.modalValue, textStyle]} numberOfLines={1}>
-                        {formatName(selectedUser)}
+                      {formatName(selectedUser)}
                     </Text>
                     <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Statut actuel</Text>
-                    <Text style={[styles.modalValue, { color: '#00c2cb' }]}>{getBanLabel(selectedUser?.moderation || {})}</Text>
-                    <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Avertissements</Text>
-                    <Text style={[styles.modalValue, textStyle]}>
-                        {selectedUser?.moderation?.warningsCount || 0}
+                    <Text style={[styles.modalValue, { color: '#00c2cb' }]}>
+                      {getBanLabel(selectedUser?.moderation || {})}
                     </Text>
+                    <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Avertissements</Text>
+                    <Text style={[styles.modalValue, textStyle]}>{selectedUser?.moderation?.warningsCount || 0}</Text>
                   </View>
 
-                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Durée du ban (heures)</Text>
+                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>
+                    Durée du ban (heures)
+                  </Text>
                   <TextInput
-                    style={[styles.modalInput, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[
+                      styles.modalInput,
+                      {
+                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                        color: isDark ? '#fff' : colors.textPrimary,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      },
+                    ]}
                     keyboardType="numeric"
                     value={banDurationHours}
                     onChangeText={setBanDurationHours}
                   />
                   <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Motif du ban</Text>
                   <TextInput
-                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[
+                      styles.modalInput,
+                      styles.modalTextarea,
+                      {
+                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                        color: isDark ? '#fff' : colors.textPrimary,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      },
+                    ]}
                     value={banNote}
                     onChangeText={setBanNote}
                     multiline
@@ -633,7 +832,9 @@ const ModeratorScreen = () => {
                   <View style={styles.modalActionsColumn}>
                     <TouchableOpacity
                       style={[styles.actionBtn, { paddingVertical: 14 }]}
-                      onPress={() => applyUserModeration('ban_temp', { durationHours: banDurationHours, note: banNote })}
+                      onPress={() =>
+                        applyUserModeration('ban_temp', { durationHours: banDurationHours, note: banNote })
+                      }
                       disabled={moderationWorking}
                     >
                       <Text style={styles.actionBtnText}>Ban temporaire</Text>
@@ -659,7 +860,14 @@ const ModeratorScreen = () => {
                     >
                       <Text style={styles.actionBtnText}>Remettre avertissements à zéro</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.primaryButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', marginTop: 5 }]} onPress={() => setModerationVisible(false)} disabled={moderationWorking}>
+                    <TouchableOpacity
+                      style={[
+                        styles.primaryButton,
+                        { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', marginTop: 5 },
+                      ]}
+                      onPress={() => setModerationVisible(false)}
+                      disabled={moderationWorking}
+                    >
                       <Text style={[styles.primaryButtonText, textStyle, { opacity: 0.6 }]}>Fermer</Text>
                     </TouchableOpacity>
                   </View>
@@ -671,16 +879,41 @@ const ModeratorScreen = () => {
       </Modal>
 
       {/* Claim Rejection Modal */}
-      <Modal transparent visible={claimRejectVisible} animationType="fade" onRequestClose={() => setClaimRejectVisible(false)}>
-        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); setClaimRejectVisible(false); }}>
+      <Modal
+        transparent
+        visible={claimRejectVisible}
+        animationType="fade"
+        onRequestClose={() => setClaimRejectVisible(false)}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setClaimRejectVisible(false);
+          }}
+        >
           <View style={styles.modalBackdrop}>
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
-                <ScrollView contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]} keyboardShouldPersistTaps="handled">
-                  <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#00c2cb' }]}>Rejeter la candidature</Text>
-                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Motif (envoyé au candidat)</Text>
+                <ScrollView
+                  contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#00c2cb' }]}>
+                    Rejeter la candidature
+                  </Text>
+                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>
+                    Motif (envoyé au candidat)
+                  </Text>
                   <TextInput
-                    style={[styles.modalInput, styles.modalTextarea, { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background }]}
+                    style={[
+                      styles.modalInput,
+                      styles.modalTextarea,
+                      {
+                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                        color: isDark ? '#fff' : colors.textPrimary,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      },
+                    ]}
                     value={claimRejectionReason}
                     onChangeText={setClaimRejectionReason}
                     multiline
@@ -691,10 +924,15 @@ const ModeratorScreen = () => {
                       onPress={() => submitClaimAction(selectedClaim?._id, 'reject', claimRejectionReason)}
                       disabled={claimWorking}
                     >
-                      <Text style={styles.primaryButtonText}>{claimWorking ? 'Traitement...' : 'Confirmer le rejet'}</Text>
+                      <Text style={styles.primaryButtonText}>
+                        {claimWorking ? 'Traitement...' : 'Confirmer le rejet'}
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[styles.primaryButton, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}
+                      style={[
+                        styles.primaryButton,
+                        { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                      ]}
                       onPress={() => setClaimRejectVisible(false)}
                       disabled={claimWorking}
                     >

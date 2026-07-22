@@ -24,7 +24,7 @@ const AppLogo = ({ width = 150, height = 150, style }) => {
         // Only apply tintColor if you want to force the logo to a specific theme color
         // and if the logo has a transparent background.
         // isDark ? { tintColor: colors.textPrimary } : null,
-        style
+        style,
       ]}
       resizeMode="contain"
       fadeDuration={0}

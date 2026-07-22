@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef } from 'react';
+import { logger } from '../utils/logger';
 import { AppState } from 'react-native';
 import * as Location from 'expo-location';
 import { post } from '../components/ApiRequest';
@@ -52,7 +53,7 @@ export function usePresence(isEnabled) {
           if (res?.user) updateUser(mapBackendUser(res.user));
           lastSentAtRef.current = Date.now();
           const duration = Date.now() - startTime;
-          console.log(`[usePresence] Foreground heartbeat sent successfully in ${duration}ms`);
+          logger.log(`[usePresence] Foreground heartbeat sent successfully in ${duration}ms`);
         } finally {
           inFlightRef.current = false;
         }
@@ -72,7 +73,9 @@ export function usePresence(isEnabled) {
         if (status !== 'granted') return;
         // Stop any previous watcher before starting a new one
         if (watcherRef.current) {
-          try { watcherRef.current.remove(); } catch {}
+          try {
+            watcherRef.current.remove();
+          } catch {}
           watcherRef.current = null;
         }
         watcherRef.current = await Location.watchPositionAsync(
@@ -110,13 +113,15 @@ export function usePresence(isEnabled) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       intervalRef.current = null;
       if (watcherRef.current) {
-        try { watcherRef.current.remove(); } catch {}
+        try {
+          watcherRef.current.remove();
+        } catch {}
         watcherRef.current = null;
       }
     };
 
     // Gérer les changements d'état de l'app (Foreground/Background)
-    const subscription = AppState.addEventListener('change', nextAppState => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
         startHeartbeat();
       } else {

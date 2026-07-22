@@ -57,14 +57,7 @@ function StorySlide({ story, onDone, progressAnim }) {
   }, [isVideo]);
 
   if (isVideo) {
-    return (
-      <VideoView
-        player={player}
-        style={StyleSheet.absoluteFill}
-        contentFit="contain"
-        nativeControls={false}
-      />
-    );
+    return <VideoView player={player} style={StyleSheet.absoluteFill} contentFit="contain" nativeControls={false} />;
   }
   return <Image source={{ uri: story.url }} style={StyleSheet.absoluteFill} resizeMode="contain" />;
 }
@@ -121,7 +114,7 @@ export default function StoryViewerModal({ stories, initialIndex = 0, onClose, i
       onPanResponderTerminate: () => {
         Animated.spring(pan, { toValue: 0, useNativeDriver: true }).start();
       },
-    })
+    }),
   ).current;
 
   const story = stories[index];
@@ -186,7 +179,10 @@ export default function StoryViewerModal({ stories, initialIndex = 0, onClose, i
           <Ionicons name="close" size={28} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity onPress={goPrev} style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '35%' }} />
-        <TouchableOpacity onPress={goNext} style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '65%' }} />
+        <TouchableOpacity
+          onPress={goNext}
+          style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '65%' }}
+        />
       </Animated.View>
     </Modal>
   );

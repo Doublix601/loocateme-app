@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal } from 'react-native';
-import {
-  loadDevLocationOverride,
-  getDevLocationOverride,
-  setDevLocationOverride,
-} from '../utils/devLocationOverride';
+import { loadDevLocationOverride, getDevLocationOverride, setDevLocationOverride } from '../utils/devLocationOverride';
 
 // Bouton flottant + modal (__DEV__ uniquement) pour forcer une position GPS
 // manuelle quand le fused location provider de l'émulateur ne répond pas.
@@ -83,7 +79,10 @@ export default function DevLocationOverride() {
               style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, marginBottom: 16 }}
             />
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
-              <TouchableOpacity onPress={() => setVisible(false)} style={{ paddingHorizontal: 12, paddingVertical: 10 }}>
+              <TouchableOpacity
+                onPress={() => setVisible(false)}
+                style={{ paddingHorizontal: 12, paddingVertical: 10 }}
+              >
                 <Text>Annuler</Text>
               </TouchableOpacity>
               {active ? (
@@ -91,7 +90,10 @@ export default function DevLocationOverride() {
                   <Text style={{ color: '#ff3b30' }}>Désactiver</Text>
                 </TouchableOpacity>
               ) : null}
-              <TouchableOpacity onPress={save} style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}>
+              <TouchableOpacity
+                onPress={save}
+                style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}
+              >
                 <Text style={{ color: '#fff', fontWeight: '600' }}>Appliquer</Text>
               </TouchableOpacity>
             </View>

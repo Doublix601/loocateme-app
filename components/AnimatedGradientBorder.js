@@ -1,11 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
-import {
-  Canvas,
-  RoundedRect,
-  SweepGradient,
-  vec,
-} from '@shopify/react-native-skia';
+import { Canvas, RoundedRect, SweepGradient, vec } from '@shopify/react-native-skia';
 import {
   useSharedValue,
   withRepeat,
@@ -65,11 +60,7 @@ const AnimatedGradientBorder = ({
   useEffect(() => {
     if (active) {
       progress.value = seed;
-      progress.value = withRepeat(
-        withTiming(seed + 1, { duration: durationMs, easing: Easing.linear }),
-        -1,
-        false
-      );
+      progress.value = withRepeat(withTiming(seed + 1, { duration: durationMs, easing: Easing.linear }), -1, false);
     } else {
       cancelAnimation(progress);
     }
@@ -82,12 +73,15 @@ const AnimatedGradientBorder = ({
   // à la carte sans padding ni margin interne).
   const [size, setSize] = useState({ width: 0, height: 0 });
 
-  const onLayout = useCallback((e) => {
-    const { width, height } = e.nativeEvent.layout;
-    if (width !== size.width || height !== size.height) {
-      setSize({ width, height });
-    }
-  }, [size.width, size.height]);
+  const onLayout = useCallback(
+    (e) => {
+      const { width, height } = e.nativeEvent.layout;
+      if (width !== size.width || height !== size.height) {
+        setSize({ width, height });
+      }
+    },
+    [size.width, size.height],
+  );
 
   // Offset angulaire (en degrés) qui « fait circuler » les couleurs autour
   // du chemin. start/end sont espacés de 360° pour couvrir l'intégralité
@@ -127,11 +121,7 @@ const AnimatedGradientBorder = ({
     : children;
 
   return (
-    <View
-      onLayout={onLayout}
-      pointerEvents="box-none"
-      style={[styles.wrapper, { marginBottom, borderRadius }, style]}
-    >
+    <View onLayout={onLayout} pointerEvents="box-none" style={[styles.wrapper, { marginBottom, borderRadius }, style]}>
       {child}
 
       {/* Canvas Skia superposé pile sur la carte (absoluteFill).
@@ -139,10 +129,7 @@ const AnimatedGradientBorder = ({
           est animée → pas de "rectangle qui tourne", pas de vide aux coins,
           pas de débordement. */}
       {size.width > 0 && size.height > 0 && (
-        <Canvas
-          pointerEvents="none"
-          style={StyleSheet.absoluteFill}
-        >
+        <Canvas pointerEvents="none" style={StyleSheet.absoluteFill}>
           <RoundedRect
             x={rectX}
             y={rectY}
@@ -154,12 +141,7 @@ const AnimatedGradientBorder = ({
             strokeJoin="round"
             strokeCap="round"
           >
-            <SweepGradient
-              c={vec(cx, cy)}
-              colors={colors}
-              start={startAngle}
-              end={endAngle}
-            />
+            <SweepGradient c={vec(cx, cy)} colors={colors} start={startAngle} end={endAngle} />
           </RoundedRect>
         </Canvas>
       )}

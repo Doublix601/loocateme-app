@@ -1,8 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  View, Text, TouchableOpacity, StyleSheet, Modal,
-  Dimensions, Animated,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Dimensions, Animated } from 'react-native';
 
 const { width: W, height: H } = Dimensions.get('window');
 const PAD = 12;
@@ -69,7 +66,7 @@ export default function SpotlightOverlay({
           Animated.timing(pulseOpacity, { toValue: 0.15, duration: 750, useNativeDriver: true }),
           Animated.timing(pulseOpacity, { toValue: 0.6, duration: 750, useNativeDriver: true }),
         ]),
-      ])
+      ]),
     );
     pulseLoop.current = loop;
     loop.start();
@@ -86,7 +83,7 @@ export default function SpotlightOverlay({
   const br = Math.min((rect.borderRadius ?? 14) + PAD, sw / 2, sh / 2);
 
   const showBelow = sy + sh < H * 0.58;
-  const tooltipTop  = showBelow ? Math.min(sy + sh + 16, H - 220) : undefined;
+  const tooltipTop = showBelow ? Math.min(sy + sh + 16, H - 220) : undefined;
   const tooltipBottom = !showBelow ? Math.max(H - sy + 16, 16) : undefined;
 
   const isLast = stepIndex === totalSteps - 1;
@@ -94,7 +91,6 @@ export default function SpotlightOverlay({
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: overlayOpacity }]}>
-
         {/* ── Overlay 4 panneaux (trou rectangulaire transparent) ── */}
         <View style={[s.dark, { top: 0, left: 0, right: 0, height: sy }]} />
         <View style={[s.dark, { top: sy + sh, left: 0, right: 0, bottom: 0 }]} />
@@ -110,23 +106,33 @@ export default function SpotlightOverlay({
         {/* ── Anneau pulsant ── */}
         <Animated.View
           pointerEvents="none"
-          style={[s.ringPulse, {
-            top: sy - 2, left: sx - 2, width: sw + 4, height: sh + 4,
-            borderRadius: br + 2,
-            transform: [{ scale: pulse }],
-            opacity: pulseOpacity,
-          }]}
+          style={[
+            s.ringPulse,
+            {
+              top: sy - 2,
+              left: sx - 2,
+              width: sw + 4,
+              height: sh + 4,
+              borderRadius: br + 2,
+              transform: [{ scale: pulse }],
+              opacity: pulseOpacity,
+            },
+          ]}
         />
 
         {/* ── Tooltip ── */}
         <Animated.View
-          style={[s.tooltip, {
-            opacity: tooltipOpacity,
-            transform: [{ translateY: tooltipTranslateY }],
-            top: tooltipTop,
-            bottom: tooltipBottom,
-            left: 20, right: 20,
-          }]}
+          style={[
+            s.tooltip,
+            {
+              opacity: tooltipOpacity,
+              transform: [{ translateY: tooltipTranslateY }],
+              top: tooltipTop,
+              bottom: tooltipBottom,
+              left: 20,
+              right: 20,
+            },
+          ]}
         >
           <View style={s.progressBar}>
             {Array.from({ length: totalSteps }).map((_, i) => (
@@ -136,7 +142,9 @@ export default function SpotlightOverlay({
             ))}
           </View>
 
-          <Text style={s.stepLabel}>{stepIndex + 1} / {totalSteps}</Text>
+          <Text style={s.stepLabel}>
+            {stepIndex + 1} / {totalSteps}
+          </Text>
           <Text style={s.title}>{title}</Text>
           <Text style={s.desc}>{description}</Text>
 
@@ -149,7 +157,6 @@ export default function SpotlightOverlay({
             </TouchableOpacity>
           </View>
         </Animated.View>
-
       </Animated.View>
     </Modal>
   );
@@ -187,15 +194,27 @@ const s = StyleSheet.create({
   progressBar: { flexDirection: 'row', gap: 5, marginBottom: 16 },
   segBg: { flex: 1, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.12)', overflow: 'hidden' },
   segFill: { flex: 1, backgroundColor: '#00C2CB' },
-  stepLabel: { fontSize: 11, fontWeight: '700', color: '#00C2CB', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 },
+  stepLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#00C2CB',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
   title: { fontSize: 18, fontWeight: '800', color: '#fff', marginBottom: 10, letterSpacing: -0.4 },
   desc: { fontSize: 14, color: 'rgba(255,255,255,0.68)', lineHeight: 21, marginBottom: 22 },
   btnRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   skipTxt: { color: 'rgba(255,255,255,0.32)', fontSize: 14 },
   nextBtn: {
     backgroundColor: '#00C2CB',
-    paddingVertical: 11, paddingHorizontal: 26, borderRadius: 24,
-    shadowColor: '#00C2CB', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.5, shadowRadius: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 26,
+    borderRadius: 24,
+    shadowColor: '#00C2CB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
   },
   nextTxt: { color: '#fff', fontWeight: '800', fontSize: 15 },
 });

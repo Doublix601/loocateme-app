@@ -46,9 +46,7 @@ const MAX_PDF_MEDIA = 3;
 // WKWebView sur iOS) : on passe par la visionneuse Google Docs en lecture
 // intégrée, ce qui évite de sortir vers un navigateur externe.
 const pdfViewerUri = (url) =>
-  Platform.OS === 'android'
-    ? `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`
-    : url;
+  Platform.OS === 'android' ? `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}` : url;
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
@@ -118,7 +116,9 @@ const LocationScreen = () => {
   // anneau dégradé tant qu'une story plus récente que la dernière consultation existe).
   useEffect(() => {
     if (!locationId) return;
-    AsyncStorage.getItem(`story_seen_${locationId}`).then(setLastStorySeenAt).catch(() => {});
+    AsyncStorage.getItem(`story_seen_${locationId}`)
+      .then(setLastStorySeenAt)
+      .catch(() => {});
   }, [locationId]);
 
   const markStoriesSeen = () => {
@@ -154,12 +154,7 @@ const LocationScreen = () => {
   // Image de cover : priorité à la couverture pro (bannerUrl), puis champs
   // courants (futur-proof OSM/Wikidata).
   const coverUri =
-    location?.bannerUrl ||
-    location?.coverUrl ||
-    location?.imageUrl ||
-    location?.photoUrl ||
-    location?.image ||
-    null;
+    location?.bannerUrl || location?.coverUrl || location?.imageUrl || location?.photoUrl || location?.image || null;
 
   const activeStories = useMemo(() => {
     const now = Date.now();
@@ -212,11 +207,7 @@ const LocationScreen = () => {
   const renderHero = () => {
     const HeroContent = (
       <>
-        <LinearGradient
-          colors={palette.heroGradient}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
+        <LinearGradient colors={palette.heroGradient} style={StyleSheet.absoluteFill} pointerEvents="none" />
         {/* Back button flottant */}
         <SafeAreaView edges={['top']} style={styles.heroSafeTop}>
           <TouchableOpacity
@@ -287,9 +278,7 @@ const LocationScreen = () => {
     >
       <View style={styles.rowBetween}>
         <View style={[styles.typePill, { backgroundColor: palette.accentSoft }]}>
-          <Text style={[styles.typePillText, { color: palette.accent }]}>
-            {formatLocationType(location.type)}
-          </Text>
+          <Text style={[styles.typePillText, { color: palette.accent }]}>{formatLocationType(location.type)}</Text>
         </View>
         <View style={styles.popularityWrap}>
           {Array.from({ length: 3 }).map((_, i) => (
@@ -328,27 +317,21 @@ const LocationScreen = () => {
       <View style={[styles.metaRow, { marginTop: spacing.sm }]}>
         <View style={styles.metaItem}>
           <Ionicons name="people" size={14} color={palette.textMuted} />
-          <Text style={[typography.body, { marginLeft: 4 }]}>
-            {users.length} sur place
-          </Text>
+          <Text style={[typography.body, { marginLeft: 4 }]}>{users.length} sur place</Text>
         </View>
         {monthlyUsers > 0 && (
           <>
             <View style={[styles.metaDot, { backgroundColor: palette.border }]} />
             <View style={styles.metaItem}>
               <Ionicons name="calendar-outline" size={14} color={palette.textMuted} />
-              <Text style={[typography.body, { marginLeft: 4 }]}>
-                {monthlyUsers} ce mois
-              </Text>
+              <Text style={[typography.body, { marginLeft: 4 }]}>{monthlyUsers} ce mois</Text>
             </View>
           </>
         )}
         <View style={[styles.metaDot, { backgroundColor: palette.border }]} />
         <View style={styles.metaItem}>
           <Ionicons name="pulse" size={14} color={palette.textMuted} />
-          <Text style={[typography.body, { marginLeft: 4 }]}>
-            {popularity.label}
-          </Text>
+          <Text style={[typography.body, { marginLeft: 4 }]}>{popularity.label}</Text>
         </View>
       </View>
     </View>
@@ -357,15 +340,9 @@ const LocationScreen = () => {
   // ─── Bannière Ultra Boost (offre du lieu, cf. push envoyé par
   // ultraBoost.service.js côté backend — même texte "20 minutes") ─
   const ultraBoostActive =
-    location?.ultraBoost?.active &&
-    location.ultraBoost.until &&
-    new Date(location.ultraBoost.until) > new Date();
+    location?.ultraBoost?.active && location.ultraBoost.until && new Date(location.ultraBoost.until) > new Date();
 
-  const isUserHere = !!(
-    user?.currentPoiId &&
-    location?._id &&
-    String(user.currentPoiId) === String(location._id)
-  );
+  const isUserHere = !!(user?.currentPoiId && location?._id && String(user.currentPoiId) === String(location._id));
 
   const renderUltraBoostSection = () => {
     if (!ultraBoostActive) return null;
@@ -394,9 +371,7 @@ const LocationScreen = () => {
               <Text style={{ fontSize: 22 }}>🔥</Text>
             </View>
             <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <Text style={[styles.boostTitle, { color: palette.text }]}>
-                Tu es sur place !
-              </Text>
+              <Text style={[styles.boostTitle, { color: palette.text }]}>Tu es sur place !</Text>
               <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
                 Reste encore un peu pour débloquer ton boost de profil gratuit.
               </Text>
@@ -423,9 +398,7 @@ const LocationScreen = () => {
             <Text style={{ fontSize: 22 }}>🔥</Text>
           </View>
           <View style={{ flex: 1, marginLeft: spacing.md }}>
-            <Text style={[styles.boostTitle, { color: palette.text }]}>
-              Offre spéciale de ce lieu
-            </Text>
+            <Text style={[styles.boostTitle, { color: palette.text }]}>Offre spéciale de ce lieu</Text>
             <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
               Passe 20 minutes sur place pour débloquer un boost de profil gratuit !
             </Text>
@@ -446,7 +419,9 @@ const LocationScreen = () => {
         key={event._id}
         event={event}
         isFirst={idx === 0}
-        onLayout={(e) => { eventSectionRefs.current[event._id] = e.nativeEvent.layout.y; }}
+        onLayout={(e) => {
+          eventSectionRefs.current[event._id] = e.nativeEvent.layout.y;
+        }}
       />
     ));
   };
@@ -459,7 +434,11 @@ const LocationScreen = () => {
     return (
       <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
         {activeStories.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: media.length ? spacing.md : 0 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: media.length ? spacing.md : 0 }}
+          >
             {activeStories.map((story, idx) => (
               <TouchableOpacity
                 key={story._id || idx}
@@ -514,9 +493,7 @@ const LocationScreen = () => {
               <Text style={[typography.body, { color: palette.text, fontWeight: '700' }]} numberOfLines={1}>
                 {m.title}
               </Text>
-              <Text style={[typography.caption, { color: palette.textMuted, marginTop: 2 }]}>
-                Voir le PDF
-              </Text>
+              <Text style={[typography.caption, { color: palette.textMuted, marginTop: 2 }]}>Voir le PDF</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={palette.textFaint} />
           </TouchableOpacity>
@@ -528,19 +505,9 @@ const LocationScreen = () => {
   const renderPdfViewer = () => {
     if (!pdfViewer) return null;
     return (
-      <Modal
-        visible
-        animationType="slide"
-        onRequestClose={() => setPdfViewer(null)}
-        presentationStyle="pageSheet"
-      >
+      <Modal visible animationType="slide" onRequestClose={() => setPdfViewer(null)} presentationStyle="pageSheet">
         <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: palette.bg }}>
-          <View
-            style={[
-              styles.pdfViewerHeader,
-              { borderBottomColor: palette.border, paddingHorizontal: spacing.lg },
-            ]}
-          >
+          <View style={[styles.pdfViewerHeader, { borderBottomColor: palette.border, paddingHorizontal: spacing.lg }]}>
             <Text style={[typography.body, { flex: 1, color: palette.text, fontWeight: '800' }]} numberOfLines={1}>
               {pdfViewer.title}
             </Text>
@@ -600,11 +567,19 @@ const LocationScreen = () => {
   // ─── Liste des ProfileCards ────────────────────────────────────
   const renderProfileList = () => (
     <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
-      <Text style={[typography.h2, { marginBottom: spacing.md }]}>
-        Les profils ici
-      </Text>
+      <Text style={[typography.h2, { marginBottom: spacing.md }]}>Les profils ici</Text>
       {users.length === 0 ? (
-        <View style={[styles.emptyState, { backgroundColor: palette.surface, borderRadius: radius.lg, borderColor: palette.border, borderWidth: isMoon ? 1 : 0 }]}>
+        <View
+          style={[
+            styles.emptyState,
+            {
+              backgroundColor: palette.surface,
+              borderRadius: radius.lg,
+              borderColor: palette.border,
+              borderWidth: isMoon ? 1 : 0,
+            },
+          ]}
+        >
           <Ionicons name="people-outline" size={36} color={palette.textFaint} />
           <Text style={[typography.body, { marginTop: spacing.sm, textAlign: 'center' }]}>
             Personne n'est ici pour le moment.{'\n'}Soyez le premier à vous signaler !
@@ -633,20 +608,10 @@ const LocationScreen = () => {
   const renderFixedAction = () => {
     const bottomPad = Math.max(insets.bottom, spacing.md);
     return (
-      <View
-        pointerEvents="box-none"
-        style={[styles.fixedActionWrap, { paddingBottom: bottomPad }]}
-      >
-        <BlurView
-          intensity={isMoon ? 50 : 70}
-          tint={isMoon ? 'dark' : 'light'}
-          style={StyleSheet.absoluteFill}
-        />
+      <View pointerEvents="box-none" style={[styles.fixedActionWrap, { paddingBottom: bottomPad }]}>
+        <BlurView intensity={isMoon ? 50 : 70} tint={isMoon ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
         <View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: isMoon ? 'rgba(5,5,5,0.55)' : 'rgba(255,255,255,0.55)' },
-          ]}
+          style={[StyleSheet.absoluteFill, { backgroundColor: isMoon ? 'rgba(5,5,5,0.55)' : 'rgba(255,255,255,0.55)' }]}
         />
         <View style={[styles.fixedActionInner, { paddingHorizontal: spacing.lg }]}>
           <TouchableOpacity
@@ -668,9 +633,7 @@ const LocationScreen = () => {
               style={[StyleSheet.absoluteFill, { borderRadius: radius.pill }]}
             />
             <Ionicons name="flash" size={18} color="#fff" />
-            <Text style={styles.primaryButtonText}>
-              {isBoosted ? 'Boosté' : 'Booster mon profil ici'}
-            </Text>
+            <Text style={styles.primaryButtonText}>{isBoosted ? 'Boosté' : 'Booster mon profil ici'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -754,12 +717,7 @@ const EventCard = ({ event, isFirst, onLayout }) => {
     >
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         {eventDateDay ? (
-          <View
-            style={[
-              styles.eventDateBadge,
-              { backgroundColor: palette.accent, borderRadius: radius.md },
-            ]}
-          >
+          <View style={[styles.eventDateBadge, { backgroundColor: palette.accent, borderRadius: radius.md }]}>
             <Text style={styles.eventDateBadgeDay}>{eventDateDay}</Text>
             <Text style={styles.eventDateBadgeMonth}>{eventDateMonth}</Text>
           </View>
@@ -769,16 +727,12 @@ const EventCard = ({ event, isFirst, onLayout }) => {
           </View>
         )}
         <View style={{ flex: 1, marginLeft: spacing.md }}>
-          {eventDateLabel && (
-            <Text style={[styles.eventDateLabel, { color: palette.accent }]}>{eventDateLabel}</Text>
-          )}
+          {eventDateLabel && <Text style={[styles.eventDateLabel, { color: palette.accent }]}>{eventDateLabel}</Text>}
           <Text style={[styles.boostTitle, { color: palette.text }]}>{event.title}</Text>
         </View>
       </View>
       {!!event.body && (
-        <Text style={[styles.boostSubtitle, { color: palette.textMuted, marginTop: spacing.sm }]}>
-          {event.body}
-        </Text>
+        <Text style={[styles.boostSubtitle, { color: palette.textMuted, marginTop: spacing.sm }]}>{event.body}</Text>
       )}
       {event.mediaUrl && (
         <View
@@ -791,23 +745,14 @@ const EventCard = ({ event, isFirst, onLayout }) => {
           }}
         >
           {isVideo ? (
-            <VideoView
-              player={player}
-              style={{ width: '100%', height: '100%' }}
-              contentFit="cover"
-              nativeControls
-            />
+            <VideoView player={player} style={{ width: '100%', height: '100%' }} contentFit="cover" nativeControls />
           ) : (
             <TouchableOpacity
               activeOpacity={0.9}
               onPress={() => setImageViewerVisible(true)}
               style={{ width: '100%', height: '100%' }}
             >
-              <Image
-                source={{ uri: event.mediaUrl }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
+              <Image source={{ uri: event.mediaUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             </TouchableOpacity>
           )}
         </View>
@@ -854,7 +799,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  floatingCard: { },
+  floatingCard: {},
 
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   typePill: {

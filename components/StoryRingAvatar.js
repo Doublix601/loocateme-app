@@ -1,13 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Canvas, Circle, SweepGradient, vec, BlurMask } from '@shopify/react-native-skia';
-import {
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  Easing,
-  useDerivedValue,
-} from 'react-native-reanimated';
+import { useSharedValue, withRepeat, withTiming, Easing, useDerivedValue } from 'react-native-reanimated';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
 
 /**
@@ -23,14 +17,7 @@ import ImageWithPlaceholder from './ImageWithPlaceholder';
  *
  * Tap → onPress (ouvre la visionneuse de stories sur la première story active).
  */
-const StoryRingAvatar = ({
-  uri,
-  size = 80,
-  state = 'none',
-  isMoon = false,
-  gradient,
-  onPress,
-}) => {
+const StoryRingAvatar = ({ uri, size = 80, state = 'none', isMoon = false, gradient, onPress }) => {
   const hasRing = state !== 'none';
   const ringWidth = isMoon ? 3 : 2.5;
   const ringOuterSize = size + ringWidth * 2;
@@ -41,17 +28,13 @@ const StoryRingAvatar = ({
 
   const colors = useMemo(
     () => (gradient && gradient.length > 1 ? gradient : ['#FF3DAD', '#8A4BFF', '#3DA9FF']),
-    [gradient]
+    [gradient],
   );
 
   const phase = useSharedValue(0);
   React.useEffect(() => {
     if (!isMoon || state !== 'unseen') return;
-    phase.value = withRepeat(
-      withTiming(phase.value + 1, { duration: 6000, easing: Easing.linear }),
-      -1,
-      false
-    );
+    phase.value = withRepeat(withTiming(phase.value + 1, { duration: 6000, easing: Easing.linear }), -1, false);
   }, [isMoon, state, phase]);
 
   const transform = useDerivedValue(() => [{ rotate: phase.value * 2 * Math.PI }]);
@@ -84,10 +67,7 @@ const StoryRingAvatar = ({
     }
 
     // Anneau statique : "vu" (gris atténué), ou "non vu" en mode Sun (plein, coloré).
-    const borderColor =
-      state === 'seen'
-        ? (isMoon ? 'rgba(255,255,255,0.28)' : 'rgba(14,17,22,0.16)')
-        : colors[0];
+    const borderColor = state === 'seen' ? (isMoon ? 'rgba(255,255,255,0.28)' : 'rgba(14,17,22,0.16)') : colors[0];
 
     return (
       <View

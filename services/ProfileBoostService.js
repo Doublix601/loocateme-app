@@ -46,7 +46,7 @@ const ProfileBoostService = {
               resolve(await ProfileBoostService._activate(locationId));
             },
           },
-        ]
+        ],
       );
     });
   },

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { logger } from '../../utils/logger';
 import { Appearance, useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -75,13 +76,13 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     // Debug log for Android theme detection
-    console.log(`[ThemeContext] Initial system scheme: ${systemScheme}`);
+    logger.log(`[ThemeContext] Initial system scheme: ${systemScheme}`);
     setInternalSystemScheme(systemScheme);
   }, [systemScheme]);
 
   useEffect(() => {
     const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      console.log(`[ThemeContext] Appearance changed: ${colorScheme}`);
+      logger.log(`[ThemeContext] Appearance changed: ${colorScheme}`);
       if (colorScheme) {
         setInternalSystemScheme(colorScheme);
       }
@@ -107,12 +108,14 @@ export function ThemeProvider({ children }) {
   }, []);
 
   const setMode = async (next) => {
-    const value = (next === 'dark' || next === 'system') ? next : 'light';
+    const value = next === 'dark' || next === 'system' ? next : 'light';
     setModeState(value);
-    try { await AsyncStorage.setItem(THEME_MODE_KEY, value); } catch (_) {}
+    try {
+      await AsyncStorage.setItem(THEME_MODE_KEY, value);
+    } catch (_) {}
   };
 
-  const isDark = (mode === 'system' ? internalSystemScheme === 'dark' : mode === 'dark');
+  const isDark = mode === 'system' ? internalSystemScheme === 'dark' : mode === 'dark';
   const colors = isDark ? darkPalette : lightPalette;
   const navTheme = isDark ? NavigationDarkTheme : NavigationLightTheme;
 

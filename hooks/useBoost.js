@@ -13,32 +13,35 @@ export function useBoost() {
 
   const isBoosted = ProfileBoostService.isActive(boostUntil);
 
-  const activateBoost = useCallback(async (locationId) => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      const result = await ProfileBoostService.activateWithConfirm(
-        locationId,
-        boostUntil instanceof Date ? boostUntil.toISOString() : boostUntil
-      );
+  const activateBoost = useCallback(
+    async (locationId) => {
+      if (loading) return;
+      setLoading(true);
+      try {
+        const result = await ProfileBoostService.activateWithConfirm(
+          locationId,
+          boostUntil instanceof Date ? boostUntil.toISOString() : boostUntil,
+        );
 
-      if (result.success) {
-        setBoostBalance(PremiumService.getBoostsRemaining());
-        try {
-          const res = await api.get('/user/me');
-          if (res?.user && updateUser) updateUser(res.user);
-        } catch (_) {}
-      } else if (result.reason === 'no_boosts') {
-        publish('ui:open_consumables', { type: 'boost' });
+        if (result.success) {
+          setBoostBalance(PremiumService.getBoostsRemaining());
+          try {
+            const res = await api.get('/user/me');
+            if (res?.user && updateUser) updateUser(res.user);
+          } catch (_) {}
+        } else if (result.reason === 'no_boosts') {
+          publish('ui:open_consumables', { type: 'boost' });
+        }
+      } catch (e) {
+        if (!e?.userCancelled) {
+          Alert.alert('Erreur', e?.message || "Impossible d'activer le boost.");
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      if (!e?.userCancelled) {
-        Alert.alert('Erreur', e?.message || 'Impossible d\'activer le boost.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [loading, boostUntil, updateUser]);
+    },
+    [loading, boostUntil, updateUser],
+  );
 
   return {
     activateBoost,

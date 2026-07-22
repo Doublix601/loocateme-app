@@ -7,7 +7,13 @@ import { proxifyImageUrl } from './ServerUtils';
 // Lightweight skeleton/placeholder for images, with an animated shimmer sweep
 // pendant le chargement (au lieu d'un simple spinner, pour une sensation plus
 // fluide sur les connexions lentes).
-export default function ImageWithPlaceholder({ uri, style, placeholderColor = '#e1e1e1', resizeMode = 'cover', children }) {
+export default function ImageWithPlaceholder({
+  uri,
+  style,
+  placeholderColor = '#e1e1e1',
+  resizeMode = 'cover',
+  children,
+}) {
   const [loading, setLoading] = useState(!!uri);
   const [error, setError] = useState(false);
   const [width, setWidth] = useState(0);
@@ -24,7 +30,7 @@ export default function ImageWithPlaceholder({ uri, style, placeholderColor = '#
         duration: 1100,
         easing: Easing.linear,
         useNativeDriver: true,
-      })
+      }),
     );
     loop.start();
     return () => loop.stop();
@@ -38,10 +44,7 @@ export default function ImageWithPlaceholder({ uri, style, placeholderColor = '#
   const borderRadius = style?.borderRadius || 0;
 
   return (
-    <View
-      style={[styles.container, style]}
-      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-    >
+    <View style={[styles.container, style]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {finalUri && !error ? (
         <Image
           source={{ uri: finalUri }}
@@ -49,13 +52,19 @@ export default function ImageWithPlaceholder({ uri, style, placeholderColor = '#
           resizeMode={resizeMode}
           cachePolicy="memory-disk"
           onLoadEnd={() => setLoading(false)}
-          onError={() => { setError(true); setLoading(false); }}
+          onError={() => {
+            setError(true);
+            setLoading(false);
+          }}
         />
       ) : (
         <View style={[StyleSheet.absoluteFill, { backgroundColor: placeholderColor, borderRadius }]} />
       )}
       {loading && (
-        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: placeholderColor, borderRadius, overflow: 'hidden' }]}>
+        <View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, { backgroundColor: placeholderColor, borderRadius, overflow: 'hidden' }]}
+        >
           {width > 0 && (
             <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ translateX }] }]}>
               <LinearGradient

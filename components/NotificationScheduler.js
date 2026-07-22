@@ -12,7 +12,9 @@ export async function cancelInactivityReminder() {
     const Notifications = mod?.default ?? mod;
     const id = await AsyncStorage.getItem(KEY_SCHEDULED_ID);
     if (id) {
-      try { await Notifications.cancelScheduledNotificationAsync(id); } catch (_) {}
+      try {
+        await Notifications.cancelScheduledNotificationAsync(id);
+      } catch (_) {}
       await AsyncStorage.removeItem(KEY_SCHEDULED_ID);
     }
   } catch (_) {}
@@ -35,7 +37,7 @@ export async function scheduleInactivityReminder({ delaySeconds = SIX_HOURS } = 
     trigger: {
       type: 'timeInterval',
       seconds: Math.max(1, Number(delaySeconds) || SIX_HOURS),
-      repeats: false
+      repeats: false,
     },
   });
   await AsyncStorage.setItem(KEY_SCHEDULED_ID, String(id));
@@ -43,7 +45,9 @@ export async function scheduleInactivityReminder({ delaySeconds = SIX_HOURS } = 
 }
 
 export async function touchUserActivity() {
-  try { await AsyncStorage.setItem(KEY_LAST_ACTIVE_AT, String(Date.now())); } catch (_) {}
+  try {
+    await AsyncStorage.setItem(KEY_LAST_ACTIVE_AT, String(Date.now()));
+  } catch (_) {}
 }
 
 export function initInactivityTracking({ devShortDelaySeconds } = {}) {
@@ -65,5 +69,9 @@ export function initInactivityTracking({ devShortDelaySeconds } = {}) {
     });
   } catch (_) {}
 
-  return () => { try { sub && sub.remove && sub.remove(); } catch (_) {} };
+  return () => {
+    try {
+      sub && sub.remove && sub.remove();
+    } catch (_) {}
+  };
 }

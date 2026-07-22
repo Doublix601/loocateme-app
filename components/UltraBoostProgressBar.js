@@ -1,11 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 function formatClock(ms) {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
@@ -20,19 +15,10 @@ function formatClock(ms) {
  * côté backend). Purement présentational : ne décide pas de sa visibilité,
  * calcule et anime la progression à partir de `startedAt`.
  */
-const UltraBoostProgressBar = ({
-  startedAt,
-  targetMs = 20 * 60 * 1000,
-  palette,
-  spacing,
-  radius,
-  typography,
-}) => {
+const UltraBoostProgressBar = ({ startedAt, targetMs = 20 * 60 * 1000, palette, spacing, radius, typography }) => {
   const startMs = useMemo(() => new Date(startedAt).getTime(), [startedAt]);
 
-  const [elapsedMs, setElapsedMs] = useState(() =>
-    Math.max(0, Math.min(Date.now() - startMs, targetMs))
-  );
+  const [elapsedMs, setElapsedMs] = useState(() => Math.max(0, Math.min(Date.now() - startMs, targetMs)));
 
   useEffect(() => {
     const tick = () => setElapsedMs(Math.max(0, Math.min(Date.now() - startMs, targetMs)));

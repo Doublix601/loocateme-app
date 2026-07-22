@@ -20,8 +20,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 
-const { width, height } = Dimensions.get('window');
-
 import { UserContext } from '../components/contexts/UserContext';
 import {
   setVisibility as apiSetVisibility,
@@ -36,6 +34,8 @@ import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../co
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
+
+const { width, height } = Dimensions.get('window');
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
@@ -102,7 +102,7 @@ const SettingsScreen = () => {
       setPolicyLoading(true);
       setPolicyModalVisible(true);
       const res = await getPrivacyPolicy();
-      const text = typeof res === 'string' ? res : (res?.policy || res?.text || JSON.stringify(res, null, 2));
+      const text = typeof res === 'string' ? res : res?.policy || res?.text || JSON.stringify(res, null, 2);
       setPolicyText(text);
     } catch (e) {
       setPolicyText('Impossible de charger la politique de confidentialité.');
@@ -111,23 +111,48 @@ const SettingsScreen = () => {
     }
   };
 
-  const persistConsentQuietly = async ({ accepted, analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue }) => {
+  const persistConsentQuietly = async ({
+    accepted,
+    analytics: analyticsValue,
+    marketing: marketingValue,
+    doNotSell: doNotSellValue,
+  }) => {
     try {
-      const res = await updateConsent({ accepted, version: consentVersion, analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue });
-      const updatedUser = res?.user ? res.user : {
-        ...user,
-        consent: { accepted, version: consentVersion, consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null },
-        privacyPreferences: { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
-      };
+      const res = await updateConsent({
+        accepted,
+        version: consentVersion,
+        analytics: analyticsValue,
+        marketing: marketingValue,
+        doNotSell: doNotSellValue,
+      });
+      const updatedUser = res?.user
+        ? res.user
+        : {
+            ...user,
+            consent: {
+              accepted,
+              version: consentVersion,
+              consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null,
+            },
+            privacyPreferences: { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
+          };
       if (updateUser) {
         updateUser({
           ...user,
           username: user?.username || updatedUser.name || '',
           bio: user?.bio ?? updatedUser.bio ?? '',
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
-          socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
+          socialMedia:
+            user?.socialMedia ??
+            (Array.isArray(updatedUser.socialNetworks)
+              ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+              : []),
           consent: updatedUser.consent || { accepted, version: consentVersion },
-          privacyPreferences: updatedUser.privacyPreferences || { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
+          privacyPreferences: updatedUser.privacyPreferences || {
+            analytics: analyticsValue,
+            marketing: marketingValue,
+            doNotSell: doNotSellValue,
+          },
         });
       }
     } catch (e) {
@@ -166,18 +191,28 @@ const SettingsScreen = () => {
   const saveConsent = async (accepted) => {
     try {
       const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing, doNotSell });
-      const updatedUser = res?.user ? res.user : {
-        ...user,
-        consent: { accepted, version: consentVersion, consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null },
-        privacyPreferences: { analytics, marketing, doNotSell },
-      };
+      const updatedUser = res?.user
+        ? res.user
+        : {
+            ...user,
+            consent: {
+              accepted,
+              version: consentVersion,
+              consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null,
+            },
+            privacyPreferences: { analytics, marketing, doNotSell },
+          };
       if (updateUser) {
         updateUser({
           ...user,
           username: user?.username || updatedUser.name || '',
           bio: user?.bio ?? updatedUser.bio ?? '',
           photo: user?.photo ?? updatedUser.profileImageUrl ?? null,
-          socialMedia: user?.socialMedia ?? (Array.isArray(updatedUser.socialNetworks) ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle })) : []),
+          socialMedia:
+            user?.socialMedia ??
+            (Array.isArray(updatedUser.socialNetworks)
+              ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+              : []),
           consent: updatedUser.consent || { accepted, version: consentVersion },
           privacyPreferences: updatedUser.privacyPreferences || { analytics, marketing, doNotSell },
         });
@@ -196,7 +231,7 @@ const SettingsScreen = () => {
       [
         { text: 'Annuler', style: 'cancel' },
         { text: 'Continuer', style: 'destructive', onPress: () => setRevokeVisible(true) },
-      ]
+      ],
     );
   };
 
@@ -210,7 +245,9 @@ const SettingsScreen = () => {
       await deleteMyAccount({ password: revokePassword });
       setRevokeVisible(false);
       setRevokePassword('');
-      try { clearApiCache(); } catch (_) {}
+      try {
+        clearApiCache();
+      } catch (_) {}
       navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Suppression impossible. Mot de passe invalide ou problème serveur.');
@@ -238,13 +275,15 @@ const SettingsScreen = () => {
         [
           { text: 'Annuler', style: 'cancel' },
           {
-            text: 'Supprimer', style: 'destructive', onPress: () => {
+            text: 'Supprimer',
+            style: 'destructive',
+            onPress: () => {
               // Open the revoke modal to let user enter their password, then perform delete
               setRevokePassword('');
               setRevokeVisible(true);
-            }
-          }
-        ]
+            },
+          },
+        ],
       );
     } catch (_) {}
   };
@@ -262,10 +301,7 @@ const SettingsScreen = () => {
           onPress={saveAndReturn}
           hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
         >
-          <Image
-            source={require('../assets/appIcons/backArrow.png')}
-            style={styles.backButtonImage}
-          />
+          <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backButtonImage} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Paramètres</Text>
         <View style={{ width: 44 }} />
@@ -278,10 +314,17 @@ const SettingsScreen = () => {
           <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode d'affichage</Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary }}>{displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}</Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}
+              </Text>
             </View>
-            <TouchableOpacity onPress={toggleDisplayNameMode} style={[styles.smallPill, { backgroundColor: colors.background }]}>
-              <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>{displayNameMode === 'full' ? 'Classique' : 'Custom'}</Text>
+            <TouchableOpacity
+              onPress={toggleDisplayNameMode}
+              style={[styles.smallPill, { backgroundColor: colors.background }]}
+            >
+              <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>
+                {displayNameMode === 'full' ? 'Classique' : 'Custom'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -289,14 +332,29 @@ const SettingsScreen = () => {
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <Text style={styles.sectionTitle}>APPARENCE</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
-            <TouchableOpacity onPress={() => setThemeMode('light')} style={[styles.themePill, themeMode === 'light' && { backgroundColor: '#00c2cb' }]}>
-              <Text style={[styles.themePillText, { color: themeMode === 'light' ? '#fff' : colors.textSecondary }]}>Clair</Text>
+            <TouchableOpacity
+              onPress={() => setThemeMode('light')}
+              style={[styles.themePill, themeMode === 'light' && { backgroundColor: '#00c2cb' }]}
+            >
+              <Text style={[styles.themePillText, { color: themeMode === 'light' ? '#fff' : colors.textSecondary }]}>
+                Clair
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setThemeMode('dark')} style={[styles.themePill, themeMode === 'dark' && { backgroundColor: '#00c2cb' }]}>
-              <Text style={[styles.themePillText, { color: themeMode === 'dark' ? '#fff' : colors.textSecondary }]}>Sombre</Text>
+            <TouchableOpacity
+              onPress={() => setThemeMode('dark')}
+              style={[styles.themePill, themeMode === 'dark' && { backgroundColor: '#00c2cb' }]}
+            >
+              <Text style={[styles.themePillText, { color: themeMode === 'dark' ? '#fff' : colors.textSecondary }]}>
+                Sombre
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setThemeMode('system')} style={[styles.themePill, themeMode === 'system' && { backgroundColor: '#00c2cb' }]}>
-              <Text style={[styles.themePillText, { color: themeMode === 'system' ? '#fff' : colors.textSecondary }]}>Auto</Text>
+            <TouchableOpacity
+              onPress={() => setThemeMode('system')}
+              style={[styles.themePill, themeMode === 'system' && { backgroundColor: '#00c2cb' }]}
+            >
+              <Text style={[styles.themePillText, { color: themeMode === 'system' ? '#fff' : colors.textSecondary }]}>
+                Auto
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -337,7 +395,9 @@ const SettingsScreen = () => {
           <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.optionText, { color: colors.textPrimary }]}>Vente de données (CCPA)</Text>
-              <Text style={{ fontSize: 11, color: colors.textSecondary }}>Ne pas vendre mes informations personnelles</Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+                Ne pas vendre mes informations personnelles
+              </Text>
             </View>
             <Switch
               value={doNotSell}
@@ -351,11 +411,17 @@ const SettingsScreen = () => {
         {['admin', 'moderator'].includes(user?.role) && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <Text style={styles.sectionTitle}>MODÉRATION</Text>
-            <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={() => navigation.navigate('Moderator')}>
+            <TouchableOpacity
+              style={[styles.linkRow, { borderBottomColor: colors.border }]}
+              onPress={() => navigation.navigate('Moderator')}
+            >
               <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Espace modérateur</Text>
             </TouchableOpacity>
             {user?.role === 'admin' && (
-              <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={() => navigation.navigate('Debug')}>
+              <TouchableOpacity
+                style={[styles.linkRow, { borderBottomWidth: 0 }]}
+                onPress={() => navigation.navigate('Debug')}
+              >
                 <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Debug Console</Text>
               </TouchableOpacity>
             )}
@@ -367,25 +433,38 @@ const SettingsScreen = () => {
             <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>Exporter mes données</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(255,77,77,0.1)' : '#ffe6e6' }]} onPress={handleDelete}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(255,77,77,0.1)' : '#ffe6e6' }]}
+            onPress={handleDelete}
+          >
             <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>Supprimer mon compte</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]}
-            onPress={async () => { try { await apiLogout(); } catch (_) {} try { clearApiCache(); } catch (_) {} navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); }}
+            onPress={async () => {
+              try {
+                await apiLogout();
+              } catch (_) {}
+              try {
+                clearApiCache();
+              } catch (_) {}
+              navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+            }}
           >
             <Text style={styles.logoutText}>Déconnexion</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 12, marginTop: 30, marginBottom: 20 }}>
+        <Text
+          style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 12, marginTop: 30, marginBottom: 20 }}
+        >
           LoocateMe v1.0.0 (39)
         </Text>
       </ScrollView>
 
       <Modal visible={policyModalVisible} animationType="slide" onRequestClose={() => setPolicyModalVisible(false)}>
-        <View style={[styles.modalContainer, { backgroundColor: colors.background }] }>
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setPolicyModalVisible(false)}>
               <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Fermer</Text>
@@ -409,11 +488,20 @@ const SettingsScreen = () => {
       {/* Revocation (Delete Account) Modal */}
       <Modal transparent visible={revokeVisible} animationType="fade" onRequestClose={() => setRevokeVisible(false)}>
         <View style={[styles.revokeBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
-          <View style={[styles.revokeCard, { backgroundColor: colors.surface, borderColor: colors.border }] }>
+          <View style={[styles.revokeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text style={[styles.revokeTitle, { color: colors.textPrimary }]}>Suppression du compte</Text>
-            <Text style={[styles.revokeDesc, { color: isDark ? '#fff' : colors.textSecondary }]}>Pour confirmer, entrez votre mot de passe. Cette action est irréversible.</Text>
+            <Text style={[styles.revokeDesc, { color: isDark ? '#fff' : colors.textSecondary }]}>
+              Pour confirmer, entrez votre mot de passe. Cette action est irréversible.
+            </Text>
             <TextInput
-              style={[styles.revokeInput, { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}
+              style={[
+                styles.revokeInput,
+                {
+                  borderColor: colors.border,
+                  color: isDark ? '#fff' : colors.textPrimary,
+                  backgroundColor: isDark ? '#0f1115' : '#ffffff',
+                },
+              ]}
               placeholder="Mot de passe"
               placeholderTextColor={isDark ? '#999' : '#666'}
               secureTextEntry
@@ -421,10 +509,18 @@ const SettingsScreen = () => {
               onChangeText={setRevokePassword}
             />
             <View style={styles.revokeButtons}>
-              <TouchableOpacity style={[styles.primaryButton, styles.secondaryButton]} onPress={() => setRevokeVisible(false)} disabled={revokeWorking}>
+              <TouchableOpacity
+                style={[styles.primaryButton, styles.secondaryButton]}
+                onPress={() => setRevokeVisible(false)}
+                disabled={revokeWorking}
+              >
                 <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.primaryButton, styles.dangerButton]} onPress={performRevokeDelete} disabled={revokeWorking}>
+              <TouchableOpacity
+                style={[styles.primaryButton, styles.dangerButton]}
+                onPress={performRevokeDelete}
+                disabled={revokeWorking}
+              >
                 <Text style={styles.dangerButtonText}>{revokeWorking ? 'Suppression...' : 'Supprimer'}</Text>
               </TouchableOpacity>
             </View>

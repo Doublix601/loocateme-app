@@ -84,8 +84,12 @@ export default function MainSwiper() {
     }),
   ).current;
 
-  const lockSwiper   = useCallback(() => { swiperLockedRef.current = true; }, []);
-  const unlockSwiper = useCallback(() => { swiperLockedRef.current = false; }, []);
+  const lockSwiper = useCallback(() => {
+    swiperLockedRef.current = true;
+  }, []);
+  const unlockSwiper = useCallback(() => {
+    swiperLockedRef.current = false;
+  }, []);
 
   const contextValue = useMemo(
     () => ({ goToPage, currentPage, insideSwiper: true, lockSwiper, unlockSwiper }),

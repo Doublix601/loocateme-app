@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../utils/logger';
 
 const STORAGE_KEY = '@loocateme:premium_nudges_v1';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -26,7 +27,8 @@ const COPY = {
   },
   profile_views: {
     title: '🔥 Passez Premium !',
-    message: "Vous avez consulté plusieurs profils. Passez Premium pour voir qui a visité VOTRE profil et débloquer de nombreuses autres fonctionnalités !",
+    message:
+      'Vous avez consulté plusieurs profils. Passez Premium pour voir qui a visité VOTRE profil et débloquer de nombreuses autres fonctionnalités !',
     source: 'profile_views',
   },
   consumables_depleted: {
@@ -88,7 +90,7 @@ async function _save() {
 
 function _log(event) {
   try {
-    console.log('[PremiumNudge Analytics]', JSON.stringify(event));
+    logger.log('[PremiumNudge Analytics]', JSON.stringify(event));
     // TODO: brancher sur votre SDK analytics (Amplitude, Mixpanel, etc.)
   } catch (_) {}
 }
@@ -154,9 +156,7 @@ const PremiumNudgeService = {
     const now = Date.now();
     const sig = _state.signals[signalId] ?? _emptySignalState();
     _state.signals[signalId] = { ...sig, lastShownAt: now };
-    _state.global.shownAtTimestamps = [..._state.global.shownAtTimestamps, now].filter(
-      (t) => now - t < 7 * DAY_MS
-    );
+    _state.global.shownAtTimestamps = [..._state.global.shownAtTimestamps, now].filter((t) => now - t < 7 * DAY_MS);
     _sessionShown = true;
     await _save();
     _log({ signal: signalId, event: 'shown', timestamp: now });

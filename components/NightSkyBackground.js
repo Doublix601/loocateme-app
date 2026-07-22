@@ -29,11 +29,11 @@ function TwinklingStar({ size, left, top, baseOpacity, delay, duration }) {
       withRepeat(
         withSequence(
           withTiming(Math.min(1, baseOpacity + 0.45), { duration, easing: Easing.inOut(Easing.quad) }),
-          withTiming(Math.max(0.1, baseOpacity - 0.1), { duration, easing: Easing.inOut(Easing.quad) })
+          withTiming(Math.max(0.1, baseOpacity - 0.1), { duration, easing: Easing.inOut(Easing.quad) }),
         ),
         -1,
-        true
-      )
+        true,
+      ),
     );
     return () => cancelAnimation(opacity);
   }, [delay, duration, baseOpacity]);
@@ -72,7 +72,9 @@ function ShootingStar({ seed = 0, screenWidth, screenHeight }) {
     // distance à parcourir : assez pour traverser l'écran
     const distance = Math.hypot(screenWidth, screenHeight) * 1.1;
     // point de départ : dans le tiers supérieur, côté opposé à la direction
-    const startX = goingLeft ? rand(screenWidth * 0.5, screenWidth * 1.05) : rand(-screenWidth * 0.05, screenWidth * 0.5);
+    const startX = goingLeft
+      ? rand(screenWidth * 0.5, screenWidth * 1.05)
+      : rand(-screenWidth * 0.05, screenWidth * 0.5);
     const startY = rand(-screenHeight * 0.05, screenHeight * 0.45);
     const dx = Math.cos(angle) * distance;
     const dy = Math.sin(angle) * distance;
@@ -96,16 +98,12 @@ function ShootingStar({ seed = 0, screenWidth, screenHeight }) {
       visible.value = withSequence(
         withTiming(1, { duration: 120, easing: Easing.out(Easing.quad) }),
         withTiming(1, { duration: Math.max(0, params.travelMs - 320) }),
-        withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) })
+        withTiming(0, { duration: 200, easing: Easing.in(Easing.quad) }),
       );
-      progress.value = withTiming(
-        1,
-        { duration: params.travelMs, easing: Easing.out(Easing.cubic) },
-        (finished) => {
-          'worklet';
-          // boucle naturelle via setTimeout côté JS
-        }
-      );
+      progress.value = withTiming(1, { duration: params.travelMs, easing: Easing.out(Easing.cubic) }, (finished) => {
+        'worklet';
+        // boucle naturelle via setTimeout côté JS
+      });
     };
     const start = () => {
       cycle();
@@ -129,11 +127,7 @@ function ShootingStar({ seed = 0, screenWidth, screenHeight }) {
     const ty = params.startY + params.dy * progress.value;
     return {
       opacity: visible.value,
-      transform: [
-        { translateX: tx },
-        { translateY: ty },
-        { rotate: `${params.angleDeg}deg` },
-      ],
+      transform: [{ translateX: tx }, { translateY: ty }, { rotate: `${params.angleDeg}deg` }],
     };
   });
 
@@ -153,12 +147,7 @@ function ShootingStar({ seed = 0, screenWidth, screenHeight }) {
     >
       {/* Trainée : gradient transparent -> blanc -> tête lumineuse */}
       <LinearGradient
-        colors={[
-          'rgba(255,255,255,0)',
-          'rgba(180,210,255,0.25)',
-          'rgba(220,230,255,0.85)',
-          'rgba(255,255,255,1)',
-        ]}
+        colors={['rgba(255,255,255,0)', 'rgba(180,210,255,0.25)', 'rgba(220,230,255,0.85)', 'rgba(255,255,255,1)']}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={{ flex: 1, borderRadius: params.thickness }}
@@ -209,14 +198,14 @@ export default function NightSkyBackground({ style, pointerEvents = 'none', star
   return (
     <View style={[StyleSheet.absoluteFill, styles.wrapper, style]} pointerEvents={pointerEvents}>
       <LinearGradient
-        colors={["#0B1026", "#1B2735"]}
+        colors={['#0B1026', '#1B2735']}
         style={StyleSheet.absoluteFill}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       />
       {/* Voile bleuté très subtil en haut pour donner de la profondeur */}
       <LinearGradient
-        colors={["rgba(40,70,130,0.25)", "rgba(0,0,0,0)"]}
+        colors={['rgba(40,70,130,0.25)', 'rgba(0,0,0,0)']}
         style={StyleSheet.absoluteFill}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.6 }}

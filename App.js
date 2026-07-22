@@ -1,14 +1,18 @@
 import 'react-native-gesture-handler';
 import { useState, useEffect, useRef, useContext } from 'react';
 import {
-  ActivityIndicator, Alert, AppState, Linking, Platform,
-  StatusBar, View, Text, TouchableOpacity, StyleSheet, LogBox,
+  ActivityIndicator,
+  Alert,
+  AppState,
+  Linking,
+  Platform,
+  StatusBar,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  LogBox,
 } from 'react-native';
-
-LogBox.ignoreLogs([
-  'expo-notifications: Android Push notifications',
-  '`expo-notifications` functionality is not fully supported in Expo Go',
-]);
 
 import * as Location from 'expo-location';
 import { getCurrentPositionSmart } from './utils/locationHelper';
@@ -32,8 +36,13 @@ import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext'
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { usePresence } from './hooks/usePresence';
 import {
-  initApiFromStorage, getMyUser, clearApiCache, getUserById,
-  getAccessToken, logout as apiLogout, getPolicyStatus,
+  initApiFromStorage,
+  getMyUser,
+  clearApiCache,
+  getUserById,
+  getAccessToken,
+  logout as apiLogout,
+  getPolicyStatus,
 } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
@@ -41,6 +50,11 @@ import PremiumNudgeService from './services/PremiumNudgeService';
 import { mapBackendUser, mapProfileUser } from './utils/mappers';
 import { hasSeenOnboarding } from './utils/onboarding';
 import RootNavigator from './navigation/RootNavigator';
+
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  '`expo-notifications` functionality is not fully supported in Expo Go',
+]);
 
 const navigationRef = createNavigationContainerRef();
 
@@ -60,7 +74,9 @@ function AppShell({ purchasesReady }) {
   usePresence(authReady);
 
   useEffect(() => {
-    try { setMode(isMoon ? 'dark' : 'light'); } catch (_) {}
+    try {
+      setMode(isMoon ? 'dark' : 'light');
+    } catch (_) {}
   }, [isMoon]);
 
   useEffect(() => {
@@ -98,13 +114,15 @@ function AppShell({ purchasesReady }) {
             const res = await getMyUser();
             const me = res?.user;
             if (me && updateUser) updateUser(mapBackendUser(me));
-            const consentAccepted = !!(me?.consent?.accepted);
+            const consentAccepted = !!me?.consent?.accepted;
             let policyBlocking = false;
             if (consentAccepted) {
               try {
                 const status = await getPolicyStatus();
                 policyBlocking = !!status?.blocking;
-              } catch (_) { /* fail-open: don't block the app on a network error */ }
+              } catch (_) {
+                /* fail-open: don't block the app on a network error */
+              }
             }
             if (consentAccepted && !policyBlocking) {
               const seen = await hasSeenOnboarding();
@@ -142,37 +160,66 @@ function AppShell({ purchasesReady }) {
         const msg = payload?.message || "Veuillez mettre à jour l'application pour continuer.";
         const min = payload?.details?.minAppVersion;
         const api = payload?.details?.apiVersion;
-        const subtitle = [min ? `Version minimale: ${min}` : null, api ? `Version API: ${api}` : null].filter(Boolean).join('\n');
+        const subtitle = [min ? `Version minimale: ${min}` : null, api ? `Version API: ${api}` : null]
+          .filter(Boolean)
+          .join('\n');
         Alert.alert(
           'Mise à jour requise',
           subtitle ? `${msg}\n\n${subtitle}` : msg,
           [
-            url ? { text: 'Mettre à jour', onPress: () => { try { Linking.openURL(url); } catch (_) {} } } : undefined,
+            url
+              ? {
+                  text: 'Mettre à jour',
+                  onPress: () => {
+                    try {
+                      Linking.openURL(url);
+                    } catch (_) {}
+                  },
+                }
+              : undefined,
             { text: 'OK', style: 'destructive' },
           ].filter(Boolean),
-          { cancelable: false }
+          { cancelable: false },
         );
       } catch (_) {}
     });
-    return () => { try { unsub && unsub(); } catch (_) {} };
+    return () => {
+      try {
+        unsub && unsub();
+      } catch (_) {}
+    };
   }, []);
 
   useEffect(() => {
     const off = subscribe('auth:logout', () => {
-      try { clearApiCache(); } catch (_) {}
+      try {
+        clearApiCache();
+      } catch (_) {}
       navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
     });
-    return () => { try { off && off(); } catch (_) {} };
+    return () => {
+      try {
+        off && off();
+      } catch (_) {}
+    };
   }, []);
 
   useEffect(() => {
     const off = subscribe('ui:open_premium', (payload) => navigationRef.navigate('PremiumPaywall', payload));
-    return () => { try { off && off(); } catch (_) {} };
+    return () => {
+      try {
+        off && off();
+      } catch (_) {}
+    };
   }, []);
 
   useEffect(() => {
     const off = subscribe('ui:open_consumables', () => setShopSheetVisible(true));
-    return () => { try { off && off(); } catch (_) {} };
+    return () => {
+      try {
+        off && off();
+      } catch (_) {}
+    };
   }, []);
 
   useEffect(() => {
@@ -206,7 +253,7 @@ function AppShell({ purchasesReady }) {
           setLocationModal({ visible: true, type: 'always' });
           hasShownLocationModal.current = true;
         } else {
-          setLocationModal(prev => prev.visible ? { ...prev, visible: false } : prev);
+          setLocationModal((prev) => (prev.visible ? { ...prev, visible: false } : prev));
         }
       } catch (err) {
         console.warn('[App] Error checking location permissions:', err);
@@ -217,25 +264,37 @@ function AppShell({ purchasesReady }) {
 
     const sub = AppState.addEventListener?.('change', (next) => {
       if (appState.current.match(/inactive|background/) && next === 'active') {
-        try { publish('userlist:refresh'); } catch (_) {}
+        try {
+          publish('userlist:refresh');
+        } catch (_) {}
         checkLocationPermissions();
-        try { LocationService.performCheckIn(ScanMode.BACKGROUND_STAY); } catch (_) {}
+        try {
+          LocationService.performCheckIn(ScanMode.BACKGROUND_STAY);
+        } catch (_) {}
       }
       appState.current = next;
     });
-    return () => { try { sub?.remove?.(); } catch (_) {} };
+    return () => {
+      try {
+        sub?.remove?.();
+      } catch (_) {}
+    };
   }, [authReady]);
 
   useEffect(() => {
     if (!authReady) return;
     if (didInitialScanRef.current) return;
     didInitialScanRef.current = true;
-    try { LocationService.performCheckIn(ScanMode.INITIAL_SCAN); } catch (_) {}
+    try {
+      LocationService.performCheckIn(ScanMode.INITIAL_SCAN);
+    } catch (_) {}
   }, [authReady]);
 
   useEffect(() => {
     return () => {
-      try { LocationService.cancelBackgroundStay(); } catch (_) {}
+      try {
+        LocationService.cancelBackgroundStay();
+      } catch (_) {}
     };
   }, []);
 
@@ -245,7 +304,11 @@ function AppShell({ purchasesReady }) {
       if (!url) return null;
       const match = String(url).match(/profile\/([^?#]+)/i);
       if (!match || !match[1]) return null;
-      try { return decodeURIComponent(match[1]); } catch (_) { return match[1]; }
+      try {
+        return decodeURIComponent(match[1]);
+      } catch (_) {
+        return match[1];
+      }
     };
 
     const handleUrl = async (url) => {
@@ -266,7 +329,11 @@ function AppShell({ purchasesReady }) {
     })();
 
     const sub = Linking.addEventListener?.('url', ({ url }) => handleUrl(url));
-    return () => { try { sub?.remove?.(); } catch (_) {} };
+    return () => {
+      try {
+        sub?.remove?.();
+      } catch (_) {}
+    };
   }, []);
 
   // Notification tap handling: navigate to the relevant screen based on the
@@ -302,7 +369,11 @@ function AppShell({ purchasesReady }) {
         console.warn('[App] notification listener setup failed', e?.message || e);
       }
     })();
-    return () => { try { sub?.remove?.(); } catch (_) {} };
+    return () => {
+      try {
+        sub?.remove?.();
+      } catch (_) {}
+    };
   }, []);
 
   const isLoading = !assetsReady || !authReady;
@@ -312,8 +383,18 @@ function AppShell({ purchasesReady }) {
       <NavigationContainer ref={navigationRef}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={colors.surface} />
         {forceUpdateInfo ? (
-          <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.background }}>
-            <Text style={{ fontSize: 22, fontWeight: '700', color: colors.onBackground || '#111', marginBottom: 12 }}>Mise à jour requise</Text>
+          <SafeAreaView
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 24,
+              backgroundColor: colors.background,
+            }}
+          >
+            <Text style={{ fontSize: 22, fontWeight: '700', color: colors.onBackground || '#111', marginBottom: 12 }}>
+              Mise à jour requise
+            </Text>
             <Text style={{ fontSize: 16, color: colors.onBackground || '#111', textAlign: 'center' }}>
               {forceUpdateInfo?.message || "Veuillez mettre à jour l'application pour continuer."}
             </Text>
@@ -325,7 +406,11 @@ function AppShell({ purchasesReady }) {
             <View style={{ height: 24 }} />
             {forceUpdateInfo?.details?.upgradeUrl ? (
               <TouchableOpacity
-                onPress={() => { try { Linking.openURL(forceUpdateInfo.details.upgradeUrl); } catch (_) {} }}
+                onPress={() => {
+                  try {
+                    Linking.openURL(forceUpdateInfo.details.upgradeUrl);
+                  } catch (_) {}
+                }}
                 style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 8 }}
               >
                 <Text style={{ color: colors.onPrimary || '#fff', fontWeight: '600' }}>Mettre à jour</Text>
@@ -349,11 +434,16 @@ function AppShell({ purchasesReady }) {
       <LocationPermissionModal
         visible={locationModal.visible}
         type={locationModal.type}
-        onClose={() => setLocationModal(prev => ({ ...prev, visible: false }))}
+        onClose={() => setLocationModal((prev) => ({ ...prev, visible: false }))}
       />
 
       {isLoading && (
-        <View style={[StyleSheet.absoluteFill, { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }]}>
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            { justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
+          ]}
+        >
           <ActivityIndicator size="large" color="#00c2cb" />
         </View>
       )}

@@ -1,5 +1,15 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, StyleSheet, Alert, Platform, Image } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  Alert,
+  Platform,
+  Image,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { getPrivacyPolicy, acceptPolicyVersion, logout } from '../components/ApiRequest';
@@ -34,7 +44,9 @@ export default function ConsentScreen() {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleAccept = async () => {
@@ -43,8 +55,14 @@ export default function ConsentScreen() {
       const res = await acceptPolicyVersion();
       if (updateUser) {
         try {
-          updateUser(res?.user ? { ...user, consent: res.user.consent } : { ...user, consent: { accepted: true, version, consentAt: new Date().toISOString() } });
-        } catch (_) { /* ignore mapping issues */ }
+          updateUser(
+            res?.user
+              ? { ...user, consent: res.user.consent }
+              : { ...user, consent: { accepted: true, version, consentAt: new Date().toISOString() } },
+          );
+        } catch (_) {
+          /* ignore mapping issues */
+        }
       }
       await navigateAfterAuth(navigation);
       setTimeout(() => publish('userlist:refresh'), 1000);
@@ -60,7 +78,9 @@ export default function ConsentScreen() {
       Alert.alert('Information', "Vous devez accepter la politique de confidentialité pour utiliser l'application.");
       await logout();
       navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-    } catch { /* noop */ }
+    } catch {
+      /* noop */
+    }
   };
 
   return (
@@ -76,8 +96,12 @@ export default function ConsentScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {!!changelog && (
-            <View style={[styles.card, { backgroundColor: colors.surface, borderLeftWidth: 3, borderLeftColor: '#00c2cb' }]}>
-              <Text style={[styles.changelogTitle, { color: colors.textPrimary }]}>Ce qui a changé{version ? ` (v${version})` : ''}</Text>
+            <View
+              style={[styles.card, { backgroundColor: colors.surface, borderLeftWidth: 3, borderLeftColor: '#00c2cb' }]}
+            >
+              <Text style={[styles.changelogTitle, { color: colors.textPrimary }]}>
+                Ce qui a changé{version ? ` (v${version})` : ''}
+              </Text>
               <Text style={[styles.policyText, { color: colors.textSecondary }]}>{changelog}</Text>
             </View>
           )}
@@ -88,7 +112,15 @@ export default function ConsentScreen() {
       )}
 
       <View style={[styles.actions, { backgroundColor: colors.surface }]}>
-        <TouchableOpacity style={[styles.button, styles.decline, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]} onPress={handleDecline} disabled={accepting}>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            styles.decline,
+            { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+          ]}
+          onPress={handleDecline}
+          disabled={accepting}
+        >
           <Text style={[styles.buttonText, { color: colors.textPrimary, opacity: 0.6 }]}>Refuser</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.accept]} onPress={handleAccept} disabled={accepting}>
