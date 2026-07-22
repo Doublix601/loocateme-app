@@ -470,7 +470,7 @@ const LocationListScreen = () => {
       // Rafraîchir la liste suite aux mutations liées à la position MAIS sans renvoyer un POST
       // pour éviter une boucle infinie (mitraillette à requêtes).
       if (path && (path.includes('/users/location') || path.includes('/user/location') || path.includes('/user/heartbeat'))) {
-        fetchNearbyLocations({ skipUpdateMyLocation: true });
+        fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true });
       }
     });
 
@@ -501,7 +501,7 @@ const LocationListScreen = () => {
   };
 
   const fetchNearbyLocations = async (options = {}) => {
-    const { skipUpdateMyLocation = false, silent = false, vibe: overrideVibe } = options;
+    const { skipUpdateMyLocation = false, silent = false, skipLastKnown = false, vibe: overrideVibe } = options;
     const currentVibe = overrideVibe || vibe;
     try {
       if (!silent) setLoading(true);
@@ -526,7 +526,7 @@ const LocationListScreen = () => {
       try {
         // getCurrentPositionSmart applique l'override dev (si défini) et retente en
         // Accuracy.Low si Balanced échoue (voir utils/locationHelper.js).
-        location = await getCurrentPositionSmart();
+        location = await getCurrentPositionSmart({ skipLastKnown });
       } catch (locErr) {
         // Position indisponible (GPS/services de localisation désactivés au niveau OS)
         console.warn('Location unavailable:', locErr?.message);
@@ -635,7 +635,7 @@ const LocationListScreen = () => {
     lastRefreshAtRef.current = now;
     setRefreshing(true);
     setDisplayLimit(MIN_LOCATIONS);
-    await fetchNearbyLocations({ limit: MIN_LOCATIONS, vibe });
+    await fetchNearbyLocations({ limit: MIN_LOCATIONS, vibe, skipLastKnown: true });
     setRefreshing(false);
   };
 
