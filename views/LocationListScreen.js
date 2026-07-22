@@ -73,6 +73,32 @@ const LocationListScreen = () => {
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
+  // Throttle du pull-to-refresh manuel : 1 appel API max par minute, pour
+  // éviter qu'un utilisateur qui tire frénétiquement sur la liste ne
+  // multiplie les requêtes serveur inutilement.
+  const REFRESH_MIN_INTERVAL_MS = 60 * 1000;
+  const lastRefreshAtRef = useRef(0);
+
+  // Cache mémoire de session par vibe (sun/moon), pour éviter de refetch
+  // /api/locations + Overpass à chaque bascule jour/nuit si on revient sur
+  // une vibe déjà consultée récemment sans avoir bougé. L'intérêt n'est pas
+  // la vitesse perçue (déjà masquée par l'interstitiel de 8s du VibeFAB)
+  // mais de réduire le volume de requêtes réseau vers le backend.
+  const VIBE_CACHE_TTL_MS = 45 * 1000;
+  const vibeCacheRef = useRef({
+    sun: { zoneKey: null, fetchedAt: 0, locations: [], osmPois: [], displayLimit: MIN_LOCATIONS, hasMore: true },
+    moon: { zoneKey: null, fetchedAt: 0, locations: [], osmPois: [], displayLimit: MIN_LOCATIONS, hasMore: true },
+  });
+  const getZoneKey = (lat, lon) => (lat == null || lon == null) ? null : `${lat}:${lon}`;
+  const readVibeCache = (v, zoneKey) => {
+    const entry = vibeCacheRef.current[v];
+    if (!entry || zoneKey == null || entry.zoneKey !== zoneKey) return null;
+    if (Date.now() - entry.fetchedAt > VIBE_CACHE_TTL_MS) return null;
+    return entry;
+  };
+  const writeVibeCache = (v, patch) => {
+    vibeCacheRef.current[v] = { ...vibeCacheRef.current[v], ...patch, fetchedAt: Date.now() };
+  };
 
   // Watch for location updates to keep distances accurate
   useEffect(() => {
@@ -160,12 +186,16 @@ const LocationListScreen = () => {
   // PulseList ordering: le lieu "Pro Boost" sponsorisé (renvoyé par le backend
   // avec isSponsored:true, un seul possible à la fois) est toujours épinglé en
   // tête, avant le tri normal par popularité (étoiles) puis distance croissante.
-  // 3★ > 2★ > 1★ > 0★ ; à égalité d'étoiles on trie par distance.
+  // 3★ > 2★ > 1★ > 0★ ; à égalité d'étoiles on trie par nombre d'utilisateurs actifs, puis distance.
   const pulseItems = useMemo(() => {
     const sorted = [...locationsWithDistance].sort((a, b) => {
       if (a.isSponsored && !b.isSponsored) return -1;
       if (b.isSponsored && !a.isSponsored) return 1;
-      return (b.stars || 0) - (a.stars || 0) || (a.distance || 0) - (b.distance || 0);
+      return (
+        (b.stars || 0) - (a.stars || 0) ||
+        (b.userCount || 0) - (a.userCount || 0) ||
+        (a.distance || 0) - (b.distance || 0)
+      );
     });
     // Mark first two high-rated items for tall card style
     let featuredCount = 0;
@@ -191,12 +221,28 @@ const LocationListScreen = () => {
   useEffect(() => {
     if (prevVibeRef.current !== vibe) {
       prevVibeRef.current = vibe;
-      setDisplayLimit(MIN_LOCATIONS);
-      setLoadingMore(false);
-      setLoadMoreError(false);
-      setHasMore(true);
-      // Recharger les 20 lieux prioritaires correspondant aux tags du nouveau mode
-      fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, limit: MIN_LOCATIONS, vibe });
+
+      const zoneKey = getZoneKey(roundedLat, roundedLon);
+      const cached = readVibeCache(vibe, zoneKey);
+
+      if (cached) {
+        // Cache hit : on a déjà ces données pour cette vibe/zone, pas besoin
+        // de refetch. On restaure aussi la profondeur de pagination (si
+        // l'utilisateur avait scrollé à 80 lieux, on ne repart pas de 40).
+        setLocations(cached.locations);
+        setOsmPois(cached.osmPois);
+        setDisplayLimit(cached.displayLimit);
+        setHasMore(cached.hasMore);
+        setLoadingMore(false);
+        setLoadMoreError(false);
+      } else {
+        setDisplayLimit(MIN_LOCATIONS);
+        setLoadingMore(false);
+        setLoadMoreError(false);
+        setHasMore(true);
+        // Recharger les 20 lieux prioritaires correspondant aux tags du nouveau mode
+        fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, limit: MIN_LOCATIONS, vibe });
+      }
       // Remonter en haut de liste
       try { flatListRef.current?.scrollToOffset?.({ offset: 0, animated: false }); } catch (_) {}
     }
@@ -220,9 +266,6 @@ const LocationListScreen = () => {
   const LocationItem = useMemo(() => {
     return React.memo(({ item, index }) => {
       const isUserHere = item._id === currentUser?.currentPoiId;
-      const green = Array.isArray(item?.activeUsers)
-        ? item.activeUsers.filter(u => (u?.status || 'green') === 'green').length
-        : (item?.userCount || 0);
 
       const card = (
         <TouchableOpacity
@@ -318,11 +361,6 @@ const LocationListScreen = () => {
             <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
               <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
             </View>
-            <View style={{ marginTop: 6 }}>
-              <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
-                {green > 0 ? `${green} personne${green>1?'s':''} prête${green>1?'s':''} à discuter ici` : 'Découvre ce lieu'}
-              </Text>
-            </View>
             <View style={styles.activeUsersContainer}>
               <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
                 {item.userCount || 0} visiteur{(item.userCount || 0) > 1 ? 's' : ''}
@@ -394,6 +432,15 @@ const LocationListScreen = () => {
     (async () => {
       if (roundedLat == null || roundedLon == null) return;
 
+      // Déjà en cache pour cette vibe/zone (écrit par l'effet [vibe] ou un
+      // précédent fetch) : pas besoin de rappeler Overpass.
+      const zoneKey = getZoneKey(roundedLat, roundedLon);
+      const cached = readVibeCache(vibe, zoneKey);
+      if (cached) {
+        setOsmPois(cached.osmPois);
+        return;
+      }
+
       // On attend une frame pour laisser respirer l'UI
       await new Promise(resolve => requestAnimationFrame(resolve));
       if (!active) return;
@@ -405,7 +452,10 @@ const LocationListScreen = () => {
 
       try {
         const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: 3000, vibe });
-        if (active) setOsmPois(pois);
+        if (active) {
+          setOsmPois(pois);
+          writeVibeCache(vibe, { zoneKey, osmPois: pois });
+        }
       } catch (_) {}
     })();
     return () => { active = false; };
@@ -546,8 +596,20 @@ const LocationListScreen = () => {
           return { ...it, stars, userCount, isPersistent };
         });
 
+        const hasMoreResult = normalized.length >= reqLimit && reqLimit < MAX_LOCATIONS;
         setLocations(normalized);
-        setHasMore(normalized.length >= reqLimit && reqLimit < MAX_LOCATIONS);
+        setHasMore(hasMoreResult);
+
+        const zoneKey = getZoneKey(
+          Math.round(latitude * 1000) / 1000,
+          Math.round(longitude * 1000) / 1000
+        );
+        writeVibeCache(currentVibe, {
+          zoneKey,
+          locations: normalized,
+          displayLimit: reqLimit,
+          hasMore: hasMoreResult,
+        });
       }
 
       // NOTE: On a supprimé l'appel OverpassService.fetchAround ici
@@ -562,6 +624,15 @@ const LocationListScreen = () => {
   };
 
   const onRefresh = async () => {
+    const now = Date.now();
+    if (now - lastRefreshAtRef.current < REFRESH_MIN_INTERVAL_MS) {
+      // Trop tôt : on ignore l'appel API mais on rejoue quand même l'animation
+      // du spinner pour ne pas donner l'impression que le geste n'a rien fait.
+      setRefreshing(true);
+      setTimeout(() => setRefreshing(false), 400);
+      return;
+    }
+    lastRefreshAtRef.current = now;
     setRefreshing(true);
     setDisplayLimit(MIN_LOCATIONS);
     await fetchNearbyLocations({ limit: MIN_LOCATIONS, vibe });
