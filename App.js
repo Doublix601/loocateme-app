@@ -356,7 +356,10 @@ function AppShell({ purchasesReady }) {
             navigationRef.navigate('Location', { locationId: data.locationId, scrollToEventId: data.eventId });
           } else if (data.kind === 'superlike') {
             navigationRef.navigate('MainTabs');
-            publish('ui:open_superlike_history');
+            publish('ui:open_superlike_history', { tab: 'received' });
+          } else if (data.kind === 'superlike_accepted') {
+            navigationRef.navigate('MainTabs');
+            publish('ui:open_superlike_history', { tab: 'sent' });
           } else if (data.kind === 'cote_expiring') {
             navigationRef.navigate('MainTabs');
           }

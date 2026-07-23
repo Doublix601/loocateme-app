@@ -77,6 +77,7 @@ const MyAccountScreen = () => {
   // Partage / QR
   const [qrVisible, setQrVisible] = useState(false);
   const [superlikeHistoryVisible, setSuperlikeHistoryVisible] = useState(false);
+  const [superlikeHistoryTab, setSuperlikeHistoryTab] = useState('received');
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [myUserId, setMyUserId] = useState('');
@@ -240,8 +241,9 @@ const MyAccountScreen = () => {
 
   // Ouvre l'historique des superlikes reçus quand on tape sur la notification push (App.js).
   useEffect(() => {
-    const unsub = subscribe('ui:open_superlike_history', () => {
+    const unsub = subscribe('ui:open_superlike_history', (payload) => {
       goToPage(2);
+      setSuperlikeHistoryTab(payload?.tab || 'received');
       setSuperlikeHistoryVisible(true);
     });
     return unsub;
@@ -1591,7 +1593,11 @@ const MyAccountScreen = () => {
             </Modal>
           </ScrollView>
 
-          <SuperlikeHistoryModal visible={superlikeHistoryVisible} onClose={() => setSuperlikeHistoryVisible(false)} />
+          <SuperlikeHistoryModal
+            visible={superlikeHistoryVisible}
+            initialTab={superlikeHistoryTab}
+            onClose={() => setSuperlikeHistoryVisible(false)}
+          />
 
           {/* QR Code Modal */}
           <Modal visible={qrVisible} animationType="slide" transparent onRequestClose={() => setQrVisible(false)}>

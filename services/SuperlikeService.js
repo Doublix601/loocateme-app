@@ -12,6 +12,17 @@ const SuperlikeService = {
     return res?.superlikes || [];
   },
 
+  // Historique des superlikes envoyés.
+  async getSentHistory() {
+    const res = await get('/premium/superlikes/sent');
+    return res?.superlikes || [];
+  },
+
+  // Valide un superlike reçu : signale une envie mutuelle de se connecter.
+  async acceptSuperlike(id) {
+    return post(`/premium/superlikes/${id}/accept`, {});
+  },
+
   // Envoie un superlike à targetUserId.
   // Déclenche une notification push côté backend (endpoint /premium/superlike).
   async send(targetUserId) {

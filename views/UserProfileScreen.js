@@ -717,7 +717,7 @@ const UserProfileScreen = () => {
             <View style={styles.socialMediaContainer}>
               {(() => {
                 const isMe = String(currentUser?._id || currentUser?.id) === String(user?._id || user?.id);
-                if (!isMe && (user.status === 'orange' || user.status === 'red')) {
+                if (!isMe && (user.status === 'orange' || user.status === 'red') && !user.mutualConnection) {
                   return (
                     <Text style={[styles.orangeStatusText, { color: colors.textSecondary }]}>
                       L'utilisateur ne partage pas ses réseaux sociaux
