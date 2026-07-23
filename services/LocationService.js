@@ -2,6 +2,7 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateMyLocation, post } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
+import { incrementCheckinCount } from '../hooks/useProgressiveUnlock';
 
 // Location check-in orchestration with three explicit modes
 export const ScanMode = Object.freeze({
@@ -64,6 +65,9 @@ async function immediateCheckIn() {
     // Nudge UI proactively (also ApiRequest will emit api:mutation)
     try {
       publish('userlist:refresh');
+    } catch (_) {}
+    try {
+      await incrementCheckinCount();
     } catch (_) {}
     return true;
   } catch (e) {

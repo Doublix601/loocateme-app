@@ -72,7 +72,7 @@ const LocationScreen = () => {
   const { palette, radius, spacing, shadows, typography } = theme;
   const insets = useSafeAreaInsets();
 
-  const { checkAccess } = useFeatureGate();
+  const { checkAccess, storiesUnlocked, boostUnlocked } = useFeatureGate();
   const { activateBoost, isBoosted, loading: boostLoading } = useBoost();
   const { location, users, monthlyUsers, loading, refreshing, refresh } = useLocationData(locationId);
   const [storyViewerIndex, setStoryViewerIndex] = useState(null);
@@ -305,7 +305,7 @@ const LocationScreen = () => {
               state={storyRingState}
               isMoon={isMoon}
               gradient={palette.gradient}
-              onPress={activeStories.length ? () => openStoryViewer(0) : undefined}
+              onPress={activeStories.length && storiesUnlocked ? () => openStoryViewer(0) : undefined}
             />
           </View>
         )}
@@ -633,7 +633,9 @@ const LocationScreen = () => {
               style={[StyleSheet.absoluteFill, { borderRadius: radius.pill }]}
             />
             <Ionicons name="flash" size={18} color="#fff" />
-            <Text style={styles.primaryButtonText}>{isBoosted ? 'Boosté' : 'Booster mon profil ici'}</Text>
+            <Text style={styles.primaryButtonText}>
+              {isBoosted ? 'Boosté' : boostUnlocked ? 'Booster mon profil ici' : 'Boost 🔓 après 2 check-ins'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

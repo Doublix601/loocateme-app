@@ -1,4 +1,5 @@
 import { usePremiumAccess } from './usePremiumAccess';
+import { useProgressiveUnlock } from './useProgressiveUnlock';
 import { Alert } from 'react-native';
 
 /**
@@ -8,6 +9,7 @@ import { Alert } from 'react-native';
  */
 export function useFeatureGate() {
   const premiumAccess = usePremiumAccess();
+  const progressiveUnlock = useProgressiveUnlock();
 
   const checkAccess = (feature, options = { silent: false }) => {
     let hasAccess = false;
@@ -15,6 +17,18 @@ export function useFeatureGate() {
     let message = 'Cette fonctionnalité est réservée aux abonnés Premium.';
 
     switch (feature) {
+      case 'stories':
+        hasAccess = progressiveUnlock.storiesUnlocked;
+        title = 'Bientôt débloqué';
+        message = 'Les stories se débloquent après ton premier check-in.';
+        break;
+
+      case 'superlike':
+        hasAccess = progressiveUnlock.superlikeUnlocked;
+        title = 'Bientôt débloqué';
+        message = 'Les superlikes se débloquent après ton premier check-in.';
+        break;
+
       case 'statistics':
         hasAccess = premiumAccess.hasStatsAccess;
         title = 'Statistiques Premium';
@@ -24,9 +38,11 @@ export function useFeatureGate() {
         break;
 
       case 'boost':
-        hasAccess = premiumAccess.canAccessBoost;
-        title = 'Boost Indisponible';
-        message = 'Le système de Boost est temporairement désactivé.';
+        hasAccess = premiumAccess.canAccessBoost && progressiveUnlock.boostUnlocked;
+        title = premiumAccess.canAccessBoost ? 'Bientôt débloqué' : 'Boost Indisponible';
+        message = premiumAccess.canAccessBoost
+          ? 'Le Boost se débloque après 2 check-ins (ou un superlike envoyé).'
+          : 'Le système de Boost est temporairement désactivé.';
         break;
 
       case 'invisible':
@@ -54,6 +70,7 @@ export function useFeatureGate() {
 
   return {
     ...premiumAccess,
+    ...progressiveUnlock,
     checkAccess,
   };
 }

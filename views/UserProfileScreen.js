@@ -41,6 +41,7 @@ import SuperlikeService from '../services/SuperlikeService';
 import PremiumService from '../services/PremiumService';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
+import { incrementSuperlikeSentCount, useProgressiveUnlock } from '../hooks/useProgressiveUnlock';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { Feather } from '@expo/vector-icons';
@@ -65,6 +66,7 @@ const UserProfileScreen = () => {
   const user = route.params?.user;
   const { user: currentUser } = React.useContext(UserContext);
   const { isPremium: premiumAccessActive, premiumSystemEnabled } = usePremiumAccess();
+  const { superlikeUnlocked } = useProgressiveUnlock();
   const [actionMenuVisible, setActionMenuVisible] = React.useState(false);
   const [reportVisible, setReportVisible] = React.useState(false);
   const [reportCategory, setReportCategory] = React.useState('harassment');
@@ -447,16 +449,9 @@ const UserProfileScreen = () => {
     );
   }
 
-  const handleMessagePress = async () => {
+  const handleFollowPress = async () => {
     if (!user) return;
-    if (followStatus === 'accepted') {
-      // Chat désactivé
-      try {
-        Alert.alert('Indisponible', 'La messagerie a été désactivée.');
-      } catch (_) {}
-      return;
-    }
-    if (followStatus === 'pending') return; // désactivé
+    if (followStatus === 'accepted' || followStatus === 'pending') return;
     // none -> créer une demande de suivi
     try {
       setFollowLoading(true);
@@ -473,6 +468,10 @@ const UserProfileScreen = () => {
 
   const handleSuperlike = async () => {
     if (superlikeSent || superlikeLoading) return;
+    if (!superlikeUnlocked) {
+      Alert.alert('Bientôt débloqué', 'Les superlikes se débloquent après ton premier check-in.');
+      return;
+    }
     if (superlikeBalance <= 0) {
       publish('ui:open_consumables', { type: 'superlike' });
       return;
@@ -484,6 +483,9 @@ const UserProfileScreen = () => {
       if (result.success) {
         setSuperlikeSent(true);
         setSuperlikeBalance(PremiumService.getSuperlikesRemaining());
+        try {
+          await incrementSuperlikeSentCount();
+        } catch (_) {}
         Alert.alert('⭐ Superlike envoyé !', `${displayName} a été notifié(e) que tu le/la remarques.`);
       } else if (result.reason === 'no_superlikes') {
         publish('ui:open_consumables', { type: 'superlike' });
@@ -534,12 +536,12 @@ const UserProfileScreen = () => {
               opacity: followLoading || followStatus === 'pending' ? 0.6 : 1,
             },
           ]}
-          onPress={handleMessagePress}
-          disabled={followLoading || followStatus === 'pending'}
+          onPress={handleFollowPress}
+          disabled={followLoading || followStatus === 'accepted' || followStatus === 'pending'}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
           accessibilityLabel={
             followStatus === 'accepted'
-              ? 'Ouvrir la conversation'
+              ? 'Déjà suivi'
               : followStatus === 'pending'
                 ? 'Demande en attente'
                 : 'Envoyer une demande de suivi'
@@ -548,7 +550,7 @@ const UserProfileScreen = () => {
           {followLoading ? (
             <ActivityIndicator color={followStatus === 'accepted' ? '#fff' : colors.accent} />
           ) : (
-            <Feather name="link-2" size={22} color={followStatus === 'accepted' ? '#fff' : colors.accent} />
+            <Feather name={followStatus === 'accepted' ? 'check' : 'link-2'} size={22} color={followStatus === 'accepted' ? '#fff' : colors.accent} />
           )}
         </TouchableOpacity>
 
@@ -566,18 +568,18 @@ const UserProfileScreen = () => {
                     ? 'rgba(255,255,255,0.08)'
                     : 'rgba(0,0,0,0.05)',
               borderColor: superlikeSent ? '#FFD700' : 'rgba(255,215,0,0.4)',
-              opacity: superlikeLoading || superlikeSent ? 0.75 : 1,
+              opacity: superlikeLoading || superlikeSent ? 0.75 : superlikeUnlocked ? 1 : 0.4,
             },
           ]}
           onPress={handleSuperlike}
           disabled={superlikeLoading || superlikeSent}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-          accessibilityLabel="Envoyer un superlike"
+          accessibilityLabel={superlikeUnlocked ? 'Envoyer un superlike' : 'Superlike verrouillé, débloqué après ton premier check-in'}
         >
           {superlikeLoading ? (
             <ActivityIndicator size="small" color="#FFD700" />
           ) : (
-            <Text style={{ fontSize: 20 }}>{superlikeSent ? '✓' : '⭐'}</Text>
+            <Text style={{ fontSize: 20 }}>{superlikeSent ? '✓' : superlikeUnlocked ? '⭐' : '🔒'}</Text>
           )}
           {superlikeBalance > 0 && !superlikeSent && (
             <View style={styles.superlikeBadge}>
