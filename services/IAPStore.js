@@ -70,12 +70,6 @@ const IAPStore = {
       return { success: true, customerInfo };
     } catch (e) {
       if (e.userCancelled) return { success: false, cancelled: true };
-      // Mode sandbox/simulateur : traiter comme un mock en dev
-      if (__DEV__ && (e.code === '5' || e.message?.includes('Test purchase'))) {
-        console.warn('[IAPStore] Sandbox purchase detected, treating as mock');
-        await PremiumService.refreshFromBackend();
-        return { success: true, isMock: true };
-      }
       _log({
         product_id: pkg?.product?.identifier,
         timestamp: Date.now(),
@@ -111,13 +105,6 @@ const IAPStore = {
       return { success: true, customerInfo, grant };
     } catch (e) {
       if (e.userCancelled) return { success: false, cancelled: true };
-      if (__DEV__ && (e.code === '5' || e.message?.includes('Test purchase'))) {
-        if (grant) {
-          if (grant.boosts > 0) await PremiumService.addBoosts(grant.boosts);
-          if (grant.superlikes > 0) await PremiumService.addSuperlikes(grant.superlikes);
-        }
-        return { success: true, isMock: true, grant };
-      }
       _log({ product_id: productId, timestamp: Date.now(), user_id: userId, success: false, error: e.message });
       throw e;
     }
