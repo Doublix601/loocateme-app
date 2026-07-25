@@ -77,6 +77,14 @@ export function proxifyImageUrl(uri) {
       if (target.host !== api.host) {
         return `${origin}/api/proxy/image?u=${encodeURIComponent(trimmed)}`;
       }
+      // Same host but plain HTTP (e.g. a photo URL persisted before the backend
+      // forced HTTPS on generation): upgrade to HTTPS, since iOS ATS blocks
+      // cleartext image loads in production builds (Expo Go is more lenient,
+      // which is why this only shows as grey placeholders in release builds).
+      if (target.protocol === 'http:') {
+        target.protocol = 'https:';
+        return target.toString();
+      }
     }
     return trimmed;
   } catch (_e) {
