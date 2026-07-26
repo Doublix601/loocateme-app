@@ -36,6 +36,11 @@ import StoryViewerModal from '../components/StoryViewerModal';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import ProfileCard from '../components/ProfileCard';
 import UltraBoostProgressBar from '../components/UltraBoostProgressBar';
+import CheckinVerifyModal from '../components/CheckinVerifyModal';
+import NearbyLocationPicker from '../components/NearbyLocationPicker';
+import { forceCheckIn } from '../components/ApiRequest';
+import { cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
+import { getCurrentPositionSmart } from '../utils/locationHelper';
 import socialMediaIcons from '../constants/socialMediaIcons';
 import { getPdfIconName } from '../constants/pdfIcons';
 import { trackLocationView } from '../components/ApiRequest';
@@ -63,7 +68,7 @@ const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
 const LocationScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { locationId, tertiles, scrollToEventId } = route.params ?? {};
+  const { locationId, tertiles, scrollToEventId, openVerifyModal } = route.params ?? {};
   const navigateToUser = useNavigateToUser();
 
   const { isMoon } = useVibe();
@@ -79,6 +84,9 @@ const LocationScreen = () => {
   const [lastStorySeenAt, setLastStorySeenAt] = useState(null);
   const [pdfViewer, setPdfViewer] = useState(null); // { url, title } | null
   const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
+  const [verifyModalVisible, setVerifyModalVisible] = useState(false);
+  const [placePicker, setPlacePicker] = useState(null); // { lat, lon } | null
+  const [correcting, setCorrecting] = useState(false);
 
   // Événements créés par le pro (palier pro2+, cf. dashboard business) :
   // affichés tant que non expirés. Plusieurs événements peuvent coexister.
@@ -140,6 +148,18 @@ const LocationScreen = () => {
     trackLocationView(locationId).catch(() => {});
   }, [locationId]);
 
+  // Ouvre le modal de vérification "Es-tu bien ici ?" quand on arrive depuis
+  // la notification programmée ~5 min après le check-in (App.js navigate avec
+  // openVerifyModal: true), seulement si l'utilisateur est toujours détecté
+  // dans ce lieu.
+  useEffect(() => {
+    const isHereNow = !!(user?.currentPoiId && location?._id && String(user.currentPoiId) === String(location._id));
+    if (openVerifyModal && isHereNow) {
+      setVerifyModalVisible(true);
+      navigation.setParams({ openVerifyModal: undefined });
+    }
+  }, [openVerifyModal, user?.currentPoiId, location?._id]);
+
   const handleGoToLocation = () => {
     if (!location?.location?.coordinates) return;
     const [lon, lat] = location.location.coordinates;
@@ -149,6 +169,46 @@ const LocationScreen = () => {
   const handleBoost = () => {
     if (isBoosted || boostLoading) return;
     if (checkAccess('boost')) activateBoost(locationId);
+  };
+
+  const handleConfirmCheckin = () => {
+    setVerifyModalVisible(false);
+    cancelCheckinVerification().catch(() => {});
+  };
+
+  const openPlacePickerFromCurrentPosition = async () => {
+    const pos = await getCurrentPositionSmart();
+    if (!pos?.coords) return;
+    setPlacePicker({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+  };
+
+  const handleCorrectCheckin = () => {
+    setVerifyModalVisible(false);
+    openPlacePickerFromCurrentPosition();
+  };
+
+  const handleForceCheckinPress = () => {
+    openPlacePickerFromCurrentPosition();
+  };
+
+  const handleSelectPlace = async (place) => {
+    if (!placePicker || correcting) return;
+    setCorrecting(true);
+    try {
+      await forceCheckIn({ locationId: place._id, lat: placePicker.lat, lon: placePicker.lon });
+      await cancelCheckinVerification();
+      setPlacePicker(null);
+      refresh();
+      if (String(place._id) === String(locationId)) {
+        // Déjà sur cet écran : rien à faire de plus, le refresh suffit.
+      } else {
+        navigation.replace('Location', { locationId: place._id });
+      }
+    } catch (e) {
+      console.warn('[LocationScreen] forceCheckIn failed', e?.message || e);
+    } finally {
+      setCorrecting(false);
+    }
   };
 
   // Image de cover : priorité à la couverture pro (bannerUrl), puis champs
@@ -637,6 +697,16 @@ const LocationScreen = () => {
               {isBoosted ? 'Boosté' : boostUnlocked ? 'Booster mon profil ici' : 'Boost 🔓 après 2 check-ins'}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleForceCheckinPress}
+            style={styles.forceCheckinLink}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="locate-outline" size={14} color={palette.textMuted} />
+            <Text style={[typography.caption, { color: palette.textMuted, marginLeft: 4 }]}>
+              Ce n'est pas le bon lieu ? Forcer mon check-in ici
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -671,6 +741,21 @@ const LocationScreen = () => {
       {renderFixedAction()}
       {renderStoryViewer()}
       {renderPdfViewer()}
+
+      <CheckinVerifyModal
+        visible={verifyModalVisible}
+        locationName={location?.name}
+        onConfirm={handleConfirmCheckin}
+        onCorrect={handleCorrectCheckin}
+        onClose={() => setVerifyModalVisible(false)}
+      />
+      <NearbyLocationPicker
+        visible={!!placePicker}
+        lat={placePicker?.lat}
+        lon={placePicker?.lon}
+        onSelect={handleSelectPlace}
+        onClose={() => setPlacePicker(null)}
+      />
     </View>
   );
 };
@@ -923,6 +1008,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 8,
     letterSpacing: 0.2,
+  },
+  forceCheckinLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
   },
 });
 

@@ -523,6 +523,10 @@ export async function updateMyLocation({ lat, lon }) {
   return request('/users/location', { method: 'POST', body: { lat, lon } });
 }
 
+export async function forceCheckIn({ locationId, lat, lon }) {
+  return request('/users/location/force', { method: 'POST', body: { locationId, lat, lon } });
+}
+
 export async function getUsersAroundMe({ lat, lon, radius = 2000 }) {
   const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
   return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });

@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateMyLocation, post } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
 import { incrementCheckinCount } from '../hooks/useProgressiveUnlock';
+import { scheduleCheckinVerification, cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
 
 // Location check-in orchestration with three explicit modes
 export const ScanMode = Object.freeze({
@@ -61,13 +62,21 @@ async function immediateCheckIn() {
   const pos = await getBalancedPosition();
   if (!pos?.coords) return false;
   try {
-    await updateMyLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+    const res = await updateMyLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
     // Nudge UI proactively (also ApiRequest will emit api:mutation)
     try {
       publish('userlist:refresh');
     } catch (_) {}
     try {
       await incrementCheckinCount();
+    } catch (_) {}
+    try {
+      const locationId = res?.user?.currentLocation;
+      if (locationId) {
+        await scheduleCheckinVerification({ locationId: String(locationId) });
+      } else {
+        await cancelCheckinVerification();
+      }
     } catch (_) {}
     return true;
   } catch (e) {

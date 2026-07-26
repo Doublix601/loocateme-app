@@ -362,6 +362,8 @@ function AppShell({ purchasesReady }) {
             publish('ui:open_superlike_history', { tab: 'sent' });
           } else if (data.kind === 'cote_expiring') {
             navigationRef.navigate('MainTabs');
+          } else if (data.kind === 'checkin_verify' && data.locationId) {
+            navigationRef.navigate('Location', { locationId: data.locationId, openVerifyModal: true });
           }
         };
 

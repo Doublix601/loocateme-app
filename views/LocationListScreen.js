@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useContext, useMemo, useRef, useCallback } from 'react';
 import {
   FlatList,
   Text,
@@ -14,13 +14,16 @@ import {
   InteractionManager,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
-import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe } from '../components/ApiRequest';
+import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe, forceCheckIn } from '../components/ApiRequest';
+import NearbyLocationPicker from '../components/NearbyLocationPicker';
+import { cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
 import { subscribe, publish } from '../components/EventBus';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
@@ -83,6 +86,34 @@ const LocationListScreen = () => {
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
+  const userCoordsRef = useRef(userCoords);
+  useEffect(() => {
+    userCoordsRef.current = userCoords;
+  }, [userCoords]);
+  const [placePicker, setPlacePicker] = useState(null); // { lat, lon } | null
+  const [correctingCheckin, setCorrectingCheckin] = useState(false);
+
+  const handleCorrectCheckinPress = useCallback(() => {
+    const c = userCoordsRef.current;
+    if (!c) return;
+    setPlacePicker({ lat: c.latitude, lon: c.longitude });
+  }, []);
+
+  const handleSelectCorrectedPlace = useCallback(async (place) => {
+    if (correctingCheckin) return;
+    setCorrectingCheckin(true);
+    try {
+      const c = userCoordsRef.current;
+      if (!c) return;
+      await forceCheckIn({ locationId: place._id, lat: c.latitude, lon: c.longitude });
+      await cancelCheckinVerification();
+      setPlacePicker(null);
+    } catch (e) {
+      console.warn('[LocationListScreen] forceCheckIn failed', e?.message || e);
+    } finally {
+      setCorrectingCheckin(false);
+    }
+  }, [correctingCheckin]);
   // Anti double-déclenchement du pull-to-refresh manuel (le backend a déjà
   // son propre rate-limit + cache 10s, cf. locationsListLimiter côté API) :
   // on bloque juste les appels quasi simultanés (double tir accidentel du
@@ -382,7 +413,19 @@ const LocationListScreen = () => {
                 )}
               </View>
               {isUserHere ? (
-                <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>Actuellement ici</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>Actuellement ici</Text>
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation?.();
+                      handleCorrectCheckinPress();
+                    }}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    style={{ marginLeft: 6 }}
+                  >
+                    <Ionicons name="pencil" size={14} color="#00c2cb" />
+                  </TouchableOpacity>
+                </View>
               ) : (
                 item.distance !== undefined && (
                   <Text style={[styles.distanceText, { color: colors.textSecondary }]}>
@@ -470,7 +513,7 @@ const LocationListScreen = () => {
 
       return card;
     });
-  }, [colors, isDark, isMoon, navigation, currentUser?.currentPoiId]);
+  }, [colors, isDark, isMoon, navigation, currentUser?.currentPoiId, handleCorrectCheckinPress]);
 
   const renderLocation = ({ item, index }) => <LocationItem item={item} index={index} />;
 
@@ -997,6 +1040,13 @@ const LocationListScreen = () => {
         )}
       </SafeAreaView>
       <VibeFAB />
+      <NearbyLocationPicker
+        visible={!!placePicker}
+        lat={placePicker?.lat}
+        lon={placePicker?.lon}
+        onSelect={handleSelectCorrectedPlace}
+        onClose={() => setPlacePicker(null)}
+      />
     </View>
   );
 };
