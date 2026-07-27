@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '../utils/logger';
+import { logAnalyticsEvent } from './AnalyticsService';
 
 const STORAGE_KEY = '@loocateme:premium_nudges_v1';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -88,10 +89,10 @@ async function _save() {
   }
 }
 
-function _log(event) {
+function _log(eventName, event) {
   try {
-    logger.log('[PremiumNudge Analytics]', JSON.stringify(event));
-    // TODO: brancher sur votre SDK analytics (Amplitude, Mixpanel, etc.)
+    logger.log('[PremiumNudge Analytics]', eventName, JSON.stringify(event));
+    logAnalyticsEvent(eventName, event);
   } catch (_) {}
 }
 
@@ -159,7 +160,7 @@ const PremiumNudgeService = {
     _state.global.shownAtTimestamps = [..._state.global.shownAtTimestamps, now].filter((t) => now - t < 7 * DAY_MS);
     _sessionShown = true;
     await _save();
-    _log({ signal: signalId, event: 'shown', timestamp: now });
+    _log('premium_nudge_shown', { signal: signalId, timestamp: now });
   },
 
   async recordDismissed(signalId) {
@@ -168,7 +169,7 @@ const PremiumNudgeService = {
     const sig = _state.signals[signalId] ?? _emptySignalState();
     _state.signals[signalId] = { ...sig, lastDismissedAt: now };
     await _save();
-    _log({ signal: signalId, event: 'dismissed', timestamp: now });
+    _log('premium_nudge_dismissed', { signal: signalId, timestamp: now });
   },
 
   // --- Debug / QA (utilisé par DebugScreen.js) ---

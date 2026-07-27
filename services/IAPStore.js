@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { DEBUG_CONFIG } from './DebugConfig';
 import PremiumService from './PremiumService';
 import { post } from '../components/ApiRequest';
+import { logAnalyticsEvent } from './AnalyticsService';
 
 // Quantités accordées par pack consommable
 const CONSUMABLE_GRANTS = {
@@ -12,10 +13,10 @@ const CONSUMABLE_GRANTS = {
   loocateme_superlike_pack_10: { boosts: 0, superlikes: 10 },
 };
 
-function _log(event) {
+function _log(eventName, event) {
   try {
-    logger.log('[IAP Analytics]', JSON.stringify(event));
-    // TODO: brancher sur votre SDK analytics (Amplitude, Mixpanel, etc.)
+    logger.log('[IAP Analytics]', eventName, JSON.stringify(event));
+    logAnalyticsEvent(eventName, event);
   } catch (_) {}
 }
 
@@ -38,10 +39,10 @@ const IAPStore = {
     try {
       const res = await post('/premium/trial/start', {});
       await PremiumService.refreshFromBackend();
-      _log({ product_id: 'trial', timestamp: Date.now(), user_id: userId, success: true });
+      _log('iap_trial_start', { product_id: 'trial', timestamp: Date.now(), user_id: userId, success: true });
       return { success: true, trialActive: res?.trialActive, premiumTrialEnd: res?.premiumTrialEnd };
     } catch (e) {
-      _log({ product_id: 'trial', timestamp: Date.now(), user_id: userId, success: false, error: e.message });
+      _log('iap_trial_start', { product_id: 'trial', timestamp: Date.now(), user_id: userId, success: false, error: e.message });
       throw e;
     }
   },
@@ -54,7 +55,7 @@ const IAPStore = {
         await post('/premium/trial/start', {});
       } catch (_) {}
       await PremiumService.refreshFromBackend();
-      _log({
+      _log('iap_subscription_purchase', {
         product_id: pkg?.product?.identifier ?? 'simulated',
         timestamp: Date.now(),
         user_id: userId,
@@ -66,11 +67,11 @@ const IAPStore = {
     try {
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       await PremiumService.refreshFromBackend();
-      _log({ product_id: pkg?.product?.identifier, timestamp: Date.now(), user_id: userId, success: true });
+      _log('iap_subscription_purchase', { product_id: pkg?.product?.identifier, timestamp: Date.now(), user_id: userId, success: true });
       return { success: true, customerInfo };
     } catch (e) {
       if (e.userCancelled) return { success: false, cancelled: true };
-      _log({
+      _log('iap_subscription_purchase', {
         product_id: pkg?.product?.identifier,
         timestamp: Date.now(),
         user_id: userId,
@@ -92,7 +93,7 @@ const IAPStore = {
         if (grant.boosts > 0) await PremiumService.addBoosts(grant.boosts);
         if (grant.superlikes > 0) await PremiumService.addSuperlikes(grant.superlikes);
       }
-      _log({ product_id: productId, timestamp: Date.now(), user_id: userId, success: true, debug: true });
+      _log('iap_consumable_purchase', { product_id: productId, timestamp: Date.now(), user_id: userId, success: true, debug: true });
       return { success: true, isMock: true, grant };
     }
     try {
@@ -101,11 +102,11 @@ const IAPStore = {
         if (grant.boosts > 0) await PremiumService.addBoosts(grant.boosts);
         if (grant.superlikes > 0) await PremiumService.addSuperlikes(grant.superlikes);
       }
-      _log({ product_id: productId, timestamp: Date.now(), user_id: userId, success: true });
+      _log('iap_consumable_purchase', { product_id: productId, timestamp: Date.now(), user_id: userId, success: true });
       return { success: true, customerInfo, grant };
     } catch (e) {
       if (e.userCancelled) return { success: false, cancelled: true };
-      _log({ product_id: productId, timestamp: Date.now(), user_id: userId, success: false, error: e.message });
+      _log('iap_consumable_purchase', { product_id: productId, timestamp: Date.now(), user_id: userId, success: false, error: e.message });
       throw e;
     }
   },
@@ -120,10 +121,10 @@ const IAPStore = {
     try {
       const { customerInfo } = await Purchases.restorePurchases();
       await PremiumService.refreshFromBackend();
-      _log({ product_id: 'restore', timestamp: Date.now(), user_id: userId, success: true });
+      _log('iap_restore', { product_id: 'restore', timestamp: Date.now(), user_id: userId, success: true });
       return { success: true, customerInfo };
     } catch (e) {
-      _log({ product_id: 'restore', timestamp: Date.now(), user_id: userId, success: false, error: e.message });
+      _log('iap_restore', { product_id: 'restore', timestamp: Date.now(), user_id: userId, success: false, error: e.message });
       throw e;
     }
   },

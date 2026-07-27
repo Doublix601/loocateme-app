@@ -71,12 +71,14 @@
     "plugins": [
       "expo-asset",
       "expo-font",
+      "@react-native-firebase/app",
       [
         "expo-build-properties",
         {
           "ios": {
             "useReactNativeNewArchitecture": true,
-            "deploymentTarget": "15.1"
+            "deploymentTarget": "15.1",
+            "useFrameworks": "static"
           }
         }
       ],
