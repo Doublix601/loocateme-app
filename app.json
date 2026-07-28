@@ -21,6 +21,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "me.loocate.app",
       "scheme": "loocateme",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "associatedDomains": ["applinks:api.loocate.me"],
       "infoPlist": {
         "NSAppTransportSecurity": {
