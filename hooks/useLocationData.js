@@ -7,12 +7,20 @@ import { subscribe } from '../components/EventBus';
  * Gère le chargement initial, le rafraîchissement manuel et l'auto-rafraîchissement sur mutation.
  *
  * @param {string} locationId - L'ID du lieu à charger
+ * @param {object} [initialLocation] - Données déjà connues (ex. venant de la liste des
+ *   lieux autour de soi) pour un affichage instantané, sans spinner, en attendant le
+ *   rafraîchissement silencieux en arrière-plan.
  * @returns {object} { location, users, loading, refreshing, refresh }
  */
-export function useLocationData(locationId) {
-  const [loading, setLoading] = useState(true);
+export function useLocationData(locationId, initialLocation) {
+  const [loading, setLoading] = useState(!initialLocation);
   const [refreshing, setRefreshing] = useState(false);
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(() => {
+    if (!initialLocation) return null;
+    const stars =
+      typeof initialLocation.stars === 'number' ? initialLocation.stars : parseInt(initialLocation.stars, 10) || 0;
+    return { ...initialLocation, stars, userCount: initialLocation.userCount ?? 0 };
+  });
   const [users, setUsers] = useState([]);
   const [monthlyUsers, setMonthlyUsers] = useState(0);
 
@@ -47,7 +55,9 @@ export function useLocationData(locationId) {
   }, [fetchDetails]);
 
   useEffect(() => {
-    fetchDetails();
+    // Si on a déjà des données (venant de la liste), on affiche instantanément
+    // et on ne rafraîchit qu'en silence, sans jamais réafficher le spinner.
+    fetchDetails(!!initialLocation);
 
     // Auto-rafraîchissement lors d'une mutation (changement de statut, profil, etc.)
     const unsub = subscribe('api:mutation', ({ path }) => {

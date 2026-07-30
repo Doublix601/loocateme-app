@@ -71,7 +71,7 @@ const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
 const LocationScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { locationId, tertiles, scrollToEventId, openVerifyModal } = route.params ?? {};
+  const { locationId, tertiles, scrollToEventId, openVerifyModal, initialLocation } = route.params ?? {};
   const navigateToUser = useNavigateToUser();
 
   const { isMoon } = useVibe();
@@ -82,7 +82,10 @@ const LocationScreen = () => {
 
   const { checkAccess, storiesUnlocked, boostUnlocked } = useFeatureGate();
   const { activateBoost, isBoosted, loading: boostLoading } = useBoost();
-  const { location, users, monthlyUsers, loading, refreshing, refresh } = useLocationData(locationId);
+  const { location, users, monthlyUsers, loading, refreshing, refresh } = useLocationData(
+    locationId,
+    initialLocation,
+  );
   const [storyViewerIndex, setStoryViewerIndex] = useState(null);
   const [lastStorySeenAt, setLastStorySeenAt] = useState(null);
   const [pdfViewer, setPdfViewer] = useState(null); // { url, title } | null

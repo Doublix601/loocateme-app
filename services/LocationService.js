@@ -5,6 +5,7 @@ import { publish } from '../components/EventBus';
 import { incrementCheckinCount } from '../hooks/useProgressiveUnlock';
 import { scheduleCheckinVerification, cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
+import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
 
 // Location check-in orchestration with three explicit modes
 export const ScanMode = Object.freeze({
@@ -59,12 +60,26 @@ async function getBalancedPosition() {
   }
 }
 
-async function immediateCheckIn() {
+async function immediateCheckIn(force = true) {
   if (isLocationHeartbeatSuppressed()) return false;
   const pos = await getBalancedPosition();
   if (!pos?.coords) return false;
+
+  const lat = pos.coords.latitude;
+  const lon = pos.coords.longitude;
+
+  if (!shouldSend(lat, lon, { force })) {
+    // Un heartbeat (usePresence) vient déjà d'envoyer une position quasi
+    // identique — on évite un doublon réseau pour le même déplacement.
+    return false;
+  }
+
+  const roundedLat = roundCoord(lat);
+  const roundedLon = roundCoord(lon);
+
   try {
-    const res = await updateMyLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+    const res = await updateMyLocation({ lat: roundedLat, lon: roundedLon });
+    markSent(roundedLat, roundedLon);
     // Nudge UI proactively (also ApiRequest will emit api:mutation)
     try {
       publish('userlist:refresh');
@@ -77,8 +92,8 @@ async function immediateCheckIn() {
       if (locationId) {
         await scheduleCheckinVerification({
           locationId: String(locationId),
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
+          lat,
+          lon,
         });
       } else {
         await cancelCheckinVerification();
@@ -132,7 +147,7 @@ export const LocationService = {
       const schedule = () => {
         backgroundTimer = setTimeout(async () => {
           backgroundTimer = null;
-          await immediateCheckIn();
+          await immediateCheckIn(false);
         }, TWO_MIN_MS);
       };
 
@@ -141,8 +156,10 @@ export const LocationService = {
         schedule();
         return true;
       } else {
-        // While-In-Use only: when app is foregrounded, no background dwell — immediate at open
-        return await immediateCheckIn();
+        // While-In-Use only: when app is foregrounded, no background dwell —
+        // immediate at open, mais dédupliqué si usePresence vient déjà d'envoyer
+        // une position quasi identique au même retour en foreground.
+        return await immediateCheckIn(false);
       }
     }
 

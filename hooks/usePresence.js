@@ -8,16 +8,19 @@ import { mapBackendUser } from '../utils/mappers';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
 import { getDevLocationOverride, loadDevLocationOverride } from '../utils/devLocationOverride';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
+import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
 
 /**
  * Hook pour gérer le "Heartbeat" (battement de cœur) de présence en premier plan.
  *
- * Stratégie pour une présence instantanée :
+ * Stratégie pour une présence quasi instantanée :
  *  - Un heartbeat est envoyé immédiatement quand l'app passe en premier plan.
  *  - Un `watchPositionAsync` envoie un heartbeat dès qu'un mouvement significatif
- *    (~20 m) est détecté → l'entrée et la sortie d'un POI sont quasi instantanées.
- *  - Un fallback temporel envoie un heartbeat toutes les 60 s même si l'utilisateur
+ *    (~30 m) est détecté → l'entrée et la sortie d'un POI restent réactives.
+ *  - Un fallback temporel envoie un heartbeat toutes les 90 s même si l'utilisateur
  *    ne bouge pas, pour maintenir la fraîcheur côté serveur.
+ *  - `locationSendGuard` déduplique avec les envois faits par `LocationService`
+ *    (check-in) pour éviter deux requêtes réseau pour le même déplacement.
  */
 export function usePresence(isEnabled) {
   const { updateUser } = useContext(UserContext);
@@ -47,13 +50,27 @@ export function usePresence(isEnabled) {
         }
 
         if (inFlightRef.current) return;
+
+        if (!shouldSend(lat, lon)) {
+          // Un envoi (heartbeat ou check-in) a déjà eu lieu très récemment pour
+          // une position quasi identique — évite un doublon réseau, mais on
+          // marque quand même lastSentAtRef pour ne pas redéclencher le
+          // fallback 60s juste après.
+          lastSentAtRef.current = Date.now();
+          return;
+        }
+
         inFlightRef.current = true;
+
+        const roundedLat = roundCoord(lat);
+        const roundedLon = roundCoord(lon);
 
         const startTime = Date.now();
         try {
-          const res = await post('/user/heartbeat', { lat, lon });
+          const res = await post('/user/heartbeat', { lat: roundedLat, lon: roundedLon });
           if (res?.user) updateUser(mapBackendUser(res.user));
           lastSentAtRef.current = Date.now();
+          markSent(roundedLat, roundedLon);
           const duration = Date.now() - startTime;
           logger.log(`[usePresence] Foreground heartbeat sent successfully in ${duration}ms`);
         } finally {
@@ -83,10 +100,10 @@ export function usePresence(isEnabled) {
         watcherRef.current = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.Balanced,
-            // Heartbeat dès qu'on bouge de ~20 m (entrée/sortie de POI réactives).
-            distanceInterval: 20,
-            // Et au pire toutes les 30 s (sécurité).
-            timeInterval: 30000,
+            // Heartbeat dès qu'on bouge de ~30 m (entrée/sortie de POI réactives).
+            distanceInterval: 30,
+            // Et au pire toutes les 45 s (sécurité).
+            timeInterval: 45000,
           },
           (pos) => {
             if (pos?.coords) sendHeartbeat(pos.coords);
@@ -103,12 +120,12 @@ export function usePresence(isEnabled) {
       sendHeartbeat();
       // Démarrer la surveillance des mouvements pour réagir instantanément
       startWatcher();
-      // Fallback : forcer un heartbeat toutes les 60s si rien n'a été envoyé entre-temps
+      // Fallback : forcer un heartbeat toutes les 90s si rien n'a été envoyé entre-temps
       intervalRef.current = setInterval(() => {
-        if (Date.now() - lastSentAtRef.current >= 60000) {
+        if (Date.now() - lastSentAtRef.current >= 90000) {
           sendHeartbeat();
         }
-      }, 60000);
+      }, 90000);
     };
 
     const stopHeartbeat = () => {

@@ -248,6 +248,7 @@ const LocationListScreen = () => {
                 navigation.navigate('Location', {
                   locationId: merged._id || merged.id,
                   tertiles: merged.tertiles || null,
+                  initialLocation: merged,
                 });
                 return;
               }
@@ -256,7 +257,11 @@ const LocationListScreen = () => {
             console.warn('[LocationListScreen] seedOsmLocation failed:', e?.message || e);
           }
         }
-        navigation.navigate('Location', { locationId: item._id || item.id, tertiles: item.tertiles || null });
+        navigation.navigate('Location', {
+          locationId: item._id || item.id,
+          tertiles: item.tertiles || null,
+          initialLocation: item,
+        });
       } finally {
         selectingLocationRef.current = false;
       }

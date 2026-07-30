@@ -166,7 +166,11 @@ export default function SearchView() {
         ]}
         onPress={() => {
           if (isLocation) {
-            navigation.navigate('Location', { locationId: item._id || item.id, tertiles: item.tertiles || null });
+            navigation.navigate('Location', {
+              locationId: item._id || item.id,
+              tertiles: item.tertiles || null,
+              initialLocation: item,
+            });
           } else {
             navigateToUser(item);
           }
