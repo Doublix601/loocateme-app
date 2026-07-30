@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getLocations } from './ApiRequest';
 import { useVibeTheme } from '../hooks/useVibeTheme';
 
-const MAX_DISTANCE_M = 50;
+const MAX_DISTANCE_M = 100;
 
 function haversineMeters(lat1, lon1, lat2, lon2) {
   const toRad = (d) => (d * Math.PI) / 180;
@@ -16,7 +16,7 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Modal listant les lieux à ≤ 50 m de l'utilisateur, pour corriger un check-in
+// Modal listant les lieux à ≤ 100 m de l'utilisateur, pour corriger un check-in
 // mal matché ou pour forcer un check-in manuel (LocationScreen).
 export default function NearbyLocationPicker({ visible, lat, lon, onSelect, onClose }) {
   const { palette, typography, spacing } = useVibeTheme();
