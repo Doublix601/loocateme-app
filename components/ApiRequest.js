@@ -15,10 +15,14 @@ const resolvedBase = process.env.EXPO_PUBLIC_API_URL
 export const BASE_URL = resolvedBase.replace(/\/$/, '');
 
 const ACCESS_TOKEN_KEY = 'loocateme_access_token';
+const REFRESH_TOKEN_KEY = 'loocateme_refresh_token';
 const PUSH_TOKEN_KEY = 'loocateme_push_token';
 
 // In-memory access token holder. Persisted via AsyncStorage for auto-login.
 let accessToken = null;
+// Native (RN) doesn't reliably carry the httpOnly refresh cookie, so the
+// refresh token is also returned in the login/signup body and stored here.
+let refreshToken = null;
 let loggedBaseUrlOnce = false;
 const APP_VERSION =
   Constants?.expoConfig?.version ||
@@ -61,9 +65,20 @@ export function getAccessToken() {
   return accessToken;
 }
 
+export function setRefreshToken(token) {
+  refreshToken = token || null;
+  if (token) {
+    AsyncStorage.setItem(REFRESH_TOKEN_KEY, token).catch(() => {});
+  } else {
+    AsyncStorage.removeItem(REFRESH_TOKEN_KEY).catch(() => {});
+  }
+}
+
 export async function initApiFromStorage() {
   try {
     const stored = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+    const storedRefresh = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+    if (storedRefresh) refreshToken = storedRefresh;
     if (stored) {
       accessToken = stored;
       return stored;
@@ -275,8 +290,8 @@ async function request(
 
     // Attempt refresh on 401 once (only for non-auth endpoints)
     const isAuthPath = typeof path === 'string' && path.startsWith('/auth/');
-    // Do NOT attempt refresh on native platforms (RN) because backend uses httpOnly cookies → web-only
-    const canAttemptRefresh = Platform && Platform.OS === 'web';
+    // Web uses the httpOnly cookie; native uses the stored refresh token (see refreshAccessToken)
+    const canAttemptRefresh = Platform.OS === 'web' || !!refreshToken;
     if (res.status === 401 && retry && accessToken && !isAuthPath && canAttemptRefresh) {
       try {
         const refreshed = await refreshAccessToken();
@@ -424,6 +439,7 @@ export async function signup({
     body: { email, password, username, firstName, lastName, customName, birthdate, gender },
   });
   if (data?.accessToken) setAccessToken(data.accessToken);
+  if (data?.refreshToken) setRefreshToken(data.refreshToken);
   try {
     publish('auth:login', { user: data?.user || null });
   } catch (_) {}
@@ -439,6 +455,7 @@ export async function login({ email, password }) {
     suppressAuthHandling: true,
   });
   if (data?.accessToken) setAccessToken(data.accessToken);
+  if (data?.refreshToken) setRefreshToken(data.refreshToken);
   try {
     publish('auth:login', { user: data?.user || null });
   } catch (_) {}
@@ -458,8 +475,10 @@ export async function socialLogin({ provider, idToken, user }) {
 }
 
 export async function refreshAccessToken() {
-  // Uses httpOnly cookie set by backend (works on web; RN native may not include cookies)
-  const data = await request('/auth/refresh', { method: 'POST', retry: false, includeCredentials: true });
+  // Web relies on the httpOnly cookie set by the backend; native (RN cookies are
+  // unreliable) sends the refresh token explicitly in the body instead.
+  const body = Platform.OS !== 'web' && refreshToken ? { refreshToken } : undefined;
+  const data = await request('/auth/refresh', { method: 'POST', body, retry: false, includeCredentials: true });
   return data;
 }
 
@@ -483,6 +502,7 @@ export async function logout() {
     }
     await request('/auth/logout', {
       method: 'POST',
+      body: Platform.OS !== 'web' && refreshToken ? { refreshToken } : undefined,
       includeCredentials: true,
       retry: false,
       suppressAuthHandling: true,
@@ -491,6 +511,7 @@ export async function logout() {
     console.error('[API] Logout error', e);
   } finally {
     setAccessToken(null);
+    setRefreshToken(null);
     try {
       await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
     } catch {}

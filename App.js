@@ -66,6 +66,7 @@ function AppShell({ purchasesReady }) {
   const { isMoon } = useVibe();
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
   const [shopSheetVisible, setShopSheetVisible] = useState(false);
   const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
@@ -74,7 +75,7 @@ function AppShell({ purchasesReady }) {
   const didInitialScanRef = useRef(false);
   const currentPoiIdRef = useRef(null);
 
-  usePresence(authReady);
+  usePresence(isAuthenticated);
 
   useEffect(() => {
     currentPoiIdRef.current = appUser?.currentPoiId || null;
@@ -156,6 +157,7 @@ function AppShell({ purchasesReady }) {
             } else {
               navigationRef.reset({ index: 0, routes: [{ name: 'Consent' }] });
             }
+            setIsAuthenticated(true);
           } catch (err) {
             if (err?.status === 401) {
               await apiLogout();
@@ -176,6 +178,19 @@ function AppShell({ purchasesReady }) {
     };
     initAuth();
   }, [updateUser]);
+
+  useEffect(() => {
+    const offLogin = subscribe('auth:login', () => setIsAuthenticated(true));
+    const offLogout = subscribe('auth:logout', () => setIsAuthenticated(false));
+    return () => {
+      try {
+        offLogin && offLogin();
+      } catch (_) {}
+      try {
+        offLogout && offLogout();
+      } catch (_) {}
+    };
+  }, []);
 
   useEffect(() => {
     const unsub = subscribe('force_update_required', (payload) => {
@@ -293,9 +308,11 @@ function AppShell({ purchasesReady }) {
           publish('userlist:refresh');
         } catch (_) {}
         checkLocationPermissions();
-        try {
-          LocationService.performCheckIn(ScanMode.BACKGROUND_STAY);
-        } catch (_) {}
+        if (isAuthenticated) {
+          try {
+            LocationService.performCheckIn(ScanMode.BACKGROUND_STAY);
+          } catch (_) {}
+        }
       }
       appState.current = next;
     });
@@ -304,16 +321,16 @@ function AppShell({ purchasesReady }) {
         sub?.remove?.();
       } catch (_) {}
     };
-  }, [authReady]);
+  }, [authReady, isAuthenticated]);
 
   useEffect(() => {
-    if (!authReady) return;
+    if (!isAuthenticated) return;
     if (didInitialScanRef.current) return;
     didInitialScanRef.current = true;
     try {
       LocationService.performCheckIn(ScanMode.INITIAL_SCAN);
     } catch (_) {}
-  }, [authReady]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     return () => {

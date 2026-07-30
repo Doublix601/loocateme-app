@@ -1,5 +1,4 @@
 import { useState, useContext } from 'react';
-import { logger } from '../utils/logger';
 import {
   TextInput,
   TouchableOpacity,
@@ -20,7 +19,6 @@ import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
 import AppLogo from '../components/AppLogo';
-import SocialAuthButton from '../components/SocialAuthButton';
 import { publish } from '../components/EventBus';
 import { mapBackendUser } from '../utils/mappers';
 
@@ -159,19 +157,6 @@ const LoginScreen = () => {
                 Mot de passe oublié ?
               </ThemedText>
             </TouchableOpacity>
-
-            <View style={styles.dividerContainer}>
-              <View style={styles.divider} />
-              <ThemedText style={styles.dividerText} type="secondary">
-                OU
-              </ThemedText>
-              <View style={styles.divider} />
-            </View>
-
-            <SocialAuthButton type="google" onPress={() => logger.log('Google login')} loading={false} />
-            {Platform.OS === 'ios' && (
-              <SocialAuthButton type="apple" onPress={() => logger.log('Apple login')} loading={false} />
-            )}
           </View>
 
           <TouchableOpacity
