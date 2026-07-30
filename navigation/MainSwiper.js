@@ -1,5 +1,6 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Keyboard, PanResponder, StyleSheet, View } from 'react-native';
+import { useRoute } from '@react-navigation/native';
 import MainSwiperContext from '../components/contexts/MainSwiperContext';
 import SearchView from '../views/SearchView';
 import LocationListScreen from '../views/LocationListScreen';
@@ -10,6 +11,7 @@ const PAGE_COUNT = 3;
 const INITIAL_PAGE = 1; // 0 = Search, 1 = LocationList, 2 = MyAccount
 
 export default function MainSwiper() {
+  const route = useRoute();
   const translateX = useRef(new Animated.Value(-width * INITIAL_PAGE)).current;
   const pageRef = useRef(INITIAL_PAGE);
   const gestureBaseRef = useRef(-width * INITIAL_PAGE);
@@ -41,6 +43,12 @@ export default function MainSwiper() {
   );
 
   goToPageRef.current = goToPage;
+
+  useEffect(() => {
+    if (typeof route.params?.initialPage === 'number') {
+      goToPageRef.current(route.params.initialPage, false);
+    }
+  }, [route.params?.initialPage]);
 
   const panResponder = useRef(
     PanResponder.create({

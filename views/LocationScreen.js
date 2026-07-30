@@ -12,6 +12,7 @@ import {
   Platform,
   Dimensions,
   Modal,
+  Alert,
 } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import ImageView from 'react-native-image-viewing';
@@ -38,9 +39,11 @@ import ProfileCard from '../components/ProfileCard';
 import UltraBoostProgressBar from '../components/UltraBoostProgressBar';
 import CheckinVerifyModal from '../components/CheckinVerifyModal';
 import NearbyLocationPicker from '../components/NearbyLocationPicker';
-import { forceCheckIn } from '../components/ApiRequest';
-import { cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
+import { forceCheckIn, forceCheckOut } from '../components/ApiRequest';
+import { cancelCheckinVerification, markCheckinVerified } from '../components/CheckinVerificationScheduler';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
+import { suppressLocationHeartbeat } from '../utils/devLocationSuppression';
+import { mapBackendUser } from '../utils/mappers';
 import socialMediaIcons from '../constants/socialMediaIcons';
 import { getPdfIconName } from '../constants/pdfIcons';
 import { trackLocationView } from '../components/ApiRequest';
@@ -72,7 +75,7 @@ const LocationScreen = () => {
   const navigateToUser = useNavigateToUser();
 
   const { isMoon } = useVibe();
-  const { user } = useContext(UserContext);
+  const { user, updateUser } = useContext(UserContext);
   const theme = useVibeTheme();
   const { palette, radius, spacing, shadows, typography } = theme;
   const insets = useSafeAreaInsets();
@@ -173,7 +176,12 @@ const LocationScreen = () => {
 
   const handleConfirmCheckin = () => {
     setVerifyModalVisible(false);
-    cancelCheckinVerification().catch(() => {});
+    const [lon, lat] = location?.location?.coordinates || [];
+    if (lat != null && lon != null) {
+      markCheckinVerified({ locationId, lat, lon }).catch(() => {});
+    } else {
+      cancelCheckinVerification().catch(() => {});
+    }
   };
 
   const openPlacePickerFromCurrentPosition = async () => {
@@ -188,6 +196,10 @@ const LocationScreen = () => {
   };
 
   const handleForceCheckinPress = () => {
+    if (isBoosted) {
+      Alert.alert('Boost en cours', 'Ton boost est actif ici : attends qu\'il se termine pour changer de lieu.');
+      return;
+    }
     openPlacePickerFromCurrentPosition();
   };
 
@@ -196,7 +208,7 @@ const LocationScreen = () => {
     setCorrecting(true);
     try {
       await forceCheckIn({ locationId: place._id, lat: placePicker.lat, lon: placePicker.lon });
-      await cancelCheckinVerification();
+      await markCheckinVerified({ locationId: place._id, lat: placePicker.lat, lon: placePicker.lon });
       setPlacePicker(null);
       refresh();
       if (String(place._id) === String(locationId)) {
@@ -205,7 +217,70 @@ const LocationScreen = () => {
         navigation.replace('Location', { locationId: place._id });
       }
     } catch (e) {
-      console.warn('[LocationScreen] forceCheckIn failed', e?.message || e);
+      if (e?.code === 'BOOST_ACTIVE') {
+        setPlacePicker(null);
+        Alert.alert('Boost en cours', e?.message || 'Ton boost est actif : attends qu\'il se termine pour changer de lieu.');
+      } else {
+        console.warn('[LocationScreen] forceCheckIn failed', e?.message || e);
+      }
+    } finally {
+      setCorrecting(false);
+    }
+  };
+
+  // Dev only: force le check-in sur CE lieu (celui affiché par l'écran),
+  // peu importe la distance réelle. Distinct de "Ce n'est pas le bon lieu ?"
+  // (handleForceCheckinPress) qui reste identique à la prod.
+  const handleDevForceCheckinPress = async () => {
+    if (!__DEV__ || correcting || !locationId) return;
+    if (isBoosted) {
+      Alert.alert('Boost en cours', 'Impossible de changer de lieu tant que le boost est actif.');
+      return;
+    }
+    setCorrecting(true);
+    try {
+      const pos = await getCurrentPositionSmart().catch(() => null);
+      const [locLon, locLat] = location?.location?.coordinates || [];
+      const lat = pos?.coords?.latitude ?? locLat;
+      const lon = pos?.coords?.longitude ?? locLon;
+      if (lat == null || lon == null) return;
+      const res = await forceCheckIn({ locationId, lat, lon, bypassDistance: true });
+      await markCheckinVerified({ locationId, lat, lon });
+      // Sans ça, le prochain heartbeat GPS réel (position potentiellement
+      // très différente, puisque c'est tout l'intérêt du bypass) ne matche
+      // plus ce lieu et annule le check-in forcé en quelques secondes.
+      suppressLocationHeartbeat();
+      // forceCheckIn ne met à jour que ce lieu (via refresh() plus bas) : le
+      // UserContext global (currentPoiId, utilisé ailleurs dans l'app) ne
+      // bouge pas tout seul, il faut le pousser explicitement.
+      if (res?.user) updateUser(mapBackendUser(res.user));
+      refresh();
+    } catch (e) {
+      console.warn('[LocationScreen] dev forceCheckIn failed', e?.message || e);
+    } finally {
+      setCorrecting(false);
+    }
+  };
+
+  // Dev only: force un check-out immédiat, sans dépendre du heartbeat GPS.
+  // Le backend refuse cette route hors dev (voir forceCheckOut/ApiRequest).
+  // Sans la suppression du heartbeat, le prochain heartbeat GPS (toutes les
+  // 30-60s, cf. hooks/usePresence.js) re-matche l'utilisateur sur ce même
+  // lieu et annule le check-out en quelques secondes.
+  const handleForceCheckoutPress = async () => {
+    if (!__DEV__ || correcting) return;
+    if (isBoosted) {
+      Alert.alert('Boost en cours', 'Impossible de se check-out tant que le boost est actif.');
+      return;
+    }
+    setCorrecting(true);
+    try {
+      const res = await forceCheckOut();
+      suppressLocationHeartbeat();
+      if (res?.user) updateUser(mapBackendUser(res.user));
+      refresh();
+    } catch (e) {
+      console.warn('[LocationScreen] forceCheckOut failed', e?.message || e);
     } finally {
       setCorrecting(false);
     }
@@ -699,14 +774,68 @@ const LocationScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleForceCheckinPress}
-            style={styles.forceCheckinLink}
+            style={[styles.forceCheckinLink, isBoosted && { opacity: 0.4 }]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="locate-outline" size={14} color={palette.textMuted} />
-            <Text style={[typography.caption, { color: palette.textMuted, marginLeft: 4 }]}>
-              Ce n'est pas le bon lieu ? Forcer mon check-in ici
+            <Ionicons name="locate-outline" size={15} color={palette.textMuted} />
+            <Text
+              style={[
+                typography.caption,
+                {
+                  color: palette.textMuted,
+                  fontWeight: '600',
+                  marginLeft: 4,
+                  textDecorationLine: 'underline',
+                },
+              ]}
+            >
+              Ce n'est pas le bon lieu ?
             </Text>
           </TouchableOpacity>
+          {__DEV__ && (
+            <TouchableOpacity
+              onPress={handleDevForceCheckinPress}
+              style={styles.forceCheckinLink}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="enter-outline" size={15} color={palette.textMuted} />
+              <Text
+                style={[
+                  typography.caption,
+                  {
+                    color: palette.textMuted,
+                    fontWeight: '600',
+                    marginLeft: 4,
+                    textDecorationLine: 'underline',
+                  },
+                ]}
+              >
+                [DEV] Forcer le check-in ici
+              </Text>
+            </TouchableOpacity>
+          )}
+          {__DEV__ && (
+            <TouchableOpacity
+              onPress={handleForceCheckoutPress}
+              style={styles.forceCheckinLink}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="log-out-outline" size={15} color={palette.textMuted} />
+              <Text
+                style={[
+                  typography.caption,
+                  {
+                    color: palette.textMuted,
+                    fontWeight: '600',
+                    marginLeft: 4,
+                    textDecorationLine: 'underline',
+                  },
+                ]}
+              >
+                [DEV] Forcer le check-out
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -1013,7 +1142,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 10,
+    paddingVertical: 4,
   },
 });
 

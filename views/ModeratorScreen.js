@@ -26,6 +26,9 @@ import {
   moderateUser,
   getBusinessClaims,
   actOnBusinessClaim,
+  getPromoCodes,
+  createPromoCode,
+  deletePromoCode,
 } from '../components/ApiRequest';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
@@ -101,6 +104,14 @@ const ModeratorScreen = () => {
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [claimRejectionReason, setClaimRejectionReason] = useState('');
   const [claimWorking, setClaimWorking] = useState(false);
+  const [promoCodes, setPromoCodes] = useState([]);
+  const [promoCodesLoading, setPromoCodesLoading] = useState(false);
+  const [promoCodesError, setPromoCodesError] = useState('');
+  const [promoModalVisible, setPromoModalVisible] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [promoDiscountInput, setPromoDiscountInput] = useState('');
+  const [promoTrialInput, setPromoTrialInput] = useState('');
+  const [promoWorking, setPromoWorking] = useState(false);
   const searchDebounceRef = useRef(null);
   const cardStyle = [
     styles.card,
@@ -151,9 +162,23 @@ const ModeratorScreen = () => {
     }
   };
 
+  const loadPromoCodes = async () => {
+    try {
+      setPromoCodesLoading(true);
+      setPromoCodesError('');
+      const res = await getPromoCodes();
+      setPromoCodes(Array.isArray(res?.promoCodes) ? res.promoCodes : []);
+    } catch (e) {
+      setPromoCodesError(e?.message || 'Impossible de charger les codes promo.');
+    } finally {
+      setPromoCodesLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadReports();
     loadClaims();
+    loadPromoCodes();
   }, []);
 
   useEffect(() => {
@@ -264,6 +289,61 @@ const ModeratorScreen = () => {
       [
         { text: 'Annuler', style: 'cancel' },
         { text: 'Approuver', onPress: () => submitClaimAction(claim._id, 'approve') },
+      ],
+    );
+  };
+
+  const openPromoModal = () => {
+    setPromoCodeInput('');
+    setPromoDiscountInput('');
+    setPromoTrialInput('');
+    setPromoModalVisible(true);
+  };
+
+  const submitPromoCode = async () => {
+    const code = promoCodeInput.trim();
+    if (!code) {
+      Alert.alert('Erreur', 'Le code est requis.');
+      return;
+    }
+    if (!promoDiscountInput.trim() && !promoTrialInput.trim()) {
+      Alert.alert('Erreur', 'Indiquez une remise et/ou des jours d\'essai.');
+      return;
+    }
+    try {
+      setPromoWorking(true);
+      await createPromoCode({
+        code,
+        discountPercent: promoDiscountInput.trim() ? Number(promoDiscountInput.trim()) : undefined,
+        trialDays: promoTrialInput.trim() ? Number(promoTrialInput.trim()) : undefined,
+      });
+      setPromoModalVisible(false);
+      await loadPromoCodes();
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de créer ce code promo.');
+    } finally {
+      setPromoWorking(false);
+    }
+  };
+
+  const confirmDeletePromoCode = (promoCode) => {
+    Alert.alert(
+      'Supprimer le code promo',
+      `Supprimer définitivement le code "${promoCode.code}" ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deletePromoCode(promoCode._id);
+              await loadPromoCodes();
+            } catch (e) {
+              Alert.alert('Erreur', e?.message || 'Impossible de supprimer ce code promo.');
+            }
+          },
+        },
       ],
     );
   };
@@ -537,7 +617,53 @@ const ModeratorScreen = () => {
 
         {activeTab === 'claims' && (
           <>
-            <Text style={[sectionTitleStyle, { marginBottom: 15 }]}>Demandes de compte pro en attente</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+              <Text style={sectionTitleStyle}>Codes promo</Text>
+              <TouchableOpacity onPress={openPromoModal}>
+                <Text style={{ color: '#00c2cb', fontWeight: '600' }}>+ Ajouter un code promo</Text>
+              </TouchableOpacity>
+            </View>
+            {promoCodesLoading ? (
+              <ActivityIndicator size="small" color="#00c2cb" style={{ marginBottom: 15 }} />
+            ) : promoCodesError ? (
+              <Text style={[styles.error, { color: '#ff6b6b', marginBottom: 15 }]}>{promoCodesError}</Text>
+            ) : promoCodes.length === 0 ? (
+              <View style={[styles.card, { backgroundColor: cardBg, borderColor: borderColor, borderWidth: 1, marginBottom: 15 }]}>
+                <Text style={subTextStyle}>Aucun code promo pour le moment.</Text>
+              </View>
+            ) : (
+              promoCodes.map((promoCode) => (
+                <View
+                  key={promoCode._id}
+                  style={[
+                    cardStyle,
+                    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+                  ]}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.cardTitle, textStyle]}>{promoCode.code}</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 }}>
+                      {promoCode.discountPercent ? (
+                        <Text style={[styles.cardMeta, subTextStyle, { marginRight: 10 }]}>
+                          -{promoCode.discountPercent}%
+                        </Text>
+                      ) : null}
+                      {promoCode.trialDays ? (
+                        <Text style={[styles.cardMeta, subTextStyle]}>{promoCode.trialDays}j offerts</Text>
+                      ) : null}
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: '#ff4444' }]}
+                    onPress={() => confirmDeletePromoCode(promoCode)}
+                  >
+                    <Text style={styles.actionBtnText}>Supprimer</Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+
+            <Text style={[sectionTitleStyle, { marginBottom: 15, marginTop: 10 }]}>Demandes de compte pro en attente</Text>
             {claimsLoading ? (
               <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 20 }} />
             ) : claimsError ? (
@@ -935,6 +1061,109 @@ const ModeratorScreen = () => {
                       ]}
                       onPress={() => setClaimRejectVisible(false)}
                       disabled={claimWorking}
+                    >
+                      <Text style={[styles.primaryButtonText, textStyle, { opacity: 0.6 }]}>Annuler</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* Promo Code Creation Modal */}
+      <Modal
+        transparent
+        visible={promoModalVisible}
+        animationType="fade"
+        onRequestClose={() => setPromoModalVisible(false)}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            setPromoModalVisible(false);
+          }}
+        >
+          <View style={styles.modalBackdrop}>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ width: '100%' }}>
+                <ScrollView
+                  contentContainerStyle={[styles.modalCard, { backgroundColor: colors.surface }]}
+                  keyboardShouldPersistTaps="handled"
+                >
+                  <Text style={[styles.modalTitle, { color: isDark ? '#fff' : '#00c2cb' }]}>
+                    Nouveau code promo
+                  </Text>
+                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>Code</Text>
+                  <TextInput
+                    style={[
+                      styles.modalInput,
+                      {
+                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                        color: isDark ? '#fff' : colors.textPrimary,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      },
+                    ]}
+                    value={promoCodeInput}
+                    onChangeText={(v) => setPromoCodeInput(v.toUpperCase())}
+                    autoCapitalize="characters"
+                    placeholder="EX: BIENVENUE2026"
+                    placeholderTextColor={isDark ? '#999' : subTextColor}
+                  />
+                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>
+                    % de remise (optionnel)
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.modalInput,
+                      {
+                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                        color: isDark ? '#fff' : colors.textPrimary,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      },
+                    ]}
+                    value={promoDiscountInput}
+                    onChangeText={setPromoDiscountInput}
+                    keyboardType="numeric"
+                    placeholder="Ex: 20"
+                    placeholderTextColor={isDark ? '#999' : subTextColor}
+                  />
+                  <Text style={[styles.modalLabel, textStyle, { opacity: isDark ? 0.9 : 0.5 }]}>
+                    Jours d'essai gratuit avant prélèvement (optionnel)
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.modalInput,
+                      {
+                        borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+                        color: isDark ? '#fff' : colors.textPrimary,
+                        backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
+                      },
+                    ]}
+                    value={promoTrialInput}
+                    onChangeText={setPromoTrialInput}
+                    keyboardType="numeric"
+                    placeholder="Ex: 14"
+                    placeholderTextColor={isDark ? '#999' : subTextColor}
+                  />
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity
+                      style={styles.primaryButton}
+                      onPress={submitPromoCode}
+                      disabled={promoWorking}
+                    >
+                      <Text style={styles.primaryButtonText}>
+                        {promoWorking ? 'Création...' : 'Créer le code promo'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.primaryButton,
+                        { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                      ]}
+                      onPress={() => setPromoModalVisible(false)}
+                      disabled={promoWorking}
                     >
                       <Text style={[styles.primaryButtonText, textStyle, { opacity: 0.6 }]}>Annuler</Text>
                     </TouchableOpacity>

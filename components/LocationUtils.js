@@ -15,7 +15,7 @@
 const TYPE_LABELS = {
   // ── Backend (libellés FR avec emoji) ───────────────────────────────────
   'Bar 🍺': 'BAR 🍺',
-  'Boîte de nuit 💃': 'BOÎTE DE NUIT 💃',
+  'Boîte de nuit 🪩': 'BOÎTE DE NUIT 🪩',
   'Restaurant 🍴': 'RESTAURANT 🍴',
   'Café ☕': 'CAFÉ ☕',
   'Cinéma 🎬': 'CINÉMA 🎬',
@@ -43,7 +43,7 @@ const TYPE_LABELS = {
   bar: 'BAR 🍺',
   pub: 'BAR 🍺',
   biergarten: 'BAR 🍺',
-  nightclub: 'BOÎTE DE NUIT 💃',
+  nightclub: 'BOÎTE DE NUIT 🪩',
   restaurant: 'RESTAURANT 🍴',
   cafe: 'CAFÉ ☕',
   fast_food: 'FAST FOOD 🍔',
@@ -94,6 +94,13 @@ function extractEmoji(str) {
 
 function stripEmoji(str) {
   return String(str).replace(EMOJI_REGEX, '').trim();
+}
+
+export function getLocationTypeEmoji(type) {
+  if (!type) return '📍';
+  const key = String(type).trim();
+  if (TYPE_LABELS[key]) return extractEmoji(TYPE_LABELS[key]) || '📍';
+  return extractEmoji(key) || '📍';
 }
 
 export function formatLocationType(type) {

@@ -523,8 +523,14 @@ export async function updateMyLocation({ lat, lon }) {
   return request('/users/location', { method: 'POST', body: { lat, lon } });
 }
 
-export async function forceCheckIn({ locationId, lat, lon }) {
-  return request('/users/location/force', { method: 'POST', body: { locationId, lat, lon } });
+export async function forceCheckIn({ locationId, lat, lon, bypassDistance }) {
+  return request('/users/location/force', { method: 'POST', body: { locationId, lat, lon, bypassDistance } });
+}
+
+// Dev only: force un check-out immédiat sans passer par le heartbeat GPS.
+// Le backend refuse cette route si NODE_ENV === 'production'.
+export async function forceCheckOut() {
+  return request('/users/location/force-checkout', { method: 'POST' });
 }
 
 export async function getUsersAroundMe({ lat, lon, radius = 2000 }) {
@@ -777,6 +783,28 @@ export async function actOnBusinessClaim(claimId, { action, rejectionReason } = 
     method: 'POST',
     body: { action, rejectionReason },
   });
+}
+
+// CODES PROMO PRO — gestion des avantages compte pro (ModeratorScreen)
+export async function getPromoCodes() {
+  return request('/promo-codes', { method: 'GET', cache: 'reload' });
+}
+
+export async function createPromoCode({ code, discountPercent, trialDays } = {}) {
+  const body = { code };
+  if (discountPercent !== undefined && discountPercent !== null && discountPercent !== '') {
+    body.discountPercent = discountPercent;
+  }
+  if (trialDays !== undefined && trialDays !== null && trialDays !== '') {
+    body.trialDays = trialDays;
+  }
+  return request('/promo-codes', { method: 'POST', body });
+}
+
+export async function deletePromoCode(promoCodeId) {
+  const id = String(promoCodeId || '');
+  if (!id) throw new Error('promoCodeId requis');
+  return request(`/promo-codes/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export async function blockUser(targetUserId) {

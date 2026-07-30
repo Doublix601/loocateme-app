@@ -36,7 +36,10 @@
       },
       "distribution": "store",
       "channel": "production",
-      "node": "20.19.0"
+      "node": "20.19.0",
+      "env": {
+        "RCT_USE_PREBUILT_RNCORE": "0"
+      }
     }
   },
   "submit": {

@@ -29,10 +29,20 @@ export default function NearbyLocationPicker({ visible, lat, lon, onSelect, onCl
     let cancelled = false;
     setLoading(true);
     setError(null);
-    getLocations({ lat, lon, limit: 40 })
-      .then((res) => {
+    // Le forçage de check-in doit proposer TOUS les lieux à proximité, pas
+    // uniquement ceux de la vibe courante (getLocations filtre par défaut sur
+    // 'sun'/'jour' côté backend) : on interroge les deux vibes et on fusionne.
+    Promise.all([
+      getLocations({ lat, lon, limit: 40, vibe: 'sun' }),
+      getLocations({ lat, lon, limit: 40, vibe: 'moon' }),
+    ])
+      .then(([sunRes, moonRes]) => {
         if (cancelled) return;
-        const list = (res?.locations || [])
+        const byId = new Map();
+        for (const loc of [...(sunRes?.locations || []), ...(moonRes?.locations || [])]) {
+          if (loc?._id) byId.set(String(loc._id), loc);
+        }
+        const list = Array.from(byId.values())
           .map((loc) => {
             const [locLon, locLat] = loc.location?.coordinates || [];
             if (locLat == null || locLon == null) return null;

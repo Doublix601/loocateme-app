@@ -11,8 +11,12 @@ const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // v4: élargissement du rayon Overpass (30 km → 50 km) + invalidation de la sync
 // sur déplacement significatif (>3 km), afin d'afficher plus de lieux autour de
 // l'utilisateur en distance et en nombre, sans ajouter de catégories.
-const LAST_SYNC_KEY = 'loocateme_last_osm_sync_v4';
-const LAST_SYNC_POS_KEY = 'loocateme_last_osm_sync_pos_v4';
+// v5: retrait du tag OSM "school" (maternelles/écoles élémentaires/collèges/lycées) de
+// la catégorie Éducation — seuls "university" et "college" (universités, écoles
+// supérieures type UTC, IFSI, AFPA...) doivent apparaître dans l'app. Bump pour
+// forcer un re-sync qui repeuple sans ces établissements.
+const LAST_SYNC_KEY = 'loocateme_last_osm_sync_v5';
+const LAST_SYNC_POS_KEY = 'loocateme_last_osm_sync_pos_v5';
 
 // Rayon de recherche Overpass (en mètres). 50 km couvre la majorité des
 // déplacements quotidiens / week-end sans saturer la requête Overpass.
@@ -74,7 +78,7 @@ export const LocationSyncService = {
       // Catégories alignées sur les enum Location.type côté backend, couvrant
       // les deux vibes (jour/nuit) pour garantir un minimum de lieux affichables.
       const AMENITY_RE =
-        'bar|pub|nightclub|library|university|college|school|food_court|cinema|ice_cream|restaurant|cafe|fast_food|gym';
+        'bar|pub|nightclub|library|university|college|food_court|cinema|ice_cream|restaurant|cafe|fast_food|gym';
       const LEISURE_RE = 'fitness_centre|beach_resort|theme_park|sports_centre|bowling_alley|stadium|pitch';
       const query = `
 [out:json];
@@ -122,7 +126,7 @@ out center;
           const leisure = el.tags?.leisure;
 
           if (amenity === 'bar' || amenity === 'pub') type = 'Bar 🍺';
-          else if (amenity === 'nightclub') type = 'Boîte de nuit 💃';
+          else if (amenity === 'nightclub') type = 'Boîte de nuit 🪩';
           else if (amenity === 'restaurant') type = 'Restaurant 🍴';
           else if (amenity === 'cafe') type = 'Café ☕';
           else if (amenity === 'fast_food' || amenity === 'food_court') type = 'Fast food 🍔';
@@ -133,7 +137,7 @@ out center;
           else if (leisure === 'sports_centre' || leisure === 'stadium' || leisure === 'pitch')
             type = 'Centre sportif 🏟️';
           else if (leisure === 'bowling_alley') type = 'Bowling 🎳';
-          else if (amenity === 'university' || amenity === 'college' || amenity === 'school') type = 'Éducation 🎓';
+          else if (amenity === 'university' || amenity === 'college') type = 'Éducation 🎓';
           else if (amenity === 'cinema') type = 'Cinéma 🎬';
           else if (amenity === 'ice_cream') type = 'Glacier 🍦';
 

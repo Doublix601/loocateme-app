@@ -31,7 +31,7 @@ const CATEGORIES_BY_VIBE = {
     leisure: ['bowling_alley'],
     backend: [
       'Bar 🍺',
-      'Boîte de nuit 💃',
+      'Boîte de nuit 🪩',
       'Restaurant 🍴',
       'Cinéma 🎬',
       'Fast food 🍔',
@@ -43,7 +43,7 @@ const CATEGORIES_BY_VIBE = {
     ],
   },
   sun: {
-    amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'school', 'marketplace', 'museum'],
+    amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'marketplace', 'museum'],
     leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach'],
     backend: [
       'Café ☕',

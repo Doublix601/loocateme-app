@@ -22,7 +22,9 @@
       "bundleIdentifier": "me.loocate.app",
       "scheme": "loocateme",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "associatedDomains": ["applinks:api.loocate.me"],
+      "associatedDomains": [
+        "applinks:api.loocate.me"
+      ],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSExceptionDomains": {
@@ -33,7 +35,10 @@
             }
           }
         },
-        "UIBackgroundModes": ["location", "remote-notification"],
+        "UIBackgroundModes": [
+          "location",
+          "remote-notification"
+        ],
         "NSLocationWhenInUseUsageDescription": "Votre position est utilisée pour afficher les utilisateurs autour de vous.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
         "NSLocationAlwaysUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
@@ -65,7 +70,10 @@
               "pathPrefix": "/profile"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -83,6 +91,7 @@
           }
         }
       ],
+      "./plugins/withFirebaseModularHeadersFix.js",
       [
         "expo-notifications",
         {

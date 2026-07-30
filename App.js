@@ -33,6 +33,7 @@ import VibeTransitOverlay from './components/VibeTransitOverlay';
 import VibeAmbientPulse from './components/VibeAmbientPulse';
 import { LocationSyncService } from './services/LocationSyncService';
 import { LocationService, ScanMode } from './services/LocationService';
+import { checkPendingCheckinVerification } from './components/CheckinVerificationScheduler';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { usePresence } from './hooks/usePresence';
@@ -71,8 +72,31 @@ function AppShell({ purchasesReady }) {
   const appState = useRef(AppState.currentState);
   const hasShownLocationModal = useRef(false);
   const didInitialScanRef = useRef(false);
+  const currentPoiIdRef = useRef(null);
 
   usePresence(authReady);
+
+  useEffect(() => {
+    currentPoiIdRef.current = appUser?.currentPoiId || null;
+  }, [appUser?.currentPoiId]);
+
+  // Vérification "Es-tu bien ici ?" en interne à l'app (pas de notification) :
+  // ~5 min après le check-in, on ouvre le modal si l'utilisateur est toujours
+  // détecté dans le lieu. Une seule proposition par lieu (cf.
+  // CheckinVerificationScheduler), donc un poll léger suffit.
+  useEffect(() => {
+    if (!authReady) return;
+    const runCheck = async () => {
+      const pending = await checkPendingCheckinVerification();
+      if (!pending) return;
+      if (String(currentPoiIdRef.current || '') !== String(pending.locationId)) return;
+      if (!navigationRef.isReady()) return;
+      navigationRef.navigate('Location', { locationId: pending.locationId, openVerifyModal: true });
+    };
+    runCheck();
+    const interval = setInterval(runCheck, 20000);
+    return () => clearInterval(interval);
+  }, [authReady]);
 
   useEffect(() => {
     try {
@@ -362,8 +386,6 @@ function AppShell({ purchasesReady }) {
             publish('ui:open_superlike_history', { tab: 'sent' });
           } else if (data.kind === 'cote_expiring') {
             navigationRef.navigate('MainTabs');
-          } else if (data.kind === 'checkin_verify' && data.locationId) {
-            navigationRef.navigate('Location', { locationId: data.locationId, openVerifyModal: true });
           }
         };
 

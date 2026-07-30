@@ -18,8 +18,8 @@ export function useNavigateToUser() {
         goToPage(2);
       } else {
         // Called from a screen outside the swiper (e.g. LocationScreen):
-        // navigate back to MainTabs; the swiper will be on its last page.
-        navigation.navigate('MainTabs');
+        // navigate back to MainTabs and tell the swiper to land on MyAccount.
+        navigation.navigate('MainTabs', { initialPage: 2 });
       }
       return;
     }

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { getFeatureFlags } from '../ApiRequest';
 
 const FeatureFlagsContext = createContext({
@@ -34,8 +34,13 @@ export function FeatureFlagsProvider({ children, ready = false }) {
     refresh();
   }, [refresh]);
 
+  const value = useMemo(
+    () => ({ flags, loading, purchasesReady: ready, error, refresh }),
+    [flags, loading, ready, error, refresh]
+  );
+
   return (
-    <FeatureFlagsContext.Provider value={{ flags, loading, purchasesReady: ready, error, refresh }}>
+    <FeatureFlagsContext.Provider value={value}>
       {children}
     </FeatureFlagsContext.Provider>
   );

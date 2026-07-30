@@ -4,6 +4,7 @@ import { updateMyLocation, post } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
 import { incrementCheckinCount } from '../hooks/useProgressiveUnlock';
 import { scheduleCheckinVerification, cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
+import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 
 // Location check-in orchestration with three explicit modes
 export const ScanMode = Object.freeze({
@@ -59,6 +60,7 @@ async function getBalancedPosition() {
 }
 
 async function immediateCheckIn() {
+  if (isLocationHeartbeatSuppressed()) return false;
   const pos = await getBalancedPosition();
   if (!pos?.coords) return false;
   try {
@@ -73,7 +75,11 @@ async function immediateCheckIn() {
     try {
       const locationId = res?.user?.currentLocation;
       if (locationId) {
-        await scheduleCheckinVerification({ locationId: String(locationId) });
+        await scheduleCheckinVerification({
+          locationId: String(locationId),
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+        });
       } else {
         await cancelCheckinVerification();
       }

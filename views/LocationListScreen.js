@@ -12,6 +12,7 @@ import {
   Dimensions,
   Platform,
   InteractionManager,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,11 +23,13 @@ import { useNavigation } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
 import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe, forceCheckIn } from '../components/ApiRequest';
+import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import NearbyLocationPicker from '../components/NearbyLocationPicker';
-import { cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
+import { markCheckinVerified } from '../components/CheckinVerificationScheduler';
 import { subscribe, publish } from '../components/EventBus';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
+import { useBoost } from '../hooks/useBoost';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance, formatDistance } from '../components/ServerUtils';
 import { UserContext } from '../components/contexts/UserContext';
@@ -37,6 +40,13 @@ import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
 import { OverpassService, isTypeAllowedForVibe } from '../services/OverpassService';
 import VibeFAB from '../components/VibeFAB';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LocationMapView from '../components/LocationMapView';
+import ClusterPickerModal from '../components/ClusterPickerModal';
+
+// Mémorise le dernier mode consulté (liste/carte) entre les sessions, même
+// pattern que loocateme_theme_mode dans ThemeContext.
+const VIEW_MODE_KEY = 'loocateme_view_mode';
 
 // Score de secours pour interclasser les POI OSM (sans stars/userCount
 // serveur) avec les lieux backend déjà triés par score composite. Constantes
@@ -47,6 +57,21 @@ const USERCOUNT_CAP = 8;
 const WEIGHT_DISTANCE = 0.45;
 const WEIGHT_STARS = 0.35;
 const WEIGHT_USERS = 0.2;
+
+// Fusionne des listes de lieux en dédupliquant par osmId (priorité) sinon
+// _id — partagé entre le merge backend/Overpass "autour de moi" et
+// l'accumulateur "lieux explorés en panant la carte" (cf. handleMapViewportChange).
+function mergeByOsmId(...lists) {
+  const map = new Map();
+  const list = [];
+  for (const it of lists.flat()) {
+    const key = it?.osmId ? `osm:${it.osmId}` : it?._id;
+    if (!key || map.has(key)) continue;
+    map.set(key, it);
+    list.push(it);
+  }
+  return list;
+}
 
 const LocationListScreen = () => {
   const navigation = useNavigation();
@@ -84,6 +109,7 @@ const LocationListScreen = () => {
   const [hasMore, setHasMore] = useState(true);
   const { user: currentUser } = useContext(UserContext);
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
+  const { isBoosted } = useBoost();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
   const userCoordsRef = useRef(userCoords);
@@ -91,13 +117,170 @@ const LocationListScreen = () => {
     userCoordsRef.current = userCoords;
   }, [userCoords]);
   const [placePicker, setPlacePicker] = useState(null); // { lat, lon } | null
+  const [clusterPickerItems, setClusterPickerItems] = useState(null); // Location[] | null
+  const handleClusterOpen = useCallback((items) => setClusterPickerItems(items), []);
   const [correctingCheckin, setCorrectingCheckin] = useState(false);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
+  // Une fois affichée, la carte reste montée (cachée via style) pour éviter de
+  // recharger la WebView/MapLibre à chaque bascule liste ↔ carte.
+  const [hasShownMap, setHasShownMap] = useState(false);
+  useEffect(() => {
+    if (viewMode === 'map') setHasShownMap(true);
+  }, [viewMode]);
+
+  // Chargement dynamique de la carte quand on la pan loin de sa position
+  // réelle (cf. plan "carte scalable, pas de nouvel appel massif à chaque
+  // pan"). Accumulateur de lieux "explorés" + garde-fous côté client :
+  // - MAP_REGION_FETCH_MIN_DISTANCE_M : pas de refetch pour un petit pan.
+  // - fetchedRegionKeysRef : pas de refetch d'une région déjà visitée.
+  // - MAP_EXPLORED_CAP : plafond FIFO pour borner la mémoire sur une longue session.
+  // S'ajoute (sans les remplacer) aux protections déjà en place côté serveur :
+  // cache Redis 60s + singleflight + rate-limit 30/min (getLocations), et le
+  // throttle global 30s d'OverpassService.
+  const [mapExploredLocations, setMapExploredLocations] = useState([]);
+  const fetchedRegionKeysRef = useRef(new Set());
+  const lastFetchCoordsRef = useRef(null);
+  const MAP_REGION_FETCH_MIN_DISTANCE_M = 300;
+  const MAP_EXPLORED_CAP = 300;
+  const MAP_REGION_KEY_PRECISION = 3; // aligné sur l'arrondi du cache backend (toFixed(3))
+
+  const handleMapViewportChange = useCallback(
+    async ({ center }) => {
+      if (viewMode !== 'map') return; // défense en profondeur (la WebView n'existe pas hors mode carte)
+      if (!Array.isArray(center) || center.length < 2) return;
+      const [lon, lat] = center;
+      if (typeof lat !== 'number' || typeof lon !== 'number') return;
+
+      const last = lastFetchCoordsRef.current;
+      if (last) {
+        const moved = calculateDistance(last.lat, last.lon, lat, lon);
+        if (moved < MAP_REGION_FETCH_MIN_DISTANCE_M) return;
+      }
+
+      const regionKey = `${lat.toFixed(MAP_REGION_KEY_PRECISION)}:${lon.toFixed(MAP_REGION_KEY_PRECISION)}`;
+      if (fetchedRegionKeysRef.current.has(regionKey)) return;
+      fetchedRegionKeysRef.current.add(regionKey);
+      lastFetchCoordsRef.current = { lat, lon };
+
+      try {
+        // On ne va chercher que les lieux backend ici : la carte n'affiche que
+        // les lieux réellement enregistrés dans l'app (cf. isAppLocation), un
+        // POI OSM brut serait de toute façon filtré avant affichage — inutile
+        // d'interroger Overpass pour cet accumulateur.
+        // La carte doit montrer TOUS les lieux (jour + nuit), pas seulement
+        // ceux de la vibe active : on interroge les deux et on fusionne,
+        // contrairement à la liste swipeable qui reste filtrée par vibe.
+        const [sunRes, moonRes] = await Promise.all([
+          getLocations({ lat, lon, vibe: 'sun', limit: MIN_LOCATIONS }),
+          getLocations({ lat, lon, vibe: 'moon', limit: MIN_LOCATIONS }),
+        ]);
+        const backendLocationsForRegion = mergeByOsmId(sunRes?.locations || [], moonRes?.locations || []);
+
+        setMapExploredLocations((prev) => {
+          const combined = mergeByOsmId(prev, backendLocationsForRegion);
+          return combined.length > MAP_EXPLORED_CAP
+            ? combined.slice(combined.length - MAP_EXPLORED_CAP)
+            : combined;
+        });
+      } catch (e) {
+        console.warn('[LocationListScreen] map viewport fetch failed:', e?.message || e);
+      }
+    },
+    [viewMode],
+  );
+
+  // Premier affichage de la carte : on amorce l'accumulateur avec les lieux
+  // (jour + nuit) autour de la position actuelle, sans attendre un pan de
+  // l'utilisateur (sinon la carte ne montrerait au départ que les lieux déjà
+  // chargés pour la liste, filtrés sur la vibe courante).
+  const initialMapFetchDoneRef = useRef(false);
+  useEffect(() => {
+    if (!hasShownMap || !userCoords || initialMapFetchDoneRef.current) return;
+    initialMapFetchDoneRef.current = true;
+    handleMapViewportChange({ center: [userCoords.longitude, userCoords.latitude] });
+  }, [hasShownMap, userCoords, handleMapViewportChange]);
+
+  useEffect(() => {
+    AsyncStorage.getItem(VIEW_MODE_KEY)
+      .then((saved) => {
+        if (saved === 'map' || saved === 'list') setViewMode(saved);
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleViewMode = useCallback(() => {
+    setViewMode((prev) => {
+      const next = prev === 'list' ? 'map' : 'list';
+      AsyncStorage.setItem(VIEW_MODE_KEY, next).catch(() => {});
+      return next;
+    });
+  }, []);
+
+  // Navigation vers le détail d'un lieu, partagée entre le tap sur une carte
+  // de la liste et le tap sur un pin de la carte — pour éviter toute
+  // divergence entre les deux modes (cf. plan "vue carte").
+  const selectingLocationRef = useRef(false);
+  const handleSelectLocation = useCallback(
+    async (item) => {
+      // Garde anti-double-tap : un tap sur un pin de la carte n'a plus de
+      // modal intermédiaire pour absorber un double-tap pendant le seed OSM
+      // (appel réseau), ce qui déclencherait un double seed/double navigate.
+      if (selectingLocationRef.current) return;
+      selectingLocationRef.current = true;
+      try {
+        const isOsm = typeof item?._id === 'string' && item._id.startsWith('osm:');
+        if (isOsm) {
+          try {
+            const coords = item?.location?.coordinates || [];
+            const lon = typeof coords[0] === 'number' ? coords[0] : null;
+            const lat = typeof coords[1] === 'number' ? coords[1] : null;
+            if (lat != null && lon != null && item?.osmId != null) {
+              const res = await seedOsmLocation({
+                osmId: item.osmId,
+                name: item.name,
+                type: item.type,
+                lat,
+                lon,
+              });
+              const seeded = res?.location;
+              if (seeded && seeded._id) {
+                const merged = { ...item, ...seeded };
+                navigation.navigate('Location', {
+                  locationId: merged._id || merged.id,
+                  tertiles: merged.tertiles || null,
+                });
+                return;
+              }
+            }
+          } catch (e) {
+            console.warn('[LocationListScreen] seedOsmLocation failed:', e?.message || e);
+          }
+        }
+        navigation.navigate('Location', { locationId: item._id || item.id, tertiles: item.tertiles || null });
+      } finally {
+        selectingLocationRef.current = false;
+      }
+    },
+    [navigation],
+  );
+
+  const handleClusterPickerSelect = useCallback(
+    (item) => {
+      setClusterPickerItems(null);
+      handleSelectLocation(item);
+    },
+    [handleSelectLocation],
+  );
 
   const handleCorrectCheckinPress = useCallback(() => {
+    if (isBoosted) {
+      Alert.alert('Boost en cours', "Ton boost est actif : attends qu'il se termine pour changer de lieu.");
+      return;
+    }
     const c = userCoordsRef.current;
     if (!c) return;
     setPlacePicker({ lat: c.latitude, lon: c.longitude });
-  }, []);
+  }, [isBoosted]);
 
   const handleSelectCorrectedPlace = useCallback(async (place) => {
     if (correctingCheckin) return;
@@ -106,10 +289,15 @@ const LocationListScreen = () => {
       const c = userCoordsRef.current;
       if (!c) return;
       await forceCheckIn({ locationId: place._id, lat: c.latitude, lon: c.longitude });
-      await cancelCheckinVerification();
+      await markCheckinVerified({ locationId: place._id, lat: c.latitude, lon: c.longitude });
       setPlacePicker(null);
     } catch (e) {
-      console.warn('[LocationListScreen] forceCheckIn failed', e?.message || e);
+      if (e?.code === 'BOOST_ACTIVE') {
+        setPlacePicker(null);
+        Alert.alert('Boost en cours', e?.message || "Ton boost est actif : attends qu'il se termine pour changer de lieu.");
+      } else {
+        console.warn('[LocationListScreen] forceCheckIn failed', e?.message || e);
+      }
     } finally {
       setCorrectingCheckin(false);
     }
@@ -202,20 +390,10 @@ const LocationListScreen = () => {
   }, [locations]);
 
   const locationsWithDistance = useMemo(() => {
-    const merged = [...filteredLocations, ...filteredOsmPois].reduce(
-      (acc, it) => {
-        // Dédoublonnage robuste : on privilégie l'osmId s'il existe, sinon l'id MongoDB.
-        // Cela permet de fusionner un lieu backend synchronisé (qui a un osmId)
-        // avec son équivalent brut provenant d'Overpass.
-        const key = it?.osmId ? `osm:${it.osmId}` : it?._id;
-        if (!key) return acc;
-        if (acc.map.has(key)) return acc; // dedupe
-        acc.map.set(key, it);
-        acc.list.push(it);
-        return acc;
-      },
-      { map: new Map(), list: [] },
-    ).list;
+    // Dédoublonnage robuste : on privilégie l'osmId s'il existe, sinon l'id MongoDB.
+    // Cela permet de fusionner un lieu backend synchronisé (qui a un osmId)
+    // avec son équivalent brut provenant d'Overpass.
+    const merged = mergeByOsmId(filteredLocations, filteredOsmPois);
 
     if (!userCoords) return merged;
 
@@ -274,6 +452,19 @@ const LocationListScreen = () => {
     return pulseItems.slice(0, Math.min(displayLimit, MAX_LOCATIONS));
   }, [pulseItems, displayLimit]);
 
+  // Vue carte : n'afficher que les lieux réellement enregistrés dans notre
+  // backend (id Mongo réel), pour exclure les POI OSM bruts jamais ajoutés à
+  // l'app (id synthétique `osm:<id>` généré par OverpassService, cf.
+  // handleSelectLocation qui utilise déjà cette même distinction). La liste
+  // swipeable, elle, continue d'afficher tous les lieux (inchangé). On fusionne
+  // avec les lieux chargés en panant la carte loin de sa position réelle
+  // (cf. handleMapViewportChange) pour que la carte reste utile/explorable.
+  const isAppLocation = (loc) => typeof loc?._id === 'string' && !loc._id.startsWith('osm:');
+  const mapVisibleItems = useMemo(
+    () => mergeByOsmId(visibleItems, mapExploredLocations).filter(isAppLocation),
+    [visibleItems, mapExploredLocations],
+  );
+
   // Reset de la pagination à chaque changement de Vibe (Soleil/Lune).
   // Spec §2: le compteur revient à 20 et la liste se reconstruit pendant
   // l'écran de chargement de 8s déclenché par VibeFAB.
@@ -281,6 +472,12 @@ const LocationListScreen = () => {
   useEffect(() => {
     if (prevVibeRef.current !== vibe) {
       prevVibeRef.current = vibe;
+
+      // Les lieux explorés en panant la carte ne sont plus pertinents pour la
+      // nouvelle vibe (catégories Overpass et scoring backend différents).
+      setMapExploredLocations([]);
+      fetchedRegionKeysRef.current = new Set();
+      lastFetchCoordsRef.current = null;
 
       const zoneKey = getZoneKey(roundedLat, roundedLon);
       const cached = readVibeCache(vibe, zoneKey);
@@ -342,42 +539,7 @@ const LocationListScreen = () => {
               shadowOpacity: isMoon ? 0.45 : isDark ? 0.2 : 0.08,
             },
           ]}
-          onPress={async () => {
-            // POI Overpass non persisté: on l'upsert en base avant d'ouvrir l'écran
-            // de détail pour éviter un 404/500 sur `getLocationById('osm:*')`.
-            const isOsm = typeof item?._id === 'string' && item._id.startsWith('osm:');
-            if (isOsm) {
-              try {
-                const coords = item?.location?.coordinates || [];
-                const lon = typeof coords[0] === 'number' ? coords[0] : null;
-                const lat = typeof coords[1] === 'number' ? coords[1] : null;
-                if (lat != null && lon != null && item?.osmId != null) {
-                  const res = await seedOsmLocation({
-                    osmId: item.osmId,
-                    name: item.name,
-                    type: item.type,
-                    lat,
-                    lon,
-                  });
-                  const seeded = res?.location;
-                  if (seeded && seeded._id) {
-                    const merged = { ...item, ...seeded };
-                    navigation.navigate('Location', {
-                      locationId: merged._id || merged.id,
-                      tertiles: merged.tertiles || null,
-                    });
-                    return;
-                  }
-                }
-              } catch (e) {
-                // En cas d'erreur (type non supporté, réseau, etc.), on retombe
-                // sur le comportement standard: la nav passera l'id `osm:*` et
-                // le backend renverra un 404 propre.
-                console.warn('[LocationListScreen] seedOsmLocation failed:', e?.message || e);
-              }
-            }
-            navigation.navigate('Location', { locationId: item._id || item.id, tertiles: item.tertiles || null });
-          }}
+          onPress={() => handleSelectLocation(item)}
         >
           <View style={styles.locationInfo}>
             {item.isPro && (item.bannerUrl || item.logoUrl) && (
@@ -421,7 +583,7 @@ const LocationListScreen = () => {
                       handleCorrectCheckinPress();
                     }}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    style={{ marginLeft: 6 }}
+                    style={{ marginLeft: 6, opacity: isBoosted ? 0.4 : 1 }}
                   >
                     <Ionicons name="pencil" size={14} color="#00c2cb" />
                   </TouchableOpacity>
@@ -513,7 +675,7 @@ const LocationListScreen = () => {
 
       return card;
     });
-  }, [colors, isDark, isMoon, navigation, currentUser?.currentPoiId, handleCorrectCheckinPress]);
+  }, [colors, isDark, isMoon, currentUser?.currentPoiId, handleCorrectCheckinPress, handleSelectLocation, isBoosted]);
 
   const renderLocation = ({ item, index }) => <LocationItem item={item} index={index} />;
 
@@ -679,7 +841,7 @@ const LocationListScreen = () => {
       const reqLimit = options.limit || displayLimit;
       const tasks = [];
 
-      if (!skipUpdateMyLocation) {
+      if (!skipUpdateMyLocation && !isLocationHeartbeatSuppressed()) {
         tasks.push(
           updateMyLocation({ lat: latitude, lon: longitude }).catch((err) =>
             console.error('Error updating my location:', err),
@@ -852,6 +1014,14 @@ const LocationListScreen = () => {
       </Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity
+          onPress={toggleViewMode}
+          style={styles.headerIconButton}
+          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+          accessibilityLabel={viewMode === 'list' ? 'Voir la carte' : 'Voir la liste'}
+        >
+          <Ionicons name={viewMode === 'list' ? 'map-outline' : 'list-outline'} size={22} color="#00c2cb" />
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={() => goToPage(0)}
           style={styles.headerIconButton}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
@@ -927,7 +1097,7 @@ const LocationListScreen = () => {
               <Text style={{ color: '#fff', fontWeight: '600' }}>Réessayer</Text>
             </TouchableOpacity>
           </ScrollView>
-        ) : visibleItems.length === 0 ? (
+        ) : viewMode === 'map' ? null : visibleItems.length === 0 ? (
           // Etat vide: permettre le pull-to-refresh même sans éléments
           <ScrollView
             contentContainerStyle={[
@@ -1038,6 +1208,22 @@ const LocationListScreen = () => {
             overScrollMode="always"
           />
         )}
+        {hasShownMap ? (
+          <View
+            style={[StyleSheet.absoluteFill, { display: viewMode === 'map' ? 'flex' : 'none' }]}
+            pointerEvents={viewMode === 'map' ? 'auto' : 'none'}
+          >
+            <LocationMapView
+              locations={mapVisibleItems}
+              currentLocation={userCoords}
+              currentPoiId={currentUser?.currentPoiId}
+              isMoon={isMoon}
+              onSelectLocation={handleSelectLocation}
+              onViewportChange={handleMapViewportChange}
+              onClusterOpen={handleClusterOpen}
+            />
+          </View>
+        ) : null}
       </SafeAreaView>
       <VibeFAB />
       <NearbyLocationPicker
@@ -1046,6 +1232,12 @@ const LocationListScreen = () => {
         lon={placePicker?.lon}
         onSelect={handleSelectCorrectedPlace}
         onClose={() => setPlacePicker(null)}
+      />
+      <ClusterPickerModal
+        visible={!!clusterPickerItems}
+        locations={clusterPickerItems}
+        onSelect={handleClusterPickerSelect}
+        onClose={() => setClusterPickerItems(null)}
       />
     </View>
   );

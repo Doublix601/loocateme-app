@@ -7,6 +7,7 @@ import { UserContext } from '../components/contexts/UserContext';
 import { mapBackendUser } from '../utils/mappers';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
 import { getDevLocationOverride, loadDevLocationOverride } from '../utils/devLocationOverride';
+import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 
 /**
  * Hook pour gérer le "Heartbeat" (battement de cœur) de présence en premier plan.
@@ -32,6 +33,7 @@ export function usePresence(isEnabled) {
 
     const sendHeartbeat = async (coords) => {
       try {
+        if (isLocationHeartbeatSuppressed()) return;
         let lat = coords?.latitude;
         let lon = coords?.longitude;
 

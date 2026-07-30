@@ -88,7 +88,7 @@ export default function VibeTransitOverlay() {
   const items = goingToMoon
     ? [
         { icon: '🍸', label: 'Bars' },
-        { icon: '💃', label: 'Clubs' },
+        { icon: '🪩', label: 'Clubs' },
         { icon: '🍕', label: 'Restos' },
         { icon: '🍻', label: 'Pubs' },
       ]

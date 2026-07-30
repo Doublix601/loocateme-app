@@ -10,6 +10,7 @@
     "format": "prettier --write .",
     "test": "jest",
     "test:watch": "jest --watch",
+    "build:map-html": "node scripts/build-map-html.js",
     "eas-build-pre-install": "bash -lc 'rm -f yarn.lock || true'",
     "build:ios:preview": "npx eas build -p ios --profile preview",
     "build:ios:store": "npx eas build -p ios --profile production --auto-submit",
