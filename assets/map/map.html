@@ -301,84 +301,101 @@ return maplibregl$1;
       wrap.style.transform = 'scale(0.88)';
       setTimeout(function () { wrap.style.transform = 'scale(1)'; }, 150);
 
-      // Le cap à 20 était en dur : si les lieux du groupe sont à des
-      // coordonnées très proches (voire identiques, ex. plusieurs lieux
-      // enregistrés au même point), le clustering en grille écran (cf.
-      // clusterLocations) ne les sépare jamais, même au zoom max du style —
-      // la bulle restait donc bloquée indéfiniment. On utilise le vrai zoom
-      // max de la carte, et si on y est déjà, on bascule sur un choix direct
-      // (liste des lieux du groupe côté RN) plutôt que de zoomer dans le vide.
+      // Si les lieux du groupe sont à des coordonnées très proches (voire
+      // identiques, ex. plusieurs lieux enregistrés au même point), le
+      // clustering par proximité écran (cf. clusterLocations) ne les sépare
+      // jamais, même au zoom max du style — la bulle restait donc bloquée
+      // indéfiniment. On utilise le vrai zoom max de la carte, et si on y est
+      // déjà, on bascule sur un choix direct (liste des lieux du groupe côté
+      // RN) plutôt que de zoomer dans le vide.
       var maxZoom = map.getMaxZoom();
       var currentZoom = map.getZoom();
       if (currentZoom >= maxZoom - 0.01) {
         post({ type: 'clusterOpen', ids: cluster.ids });
         return;
       }
-      map.easeTo({ center: cluster.coords, zoom: Math.min(currentZoom + 2, maxZoom) });
+
+      // Zoom vers la bounding box réelle des lieux du groupe plutôt qu'un pas
+      // fixe (+2) : un cluster serré se sépare avec un léger zoom, un cluster
+      // très étalé en a besoin de bien plus — un pas fixe ratait l'un des
+      // deux cas et forçait parfois plusieurs taps successifs.
+      var bounds = cluster.memberCoords.reduce(function (b, c) {
+        return b.extend(c);
+      }, new maplibregl.LngLatBounds(cluster.memberCoords[0], cluster.memberCoords[0]));
+      map.fitBounds(bounds, { padding: 64, maxZoom: maxZoom, duration: 400 });
     });
 
     return wrap;
   }
 
-  // Taille de cellule de la grille écran (px) servant à regrouper les lieux
-  // dont la projection tombe trop proche l'une de l'autre. Pas de seuil
-  // minimal sur le nombre total de lieux : à très faible zoom, même 2-3
-  // lieux réels très éloignés peuvent se projeter à quelques pixels l'un de
-  // l'autre et doivent être regroupés pour éviter la superposition — c'est
-  // la grille (density-based), pas le compte absolu, qui détermine le
-  // clustering.
-  var CLUSTER_CELL_PX = 56;
+  // Distance écran (px) en dessous de laquelle un lieu rejoint le cluster
+  // existant le plus proche. Pas de seuil minimal sur le nombre total de
+  // lieux : à très faible zoom, même 2-3 lieux réels très éloignés peuvent se
+  // projeter à quelques pixels l'un de l'autre et doivent être regroupés pour
+  // éviter la superposition — c'est la densité écran, pas le compte absolu,
+  // qui détermine le clustering.
+  var CLUSTER_RADIUS_PX = 56;
 
-  // Regroupe les lieux dont la projection écran tombe dans la même cellule
-  // d'une grille de taille fixe (px). Approche volontairement simple (pas de
-  // supercluster/quadtree) : les volumes gérés (quelques centaines de lieux
-  // max, cf. MAP_EXPLORED_CAP côté RN) restent largement dans le budget d'un
-  // algorithme O(n).
+  // Regroupe les lieux dont la projection écran est à moins de
+  // CLUSTER_RADIUS_PX du centre (écran) d'un cluster existant, par un
+  // algorithme glouton (chaque point rejoint le cluster le plus proche parmi
+  // ceux déjà formés, sinon en crée un nouveau). Contrairement à une grille à
+  // cellules fixes, deux points proches en pixels sont toujours regroupés
+  // ensemble, peu importe où seraient tombées les frontières d'une grille —
+  // évite l'effet "seam" où deux lieux à 2px l'un de l'autre mais de part et
+  // d'autre d'une frontière de cellule ne se regroupaient pas, tandis que
+  // deux lieux plus éloignés dans la même cellule si. Le centre d'un cluster
+  // est la moyenne des positions écran de ses membres (pas une moyenne
+  // géographique) : la bulle reste ainsi toujours visuellement au centre de
+  // ses pins, y compris pour un cluster à large étalement géographique à
+  // faible zoom. Approche volontairement simple (pas de supercluster/
+  // quadtree) : les volumes gérés (quelques centaines de lieux max, cf.
+  // MAP_EXPLORED_CAP côté RN) restent largement dans le budget d'un
+  // algorithme O(n²).
   function clusterLocations(locations) {
     var valid = (locations || []).filter(function (loc) {
       return Array.isArray(loc.coords) && loc.coords.length >= 2;
     });
 
-    var cells = {};
+    var clusters = []; // { sumX, sumY, cx, cy, members: [{ loc, point }] }
+
     valid.forEach(function (loc) {
       var point = map.project(loc.coords);
-      var cellX = Math.floor(point.x / CLUSTER_CELL_PX);
-      var cellY = Math.floor(point.y / CLUSTER_CELL_PX);
-      var key = cellX + ':' + cellY;
-      if (!cells[key]) cells[key] = [];
-      cells[key].push(loc);
+      var best = null;
+      var bestDist = Infinity;
+      clusters.forEach(function (c) {
+        var dx = point.x - c.cx;
+        var dy = point.y - c.cy;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < CLUSTER_RADIUS_PX && dist < bestDist) {
+          best = c;
+          bestDist = dist;
+        }
+      });
+      if (!best) {
+        best = { sumX: 0, sumY: 0, cx: point.x, cy: point.y, members: [] };
+        clusters.push(best);
+      }
+      best.members.push({ loc: loc, point: point });
+      best.sumX += point.x;
+      best.sumY += point.y;
+      best.cx = best.sumX / best.members.length;
+      best.cy = best.sumY / best.members.length;
     });
 
     var result = [];
-    Object.keys(cells).forEach(function (key) {
-      var group = cells[key];
-      if (group.length === 1) {
-        result.push({ type: 'single', location: group[0] });
+    clusters.forEach(function (c) {
+      if (c.members.length === 1) {
+        result.push({ type: 'single', location: c.members[0].loc });
         return;
       }
-      // Moyenne des longitudes en tenant compte du wrap à l'antiméridien :
-      // on ramène chaque longitude dans un voisinage de +/-180° de la
-      // première du groupe avant de moyenner, sinon un groupe à cheval sur
-      // l'antiméridien (ou simplement au zoom monde) donnerait un centroïde
-      // aberrant (ex: moyenne de -179° et 179° = 0° au lieu de 180°).
-      var refLng = group[0].coords[0];
-      var sumLng = 0, sumLat = 0;
-      group.forEach(function (loc) {
-        var lng = loc.coords[0];
-        var delta = lng - refLng;
-        if (delta > 180) lng -= 360;
-        else if (delta < -180) lng += 360;
-        sumLng += lng;
-        sumLat += loc.coords[1];
-      });
-      var avgLng = sumLng / group.length;
-      if (avgLng > 180) avgLng -= 360;
-      else if (avgLng < -180) avgLng += 360;
+      var center = map.unproject([c.cx, c.cy]);
       result.push({
         type: 'cluster',
-        count: group.length,
-        coords: [avgLng, sumLat / group.length],
-        ids: group.map(function (loc) { return loc.id; }),
+        count: c.members.length,
+        coords: [center.lng, center.lat],
+        ids: c.members.map(function (m) { return m.loc.id; }),
+        memberCoords: c.members.map(function (m) { return m.loc.coords; }),
       });
     });
     return result;
