@@ -163,7 +163,13 @@
     wrap.style.alignItems = 'center';
     wrap.style.justifyContent = 'center';
     wrap.style.cursor = 'pointer';
-    wrap.style.transition = 'transform 0.15s ease-out';
+    // Pas de transition sur `wrap` : c'est l'élément passé comme `element` au
+    // maplibregl.Marker, que MapLibre repositionne à chaque frame de caméra
+    // via `style.transform`. Une transition ici anime aussi ces mises à jour
+    // de position (censées être instantanées), d'où l'effet de "traîne"
+    // pendant un pan puis un rattrapage brusque à l'arrêt. L'animation de tap
+    // ("squish") est donc portée par bubbleWrap (noeud interne, jamais touché
+    // par MapLibre) plutôt que par wrap lui-même.
 
     // Halo : disque flou en teinte accent transparente, façon "aura", pour
     // donner de la profondeur sans surcharger visuellement la carte.
@@ -183,6 +189,7 @@
     bubbleWrap.style.display = 'flex';
     bubbleWrap.style.alignItems = 'center';
     bubbleWrap.style.justifyContent = 'center';
+    bubbleWrap.style.transition = 'transform 0.15s ease-out';
     bubbleWrap.appendChild(halo);
 
     var bubble = document.createElement('div');
@@ -209,8 +216,8 @@
 
     wrap.addEventListener('click', function (e) {
       e.stopPropagation();
-      wrap.style.transform = 'scale(0.88)';
-      setTimeout(function () { wrap.style.transform = 'scale(1)'; }, 150);
+      bubbleWrap.style.transform = 'scale(0.88)';
+      setTimeout(function () { bubbleWrap.style.transform = 'scale(1)'; }, 150);
 
       // Si les lieux du groupe sont à des coordonnées très proches (voire
       // identiques, ex. plusieurs lieux enregistrés au même point), le
