@@ -140,12 +140,18 @@ const LocationListScreen = () => {
   const [mapExploredLocations, setMapExploredLocations] = useState([]);
   const fetchedRegionKeysRef = useRef(new Set());
   const lastFetchCoordsRef = useRef(null);
-  const MAP_REGION_FETCH_MIN_DISTANCE_M = 300;
+  const mapFetchDebounceRef = useRef(null);
+  // 600m (au lieu de 300m) : chaque appel tire 2 requêtes (sun+moon), donc
+  // doubler la distance mini divise par ~4 le nombre de régions déclenchées
+  // sur une même zone explorée, sans que l'utilisateur le perçoive (les
+  // marqueurs/clusters déjà accumulés restent affichés entre deux fetches).
+  const MAP_REGION_FETCH_MIN_DISTANCE_M = 600;
   const MAP_EXPLORED_CAP = 300;
   const MAP_REGION_KEY_PRECISION = 3; // aligné sur l'arrondi du cache backend (toFixed(3))
+  const MAP_FETCH_DEBOUNCE_MS = 500;
 
   const handleMapViewportChange = useCallback(
-    async ({ center }) => {
+    ({ center }) => {
       if (viewMode !== 'map') return; // défense en profondeur (la WebView n'existe pas hors mode carte)
       if (!Array.isArray(center) || center.length < 2) return;
       const [lon, lat] = center;
@@ -157,37 +163,54 @@ const LocationListScreen = () => {
         if (moved < MAP_REGION_FETCH_MIN_DISTANCE_M) return;
       }
 
-      const regionKey = `${lat.toFixed(MAP_REGION_KEY_PRECISION)}:${lon.toFixed(MAP_REGION_KEY_PRECISION)}`;
-      if (fetchedRegionKeysRef.current.has(regionKey)) return;
-      fetchedRegionKeysRef.current.add(regionKey);
-      lastFetchCoordsRef.current = { lat, lon };
+      // Anti-rafale : un pan continu peut franchir plusieurs seuils de
+      // distance en quelques centaines de ms (plusieurs événements webview
+      // avant que l'utilisateur ne s'arrête réellement). On ne garde que le
+      // dernier viewport reçu dans la fenêtre de debounce, évitant de tirer
+      // une paire de requêtes par franchissement plutôt qu'une seule pour la
+      // position finale.
+      if (mapFetchDebounceRef.current) clearTimeout(mapFetchDebounceRef.current);
+      mapFetchDebounceRef.current = setTimeout(async () => {
+        mapFetchDebounceRef.current = null;
 
-      try {
-        // On ne va chercher que les lieux backend ici : la carte n'affiche que
-        // les lieux réellement enregistrés dans l'app (cf. isAppLocation), un
-        // POI OSM brut serait de toute façon filtré avant affichage — inutile
-        // d'interroger Overpass pour cet accumulateur.
-        // La carte doit montrer TOUS les lieux (jour + nuit), pas seulement
-        // ceux de la vibe active : on interroge les deux et on fusionne,
-        // contrairement à la liste swipeable qui reste filtrée par vibe.
-        const [sunRes, moonRes] = await Promise.all([
-          getLocations({ lat, lon, vibe: 'sun', limit: MIN_LOCATIONS }),
-          getLocations({ lat, lon, vibe: 'moon', limit: MIN_LOCATIONS }),
-        ]);
-        const backendLocationsForRegion = mergeByOsmId(sunRes?.locations || [], moonRes?.locations || []);
+        const regionKey = `${lat.toFixed(MAP_REGION_KEY_PRECISION)}:${lon.toFixed(MAP_REGION_KEY_PRECISION)}`;
+        if (fetchedRegionKeysRef.current.has(regionKey)) return;
+        fetchedRegionKeysRef.current.add(regionKey);
+        lastFetchCoordsRef.current = { lat, lon };
 
-        setMapExploredLocations((prev) => {
-          const combined = mergeByOsmId(prev, backendLocationsForRegion);
-          return combined.length > MAP_EXPLORED_CAP
-            ? combined.slice(combined.length - MAP_EXPLORED_CAP)
-            : combined;
-        });
-      } catch (e) {
-        console.warn('[LocationListScreen] map viewport fetch failed:', e?.message || e);
-      }
+        try {
+          // On ne va chercher que les lieux backend ici : la carte n'affiche que
+          // les lieux réellement enregistrés dans l'app (cf. isAppLocation), un
+          // POI OSM brut serait de toute façon filtré avant affichage — inutile
+          // d'interroger Overpass pour cet accumulateur.
+          // La carte doit montrer TOUS les lieux (jour + nuit), pas seulement
+          // ceux de la vibe active : on interroge les deux et on fusionne,
+          // contrairement à la liste swipeable qui reste filtrée par vibe.
+          const [sunRes, moonRes] = await Promise.all([
+            getLocations({ lat, lon, vibe: 'sun', limit: MIN_LOCATIONS }),
+            getLocations({ lat, lon, vibe: 'moon', limit: MIN_LOCATIONS }),
+          ]);
+          const backendLocationsForRegion = mergeByOsmId(sunRes?.locations || [], moonRes?.locations || []);
+
+          setMapExploredLocations((prev) => {
+            const combined = mergeByOsmId(prev, backendLocationsForRegion);
+            return combined.length > MAP_EXPLORED_CAP
+              ? combined.slice(combined.length - MAP_EXPLORED_CAP)
+              : combined;
+          });
+        } catch (e) {
+          console.warn('[LocationListScreen] map viewport fetch failed:', e?.message || e);
+        }
+      }, MAP_FETCH_DEBOUNCE_MS);
     },
     [viewMode],
   );
+
+  useEffect(() => {
+    return () => {
+      if (mapFetchDebounceRef.current) clearTimeout(mapFetchDebounceRef.current);
+    };
+  }, []);
 
   // Premier affichage de la carte : on amorce l'accumulateur avec les lieux
   // (jour + nuit) autour de la position actuelle, sans attendre un pan de
