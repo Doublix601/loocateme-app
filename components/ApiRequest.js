@@ -577,6 +577,11 @@ export async function getLocationById(id) {
   return request(`/locations/${id}`, { method: 'GET', cache: 'reload' });
 }
 
+export async function getCrossedPathsUsers(locationId, { page = 1, limit = 20 } = {}) {
+  const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+  return request(`/locations/${locationId}/crossed-paths?${qs.toString()}`, { method: 'GET' });
+}
+
 // Seed unitaire d'un POI Overpass (id `osm:<osmId>`) côté backend pour qu'il
 // soit ensuite récupérable par `getLocationById`. À appeler juste avant
 // d'ouvrir l'écran de détail d'un lieu OSM affiché dans la liste.

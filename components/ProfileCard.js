@@ -18,6 +18,7 @@ const ProfileCard = ({
   radius,
   spacing,
   socialMediaIcons = {},
+  subtitle,
   onPress,
 }) => {
   const isBoosted = user?.boostUntil && new Date(user.boostUntil) > new Date();
@@ -72,6 +73,12 @@ const ProfileCard = ({
           {isBoosted && <Text style={[styles.boostBadge, { color: '#FFD700' }]}>⚡</Text>}
           {isGhost && <Text style={[styles.boostBadge, { color: palette.textFaint }]}>👻</Text>}
         </View>
+
+        {subtitle ? (
+          <Text numberOfLines={1} style={[styles.bio, { color: palette.textFaint }]}>
+            {subtitle}
+          </Text>
+        ) : null}
 
         {isGhost ? (
           <Text numberOfLines={1} style={[styles.bio, { color: palette.textFaint, fontStyle: 'italic' }]}>

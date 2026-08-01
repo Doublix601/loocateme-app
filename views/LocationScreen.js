@@ -30,6 +30,7 @@ import { formatLocationType } from '../components/LocationUtils';
 import { useFeatureGate } from '../hooks/useFeatureGate';
 import { useBoost } from '../hooks/useBoost';
 import { useLocationData } from '../hooks/useLocationData';
+import { useCrossedPaths } from '../hooks/useCrossedPaths';
 import { useVibeTheme } from '../hooks/useVibeTheme';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import StoryRingAvatar from '../components/StoryRingAvatar';
@@ -86,6 +87,14 @@ const LocationScreen = () => {
     locationId,
     initialLocation,
   );
+  const {
+    items: crossedItems,
+    loading: crossedLoading,
+    loadingMore: crossedLoadingMore,
+    hasMore: crossedHasMore,
+    loadMore: loadMoreCrossed,
+    isPremium: crossedIsPremium,
+  } = useCrossedPaths(locationId);
   const [storyViewerIndex, setStoryViewerIndex] = useState(null);
   const [lastStorySeenAt, setLastStorySeenAt] = useState(null);
   const [pdfViewer, setPdfViewer] = useState(null); // { url, title } | null
@@ -742,6 +751,73 @@ const LocationScreen = () => {
     </View>
   );
 
+  // ─── Section "Croisé récemment" (priorisée après la présence live) ────
+  const formatCrossedAt = (dateStr) => {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffMin = Math.max(1, Math.round(diffMs / 60000));
+    if (diffMin < 60) return `il y a ${diffMin} min`;
+    const diffH = Math.round(diffMin / 60);
+    if (diffH < 24) return `il y a ${diffH}h`;
+    const diffJ = Math.round(diffH / 24);
+    return `il y a ${diffJ}j`;
+  };
+
+  const renderCrossedPathsSection = () => (
+    <View style={{ marginTop: spacing.xl, paddingHorizontal: spacing.lg }}>
+      <Text style={[typography.h2, { marginBottom: spacing.md }]}>Croisé récemment</Text>
+
+      {crossedLoading ? (
+        <ActivityIndicator color={palette.textFaint} />
+      ) : crossedItems.length === 0 ? (
+        <Text style={[typography.body, { color: palette.textMuted }]}>
+          Aucun croisement récent ici.
+        </Text>
+      ) : (
+        <>
+          {crossedItems.map((c, i) => (
+            <ProfileCard
+              key={c.user?._id || i}
+              user={c.user}
+              index={i}
+              isMoon={isMoon}
+              palette={palette}
+              shadows={shadows}
+              radius={radius}
+              spacing={spacing}
+              socialMediaIcons={socialMediaIcons}
+              subtitle={`Vu ${formatCrossedAt(c.lastSeenAt)} · ${c.crossCount}x`}
+              onPress={() => navigateToUser(c.user)}
+            />
+          ))}
+          {crossedHasMore && (
+            <TouchableOpacity
+              onPress={loadMoreCrossed}
+              disabled={crossedLoadingMore}
+              style={[styles.emptyState, { backgroundColor: palette.surface, borderRadius: radius.lg, paddingVertical: spacing.sm }]}
+            >
+              {crossedLoadingMore ? (
+                <ActivityIndicator color={palette.textFaint} />
+              ) : (
+                <Text style={[typography.body, { color: palette.text, fontWeight: '700' }]}>Voir plus</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+
+      {!crossedIsPremium && (
+        <TouchableOpacity
+          onPress={() => checkAccess('crossed_paths_history')}
+          style={[styles.emptyState, { backgroundColor: palette.surface, borderRadius: radius.lg, marginTop: spacing.sm, paddingVertical: spacing.sm }]}
+        >
+          <Text style={[typography.body, { color: palette.textMuted, textAlign: 'center' }]}>
+            Passez Premium pour voir les croisements des 7 derniers jours (24h en gratuit)
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
   // ─── Bouton fixe (Se signaler / Chatter) ──────────────────────
   const renderFixedAction = () => {
     const bottomPad = Math.max(insets.bottom, spacing.md);
@@ -868,6 +944,7 @@ const LocationScreen = () => {
         {renderEventsSection()}
         {renderProSection()}
         {renderProfileList()}
+        {renderCrossedPathsSection()}
       </ScrollView>
 
       {renderFixedAction()}
