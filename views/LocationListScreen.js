@@ -150,12 +150,41 @@ const LocationListScreen = () => {
   const MAP_REGION_KEY_PRECISION = 3; // aligné sur l'arrondi du cache backend (toFixed(3))
   const MAP_FETCH_DEBOUNCE_MS = 500;
 
+  // Dernier centre de viewport connu, mis à jour à CHAQUE événement de la
+  // WebView (indépendamment du debounce/dedup de fetch ci-dessous) : sert de
+  // référence pour re-fetcher immédiatement au bon endroit lors d'un
+  // changement de vibe, même si l'utilisateur a pané loin de sa position réelle.
+  const lastMapCenterRef = useRef(null);
+
+  // Fetch effectif des lieux backend pour un centre donné, sans passer par le
+  // debounce/dedup de handleMapViewportChange (utilisé pour un refresh
+  // explicite : changement de vibe ou bouton refresh manuel de la carte).
+  const fetchMapRegion = useCallback(
+    async (lat, lon, forVibe) => {
+      try {
+        const res = await getLocations({ lat, lon, vibe: forVibe, limit: MIN_LOCATIONS });
+        const backendLocationsForRegion = res?.locations || [];
+        setMapExploredLocations((prev) => {
+          const combined = mergeByOsmId(backendLocationsForRegion, prev);
+          return combined.length > MAP_EXPLORED_CAP
+            ? combined.slice(0, MAP_EXPLORED_CAP)
+            : combined;
+        });
+      } catch (e) {
+        console.warn('[LocationListScreen] map region fetch failed:', e?.message || e);
+      }
+    },
+    [],
+  );
+
   const handleMapViewportChange = useCallback(
     ({ center }) => {
       if (viewMode !== 'map') return; // défense en profondeur (la WebView n'existe pas hors mode carte)
       if (!Array.isArray(center) || center.length < 2) return;
       const [lon, lat] = center;
       if (typeof lat !== 'number' || typeof lon !== 'number') return;
+
+      lastMapCenterRef.current = { lat, lon };
 
       const last = lastFetchCoordsRef.current;
       if (last) {
@@ -178,39 +207,45 @@ const LocationListScreen = () => {
         fetchedRegionKeysRef.current.add(regionKey);
         lastFetchCoordsRef.current = { lat, lon };
 
-        try {
-          // On ne va chercher que les lieux backend ici : la carte n'affiche que
-          // les lieux réellement enregistrés dans l'app (cf. isAppLocation), un
-          // POI OSM brut serait de toute façon filtré avant affichage — inutile
-          // d'interroger Overpass pour cet accumulateur.
-          // La carte ne montre que les lieux de la vibe active (jour ou nuit),
-          // comme la liste swipeable.
-          const res = await getLocations({ lat, lon, vibe, limit: MIN_LOCATIONS });
-          const backendLocationsForRegion = res?.locations || [];
-
-          setMapExploredLocations((prev) => {
-            const combined = mergeByOsmId(prev, backendLocationsForRegion);
-            return combined.length > MAP_EXPLORED_CAP
-              ? combined.slice(combined.length - MAP_EXPLORED_CAP)
-              : combined;
-          });
-        } catch (e) {
-          console.warn('[LocationListScreen] map viewport fetch failed:', e?.message || e);
-        }
+        // On ne va chercher que les lieux backend ici : la carte n'affiche que
+        // les lieux réellement enregistrés dans l'app (cf. isAppLocation), un
+        // POI OSM brut serait de toute façon filtré avant affichage — inutile
+        // d'interroger Overpass pour cet accumulateur.
+        // La carte ne montre que les lieux de la vibe active (jour ou nuit),
+        // comme la liste swipeable.
+        fetchMapRegion(lat, lon, vibe);
       }, MAP_FETCH_DEBOUNCE_MS);
     },
-    [viewMode, vibe],
+    [viewMode, vibe, fetchMapRegion],
   );
 
-  // Au changement de vibe, l'accumulateur de lieux explorés en pannant la
-  // carte doit repartir de zéro : les marqueurs de l'ancienne vibe n'ont plus
-  // rien à faire sur la carte, et les régions déjà visitées doivent pouvoir
-  // être re-fetchées pour la nouvelle vibe.
+  // Au changement de vibe : reset immédiat de l'accumulateur (les marqueurs
+  // de l'ancienne vibe n'ont plus rien à faire sur la carte) PUIS re-fetch
+  // immédiat et inconditionnel (sans passer par le debounce/dedup de pan, ni
+  // attendre un nouvel événement de la WebView) pour le dernier centre de
+  // viewport connu — ou la position de l'utilisateur si la carte n'a encore
+  // jamais été pannée. Ainsi la carte se réactualise automatiquement dès le
+  // changement de mode jour/nuit, sans action manuelle.
+  const mapVibeInitRef = useRef(vibe);
   useEffect(() => {
+    if (mapVibeInitRef.current === vibe) return; // pas de reset au montage initial
+    mapVibeInitRef.current = vibe;
+
     setMapExploredLocations([]);
     fetchedRegionKeysRef.current = new Set();
     lastFetchCoordsRef.current = null;
-    initialMapFetchDoneRef.current = false;
+
+    const center = lastMapCenterRef.current
+      || (userCoords ? { lat: userCoords.latitude, lon: userCoords.longitude } : null);
+    if (center && hasShownMap) {
+      initialMapFetchDoneRef.current = true; // le fetch ci-dessous en tient déjà lieu
+      fetchMapRegion(center.lat, center.lon, vibe);
+    } else {
+      // La carte n'a jamais été ouverte : laisser le fetch initial (cf.
+      // effet suivant) s'en charger dès sa première ouverture.
+      initialMapFetchDoneRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vibe]);
 
   useEffect(() => {
@@ -219,10 +254,10 @@ const LocationListScreen = () => {
     };
   }, []);
 
-  // Premier affichage de la carte (et à chaque changement de vibe, via le
-  // changement de référence de handleMapViewportChange) : on amorce
-  // l'accumulateur avec les lieux de la vibe active autour de la position
-  // actuelle, sans attendre un pan de l'utilisateur.
+  // Premier affichage de la carte : on amorce l'accumulateur avec les lieux
+  // de la vibe active autour de la position actuelle, sans attendre un pan de
+  // l'utilisateur (l'effet ci-dessus prend le relais pour les changements de
+  // vibe suivants).
   const initialMapFetchDoneRef = useRef(false);
   useEffect(() => {
     if (!hasShownMap || !userCoords || initialMapFetchDoneRef.current) return;
@@ -511,11 +546,9 @@ const LocationListScreen = () => {
     if (prevVibeRef.current !== vibe) {
       prevVibeRef.current = vibe;
 
-      // Les lieux explorés en panant la carte ne sont plus pertinents pour la
-      // nouvelle vibe (catégories Overpass et scoring backend différents).
-      setMapExploredLocations([]);
-      fetchedRegionKeysRef.current = new Set();
-      lastFetchCoordsRef.current = null;
+      // Le reset/refetch de l'accumulateur de la carte (mapExploredLocations)
+      // pour la nouvelle vibe est géré par un effet dédié, cf. plus haut
+      // (fetchMapRegion sur lastMapCenterRef/userCoords).
 
       const zoneKey = getZoneKey(roundedLat, roundedLon);
       const cached = readVibeCache(vibe, zoneKey);
