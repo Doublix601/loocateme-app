@@ -46,7 +46,7 @@ export default function DevLocationOverride() {
         style={{
           position: 'absolute',
           bottom: 100,
-          right: 16,
+          left: 16,
           backgroundColor: active ? '#ff9500' : '#333',
           paddingHorizontal: 12,
           paddingVertical: 8,
