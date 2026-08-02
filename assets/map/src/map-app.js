@@ -439,18 +439,17 @@
 
     if (styleUrl !== currentStyleUrl) {
       currentStyleUrl = styleUrl;
-      ready = false;
       map.setStyle(styleUrl);
-      map.once('style.load', function () {
-        ready = true;
-        // On utilise lastLocations/lastPalette (mis à jour à chaque message
-        // reçu, cf. plus haut) plutôt que les `locations`/`palette` figés de
-        // CET appel : un message plus récent (nouveaux lieux de la vibe
-        // active, arrivé pendant le chargement du style) aurait sinon été
-        // ignoré silencieusement (cf. branche `else if (ready)` ci-dessous),
-        // laissant la carte affichée avec des données obsolètes.
-        renderMarkers(lastLocations, lastPalette);
-      });
+      // Les marqueurs sont des DOM markers positionnés via map.project()
+      // (caméra déjà connue dès la création de la carte), pas des layers du
+      // style : ils n'ont pas besoin d'attendre que le nouveau style soit
+      // entièrement chargé pour être redessinés. On ne bascule donc plus
+      // `ready` à false ni n'attend l'événement `style.load` ici — ce
+      // dernier s'est avéré ne pas se déclencher de façon fiable dans ce
+      // contexte WebView, ce qui gelait les marqueurs indéfiniment après le
+      // premier changement de thème jour/nuit (plus aucun redessin possible
+      // ensuite, `ready` restant bloqué à false pour le reste de la session).
+      renderMarkers(locations, palette);
     } else if (ready) {
       renderMarkers(locations, palette);
     }
