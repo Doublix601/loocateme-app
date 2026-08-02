@@ -59,10 +59,16 @@ export function useLocationData(locationId, initialLocation) {
     // et on ne rafraîchit qu'en silence, sans jamais réafficher le spinner.
     fetchDetails(!!initialLocation);
 
-    // Auto-rafraîchissement lors d'une mutation (changement de statut, profil, etc.)
+    // Auto-rafraîchissement lors d'une mutation (changement de statut, profil, check-in, etc.)
     const unsub = subscribe('api:mutation', ({ path }) => {
-      // On rafraîchit si la mutation concerne l'utilisateur ou son profil
-      if (path.includes('/user/') || path.includes('/profile') || path.includes('/settings')) {
+      // On rafraîchit si la mutation concerne l'utilisateur, sa position (check-in) ou son profil
+      if (
+        path &&
+        (path.includes('/user/') ||
+          path.includes('/users/location') ||
+          path.includes('/profile') ||
+          path.includes('/settings'))
+      ) {
         fetchDetails(true);
       }
     });

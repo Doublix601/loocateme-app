@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
 import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe, forceCheckIn } from '../components/ApiRequest';
@@ -183,14 +183,10 @@ const LocationListScreen = () => {
           // les lieux réellement enregistrés dans l'app (cf. isAppLocation), un
           // POI OSM brut serait de toute façon filtré avant affichage — inutile
           // d'interroger Overpass pour cet accumulateur.
-          // La carte doit montrer TOUS les lieux (jour + nuit), pas seulement
-          // ceux de la vibe active : on interroge les deux et on fusionne,
-          // contrairement à la liste swipeable qui reste filtrée par vibe.
-          const [sunRes, moonRes] = await Promise.all([
-            getLocations({ lat, lon, vibe: 'sun', limit: MIN_LOCATIONS }),
-            getLocations({ lat, lon, vibe: 'moon', limit: MIN_LOCATIONS }),
-          ]);
-          const backendLocationsForRegion = mergeByOsmId(sunRes?.locations || [], moonRes?.locations || []);
+          // La carte ne montre que les lieux de la vibe active (jour ou nuit),
+          // comme la liste swipeable.
+          const res = await getLocations({ lat, lon, vibe, limit: MIN_LOCATIONS });
+          const backendLocationsForRegion = res?.locations || [];
 
           setMapExploredLocations((prev) => {
             const combined = mergeByOsmId(prev, backendLocationsForRegion);
@@ -203,8 +199,19 @@ const LocationListScreen = () => {
         }
       }, MAP_FETCH_DEBOUNCE_MS);
     },
-    [viewMode],
+    [viewMode, vibe],
   );
+
+  // Au changement de vibe, l'accumulateur de lieux explorés en pannant la
+  // carte doit repartir de zéro : les marqueurs de l'ancienne vibe n'ont plus
+  // rien à faire sur la carte, et les régions déjà visitées doivent pouvoir
+  // être re-fetchées pour la nouvelle vibe.
+  useEffect(() => {
+    setMapExploredLocations([]);
+    fetchedRegionKeysRef.current = new Set();
+    lastFetchCoordsRef.current = null;
+    initialMapFetchDoneRef.current = false;
+  }, [vibe]);
 
   useEffect(() => {
     return () => {
@@ -212,10 +219,10 @@ const LocationListScreen = () => {
     };
   }, []);
 
-  // Premier affichage de la carte : on amorce l'accumulateur avec les lieux
-  // (jour + nuit) autour de la position actuelle, sans attendre un pan de
-  // l'utilisateur (sinon la carte ne montrerait au départ que les lieux déjà
-  // chargés pour la liste, filtrés sur la vibe courante).
+  // Premier affichage de la carte (et à chaque changement de vibe, via le
+  // changement de référence de handleMapViewportChange) : on amorce
+  // l'accumulateur avec les lieux de la vibe active autour de la position
+  // actuelle, sans attendre un pan de l'utilisateur.
   const initialMapFetchDoneRef = useRef(false);
   useEffect(() => {
     if (!hasShownMap || !userCoords || initialMapFetchDoneRef.current) return;
@@ -489,8 +496,11 @@ const LocationListScreen = () => {
   // (cf. handleMapViewportChange) pour que la carte reste utile/explorable.
   const isAppLocation = (loc) => typeof loc?._id === 'string' && !loc._id.startsWith('osm:');
   const mapVisibleItems = useMemo(
-    () => mergeByOsmId(visibleItems, mapExploredLocations).filter(isAppLocation),
-    [visibleItems, mapExploredLocations],
+    () =>
+      mergeByOsmId(visibleItems, mapExploredLocations)
+        .filter(isAppLocation)
+        .filter((loc) => isTypeAllowedForVibe(loc?.type, vibe)),
+    [visibleItems, mapExploredLocations, vibe],
   );
 
   // Reset de la pagination à chaque changement de Vibe (Soleil/Lune).
@@ -931,6 +941,30 @@ const LocationListScreen = () => {
     setRefreshing(false);
   };
 
+  // Rafraîchissement manuel de la vue carte (bouton dédié, la WebView n'a pas
+  // de pull-to-refresh) : on réutilise la même fonction que le pull-to-refresh
+  // de la liste, en silence pour ne pas afficher le loader plein écran.
+  const [mapRefreshing, setMapRefreshing] = useState(false);
+  const handleMapManualRefresh = useCallback(async () => {
+    if (mapRefreshing) return;
+    setMapRefreshing(true);
+    try {
+      await fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe });
+    } finally {
+      setMapRefreshing(false);
+    }
+  }, [mapRefreshing, vibe]);
+
+  // Rafraîchissement silencieux de la liste/carte à chaque reprise de focus
+  // de l'écran (retour depuis LocationScreen, changement d'onglet, etc.),
+  // pour que la présence des autres utilisateurs reste à jour sans action
+  // manuelle de la part de l'utilisateur.
+  useFocusEffect(
+    useCallback(() => {
+      fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe });
+    }, [vibe]),
+  );
+
   // Charge plus de lieux backend (jusqu'à MAX_LOCATIONS) quand l'utilisateur
   // approche du bas de la liste. Lazy loading: l'appel API n'est déclenché
   // qu'à la demande (scroll) et le déchargement hors-écran est géré par FlatList
@@ -1249,6 +1283,7 @@ const LocationListScreen = () => {
               onSelectLocation={handleSelectLocation}
               onViewportChange={handleMapViewportChange}
               onClusterOpen={handleClusterOpen}
+              onRefresh={handleMapManualRefresh}
             />
           </View>
         ) : null}
