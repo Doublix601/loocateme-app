@@ -219,30 +219,45 @@ const LocationListScreen = () => {
     [viewMode, vibe, fetchMapRegion],
   );
 
+  // Point d'entrée unique pour réactualiser la carte (accumulateur
+  // mapExploredLocations) : utilisé à la fois par le changement de vibe et
+  // par le bouton de rafraîchissement manuel, pour le dernier centre de
+  // viewport connu — ou la position de l'utilisateur si la carte n'a encore
+  // jamais été pannée. Ignore volontairement le debounce/dedup de
+  // handleMapViewportChange (pan) : un refresh explicite doit toujours
+  // repartir d'un état propre, même si la même région a déjà été fetchée.
+  const refreshMapData = useCallback(
+    (forVibe) => {
+      const center = lastMapCenterRef.current
+        || (userCoords ? { lat: userCoords.latitude, lon: userCoords.longitude } : null);
+      if (!center) return Promise.resolve();
+      fetchedRegionKeysRef.current = new Set();
+      lastFetchCoordsRef.current = null;
+      initialMapFetchDoneRef.current = true;
+      return fetchMapRegion(center.lat, center.lon, forVibe);
+    },
+    [userCoords, fetchMapRegion],
+  );
+
   // Au changement de vibe : reset immédiat de l'accumulateur (les marqueurs
   // de l'ancienne vibe n'ont plus rien à faire sur la carte) PUIS re-fetch
-  // immédiat et inconditionnel (sans passer par le debounce/dedup de pan, ni
-  // attendre un nouvel événement de la WebView) pour le dernier centre de
-  // viewport connu — ou la position de l'utilisateur si la carte n'a encore
-  // jamais été pannée. Ainsi la carte se réactualise automatiquement dès le
-  // changement de mode jour/nuit, sans action manuelle.
+  // via refreshMapData, sans attendre un nouvel événement de la WebView.
+  // Ainsi la carte se réactualise automatiquement dès le changement de mode
+  // jour/nuit, sans action manuelle.
   const mapVibeInitRef = useRef(vibe);
   useEffect(() => {
     if (mapVibeInitRef.current === vibe) return; // pas de reset au montage initial
     mapVibeInitRef.current = vibe;
 
     setMapExploredLocations([]);
-    fetchedRegionKeysRef.current = new Set();
-    lastFetchCoordsRef.current = null;
 
-    const center = lastMapCenterRef.current
-      || (userCoords ? { lat: userCoords.latitude, lon: userCoords.longitude } : null);
-    if (center && hasShownMap) {
-      initialMapFetchDoneRef.current = true; // le fetch ci-dessous en tient déjà lieu
-      fetchMapRegion(center.lat, center.lon, vibe);
+    if (hasShownMap) {
+      refreshMapData(vibe);
     } else {
-      // La carte n'a jamais été ouverte : laisser le fetch initial (cf.
-      // effet suivant) s'en charger dès sa première ouverture.
+      // La carte n'a jamais été ouverte : reset simple, laisser le fetch
+      // initial (cf. effet suivant) s'en charger dès sa première ouverture.
+      fetchedRegionKeysRef.current = new Set();
+      lastFetchCoordsRef.current = null;
       initialMapFetchDoneRef.current = false;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -976,17 +991,25 @@ const LocationListScreen = () => {
 
   // Rafraîchissement manuel de la vue carte (bouton dédié, la WebView n'a pas
   // de pull-to-refresh) : on réutilise la même fonction que le pull-to-refresh
-  // de la liste, en silence pour ne pas afficher le loader plein écran.
+  // de la liste, en silence pour ne pas afficher le loader plein écran. On
+  // réactualise à la fois la liste (près de la position réelle, pour la
+  // présence des autres utilisateurs) ET l'accumulateur de la carte via
+  // refreshMapData (centré sur le dernier viewport pané, pas seulement la
+  // position de l'utilisateur) — sinon un utilisateur ayant pané la carte
+  // loin de chez lui ne verrait aucun effet au clic sur le bouton.
   const [mapRefreshing, setMapRefreshing] = useState(false);
   const handleMapManualRefresh = useCallback(async () => {
     if (mapRefreshing) return;
     setMapRefreshing(true);
     try {
-      await fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe });
+      await Promise.all([
+        fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe }),
+        refreshMapData(vibe),
+      ]);
     } finally {
       setMapRefreshing(false);
     }
-  }, [mapRefreshing, vibe]);
+  }, [mapRefreshing, vibe, refreshMapData]);
 
   // Rafraîchissement silencieux de la liste/carte à chaque reprise de focus
   // de l'écran (retour depuis LocationScreen, changement d'onglet, etc.),
