@@ -251,6 +251,17 @@ const LocationListScreen = () => {
 
     setMapExploredLocations([]);
 
+    // Contournement en attendant un vrai correctif du repaint WebView (cf.
+    // renderMarkers dans map-app.js) : la carte reste visuellement figée
+    // après un changement de vibe malgré des données à jour. En repassant
+    // sur la liste, on évite d'exposer une carte à l'affichage obsolète —
+    // l'utilisateur devra rebasculer manuellement sur la carte pour la voir
+    // (ce qui déclenche déjà un repaint correct, cf. bug précédent).
+    if (viewMode === 'map') {
+      setViewMode('list');
+      AsyncStorage.setItem(VIEW_MODE_KEY, 'list').catch(() => {});
+    }
+
     if (hasShownMap) {
       refreshMapData(vibe);
     } else {
