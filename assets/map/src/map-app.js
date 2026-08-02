@@ -367,6 +367,19 @@
         .addTo(map);
       markers.push(marker);
     });
+
+    // Forcer un repaint : les marqueurs sont des éléments DOM superposés au
+    // canvas WebGL de la carte, mutés hors d'un geste utilisateur (postMessage
+    // venu de RN). WKWebView (iOS) peut alors différer la synchronisation
+    // visuelle de ces mutations — le fond de carte (dessiné en continu par la
+    // boucle de rendu WebGL) reste à jour, mais les marqueurs restent figés à
+    // l'écran jusqu'à ce qu'un événement de layout externe (ex: revenir sur
+    // cet écran) force un repaint. On déclenche nous-mêmes ce repaint plutôt
+    // que de dépendre d'un tel événement.
+    requestAnimationFrame(function () {
+      void document.body.offsetHeight; // force un reflow synchrone
+      if (map) map.triggerRepaint();
+    });
   }
 
   function rerenderFromCache() {
