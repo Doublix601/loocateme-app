@@ -325,8 +325,12 @@
   // qui se déclenche juste après qu'un nouveau payload RN ait déjà provoqué
   // le même regroupement) — c'est cette reconstruction redondante qui cause
   // le "flash" regroupement/dégroupement visible à l'utilisateur.
-  function itemsSignature(items) {
-    return items
+  function itemsSignature(items, palette) {
+    // Le discriminant de palette est inclus pour qu'un changement de thème
+    // (jour/nuit) force toujours un redessin des marqueurs, même quand le
+    // clustering géométrique (ids/positions/comptes) n'a pas changé entre-temps.
+    var paletteKey = palette ? (palette.accent + ':' + palette.accentAlt) : '';
+    return paletteKey + '|' + items
       .map(function (item) {
         if (item.type === 'cluster') {
           return 'c:' + item.count + ':' + item.coords[0].toFixed(4) + ':' + item.coords[1].toFixed(4) + ':' + item.ids.slice().sort().join(',');
@@ -341,7 +345,7 @@
 
   function renderMarkers(locations, palette) {
     var items = clusterLocations(locations);
-    var signature = itemsSignature(items);
+    var signature = itemsSignature(items, palette);
     if (signature === lastSignature && markers.length > 0) return;
     lastSignature = signature;
 
@@ -439,7 +443,13 @@
       map.setStyle(styleUrl);
       map.once('style.load', function () {
         ready = true;
-        renderMarkers(locations, palette);
+        // On utilise lastLocations/lastPalette (mis à jour à chaque message
+        // reçu, cf. plus haut) plutôt que les `locations`/`palette` figés de
+        // CET appel : un message plus récent (nouveaux lieux de la vibe
+        // active, arrivé pendant le chargement du style) aurait sinon été
+        // ignoré silencieusement (cf. branche `else if (ready)` ci-dessous),
+        // laissant la carte affichée avec des données obsolètes.
+        renderMarkers(lastLocations, lastPalette);
       });
     } else if (ready) {
       renderMarkers(locations, palette);
