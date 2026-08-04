@@ -1,9 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Animated, StatusBar } from 'react-native';
+import React, { useRef, useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Dimensions, Animated, StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { markOnboardingDone } from '../utils/onboarding';
+import { redeemReferralCode } from '../components/ApiRequest';
+
+const PENDING_REFERRAL_CODE_KEY = '@loocateme:pending_referral_code';
 
 const { width: W, height: H } = Dimensions.get('window');
 
@@ -35,20 +39,52 @@ const SLIDES = [
     accent: '#2ECC71',
     accentAlt: '#00C2CB',
   },
+  {
+    key: 'referral',
+    emoji: '👥',
+    title: 'Un ami t\'a invité ?',
+    desc: "Entre son code de parrainage (facultatif) — ça l'aide à débloquer un mois Premium offert.",
+    gradient: ['#0A1020', '#101830'],
+    accent: '#00C2CB',
+    accentAlt: '#2ECC71',
+  },
 ];
 
 export default function OnboardingScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
+  const [referralCode, setReferralCode] = useState('');
   const flatRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
 
   const slide = SLIDES[index];
   const isLast = index === SLIDES.length - 1;
 
+  // Pré-remplit le champ si l'utilisateur est arrivé via un lien d'invitation
+  // (loocateme://invite/:code) ouvert avant d'être connecté (cf. App.js).
+  useEffect(() => {
+    (async () => {
+      try {
+        const pending = await AsyncStorage.getItem(PENDING_REFERRAL_CODE_KEY);
+        if (pending) setReferralCode(pending);
+      } catch (_) {}
+    })();
+  }, []);
+
   const goNext = async () => {
     if (isLast) {
+      const code = referralCode.trim();
+      if (code) {
+        // Facultatif et non bloquant : une erreur (code invalide, déjà utilisé...)
+        // ne doit jamais empêcher de terminer l'onboarding.
+        try {
+          await redeemReferralCode(code);
+        } catch (_) {}
+        try {
+          await AsyncStorage.removeItem(PENDING_REFERRAL_CODE_KEY);
+        } catch (_) {}
+      }
       await markOnboardingDone();
       navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
     } else {
@@ -85,7 +121,22 @@ export default function OnboardingScreen() {
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: false })}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
-        renderItem={({ item }) => <Slide item={item} />}
+        renderItem={({ item }) =>
+          item.key === 'referral' ? (
+            <Slide item={item}>
+              <TextInput
+                style={styles.referralInput}
+                placeholder="Code de parrainage"
+                placeholderTextColor="rgba(255,255,255,0.4)"
+                autoCapitalize="characters"
+                value={referralCode}
+                onChangeText={setReferralCode}
+              />
+            </Slide>
+          ) : (
+            <Slide item={item} />
+          )
+        }
       />
 
       {/* Bottom UI */}
@@ -128,7 +179,7 @@ export default function OnboardingScreen() {
   );
 }
 
-function Slide({ item }) {
+function Slide({ item, children }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={{ width: W }}>
@@ -145,6 +196,7 @@ function Slide({ item }) {
 
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.desc}>{item.desc}</Text>
+        {children}
       </SafeAreaView>
     </View>
   );
@@ -236,6 +288,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
+  referralInput: {
+    marginTop: 24,
+    width: W - 96,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+    letterSpacing: 2,
+  },
   skipBtn: { marginTop: 14, paddingVertical: 6 },
   skipTxt: { color: 'rgba(255,255,255,0.40)', fontSize: 14, fontWeight: '500' },
 });

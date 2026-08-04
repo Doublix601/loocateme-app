@@ -622,6 +622,19 @@ export async function verifyPurchase(isMock = false) {
   });
 }
 
+// PARRAINAGE
+export async function getMyReferralInfo() {
+  return get('/referrals/me');
+}
+
+export async function redeemReferralCode(code) {
+  return post('/referrals/redeem', { code });
+}
+
+export async function getReferralHistory({ page = 1, limit = 20 } = {}) {
+  return get(`/referrals/history?page=${page}&limit=${limit}`);
+}
+
 // PROFILE
 export async function updateProfile({ username, firstName, lastName, customName, bio }) {
   const body = {};

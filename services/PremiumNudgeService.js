@@ -11,10 +11,11 @@ const COOLDOWN_DAYS = {
   profile_views: 5,
   consumables_depleted: 3,
   periodic_home: 7,
+  invite_friends_periodic: 10,
 };
 
 // Ordre de priorité en cas de signaux concurrents dans le même tick.
-const PRIORITY = ['consumables_depleted', 'radius_limited', 'profile_views', 'periodic_home'];
+const PRIORITY = ['consumables_depleted', 'radius_limited', 'profile_views', 'periodic_home', 'invite_friends_periodic'];
 
 const GLOBAL_WEEKLY_CAP = 3; // max nudges affichés, tous signaux confondus, par fenêtre glissante de 7 jours
 
@@ -42,6 +43,11 @@ const COPY = {
     message: 'Débloque le rayon étendu, les statistiques et plus encore.',
     source: 'periodic_home_banner',
   },
+  invite_friends_periodic: {
+    title: '👥 Invite 3 amis',
+    message: "Invite 3 amis sur LoocateMe et rapproche-toi d'un mois Premium offert (5 parrainages = 1 mois gratuit).",
+    source: 'invite_friends_periodic',
+  },
 };
 
 function _emptySignalState() {
@@ -55,6 +61,7 @@ function _emptyState() {
       profile_views: _emptySignalState(),
       consumables_depleted: _emptySignalState(),
       periodic_home: _emptySignalState(),
+      invite_friends_periodic: _emptySignalState(),
     },
     global: { shownAtTimestamps: [] },
   };
@@ -98,7 +105,11 @@ function _log(eventName, event) {
 
 function _isEligible(signalId, eligibility) {
   if (!eligibility?.premiumSystemEnabled) return false;
-  if (eligibility?.isPremium) return false;
+  // Ce signal reste utile même aux utilisateurs déjà premium (parrainage indépendant du
+  // gating premium), contrairement à tous les autres nudges qui n'ont de sens que hors premium.
+  if (signalId !== 'invite_friends_periodic' && eligibility?.isPremium) return false;
+  // Pas la peine de relancer quelqu'un qui a déjà atteint son quota de parrainages ce mois-ci.
+  if (signalId === 'invite_friends_periodic' && eligibility?.referralCapReachedThisMonth) return false;
   if (_sessionShown) return false;
 
   const now = Date.now();

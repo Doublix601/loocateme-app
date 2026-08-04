@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
 import { useTheme } from './contexts/ThemeContext';
 
-const LocationPermissionModal = ({ visible, type, onClose }) => {
+const LocationPermissionModal = ({ visible, onClose }) => {
   const { colors } = useTheme();
 
   const handleOpenSettings = () => {
@@ -10,53 +10,29 @@ const LocationPermissionModal = ({ visible, type, onClose }) => {
     if (onClose) onClose();
   };
 
-  const isAlwaysType = type === 'always';
+  const instructions =
+    Platform.OS === 'ios'
+      ? 'Pour une expérience optimale, réglez l\'autorisation sur "Toujours" dans les réglages de votre iPhone (Réglages > LoocateMe > Position).'
+      : 'Pour une expérience optimale, réglez l\'autorisation sur "Toujours" dans les paramètres de votre Android (Paramètres > Applications > LoocateMe > Autorisations > Position).';
 
-  const renderContent = () => {
-    if (isAlwaysType) {
-      const instructions =
-        Platform.OS === 'ios'
-          ? 'Pour une expérience optimale, réglez l\'autorisation sur "Toujours" dans les réglages de votre iPhone (Réglages > LoocateMe > Position).'
-          : 'Pour une expérience optimale, réglez l\'autorisation sur "Toujours" dans les paramètres de votre Android (Paramètres > Applications > LoocateMe > Autorisations > Position).';
-
-      return (
-        <>
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>Position "Toujours"</Text>
           <Text style={[styles.message, { color: colors.textSecondary }]}>
             L'application fonctionne mieux si vous autorisez la localisation en mode "Toujours". Cela permet de vous
             localiser même lorsque l'application est en arrière-plan.
           </Text>
           <Text style={[styles.instructions, { color: colors.accent }]}>{instructions}</Text>
-        </>
-      );
-    }
-
-    return (
-      <>
-        <Text style={[styles.title, { color: colors.danger }]}>Localisation requise</Text>
-        <Text style={[styles.message, { color: colors.textSecondary }]}>
-          LoocateMe ne peut pas fonctionner sans accès à votre position. Veuillez activer la localisation dans les
-          réglages de votre appareil pour continuer.
-        </Text>
-      </>
-    );
-  };
-
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={isAlwaysType ? onClose : undefined}>
-      <View style={styles.overlay}>
-        <View style={[styles.container, { backgroundColor: colors.surface }]}>
-          {renderContent()}
 
           <View style={styles.buttonContainer}>
-            {isAlwaysType && (
-              <TouchableOpacity
-                style={[styles.button, styles.secondaryButton, { borderColor: colors.border }]}
-                onPress={onClose}
-              >
-                <Text style={[styles.buttonText, { color: colors.textSecondary }]}>Plus tard</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={[styles.button, styles.secondaryButton, { borderColor: colors.border }]}
+              onPress={onClose}
+            >
+              <Text style={[styles.buttonText, { color: colors.textSecondary }]}>Plus tard</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={[styles.button, { backgroundColor: colors.accent }]} onPress={handleOpenSettings}>
               <Text style={[styles.buttonText, { color: '#fff' }]}>Ouvrir les réglages</Text>
             </TouchableOpacity>

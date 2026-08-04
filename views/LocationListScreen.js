@@ -22,7 +22,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
-import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe, forceCheckIn } from '../components/ApiRequest';
+import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe, forceCheckIn, getMyReferralInfo } from '../components/ApiRequest';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import NearbyLocationPicker from '../components/NearbyLocationPicker';
 import { markCheckinVerified } from '../components/CheckinVerificationScheduler';
@@ -928,6 +928,26 @@ const LocationListScreen = () => {
               premiumSystemEnabled,
             });
             if (periodicNudge) publish('premium:nudge', periodicNudge);
+          } catch (_) {
+            // Signal purement observationnel : ne doit jamais impacter la liste principale.
+          }
+        })();
+      }
+
+      // Nudge parrainage (signal passif, fire-and-forget) : contrairement aux nudges
+      // premium ci-dessus, celui-ci reste pertinent même pour un utilisateur déjà premium
+      // (le parrainage est indépendant du gating premium), donc pas de garde `!isPremium` ici.
+      if (!skipUpdateMyLocation) {
+        (async () => {
+          try {
+            const referralInfo = await getMyReferralInfo();
+            const referralCapReachedThisMonth = (referralInfo?.currentMonthValidatedCount ?? 0) >= (referralInfo?.targetCount ?? 5);
+            const inviteNudge = await PremiumNudgeService.evaluate('invite_friends_periodic', {
+              isPremium,
+              premiumSystemEnabled,
+              referralCapReachedThisMonth,
+            });
+            if (inviteNudge) publish('premium:nudge', inviteNudge);
           } catch (_) {
             // Signal purement observationnel : ne doit jamais impacter la liste principale.
           }

@@ -1164,7 +1164,7 @@ const MyAccountScreen = () => {
                   </TouchableOpacity>
                 )}
 
-                {/* Boutons de partage entre la bio et les réseaux sociaux (icônes uniquement) */}
+                {/* Boutons de partage entre la bio et les réseaux sociaux (icône + label) */}
                 <View
                   style={[
                     styles.shareIconsRow,
@@ -1172,34 +1172,57 @@ const MyAccountScreen = () => {
                   ]}
                 >
                   <TouchableOpacity
-                    style={styles.shareIconBtn}
+                    style={styles.shareIconItem}
                     onPress={handleShareProfile}
                     accessibilityLabel="Partager mon profil"
                   >
-                    <Text style={styles.shareIconEmoji}>📤</Text>
+                    <View style={styles.shareIconBtn}>
+                      <Ionicons name="share-social-outline" size={20} color="#fff" />
+                    </View>
+                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Partager</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={styles.shareIconBtn}
+                    style={styles.shareIconItem}
                     onPress={() => setQrVisible(true)}
                     accessibilityLabel="Afficher mon QR code"
                   >
-                    <Text style={styles.shareIconEmoji}>🔳</Text>
+                    <View style={styles.shareIconBtn}>
+                      <Ionicons name="qr-code-outline" size={20} color="#fff" />
+                    </View>
+                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>QR code</Text>
                   </TouchableOpacity>
-                  {/* Bouton statistiques (emoji diagramme vers le haut) */}
+                  {/* Bouton statistiques */}
                   <TouchableOpacity
-                    style={styles.shareIconBtn}
+                    style={styles.shareIconItem}
                     onPress={handleOpenStats}
                     accessibilityLabel="Voir mes statistiques"
                   >
-                    <Text style={styles.shareIconEmoji}>📈</Text>
+                    <View style={styles.shareIconBtn}>
+                      <Ionicons name="stats-chart-outline" size={20} color="#fff" />
+                    </View>
+                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Stats</Text>
                   </TouchableOpacity>
                   {/* Bouton historique des superlikes reçus */}
                   <TouchableOpacity
-                    style={styles.shareIconBtn}
+                    style={styles.shareIconItem}
                     onPress={() => setSuperlikeHistoryVisible(true)}
                     accessibilityLabel="Voir les superlikes reçus"
                   >
-                    <Text style={styles.shareIconEmoji}>⭐</Text>
+                    <View style={styles.shareIconBtn}>
+                      <Ionicons name="star-outline" size={20} color="#fff" />
+                    </View>
+                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Superlikes</Text>
+                  </TouchableOpacity>
+                  {/* Bouton parrainage */}
+                  <TouchableOpacity
+                    style={styles.shareIconItem}
+                    onPress={() => navigation.navigate('Referral')}
+                    accessibilityLabel="Parrainage"
+                  >
+                    <View style={styles.shareIconBtn}>
+                      <Ionicons name="people-outline" size={20} color="#fff" />
+                    </View>
+                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Parrainage</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -2068,18 +2091,23 @@ const styles = StyleSheet.create({
   // --- Icônes de partage (entre bio et réseaux sociaux) ---
   shareIconsRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 20,
+    flexWrap: 'wrap',
+    justifyContent: 'space-evenly',
+    alignItems: 'flex-start',
+    rowGap: 12,
     marginTop: height * 0.03,
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 8,
     borderRadius: 20,
   },
+  shareIconItem: {
+    alignItems: 'center',
+    width: Math.min(width * 0.19, 72),
+  },
   shareIconBtn: {
-    width: Math.min(width * 0.14, 56),
-    height: Math.min(width * 0.14, 56),
-    borderRadius: Math.min(width * 0.07, 28),
+    width: Math.min(width * 0.11, 44),
+    height: Math.min(width * 0.11, 44),
+    borderRadius: Math.min(width * 0.055, 22),
     backgroundColor: '#00c2cb',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2089,9 +2117,10 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-  shareIconEmoji: {
-    fontSize: 22,
-    color: '#fff',
+  shareIconLabel: {
+    fontSize: 11,
+    marginTop: 4,
+    textAlign: 'center',
   },
   // --- Partage styles ---
   shareTitle: {

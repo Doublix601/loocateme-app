@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useRef, useContext } from 'react';
 import {
   ActivityIndicator,
@@ -69,7 +70,7 @@ function AppShell({ purchasesReady }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
   const [shopSheetVisible, setShopSheetVisible] = useState(false);
-  const [locationModal, setLocationModal] = useState({ visible: false, type: 'required' });
+  const [locationModal, setLocationModal] = useState({ visible: false });
   const appState = useRef(AppState.currentState);
   const hasShownLocationModal = useRef(false);
   const didInitialScanRef = useRef(false);
@@ -254,6 +255,15 @@ function AppShell({ purchasesReady }) {
   }, []);
 
   useEffect(() => {
+    const off = subscribe('ui:open_referral', (payload) => navigationRef.navigate('Referral', payload));
+    return () => {
+      try {
+        off && off();
+      } catch (_) {}
+    };
+  }, []);
+
+  useEffect(() => {
     const off = subscribe('ui:open_consumables', () => setShopSheetVisible(true));
     return () => {
       try {
@@ -283,8 +293,6 @@ function AppShell({ purchasesReady }) {
         }
 
         if (fgStatus !== 'granted') {
-          setLocationModal({ visible: true, type: 'required' });
-          hasShownLocationModal.current = true;
           return;
         }
 
@@ -340,7 +348,7 @@ function AppShell({ purchasesReady }) {
     };
   }, []);
 
-  // Deep link handling: loocateme://profile/:userId
+  // Deep link handling: loocateme://profile/:userId et loocateme://invite/:code
   useEffect(() => {
     const extractProfileId = (url) => {
       if (!url) return null;
@@ -353,7 +361,35 @@ function AppShell({ purchasesReady }) {
       }
     };
 
+    const extractInviteCode = (url) => {
+      if (!url) return null;
+      const match = String(url).match(/invite\/([^?#]+)/i);
+      if (!match || !match[1]) return null;
+      try {
+        return decodeURIComponent(match[1]);
+      } catch (_) {
+        return match[1];
+      }
+    };
+
     const handleUrl = async (url) => {
+      const inviteCode = extractInviteCode(url);
+      if (inviteCode) {
+        if (!getAccessToken()) {
+          // Pas encore connecté : on garde le code pour pré-remplissage à l'onboarding,
+          // plutôt que de perdre le lien si l'utilisateur doit d'abord créer un compte.
+          try {
+            await AsyncStorage.setItem('@loocateme:pending_referral_code', inviteCode);
+          } catch (_) {}
+        } else {
+          // Déjà connecté : pas de redeem automatique et silencieux (un utilisateur
+          // existant qui rouvre un vieux lien d'ami ne doit pas être re-parrainé sans
+          // confirmation), on navigue vers l'écran de parrainage avec le code prérempli.
+          navigationRef.navigate('Referral', { prefillCode: inviteCode });
+        }
+        return;
+      }
+
       const id = extractProfileId(url);
       if (!id || !getAccessToken()) return;
       try {
@@ -403,6 +439,8 @@ function AppShell({ purchasesReady }) {
             publish('ui:open_superlike_history', { tab: 'sent' });
           } else if (data.kind === 'cote_expiring') {
             navigationRef.navigate('MainTabs');
+          } else if (data.kind === 'referral_validated' || data.kind === 'referral_reward_granted') {
+            navigationRef.navigate('Referral');
           }
         };
 
@@ -479,7 +517,6 @@ function AppShell({ purchasesReady }) {
       />
       <LocationPermissionModal
         visible={locationModal.visible}
-        type={locationModal.type}
         onClose={() => setLocationModal((prev) => ({ ...prev, visible: false }))}
       />
 

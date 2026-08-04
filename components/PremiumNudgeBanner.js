@@ -39,7 +39,11 @@ export default function PremiumNudgeBanner() {
 
   const handlePress = () => {
     if (!nudge) return;
-    publish('ui:open_premium', { source: nudge.source });
+    if (nudge.id === 'invite_friends_periodic') {
+      publish('ui:open_referral', { source: nudge.source });
+    } else {
+      publish('ui:open_premium', { source: nudge.source });
+    }
     setNudge(null);
   };
 

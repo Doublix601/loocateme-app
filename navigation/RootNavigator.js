@@ -12,6 +12,7 @@ import DebugScreen from '../views/DebugScreen';
 import ModeratorScreen from '../views/ModeratorScreen';
 import StatisticsScreen from '../views/StatisticsScreen';
 import WarningsScreen from '../views/WarningsScreen';
+import ReferralScreen from '../views/ReferralScreen';
 import DataManagementScreen from '../views/DataManagementScreen';
 import EditProfileScreen from '../views/EditProfileScreen';
 import PremiumPaywallScreen from '../views/PremiumPaywallScreen';
@@ -48,6 +49,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Moderator" component={ModeratorScreen} />
       <Stack.Screen name="Statistics" component={StatisticsScreen} />
       <Stack.Screen name="Warnings" component={WarningsScreen} />
+      <Stack.Screen name="Referral" component={ReferralScreen} />
       <Stack.Screen name="DataManagement" component={DataManagementScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
 

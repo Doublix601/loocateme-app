@@ -29,6 +29,8 @@ import {
   deleteMyAccount,
   logout as apiLogout,
   clearApiCache,
+  redeemReferralCode,
+  getMyUser,
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -48,6 +50,8 @@ const SettingsScreen = () => {
   const isDark = themeMode === 'dark';
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
+  const [referralCodeInput, setReferralCodeInput] = useState('');
+  const [referralSubmitting, setReferralSubmitting] = useState(false);
 
   // GDPR state
   const [policyModalVisible, setPolicyModalVisible] = useState(false);
@@ -91,6 +95,31 @@ const SettingsScreen = () => {
       setDisplayNameMode(next);
       await AsyncStorage.setItem(DISPLAY_NAME_PREF_KEY, next);
     } catch (_) {}
+  };
+
+  const handleRedeemReferralCode = async () => {
+    const code = referralCodeInput.trim();
+    if (!code) return;
+    setReferralSubmitting(true);
+    try {
+      await redeemReferralCode(code);
+      const freshUser = await getMyUser();
+      if (freshUser) updateUser(freshUser);
+      setReferralCodeInput('');
+      Alert.alert('Parrainage', 'Code de parrainage enregistré !');
+    } catch (e) {
+      const message =
+        e?.code === 'SELF_REFERRAL'
+          ? 'Vous ne pouvez pas utiliser votre propre code.'
+          : e?.code === 'ALREADY_REFERRED'
+          ? 'Vous avez déjà utilisé un code de parrainage.'
+          : e?.code === 'INVALID_CODE'
+          ? 'Ce code de parrainage est invalide.'
+          : e?.message || 'Impossible de valider ce code.';
+      Alert.alert('Parrainage', message);
+    } finally {
+      setReferralSubmitting(false);
+    }
   };
 
   const saveAndReturn = () => {
@@ -327,6 +356,51 @@ const SettingsScreen = () => {
               </Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={styles.sectionTitle}>PARRAINAGE</Text>
+          {user?.referredBy ? (
+            <Text style={{ fontSize: 14, color: colors.textSecondary, paddingVertical: 10 }}>
+              Vous avez déjà été parrainé.
+            </Text>
+          ) : (
+            <View style={{ paddingVertical: 10 }}>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
+                Un ami vous a partagé un code ? Entrez-le ici.
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TextInput
+                  style={[
+                    styles.revokeInput,
+                    {
+                      flex: 1,
+                      marginBottom: 0,
+                      borderColor: colors.border,
+                      color: isDark ? '#fff' : colors.textPrimary,
+                      backgroundColor: isDark ? '#0f1115' : '#ffffff',
+                    },
+                  ]}
+                  placeholder="Code de parrainage"
+                  placeholderTextColor={isDark ? '#999' : '#666'}
+                  autoCapitalize="characters"
+                  value={referralCodeInput}
+                  onChangeText={setReferralCodeInput}
+                />
+                <TouchableOpacity
+                  onPress={handleRedeemReferralCode}
+                  disabled={referralSubmitting || !referralCodeInput.trim()}
+                  style={[styles.smallPill, { backgroundColor: '#00c2cb', marginLeft: 10, opacity: referralSubmitting ? 0.6 : 1 }]}
+                >
+                  {referralSubmitting ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={[styles.smallPillText, { color: '#fff' }]}>Valider</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
