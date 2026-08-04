@@ -24,6 +24,8 @@ import Purchases from 'react-native-purchases';
 
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
+import ChurnSurveyModal from './components/ChurnSurveyModal';
+import { reportPermissionStatus } from './services/EngagementTrackingService';
 import DevLocationOverride from './components/DevLocationOverride';
 import PolicyUpdateBanner from './components/PolicyUpdateBanner';
 import PremiumNudgeBanner from './components/PremiumNudgeBanner';
@@ -71,8 +73,13 @@ function AppShell({ purchasesReady }) {
   const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
   const [shopSheetVisible, setShopSheetVisible] = useState(false);
   const [locationModal, setLocationModal] = useState({ visible: false });
+  const [churnSurveyVisible, setChurnSurveyVisible] = useState(false);
   const appState = useRef(AppState.currentState);
   const hasShownLocationModal = useRef(false);
+  // Dernier statut de permission localisation connu, pour détecter une révocation
+  // (granted -> denied) plutôt qu'un simple "toujours pas accordé" au premier lancement.
+  const lastKnownLocationStatus = useRef(null);
+  const hasShownChurnSurvey = useRef(false);
   const didInitialScanRef = useRef(false);
   const currentPoiIdRef = useRef(null);
 
@@ -285,6 +292,17 @@ function AppShell({ purchasesReady }) {
       try {
         const { status: fgStatus } = await Location.getForegroundPermissionsAsync();
 
+        reportPermissionStatus({ locationPermissionStatus: fgStatus === 'granted' ? 'granted' : 'denied' });
+        if (
+          lastKnownLocationStatus.current === 'granted' &&
+          fgStatus !== 'granted' &&
+          !hasShownChurnSurvey.current
+        ) {
+          hasShownChurnSurvey.current = true;
+          setChurnSurveyVisible(true);
+        }
+        lastKnownLocationStatus.current = fgStatus;
+
         if (fgStatus === 'granted') {
           const pos = await getCurrentPositionSmart();
           if (pos?.coords) {
@@ -372,6 +390,19 @@ function AppShell({ purchasesReady }) {
       }
     };
 
+    // Au cold-start (app fermée, ouverte directement via le lien), Linking.getInitialURL()
+    // résout souvent avant que le NavigationContainer soit monté : navigate() est alors un
+    // no-op silencieux et l'app atterrit sur sa route initiale par défaut. On attend que
+    // navigationRef soit prêt (comme ailleurs dans ce fichier) avant de naviguer.
+    const waitForNavigationReady = async () => {
+      if (navigationRef.isReady()) return true;
+      for (let i = 0; i < 50; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        if (navigationRef.isReady()) return true;
+      }
+      return false;
+    };
+
     const handleUrl = async (url) => {
       const inviteCode = extractInviteCode(url);
       if (inviteCode) {
@@ -381,7 +412,7 @@ function AppShell({ purchasesReady }) {
           try {
             await AsyncStorage.setItem('@loocateme:pending_referral_code', inviteCode);
           } catch (_) {}
-        } else {
+        } else if (await waitForNavigationReady()) {
           // Déjà connecté : pas de redeem automatique et silencieux (un utilisateur
           // existant qui rouvre un vieux lien d'ami ne doit pas être re-parrainé sans
           // confirmation), on navigue vers l'écran de parrainage avec le code prérempli.
@@ -392,6 +423,7 @@ function AppShell({ purchasesReady }) {
 
       const id = extractProfileId(url);
       if (!id || !getAccessToken()) return;
+      if (!(await waitForNavigationReady())) return;
       try {
         const res = await getUserById(id);
         const u = res?.user;
@@ -518,6 +550,11 @@ function AppShell({ purchasesReady }) {
       <LocationPermissionModal
         visible={locationModal.visible}
         onClose={() => setLocationModal((prev) => ({ ...prev, visible: false }))}
+      />
+      <ChurnSurveyModal
+        visible={churnSurveyVisible}
+        context="location_permission_revoked"
+        onClose={() => setChurnSurveyVisible(false)}
       />
 
       {isLoading && (

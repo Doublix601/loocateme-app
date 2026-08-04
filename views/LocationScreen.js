@@ -34,6 +34,7 @@ import { useCrossedPaths } from '../hooks/useCrossedPaths';
 import { useVibeTheme } from '../hooks/useVibeTheme';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import StoryRingAvatar from '../components/StoryRingAvatar';
+import StoryUnseenBubble from '../components/StoryUnseenBubble';
 import StoryViewerModal from '../components/StoryViewerModal';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import ProfileCard from '../components/ProfileCard';
@@ -319,6 +320,23 @@ const LocationScreen = () => {
     return hasUnseen ? 'unseen' : 'seen';
   }, [activeStories, lastStorySeenAt]);
 
+  // Nombre de stories non encore vues, affiché dans la bulle au-dessus de l'anneau.
+  const unseenStoriesCount = useMemo(() => {
+    if (!activeStories.length) return 0;
+    if (!lastStorySeenAt) return activeStories.length;
+    const lastSeenMs = new Date(lastStorySeenAt).getTime();
+    return activeStories.filter((s) => new Date(s.createdAt || s.expiresAt || 0).getTime() > lastSeenMs).length;
+  }, [activeStories, lastStorySeenAt]);
+
+  // Index de la première story non vue (façon Instagram) : à l'ouverture, on
+  // reprend là où on s'était arrêté. Si tout a déjà été vu, on repart du début.
+  const firstUnseenStoryIndex = useMemo(() => {
+    if (!activeStories.length || !lastStorySeenAt) return 0;
+    const lastSeenMs = new Date(lastStorySeenAt).getTime();
+    const idx = activeStories.findIndex((s) => new Date(s.createdAt || s.expiresAt || 0).getTime() > lastSeenMs);
+    return idx === -1 ? 0 : idx;
+  }, [activeStories, lastStorySeenAt]);
+
   const popularity = useMemo(() => {
     const s = location?.stars || 0;
     if (s >= 3) return { label: 'Très populaire', stars: 3 };
@@ -446,13 +464,20 @@ const LocationScreen = () => {
       <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }}>
         {location.logoUrl && (
           <View style={{ marginRight: spacing.sm }}>
+            {storyRingState === 'unseen' && unseenStoriesCount > 0 && (
+              <View style={styles.storyUnseenBubbleWrap} pointerEvents="none">
+                <StoryUnseenBubble count={unseenStoriesCount} />
+              </View>
+            )}
             <StoryRingAvatar
               uri={location.logoUrl}
               size={80}
               state={storyRingState}
               isMoon={isMoon}
               gradient={palette.gradient}
-              onPress={activeStories.length && storiesUnlocked ? () => openStoryViewer(0) : undefined}
+              onPress={
+                activeStories.length && storiesUnlocked ? () => openStoryViewer(firstUnseenStoryIndex) : undefined
+              }
             />
           </View>
         )}
@@ -573,46 +598,15 @@ const LocationScreen = () => {
     ));
   };
 
-  // ─── Stories & PDF pro (Premium Pro 1/2) ───────────────────────
+  // ─── PDF pro (Premium Pro 1/2) ───────────────────────
+  // Les stories sont accessibles uniquement via l'anneau sur la photo de
+  // profil du lieu (StoryRingAvatar plus haut) : un seul point d'entrée.
   const renderProSection = () => {
     // Max 3 PDF affichés (aligné sur la limite d'ajout côté dashboard business).
     const media = (location.media || []).filter((m) => m.type === 'PDF').slice(0, MAX_PDF_MEDIA);
-    if (!activeStories.length && !media.length) return null;
+    if (!media.length) return null;
     return (
       <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
-        {activeStories.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginBottom: media.length ? spacing.md : 0 }}
-          >
-            {activeStories.map((story, idx) => (
-              <TouchableOpacity
-                key={story._id || idx}
-                onPress={() => openStoryViewer(idx)}
-                style={{
-                  width: 64,
-                  height: 100,
-                  borderRadius: radius.md,
-                  marginRight: spacing.sm,
-                  overflow: 'hidden',
-                  borderWidth: 2,
-                  borderColor: palette.accent,
-                }}
-              >
-                <ImageWithPlaceholder
-                  uri={story.mediaType === 'video' ? story.thumbnailUrl : story.url}
-                  style={{ width: '100%', height: '100%' }}
-                />
-                {story.mediaType === 'video' && (
-                  <View style={styles.storyPlayBadge} pointerEvents="none">
-                    <Ionicons name="play" size={12} color="#fff" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
         {media.map((m) => (
           <TouchableOpacity
             key={m._id || m.url}
@@ -1069,6 +1063,15 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   errorBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
 
+  storyUnseenBubbleWrap: {
+    position: 'absolute',
+    top: -38,
+    left: -60,
+    right: -60,
+    alignItems: 'center',
+    zIndex: 2,
+  },
+
   hero: {
     width: '100%',
     height: HERO_HEIGHT,
@@ -1139,17 +1142,6 @@ const styles = StyleSheet.create({
   eventDateBadgeDay: { fontSize: 20, fontWeight: '900', color: '#fff', lineHeight: 22 },
   eventDateBadgeMonth: { fontSize: 10, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
   eventDateLabel: { fontSize: 13, fontWeight: '800', marginBottom: 2, textTransform: 'capitalize' },
-
-  storyPlayBadge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
 
   pdfCard: {
     flexDirection: 'row',

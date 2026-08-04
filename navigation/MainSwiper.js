@@ -5,6 +5,7 @@ import MainSwiperContext from '../components/contexts/MainSwiperContext';
 import SearchView from '../views/SearchView';
 import LocationListScreen from '../views/LocationListScreen';
 import MyAccountScreen from '../views/MyAccountScreen';
+import MainTabBar from '../components/MainTabBar';
 
 const { width } = Dimensions.get('window');
 const PAGE_COUNT = 3;
@@ -118,6 +119,7 @@ export default function MainSwiper() {
             <MyAccountScreen />
           </View>
         </Animated.View>
+        <MainTabBar />
       </View>
     </MainSwiperContext.Provider>
   );

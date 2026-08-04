@@ -19,6 +19,7 @@ import IAPStore from '../services/IAPStore';
 import { DEBUG_CONFIG } from '../services/DebugConfig';
 import { publish } from './EventBus';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
+import CloseButton from './CloseButton';
 
 const HISTORY_KEY = '@loocateme:iap_history_v1';
 
@@ -200,6 +201,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
       <Animated.View style={[styles.sheet, { backgroundColor: bg, transform: [{ translateY: slideAnim }] }]}>
         {/* Handle */}
         <View style={styles.handle} />
+        <CloseButton onPress={handleClose} style={styles.closeBtn} />
 
         {/* Bannière debug */}
         {DEBUG_CONFIG.IAP_DISABLED && (
@@ -342,6 +344,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 14,
     marginBottom: 10,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 16,
+    zIndex: 2,
   },
   debugBanner: {
     backgroundColor: '#f39c12',

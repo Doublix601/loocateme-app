@@ -4,6 +4,7 @@ import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateMyLocation, setVisibility } from './ApiRequest';
+import { reportPermissionStatus } from '../services/EngagementTrackingService';
 
 const TASK_NAME = 'HEARTBEAT_TASK';
 const STORAGE_START_KEY = 'bg_loc_start_ts';
@@ -75,6 +76,7 @@ export async function startBackgroundLocationForSixHours() {
     if (!started) {
       // Permissions
       const fg = await Location.requestForegroundPermissionsAsync();
+      reportPermissionStatus({ locationPermissionStatus: fg.status === 'granted' ? 'granted' : 'denied' });
       if (fg.status !== 'granted') return false;
       // Background permissions (Android). On iOS, background must be enabled in app config.
       const bg = await Location.requestBackgroundPermissionsAsync();

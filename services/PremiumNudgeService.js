@@ -44,8 +44,8 @@ const COPY = {
     source: 'periodic_home_banner',
   },
   invite_friends_periodic: {
-    title: '👥 Invite 3 amis',
-    message: "Invite 3 amis sur LoocateMe et rapproche-toi d'un mois Premium offert (5 parrainages = 1 mois gratuit).",
+    title: '👥 Invite 5 amis',
+    message: "Invite 5 amis sur LoocateMe et débloque un mois Premium offert (5 parrainages = 1 mois gratuit).",
     source: 'invite_friends_periodic',
   },
 };

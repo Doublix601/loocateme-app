@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
 import { useTheme } from './contexts/ThemeContext';
+import CloseButton from './CloseButton';
 
 const LocationPermissionModal = ({ visible, onClose }) => {
   const { colors } = useTheme();
@@ -19,6 +20,7 @@ const LocationPermissionModal = ({ visible, onClose }) => {
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
+          <CloseButton onPress={onClose} style={styles.closeBtn} />
           <Text style={[styles.title, { color: colors.textPrimary }]}>Position "Toujours"</Text>
           <Text style={[styles.message, { color: colors.textSecondary }]}>
             L'application fonctionne mieux si vous autorisez la localisation en mode "Toujours". Cela permet de vous
@@ -61,6 +63,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
   },
   title: {
     fontSize: 20,

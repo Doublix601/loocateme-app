@@ -8,11 +8,9 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
-  Platform,
   Linking,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { UserContext } from '../components/contexts/UserContext';
@@ -21,6 +19,7 @@ import { subscribe } from '../components/EventBus';
 import IAPStore from '../services/IAPStore';
 import PremiumService from '../services/PremiumService';
 import { DEBUG_CONFIG } from '../services/DebugConfig';
+import ScreenHeader from '../components/ScreenHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -55,7 +54,6 @@ const FALLBACK = { monthly: '4,99 €', annual: '39,99 €', savings: 33 };
 
 export default function PremiumPaywallScreen() {
   const navigation = useNavigation();
-  const insets = useSafeAreaInsets();
   const route = useRoute();
   const routeParams = route.params ?? {};
   const onBack = () => navigation.goBack();
@@ -202,19 +200,11 @@ export default function PremiumPaywallScreen() {
   return (
     <View style={[styles.container, { backgroundColor: bg }]}>
       {/* Header */}
-      <View style={[styles.headerRow, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity
-          onPress={onBack}
-          style={[styles.closeBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}
-        >
-          <Text style={{ fontSize: 16, color: text, fontWeight: '700' }}>✕</Text>
-        </TouchableOpacity>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={[styles.headerTitle, { color: text }]}>👑 Premium</Text>
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
-      <Text style={[styles.headerSubtitle, { color: sub }]}>Débloquez toutes les fonctionnalités</Text>
+      <ScreenHeader
+        left={{ icon: 'close', onPress: onBack, accessibilityLabel: 'Fermer' }}
+        title="👑 Premium"
+        subtitle="Débloquez toutes les fonctionnalités"
+      />
 
       {/* Debug banner */}
       {DEBUG_CONFIG.IAP_DISABLED && (
@@ -387,17 +377,6 @@ export default function PremiumPaywallScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 40 : 56,
-    paddingBottom: 8,
-  },
-  closeBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '900' },
-  headerSubtitle: { fontSize: 13, fontWeight: '600', textAlign: 'center', marginTop: 2 },
   debugBanner: {
     backgroundColor: '#f39c12',
     marginHorizontal: 20,

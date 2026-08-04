@@ -3,6 +3,7 @@
 // avec trigger: null pour l'affichage immédiat (compatible iOS, Expo managed)
 
 import { Platform } from 'react-native';
+import { reportPermissionStatus } from '../services/EngagementTrackingService';
 
 export async function getNotificationsModule() {
   const mod = await import('expo-notifications');
@@ -43,8 +44,10 @@ export async function ensureNotificationPermissions(Notifications) {
     if (status !== 'granted') {
       const req = await api.requestPermissionsAsync();
       status = req?.status;
+      reportPermissionStatus({ notificationsPermissionStatus: status === 'granted' ? 'granted' : 'denied' });
       return status === 'granted';
     }
+    reportPermissionStatus({ notificationsPermissionStatus: 'granted' });
     return true;
   } catch (_) {
     return false;
