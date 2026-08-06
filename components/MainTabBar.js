@@ -96,10 +96,10 @@ export default function MainTabBar() {
         style={[
           styles.container,
           {
-            backgroundColor: isDark ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.96)',
-            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+            backgroundColor: isDark ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.98)',
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
             shadowColor: '#000',
-            shadowOpacity: isDark ? 0.4 : 0.15,
+            shadowOpacity: isDark ? 0.45 : 0.22,
           },
         ]}
       >
@@ -144,9 +144,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: BAR_PADDING,
     borderRadius: 34,
     borderWidth: StyleSheet.hairlineWidth,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 20,
+    elevation: 12,
     overflow: 'hidden',
   },
   indicator: {
