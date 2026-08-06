@@ -48,6 +48,8 @@ import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 import SpotlightOverlay from '../components/SpotlightOverlay';
 import { hasSeenProfileOnboarding, markProfileOnboardingDone } from '../utils/onboarding';
 import SuperlikeHistoryModal from '../components/SuperlikeHistoryModal';
+import ConsumablesShopSheet from '../components/ConsumablesShopSheet';
+import PremiumService from '../services/PremiumService';
 import CoteCard from '../components/CoteCard';
 import { subscribe } from '../components/EventBus';
 
@@ -69,6 +71,12 @@ const MyAccountScreen = () => {
   };
   const { user, updateUser } = useContext(UserContext);
   const { isPremium, hasStatsAccess, premiumSystemEnabled, effectiveStatisticsEnabled } = usePremiumAccess();
+  const [superlikeBalance, setSuperlikeBalance] = useState(PremiumService.getSuperlikesRemaining());
+  const [boostBalance, setBoostBalance] = useState(PremiumService.getBoostsRemaining());
+  const refreshConsumableCounts = () => {
+    setSuperlikeBalance(PremiumService.getSuperlikesRemaining());
+    setBoostBalance(PremiumService.getBoostsRemaining());
+  };
   const { flags } = useFeatureFlags();
   const warningsCount = user?.moderation?.warningsCount || 0;
   const [modalVisible, setModalVisible] = useState(false);
@@ -78,6 +86,7 @@ const MyAccountScreen = () => {
   const [qrVisible, setQrVisible] = useState(false);
   const [superlikeHistoryVisible, setSuperlikeHistoryVisible] = useState(false);
   const [superlikeHistoryTab, setSuperlikeHistoryTab] = useState('received');
+  const [consumablesShopVisible, setConsumablesShopVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const [myUserId, setMyUserId] = useState('');
@@ -238,6 +247,12 @@ const MyAccountScreen = () => {
   useEffect(() => {
     setSocialLinks(user?.socialMedia || []);
   }, [user?.socialMedia]);
+
+  // Rafraîchit les compteurs de superlikes/boosts à chaque retour sur l'écran
+  useEffect(() => {
+    const unsub = navigation.addListener('focus', refreshConsumableCounts);
+    return unsub;
+  }, [navigation]);
 
   // Ouvre l'historique des superlikes reçus quand on tape sur la notification push (App.js).
   useEffect(() => {
@@ -1218,12 +1233,37 @@ const MyAccountScreen = () => {
                   <TouchableOpacity
                     style={styles.shareIconItem}
                     onPress={() => setSuperlikeHistoryVisible(true)}
-                    accessibilityLabel="Voir les superlikes reçus"
+                    accessibilityLabel={`Voir les superlikes reçus, ${superlikeBalance} superlike${superlikeBalance !== 1 ? 's' : ''} restant${superlikeBalance !== 1 ? 's' : ''}`}
                   >
-                    <View style={styles.shareIconBtn}>
-                      <Ionicons name="star-outline" size={20} color="#fff" />
+                    <View style={{ position: 'relative' }}>
+                      <View style={styles.shareIconBtn}>
+                        <Ionicons name="star-outline" size={20} color="#fff" />
+                      </View>
+                      {superlikeBalance > 0 && (
+                        <View style={styles.countBadge}>
+                          <Text style={styles.countBadgeText}>{superlikeBalance}</Text>
+                        </View>
+                      )}
                     </View>
                     <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Superlikes</Text>
+                  </TouchableOpacity>
+                  {/* Bouton boosts */}
+                  <TouchableOpacity
+                    style={styles.shareIconItem}
+                    onPress={() => setConsumablesShopVisible(true)}
+                    accessibilityLabel={`Voir mes boosts, ${boostBalance} boost${boostBalance !== 1 ? 's' : ''} disponible${boostBalance !== 1 ? 's' : ''}`}
+                  >
+                    <View style={{ position: 'relative' }}>
+                      <View style={styles.shareIconBtn}>
+                        <Ionicons name="flash-outline" size={20} color="#fff" />
+                      </View>
+                      {boostBalance > 0 && (
+                        <View style={styles.countBadge}>
+                          <Text style={styles.countBadgeText}>{boostBalance}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Boosts</Text>
                   </TouchableOpacity>
                   {/* Bouton parrainage */}
                   <TouchableOpacity
@@ -1631,7 +1671,19 @@ const MyAccountScreen = () => {
           <SuperlikeHistoryModal
             visible={superlikeHistoryVisible}
             initialTab={superlikeHistoryTab}
-            onClose={() => setSuperlikeHistoryVisible(false)}
+            onClose={() => {
+              setSuperlikeHistoryVisible(false);
+              refreshConsumableCounts();
+            }}
+          />
+
+          <ConsumablesShopSheet
+            visible={consumablesShopVisible}
+            onClose={() => {
+              setConsumablesShopVisible(false);
+              refreshConsumableCounts();
+            }}
+            userId={myUserId}
           />
 
           {/* QR Code Modal */}
@@ -2123,6 +2175,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
     textAlign: 'center',
+  },
+  countBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#FFB800',
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  countBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '800',
   },
   // --- Partage styles ---
   shareTitle: {

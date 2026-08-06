@@ -4,6 +4,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import ImageWithPlaceholder from './ImageWithPlaceholder';
 import SuperlikeService from '../services/SuperlikeService';
+import PremiumService from '../services/PremiumService';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import { useTheme } from './contexts/ThemeContext';
 import { useLocale } from './contexts/LocalizationContext';
@@ -30,9 +31,13 @@ const SuperlikeHistoryModal = ({ visible, onClose, initialTab = 'received' }) =>
   const [loading, setLoading] = useState(false);
   const [superlikes, setSuperlikes] = useState([]);
   const [acceptingId, setAcceptingId] = useState(null);
+  const [remainingCount, setRemainingCount] = useState(PremiumService.getSuperlikesRemaining());
 
   useEffect(() => {
-    if (visible) setTab(initialTab || 'received');
+    if (visible) {
+      setTab(initialTab || 'received');
+      setRemainingCount(PremiumService.getSuperlikesRemaining());
+    }
   }, [visible, initialTab]);
 
   useEffect(() => {
@@ -93,6 +98,12 @@ const SuperlikeHistoryModal = ({ visible, onClose, initialTab = 'received' }) =>
                 <Ionicons name="close" size={22} color={colors.textPrimary} />
               </Pressable>
             </View>
+
+            <Text style={[styles.balanceText, { color: colors.textSecondary }]}>
+              {remainingCount > 0
+                ? `Il te reste ${remainingCount} superlike${remainingCount !== 1 ? 's' : ''}`
+                : "Tu n'as plus de superlike disponible"}
+            </Text>
 
             <View style={styles.tabRow}>
               <Pressable style={styles.tabButton} onPress={() => setTab('received')}>
@@ -185,6 +196,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  balanceText: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 12,
   },
   tabRow: {
     flexDirection: 'row',
