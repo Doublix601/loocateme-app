@@ -50,6 +50,7 @@ import {
   getAccessToken,
   logout as apiLogout,
   getPolicyStatus,
+  forceCheckIn,
 } from './components/ApiRequest';
 import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
@@ -418,6 +419,20 @@ function AppShell({ purchasesReady }) {
       }
     };
 
+    // QR code imprimé par un lieu partenaire (cf. checkin-qr côté backend) :
+    // scanner ce lien prouve physiquement la présence, donc on check-in direct
+    // sans passer par l'écran de sélection manuelle du lieu.
+    const extractVenueId = (url) => {
+      if (!url) return null;
+      const match = String(url).match(/venue\/([^?#]+)/i);
+      if (!match || !match[1]) return null;
+      try {
+        return decodeURIComponent(match[1]);
+      } catch (_) {
+        return match[1];
+      }
+    };
+
     // Au cold-start (app fermée, ouverte directement via le lien), Linking.getInitialURL()
     // résout souvent avant que le NavigationContainer soit monté : navigate() est alors un
     // no-op silencieux et l'app atterrit sur sa route initiale par défaut. On attend que
@@ -446,6 +461,30 @@ function AppShell({ purchasesReady }) {
           // confirmation), on navigue vers l'écran de parrainage avec le code prérempli.
           navigationRef.navigate('Referral', { prefillCode: inviteCode });
         }
+        return;
+      }
+
+      const venueId = extractVenueId(url);
+      if (venueId) {
+        if (!getAccessToken()) return; // scan avant connexion : on ignore, pas de flow de rattrapage pour l'instant
+        if (!(await waitForNavigationReady())) return;
+        try {
+          // bypassDistance: le scan du QR sur place prouve déjà la présence physique,
+          // pas besoin d'attendre une confirmation GPS dans le rayon du lieu.
+          let lat = 0, lon = 0;
+          try {
+            const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 8000 });
+            lat = pos?.coords?.latitude ?? 0;
+            lon = pos?.coords?.longitude ?? 0;
+          } catch (_) {
+            // Pas de fix GPS dispo : on check-in quand même (bypassDistance), le
+            // heartbeat suivant recalera les coordonnées réelles.
+          }
+          await forceCheckIn({ locationId: venueId, lat, lon, bypassDistance: true });
+        } catch (e) {
+          console.warn('[App] venue QR check-in failed', e?.message || e);
+        }
+        navigationRef.navigate('Location', { locationId: venueId });
         return;
       }
 

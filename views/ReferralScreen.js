@@ -127,7 +127,7 @@ const ReferralScreen = () => {
             ]}
           >
             <Text style={[styles.infoText, { color: colors.textPrimary }]}>
-              Invite 5 amis ce mois-ci (inscription + email vérifié) et gagne 1 mois Premium offert 🎉
+              Invite 5 amis ce mois-ci (chacun doit sortir et faire son 1er check-in vérifié) et gagne 1 mois Premium offert 🎉
             </Text>
           </View>
 

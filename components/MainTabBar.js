@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './contexts/ThemeContext';
@@ -11,87 +11,177 @@ const TABS = [
   { page: 2, label: 'Compte', icon: 'person-outline', iconActive: 'person' },
 ];
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const BAR_MARGIN = 16;
+const BAR_WIDTH = SCREEN_WIDTH - BAR_MARGIN * 2;
+const TAB_WIDTH = BAR_WIDTH / TABS.length;
+
+function TabItem({ tab, active, colors, isDark, onPress }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const lift = useRef(new Animated.Value(active ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(lift, {
+      toValue: active ? 1 : 0,
+      useNativeDriver: true,
+      tension: 220,
+      friction: 16,
+    }).start();
+  }, [active, lift]);
+
+  const handlePressIn = () => {
+    Animated.spring(scale, { toValue: 0.88, useNativeDriver: true, speed: 40, bounciness: 6 }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }).start();
+  };
+
+  const translateY = lift.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
+  const labelOpacity = lift;
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityLabel={tab.label}
+      accessibilityState={{ selected: active }}
+      style={styles.tab}
+      activeOpacity={1}
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View style={{ transform: [{ scale }, { translateY }], alignItems: 'center' }}>
+        <View
+          style={[
+            styles.iconPill,
+            active && {
+              backgroundColor: colors.accent,
+              shadowColor: colors.accent,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isDark ? 0.5 : 0.35,
+              shadowRadius: 8,
+              elevation: 6,
+            },
+          ]}
+        >
+          <Ionicons
+            name={active ? tab.iconActive : tab.icon}
+            size={21}
+            color={active ? '#ffffff' : colors.textMuted}
+          />
+        </View>
+        <Animated.Text
+          numberOfLines={1}
+          style={[
+            styles.label,
+            {
+              color: colors.accent,
+              opacity: labelOpacity,
+              transform: [{ translateY: Animated.multiply(labelOpacity, -1).interpolate({ inputRange: [-1, 0], outputRange: [0, 4] }) }],
+            },
+          ]}
+        >
+          {tab.label}
+        </Animated.Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
+
 export default function MainTabBar() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { goToPage, currentPage } = useMainSwiper();
+  const indicatorX = useRef(new Animated.Value(currentPage * TAB_WIDTH)).current;
+
+  useEffect(() => {
+    Animated.spring(indicatorX, {
+      toValue: currentPage * TAB_WIDTH,
+      useNativeDriver: true,
+      tension: 220,
+      friction: 22,
+    }).start();
+  }, [currentPage, indicatorX]);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          paddingBottom: insets.bottom + 8,
-          paddingTop: 22,
-          backgroundColor: colors.surface,
-          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-        },
-      ]}
-    >
-      {TABS.map((tab) => {
-        const active = currentPage === tab.page;
-        return (
-          <TouchableOpacity
+    <View style={[styles.wrapper, { bottom: insets.bottom + 10 }]} pointerEvents="box-none">
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: isDark ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.96)',
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+            shadowColor: '#000',
+            shadowOpacity: isDark ? 0.4 : 0.15,
+          },
+        ]}
+      >
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.indicator,
+            {
+              width: TAB_WIDTH,
+              backgroundColor: colors.accentSoft,
+              transform: [{ translateX: indicatorX }],
+            },
+          ]}
+        />
+        {TABS.map((tab) => (
+          <TabItem
             key={tab.page}
-            accessibilityRole="button"
-            accessibilityLabel={tab.label}
-            style={styles.tab}
-            activeOpacity={0.7}
+            tab={tab}
+            active={currentPage === tab.page}
+            colors={colors}
+            isDark={isDark}
             onPress={() => goToPage(tab.page)}
-          >
-            <View
-              style={[
-                styles.iconPill,
-                active && {
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : colors.accentSoft || 'rgba(0,0,0,0.06)',
-                  shadowColor: colors.accent,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: isDark ? 0.35 : 0.18,
-                  shadowRadius: 6,
-                  elevation: active ? 3 : 0,
-                },
-              ]}
-            >
-              <Ionicons
-                name={active ? tab.iconActive : tab.icon}
-                size={22}
-                color={active ? colors.accent : colors.textMuted}
-              />
-            </View>
-          </TouchableOpacity>
-        );
-      })}
+          />
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    alignItems: 'center',
+  },
+  container: {
     flexDirection: 'row',
-    height: 92,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    width: BAR_WIDTH,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 16,
+    elevation: 10,
+    overflow: 'hidden',
+  },
+  indicator: {
+    position: 'absolute',
+    top: 8,
+    bottom: 8,
+    borderRadius: 26,
   },
   tab: {
-    flex: 1,
+    width: TAB_WIDTH,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconPill: {
-    width: 52,
+    width: 44,
     height: 34,
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  label: {
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 2,
+    letterSpacing: 0.2,
   },
 });

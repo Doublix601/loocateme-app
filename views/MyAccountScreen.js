@@ -992,6 +992,18 @@ const MyAccountScreen = () => {
             <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backButtonImage} />
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[
+              styles.topSettingsButton,
+              { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' },
+            ]}
+            onPress={() => navigation.navigate('Settings')}
+            hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+            accessibilityLabel="Réglages"
+          >
+            <Ionicons name="settings-outline" size={22} color="#00c2cb" />
+          </TouchableOpacity>
+
           <ScrollView
             ref={scrollViewRef}
             style={{ flex: 1 }}
@@ -1663,10 +1675,6 @@ const MyAccountScreen = () => {
 
           {/* Bouton texte supprimé et remplacé par un bouton circulaire 📈 à côté des boutons de partage */}
 
-          <TouchableOpacity style={styles.settingsButton} onPress={() => navigation.navigate('Settings')}>
-            <Image source={require('../assets/appIcons/settings.png')} style={styles.roundButtonImage} />
-          </TouchableOpacity>
-
           <Toast message={toastMessage} visible={toastVisible} onHide={() => setToastVisible(false)} />
         </SafeAreaView>
       </View>
@@ -2189,22 +2197,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  settingsButton: {
-    backgroundColor: '#00c2cb',
-    width: Math.min(width * 0.14, 56),
-    height: Math.min(width * 0.14, 56),
-    borderRadius: Math.min(width * 0.07, 28),
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: Math.max(height * 0.02, 16),
-    right: Math.max(width * 0.05, 16),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
   dataButton: {
     backgroundColor: '#00c2cb',
     height: Math.min(width * 0.14, 56),
@@ -2245,6 +2237,17 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     tintColor: '#00c2cb',
+  },
+  topSettingsButton: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

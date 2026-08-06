@@ -7,7 +7,6 @@ import {
   View,
   ActivityIndicator,
   RefreshControl,
-  Image,
   ScrollView,
   Dimensions,
   Platform,
@@ -39,7 +38,6 @@ import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
 import { OverpassService, isTypeAllowedForVibe } from '../services/OverpassService';
 import VibeFAB from '../components/VibeFAB';
-import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LocationMapView from '../components/LocationMapView';
 import ClusterPickerModal from '../components/ClusterPickerModal';
@@ -75,7 +73,6 @@ function mergeByOsmId(...lists) {
 
 const LocationListScreen = () => {
   const navigation = useNavigation();
-  const { goToPage } = useMainSwiper();
   const { colors, isDark } = useTheme();
   const { isMoon, vibe, transitioningTo } = useVibe();
   const insets = useSafeAreaInsets();
@@ -1170,17 +1167,6 @@ const LocationListScreen = () => {
         >
           <Ionicons name={viewMode === 'list' ? 'map-outline' : 'list-outline'} size={22} color="#00c2cb" />
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => goToPage(2)}
-          style={styles.headerProfileButton}
-          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-          accessibilityLabel="Mon compte"
-        >
-          <Image
-            source={require('../assets/appIcons/userProfile.png')}
-            style={[styles.profileIcon, { tintColor: '#00c2cb' }]}
-          />
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -1406,17 +1392,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 194, 203, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
   },
-  headerProfileButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 194, 203, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  profileIcon: { width: 24, height: 24 },
   listContent: { padding: 20 },
   locationCard: {
     flexDirection: 'row',
