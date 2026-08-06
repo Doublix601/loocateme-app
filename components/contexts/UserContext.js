@@ -28,7 +28,7 @@ function mapBackendUser(u = {}) {
     // Include GDPR consent and privacy preferences if present
     status: u.status || 'green',
     consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false, bluetoothProximity: false },
     moderation: u.moderation || {
       warningsCount: 0,
       lastWarningAt: null,
@@ -63,7 +63,7 @@ export const UserProvider = ({ children }) => {
     role: 'user',
     status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
-    privacyPreferences: { analytics: false, marketing: false },
+    privacyPreferences: { analytics: false, marketing: false, bluetoothProximity: false },
     moderation: {
       warningsCount: 0,
       lastWarningAt: null,
@@ -139,7 +139,7 @@ export const UserProvider = ({ children }) => {
         role: 'user',
         status: 'green',
         consent: { accepted: false, version: '', consentAt: null },
-        privacyPreferences: { analytics: false, marketing: false },
+        privacyPreferences: { analytics: false, marketing: false, bluetoothProximity: false },
         moderation: {
           warningsCount: 0,
           lastWarningAt: null,

@@ -36,6 +36,7 @@ import VibeTransitOverlay from './components/VibeTransitOverlay';
 import VibeAmbientPulse from './components/VibeAmbientPulse';
 import { LocationSyncService } from './services/LocationSyncService';
 import { LocationService, ScanMode } from './services/LocationService';
+import { BluetoothProximityService } from './services/BluetoothProximityService';
 import { checkPendingCheckinVerification } from './components/CheckinVerificationScheduler';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
@@ -362,6 +363,25 @@ function AppShell({ purchasesReady }) {
     return () => {
       try {
         LocationService.cancelBackgroundStay();
+      } catch (_) {}
+    };
+  }, []);
+
+  // Démarre/arrête le scan+advertising BLE selon le consentement explicite de
+  // l'utilisateur (opt-in, désactivé par défaut — cf. SettingsScreen).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    if (appUser?.privacyPreferences?.bluetoothProximity) {
+      BluetoothProximityService.start().catch(() => {});
+    } else {
+      BluetoothProximityService.stop().catch(() => {});
+    }
+  }, [isAuthenticated, appUser?.privacyPreferences?.bluetoothProximity]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        BluetoothProximityService.stop();
       } catch (_) {}
     };
   }, []);

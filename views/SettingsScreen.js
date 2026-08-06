@@ -31,8 +31,10 @@ import {
   clearApiCache,
   redeemReferralCode,
   getMyUser,
+  updateBluetoothConsent,
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
+import { BluetoothProximityService } from '../services/BluetoothProximityService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
@@ -62,6 +64,8 @@ const SettingsScreen = () => {
   const [analytics, setAnalytics] = useState(!!user?.privacyPreferences?.analytics);
   const [marketing, setMarketing] = useState(!!user?.privacyPreferences?.marketing);
   const [doNotSell, setDoNotSell] = useState(!!user?.privacyPreferences?.doNotSell);
+  const [bluetoothProximity, setBluetoothProximity] = useState(!!user?.privacyPreferences?.bluetoothProximity);
+  const [bluetoothSaving, setBluetoothSaving] = useState(false);
 
   // Revocation (delete account) modal state
   const [revokeVisible, setRevokeVisible] = useState(false);
@@ -76,6 +80,7 @@ const SettingsScreen = () => {
       setAnalytics(!!user?.privacyPreferences?.analytics);
       setMarketing(!!user?.privacyPreferences?.marketing);
       setDoNotSell(!!user?.privacyPreferences?.doNotSell);
+      setBluetoothProximity(!!user?.privacyPreferences?.bluetoothProximity);
     } catch (_) {}
   }, [user]);
 
@@ -215,6 +220,37 @@ const SettingsScreen = () => {
   const handleToggleDoNotSell = async (v) => {
     setDoNotSell(v);
     await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing, doNotSell: v });
+  };
+
+  // Consentement distinct de celui de la localisation GPS (finalité RGPD
+  // séparée) : géré par son propre endpoint, indépendamment de saveConsent/
+  // persistConsentQuietly ci-dessus qui portent sur la politique globale.
+  const handleToggleBluetooth = async (v) => {
+    setBluetoothProximity(v);
+    setBluetoothSaving(true);
+    try {
+      const res = await updateBluetoothConsent(v);
+      if (updateUser) {
+        updateUser({
+          ...user,
+          privacyPreferences: {
+            ...(user?.privacyPreferences || {}),
+            ...(res?.user?.privacyPreferences || {}),
+            bluetoothProximity: v,
+          },
+        });
+      }
+      if (v) {
+        await BluetoothProximityService.start();
+      } else {
+        await BluetoothProximityService.stop();
+      }
+    } catch (e) {
+      setBluetoothProximity(!v);
+      Alert.alert('Erreur', e?.message || "Impossible de mettre à jour la proximité Bluetooth");
+    } finally {
+      setBluetoothSaving(false);
+    }
   };
 
   const saveConsent = async (accepted) => {
@@ -479,6 +515,30 @@ const SettingsScreen = () => {
               trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
               thumbColor={doNotSell ? '#fff' : '#f4f3f4'}
             />
+          </View>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={styles.sectionTitle}>PROXIMITÉ BLUETOOTH</Text>
+          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={[styles.optionText, { color: colors.textPrimary }]}>Détection Bluetooth à proximité</Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
+                Détecte les autres utilisateurs très proches de vous (quelques mètres) pour continuer à fonctionner
+                sans réseau et affiner votre position dans un lieu. Désactivé par défaut, distinct du consentement de
+                localisation GPS. Un identifiant temporaire et anonyme est utilisé, jamais votre identité.
+              </Text>
+            </View>
+            {bluetoothSaving ? (
+              <ActivityIndicator size="small" color="#00c2cb" />
+            ) : (
+              <Switch
+                value={bluetoothProximity}
+                onValueChange={handleToggleBluetooth}
+                trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                thumbColor={bluetoothProximity ? '#fff' : '#f4f3f4'}
+              />
+            )}
           </View>
         </View>
 

@@ -37,13 +37,16 @@
         },
         "UIBackgroundModes": [
           "location",
-          "remote-notification"
+          "remote-notification",
+          "bluetooth-central",
+          "bluetooth-peripheral"
         ],
         "NSLocationWhenInUseUsageDescription": "Votre position est utilisée pour afficher les utilisateurs autour de vous.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
         "NSLocationAlwaysUsageDescription": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
         "NSCameraUsageDescription": "LoocateMe utilise votre appareil photo pour prendre une photo de profil ou l'envoyer dans une conversation.",
         "NSPhotoLibraryUsageDescription": "LoocateMe accède à votre photothèque pour choisir une photo de profil ou l'envoyer dans une conversation.",
+        "NSBluetoothAlwaysUsageDescription": "Si vous l'activez, LoocateMe utilise le Bluetooth pour détecter les autres utilisateurs à proximité immédiate, y compris sans connexion réseau, et affiner votre position dans un lieu. Cette fonctionnalité est optionnelle et désactivée par défaut.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -57,7 +60,10 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
         "CAMERA",
-        "READ_MEDIA_IMAGES"
+        "READ_MEDIA_IMAGES",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_ADVERTISE",
+        "BLUETOOTH_CONNECT"
       ],
       "intentFilters": [
         {
@@ -118,6 +124,14 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez."
+        }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": ["peripheral", "central"],
+          "bluetoothAlwaysPermission": "Si vous l'activez, LoocateMe utilise le Bluetooth pour détecter les autres utilisateurs à proximité immédiate, y compris sans connexion réseau, et affiner votre position dans un lieu. Cette fonctionnalité est optionnelle et désactivée par défaut."
         }
       ],
       "@react-native-community/datetimepicker",

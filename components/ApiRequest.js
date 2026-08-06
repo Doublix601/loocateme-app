@@ -554,6 +554,18 @@ export async function forceCheckOut() {
   return request('/users/location/force-checkout', { method: 'POST' });
 }
 
+export async function updateBluetoothConsent(enabled) {
+  return request('/users/ble-consent', { method: 'PUT', body: { enabled: !!enabled } });
+}
+
+export async function issueBleToken() {
+  return request('/users/ble-token', { method: 'POST' });
+}
+
+export async function reportBleSightings(sightings) {
+  return request('/users/ble-sightings', { method: 'POST', body: { sightings } });
+}
+
 export async function getUsersAroundMe({ lat, lon, radius = 2000 }) {
   const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
   return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
