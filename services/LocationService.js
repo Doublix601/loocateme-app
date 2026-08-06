@@ -112,13 +112,29 @@ async function confirmLocalVenue(locationId, candidates, lat, lon) {
 async function tryLocalOfflineResolution(lat, lon) {
   try {
     // Déjà répondu récemment (auto ou manuellement) sans avoir bougé depuis :
-    // on ne re-sollicite pas l'utilisateur à chaque cycle.
-    if (isOfflineAnswerStillValid(lat, lon)) return offlineAnswer.locationId;
+    // on ne re-sollicite pas l'utilisateur à chaque cycle. Ne s'applique que
+    // si on a une position à comparer (voir cas "aucune position du tout"
+    // ci-dessous, qui ne peut de toute façon pas savoir s'il a bougé).
+    if (lat != null && lon != null && isOfflineAnswerStillValid(lat, lon)) return offlineAnswer.locationId;
 
     const cached = await getCachedNearbyVenues();
     if (!cached.length) {
       try {
         publish('ble:local-venue-unresolved', { candidates: [] });
+      } catch (_) {}
+      return null;
+    }
+
+    // Aucune position exploitable (GPS jamais fixé, ex : sous-sol avec wifi
+    // mais sans réception satellite) : impossible de filtrer par distance.
+    // On teste tous les lieux du cache comme candidats via BLE uniquement —
+    // la portée physique du signal (quelques mètres) fait déjà le filtrage.
+    if (lat == null || lon == null) {
+      const candidateIds = cached.map((v) => v.id);
+      const resolved = BluetoothProximityService.resolveVenueLocally(candidateIds);
+      if (resolved) return await confirmLocalVenue(resolved, cached, null, null);
+      try {
+        publish('ble:local-venue-unresolved', { candidates: cached.map((c) => ({ id: c.id, name: c.name })) });
       } catch (_) {}
       return null;
     }
@@ -207,8 +223,9 @@ async function offlinePromptTick() {
     if (net?.isConnected && net?.isInternetReachable) return; // réseau dispo : rien à faire ici
     if (!BluetoothProximityService.isActive()) return;
     const coords = await getLastKnownCoordsOnly();
-    if (!coords) return;
-    await tryLocalOfflineResolution(coords.latitude, coords.longitude);
+    // Pas de coords du tout (GPS jamais fixé) : tryLocalOfflineResolution
+    // gère ce cas en testant tous les candidats du cache via BLE seul.
+    await tryLocalOfflineResolution(coords?.latitude ?? null, coords?.longitude ?? null);
   } catch (_) {
     // best-effort
   }
@@ -233,10 +250,51 @@ async function getBalancedPosition() {
   }
 }
 
+// Aucun GPS exploitable, mais le Bluetooth est actif. Priorité au serveur
+// s'il est joignable (résultat "officiel", visible par tout le monde
+// immédiatement) ; sinon repli sur la résolution locale (cf.
+// tryLocalOfflineResolution), qui gère déjà le cas "aucune position".
+async function tryGpsLessCheckIn() {
+  const net = await NetInfo.fetch();
+  if (net?.isConnected && net?.isInternetReachable) {
+    try {
+      const { checkInViaBle } = await import('../components/ApiRequest');
+      const res = await checkInViaBle();
+      if (res?.resolved && res?.user) {
+        try {
+          publish('userlist:refresh');
+        } catch (_) {}
+        const locationId = res.user.currentLocation;
+        try {
+          await BluetoothProximityService.setLocalConfirmedVenue(locationId ? String(locationId) : null);
+        } catch (_) {}
+        return true;
+      }
+      // Réseau dispo mais aucun pair BLE confirmé à proximité pour trancher :
+      // pas d'erreur, juste rien à en tirer pour l'instant.
+      return false;
+    } catch (e) {
+      console.warn('[LocationService] checkInViaBle failed', e?.message || e);
+      // Tombe au repli local ci-dessous.
+    }
+  }
+  const coords = await getLastKnownCoordsOnly();
+  const resolved = await tryLocalOfflineResolution(coords?.latitude ?? null, coords?.longitude ?? null);
+  return !!resolved;
+}
+
 async function immediateCheckIn(force = true) {
   if (isLocationHeartbeatSuppressed()) return false;
   const pos = await getBalancedPosition();
-  if (!pos?.coords) return false;
+  if (!pos?.coords) {
+    // Pas de GPS du tout (ex : sous-sol avec wifi, satellites bloqués) :
+    // le réseau peut malgré tout être disponible, donc pas la peine
+    // d'abandonner. Si le Bluetooth est actif, on tente un check-in basé
+    // uniquement sur les pairs déjà confirmés à proximité (serveur si en
+    // ligne, sinon résolution locale via le cache).
+    if (!BluetoothProximityService.isActive()) return false;
+    return await tryGpsLessCheckIn();
+  }
 
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;

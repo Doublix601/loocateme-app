@@ -566,6 +566,13 @@ export async function reportBleSightings(sightings) {
   return request('/users/ble-sightings', { method: 'POST', body: { sightings } });
 }
 
+// Réseau disponible mais pas de position GPS exploitable (ex : sous-sol avec
+// wifi, satellites bloqués) : check-in basé uniquement sur les pairs BLE déjà
+// confirmés à proximité, sans aucune coordonnée.
+export async function checkInViaBle() {
+  return request('/users/ble-checkin', { method: 'POST' });
+}
+
 export async function getUsersAroundMe({ lat, lon, radius = 2000 }) {
   const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
   return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
