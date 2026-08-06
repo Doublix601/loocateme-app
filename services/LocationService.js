@@ -53,29 +53,57 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Même marge que MIN_LEAD_M côté serveur (user.service.js) : évite un faux
+// check-in local causé par l'imprécision GPS quand deux lieux voisins sont
+// à moins de 12 m l'un de l'autre.
+const LOCAL_MIN_LEAD_M = 12;
+
+async function confirmLocalVenue(locationId) {
+  await BluetoothProximityService.setLocalConfirmedVenue(locationId);
+  try {
+    publish('ble:local-venue-resolved', { locationId });
+  } catch (_) {}
+  return locationId;
+}
+
 // Dernier recours quand le réseau est indisponible (et peut ne jamais
 // revenir) : au lieu d'abandonner le check-in, on tente une résolution
-// purement locale, en confrontant les lieux GPS-candidats proches (cache
-// local, cf. NearbyVenueCache) aux détections BLE d'autres utilisateurs déjà
-// confirmés sur place — sans aucun appel serveur. Optimiste et best-effort :
-// la vérité "officielle" sera de toute façon recalculée côté serveur dès que
-// le réseau (et donc le heartbeat GPS normal) reviendra.
+// purement locale à partir de la dernière position GPS connue et du cache
+// des lieux proches (cf. NearbyVenueCache) — sans aucun appel serveur.
+//
+// S'il n'y a qu'un seul lieu candidat à proximité (cas courant : "le seul
+// lieu autour de moi est celui dans lequel je viens d'entrer"), il n'y a pas
+// besoin d'un autre utilisateur BLE pour confirmer, exactement comme le
+// ferait le serveur. Le pairing BLE (resolveVenueLocally) n'intervient qu'en
+// cas d'ambiguïté (plusieurs lieux proches), pour départager comme le fait
+// resolveAmbiguousVenueViaBle côté serveur.
 async function tryLocalOfflineResolution(lat, lon) {
   try {
     const cached = await getCachedNearbyVenues();
     if (!cached.length) return null;
-    const candidateIds = cached
-      .filter((v) => haversineMeters(lat, lon, v.lat, v.lon) <= (v.radius || 50))
-      .map((v) => v.id);
-    if (!candidateIds.length) return null;
-    const resolved = BluetoothProximityService.resolveVenueLocally(candidateIds);
-    if (resolved) {
-      await BluetoothProximityService.setLocalConfirmedVenue(resolved);
-      try {
-        publish('ble:local-venue-resolved', { locationId: resolved });
-      } catch (_) {}
+
+    const candidates = cached
+      .map((v) => ({ ...v, dist: haversineMeters(lat, lon, v.lat, v.lon) }))
+      .filter((v) => v.dist <= (v.radius || 50))
+      .sort((a, b) => a.dist - b.dist);
+
+    if (!candidates.length) return null;
+
+    const nearest = candidates[0];
+    const second = candidates[1];
+    const hasMinLead = !second || second.dist - nearest.dist >= LOCAL_MIN_LEAD_M;
+    if (hasMinLead) {
+      // Un seul lieu plausible (ou nettement le plus proche) : pas besoin de
+      // confirmation par un pair, comme le ferait le serveur.
+      return await confirmLocalVenue(nearest.id);
     }
-    return resolved;
+
+    // Ambiguïté (plusieurs lieux trop proches) : on a besoin d'un pair déjà
+    // confirmé sur l'un des candidats pour trancher.
+    const candidateIds = candidates.map((v) => v.id);
+    const resolved = BluetoothProximityService.resolveVenueLocally(candidateIds);
+    if (resolved) return await confirmLocalVenue(resolved);
+    return null;
   } catch (_) {
     return null;
   }
