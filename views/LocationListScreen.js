@@ -1013,7 +1013,16 @@ const LocationListScreen = () => {
     } catch (e) {
       console.error('Error fetching locations:', e);
     } finally {
-      if (!silent && myRequestId === fetchRequestIdRef.current) setLoading(false);
+      // NB: `setLoading` n'est PAS gardé par `myRequestId` contrairement à
+      // `setLocations`/`setHasMore` ci-dessus. Chaque fetchNearbyLocations()
+      // déclenche en interne un POST /users/location qui publie 'api:mutation',
+      // capté par l'abonnement ci-dessous qui relance aussitôt un fetch
+      // "silent" (donc sans reset de loading) — ce qui incrémente
+      // fetchRequestIdRef AVANT que l'appel initial (non-silent) n'atteigne ce
+      // bloc. Si on gardait ce reset par la même staleness-guard, `loading`
+      // resterait bloqué à `true` indéfiniment (aucun appel "silent" ne le
+      // remet jamais à false), et la liste semblerait ne plus jamais charger.
+      if (!silent) setLoading(false);
     }
   };
 
