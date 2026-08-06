@@ -1017,28 +1017,6 @@ const LocationListScreen = () => {
     setRefreshing(false);
   };
 
-  // Rafraîchissement manuel de la vue carte (bouton dédié, la WebView n'a pas
-  // de pull-to-refresh) : on réutilise la même fonction que le pull-to-refresh
-  // de la liste, en silence pour ne pas afficher le loader plein écran. On
-  // réactualise à la fois la liste (près de la position réelle, pour la
-  // présence des autres utilisateurs) ET l'accumulateur de la carte via
-  // refreshMapData (centré sur le dernier viewport pané, pas seulement la
-  // position de l'utilisateur) — sinon un utilisateur ayant pané la carte
-  // loin de chez lui ne verrait aucun effet au clic sur le bouton.
-  const [mapRefreshing, setMapRefreshing] = useState(false);
-  const handleMapManualRefresh = useCallback(async () => {
-    if (mapRefreshing) return;
-    setMapRefreshing(true);
-    try {
-      await Promise.all([
-        fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe }),
-        refreshMapData(vibe),
-      ]);
-    } finally {
-      setMapRefreshing(false);
-    }
-  }, [mapRefreshing, vibe, refreshMapData]);
-
   // Rafraîchissement silencieux de la liste/carte à chaque reprise de focus
   // de l'écran (retour depuis LocationScreen, changement d'onglet, etc.),
   // pour que la présence des autres utilisateurs reste à jour sans action
@@ -1348,7 +1326,6 @@ const LocationListScreen = () => {
               onSelectLocation={handleSelectLocation}
               onViewportChange={handleMapViewportChange}
               onClusterOpen={handleClusterOpen}
-              onRefresh={handleMapManualRefresh}
             />
           </View>
         ) : null}

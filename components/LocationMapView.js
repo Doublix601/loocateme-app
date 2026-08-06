@@ -35,7 +35,6 @@ export default function LocationMapView({
   onSelectLocation,
   onViewportChange,
   onClusterOpen,
-  onRefresh,
 }) {
   const { lockSwiper, unlockSwiper } = useMainSwiper();
   const { palette } = useVibeTheme();
@@ -44,20 +43,6 @@ export default function LocationMapView({
   const [loadError, setLoadError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [htmlUri, setHtmlUri] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Rafraîchissement manuel des données de la carte (la WebView n'a pas de
-  // pull-to-refresh natif) : l'appelant (LocationListScreen) fournit la
-  // fonction de refetch, on ne gère ici que le spinner du bouton.
-  const handleManualRefresh = useCallback(async () => {
-    if (!onRefresh || isRefreshing) return;
-    setIsRefreshing(true);
-    try {
-      await onRefresh();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [onRefresh, isRefreshing]);
 
   useEffect(() => {
     let cancelled = false;
@@ -282,21 +267,6 @@ export default function LocationMapView({
           <Ionicons name={currentPoiId ? 'navigate' : 'locate'} size={20} color={palette.accent} />
         </TouchableOpacity>
       ) : null}
-      {onRefresh && !isLoading && !loadError ? (
-        <TouchableOpacity
-          onPress={handleManualRefresh}
-          activeOpacity={0.8}
-          disabled={isRefreshing}
-          style={[styles.refreshBtn, { backgroundColor: palette.surface, shadowColor: '#000' }]}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          {isRefreshing ? (
-            <ActivityIndicator size="small" color={palette.accent} />
-          ) : (
-            <Ionicons name="refresh" size={20} color={palette.accent} />
-          )}
-        </TouchableOpacity>
-      ) : null}
     </View>
   );
 }
@@ -319,20 +289,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     bottom: 44,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  refreshBtn: {
-    position: 'absolute',
-    right: 16,
-    bottom: 96,
     width: 44,
     height: 44,
     borderRadius: 22,
