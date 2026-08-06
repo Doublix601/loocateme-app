@@ -283,6 +283,52 @@ async function tryGpsLessCheckIn() {
   return !!resolved;
 }
 
+// Estimation locale immédiate du lieu probable, à partir du cache des lieux
+// proches déjà vus par l'app (cf. NearbyVenueCache), sans aucun appel réseau.
+// Sert uniquement à donner un retour visuel instantané à l'utilisateur
+// ("vous êtes ici") pendant que le vrai check-in attend son TTL (throttle
+// serveur, cf. `shouldSend` / dwell timer BACKGROUND_STAY ci-dessous) — la
+// valeur affichée est ensuite reconciliée avec la vérité serveur au prochain
+// heartbeat (cf. usePresence.js, qui appelle déjà `updateUser` avec la
+// réponse du serveur, y compris pour corriger une estimation locale erronée).
+// On ne devine que s'il y a un candidat clairement le plus proche (même règle
+// de marge que la résolution offline, cf. LOCAL_MIN_LEAD_M) : en cas
+// d'ambiguïté, on préfère ne rien afficher plutôt que d'afficher un mauvais lieu.
+async function guessLikelyVenueLocally(lat, lon) {
+  try {
+    if (lat == null || lon == null) return null;
+    const cached = await getCachedNearbyVenues();
+    if (!cached.length) return null;
+
+    const candidates = cached
+      .map((v) => ({ ...v, dist: haversineMeters(lat, lon, v.lat, v.lon) }))
+      .filter((v) => v.dist <= (v.radius || 50))
+      .sort((a, b) => a.dist - b.dist);
+
+    if (!candidates.length) return null;
+
+    const nearest = candidates[0];
+    const second = candidates[1];
+    const hasMinLead = !second || second.dist - nearest.dist >= LOCAL_MIN_LEAD_M;
+    return hasMinLead ? nearest.id : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function publishOptimisticCheckIn() {
+  try {
+    const pos = await getBalancedPosition();
+    if (!pos?.coords) return;
+    const locationId = await guessLikelyVenueLocally(pos.coords.latitude, pos.coords.longitude);
+    if (locationId) {
+      publish('presence:optimistic', { locationId });
+    }
+  } catch (_) {
+    // best-effort : une estimation ratée ne doit jamais bloquer le vrai check-in
+  }
+}
+
 async function immediateCheckIn(force = true) {
   if (isLocationHeartbeatSuppressed()) return false;
   const pos = await getBalancedPosition();
@@ -406,6 +452,12 @@ export const LocationService = {
       };
 
       if (perms.hasBg) {
+        // Retour visuel instantané pendant le buffer de 2 minutes : on tente
+        // une estimation locale du lieu (sans appel serveur) pour que
+        // l'utilisateur voie tout de suite "vous êtes ici" au lieu de croire
+        // à un bug. La valeur réelle est confirmée/corrigée dès le prochain
+        // heartbeat (cf. usePresence.js).
+        publishOptimisticCheckIn();
         // Start 2-minute dwell timer
         schedule();
         return true;

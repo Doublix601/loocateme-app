@@ -165,6 +165,17 @@ export const UserProvider = ({ children }) => {
         // silent
       }
     });
+    // Retour visuel instantané du check-in (cf. LocationService.publishOptimisticCheckIn) :
+    // affiche immédiatement "vous êtes ici" à partir d'une estimation locale,
+    // avant même que le vrai check-in (throttlé côté serveur) ait résolu. La
+    // valeur est ensuite écrasée par la vérité serveur au prochain heartbeat
+    // (usePresence.js), qui appelle déjà `updateUser` avec la réponse réelle —
+    // aucune reconciliation manuelle n'est donc nécessaire ici.
+    const offOptimisticCheckIn = subscribe('presence:optimistic', ({ locationId } = {}) => {
+      if (!locationId) return;
+      setUser((prev) => (prev.currentPoiId === locationId ? prev : { ...prev, currentPoiId: locationId }));
+    });
+
     // Lorsque le backend signale un reload UI (abonnement changé), recharger le profil
     const offUiReload = subscribe('ui:reload', async () => {
       try {
@@ -179,6 +190,7 @@ export const UserProvider = ({ children }) => {
     return () => {
       offLogout();
       offLogin();
+      offOptimisticCheckIn();
       offUiReload();
     };
   }, []);
