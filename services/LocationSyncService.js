@@ -15,8 +15,13 @@ const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // la catégorie Éducation — seuls "university" et "college" (universités, écoles
 // supérieures type UTC, IFSI, AFPA...) doivent apparaître dans l'app. Bump pour
 // forcer un re-sync qui repeuple sans ces établissements.
-const LAST_SYNC_KEY = 'loocateme_last_osm_sync_v5';
-const LAST_SYNC_POS_KEY = 'loocateme_last_osm_sync_pos_v5';
+// v6: ajout des clés OSM "shop" (marketplace → Marché) et "tourism" (museum → Musée) en
+// complément d'amenity/leisure, ajout de "leisure=park" (Parc, mode jour), et nouvelle
+// catégorie "Loisir 🎯" (mode nuit exclusivement) regroupant bowling, karting, escape
+// game, laser game, salle de jeux — fusionnée avec l'ancienne catégorie "Bowling 🎳".
+// Bump pour forcer un re-sync qui repeuple/recatégorise avec ces nouveaux tags.
+const LAST_SYNC_KEY = 'loocateme_last_osm_sync_v6';
+const LAST_SYNC_POS_KEY = 'loocateme_last_osm_sync_pos_v6';
 
 // Rayon de recherche Overpass (en mètres). 50 km couvre la majorité des
 // déplacements quotidiens / week-end sans saturer la requête Overpass.
@@ -79,14 +84,24 @@ export const LocationSyncService = {
       // les deux vibes (jour/nuit) pour garantir un minimum de lieux affichables.
       const AMENITY_RE =
         'bar|pub|nightclub|library|university|college|food_court|cinema|ice_cream|restaurant|cafe|fast_food|gym';
-      const LEISURE_RE = 'fitness_centre|beach_resort|theme_park|sports_centre|bowling_alley|stadium|pitch';
+      const LEISURE_RE =
+        'fitness_centre|beach_resort|theme_park|sports_centre|bowling_alley|stadium|pitch|park|escape_game|laser_tag|adult_gaming_centre';
+      const SHOP_RE = 'marketplace';
+      const TOURISM_RE = 'museum';
+      const SPORT_RE = 'karting';
       const query = `
 [out:json];
 (
   node["amenity"~"${AMENITY_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
   node["leisure"~"${LEISURE_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
+  node["shop"~"${SHOP_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
+  node["tourism"~"${TOURISM_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
+  node["sport"~"${SPORT_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
   way["amenity"~"${AMENITY_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
   way["leisure"~"${LEISURE_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
+  way["shop"~"${SHOP_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
+  way["tourism"~"${TOURISM_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
+  way["sport"~"${SPORT_RE}"](around:${OVERPASS_RADIUS_M}, ${lat}, ${lon});
 );
 out center;
 `;
@@ -124,6 +139,9 @@ out center;
           let type = null;
           const amenity = el.tags?.amenity;
           const leisure = el.tags?.leisure;
+          const shop = el.tags?.shop;
+          const tourism = el.tags?.tourism;
+          const sport = el.tags?.sport;
 
           if (amenity === 'bar' || amenity === 'pub') type = 'Bar 🍺';
           else if (amenity === 'nightclub') type = 'Boîte de nuit 🪩';
@@ -136,10 +154,21 @@ out center;
           else if (amenity === 'library') type = 'Bibliothèque 📚';
           else if (leisure === 'sports_centre' || leisure === 'stadium' || leisure === 'pitch')
             type = 'Centre sportif 🏟️';
-          else if (leisure === 'bowling_alley') type = 'Bowling 🎳';
           else if (amenity === 'university' || amenity === 'college') type = 'Éducation 🎓';
           else if (amenity === 'cinema') type = 'Cinéma 🎬';
           else if (amenity === 'ice_cream') type = 'Glacier 🍦';
+          else if (shop === 'marketplace') type = 'Marché 🛒';
+          else if (tourism === 'museum') type = 'Musée 🏛️';
+          else if (leisure === 'park') type = 'Parc 🌳';
+          // Loisir 🎯 : bowling, karting, escape game, laser game, arcade — mode nuit exclusivement.
+          else if (
+            leisure === 'bowling_alley' ||
+            leisure === 'escape_game' ||
+            leisure === 'laser_tag' ||
+            leisure === 'adult_gaming_centre' ||
+            sport === 'karting'
+          )
+            type = 'Loisir 🎯';
 
           const elLat = el.lat || el.center?.lat;
           const elLon = el.lon || el.center?.lon;

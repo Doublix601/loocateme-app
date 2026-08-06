@@ -28,16 +28,23 @@ let lastResult = { bboxKey: null, pois: [] };
 const CATEGORIES_BY_VIBE = {
   moon: {
     amenity: ['bar', 'pub', 'biergarten', 'nightclub'],
-    leisure: [],
+    leisure: ['bowling_alley', 'escape_game', 'laser_tag', 'adult_gaming_centre'],
+    shop: [],
+    tourism: [],
+    sport: ['karting'],
     backend: [
       'Bar 🍺',
       'Boîte de nuit 🪩',
+      'Loisir 🎯',
       'TEST 🤖',
     ],
   },
   sun: {
     amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'marketplace', 'museum', 'restaurant', 'cinema', 'fast_food', 'food_court'],
-    leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach', 'bowling_alley'],
+    leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach'],
+    shop: ['marketplace'],
+    tourism: ['museum'],
+    sport: [],
     backend: [
       'Café ☕',
       'Coworking 🧑‍💻',
@@ -55,7 +62,6 @@ const CATEGORIES_BY_VIBE = {
       'Restaurant 🍴',
       'Cinéma 🎬',
       'Fast food 🍔',
-      'Bowling 🎳',
       'Rooftop 🌆',
       'Karaoké 🎤',
       'Club de jeux 🎮',
@@ -72,11 +78,17 @@ export const ALLOWED_TYPES_BY_VIBE = {
   moon: new Set([
     ...CATEGORIES_BY_VIBE.moon.amenity,
     ...CATEGORIES_BY_VIBE.moon.leisure,
+    ...CATEGORIES_BY_VIBE.moon.shop,
+    ...CATEGORIES_BY_VIBE.moon.tourism,
+    ...CATEGORIES_BY_VIBE.moon.sport,
     ...CATEGORIES_BY_VIBE.moon.backend,
   ]),
   sun: new Set([
     ...CATEGORIES_BY_VIBE.sun.amenity,
     ...CATEGORIES_BY_VIBE.sun.leisure,
+    ...CATEGORIES_BY_VIBE.sun.shop,
+    ...CATEGORIES_BY_VIBE.sun.tourism,
+    ...CATEGORIES_BY_VIBE.sun.sport,
     ...CATEGORIES_BY_VIBE.sun.backend,
   ]),
 };
@@ -116,6 +128,15 @@ function buildQuery({ lat, lon, radius = 1200, vibe = 'sun' }) {
   if (cats.leisure && cats.leisure.length > 0) {
     parts.push(`node["leisure"~"^(${cats.leisure.join('|')})$"](around:${radius},${lat},${lon});`);
   }
+  if (cats.shop && cats.shop.length > 0) {
+    parts.push(`node["shop"~"^(${cats.shop.join('|')})$"](around:${radius},${lat},${lon});`);
+  }
+  if (cats.tourism && cats.tourism.length > 0) {
+    parts.push(`node["tourism"~"^(${cats.tourism.join('|')})$"](around:${radius},${lat},${lon});`);
+  }
+  if (cats.sport && cats.sport.length > 0) {
+    parts.push(`node["sport"~"^(${cats.sport.join('|')})$"](around:${radius},${lat},${lon});`);
+  }
   const filters = parts.join('\n');
   return `[out:json][timeout:${OVERPASS_SERVER_TIMEOUT_S}];(\n${filters}\n);out body;`;
 }
@@ -142,7 +163,7 @@ function normalize(elements = []) {
     .filter((e) => e && e.type === 'node' && e.tags?.name)
     .map((e) => {
       const name = e.tags.name;
-      const type = e.tags?.amenity || e.tags?.leisure || 'poi';
+      const type = e.tags?.amenity || e.tags?.leisure || e.tags?.shop || e.tags?.tourism || e.tags?.sport || 'poi';
       return {
         _id: `osm:${e.id}`,
         osmId: e.id,
