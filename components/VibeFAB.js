@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVibe } from './contexts/VibeContext';
 import { useTheme } from './contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ const LOADING_DURATION_MS = VIBE_TRANSITION_DURATION_MS;
 export default function VibeFAB() {
   const { isMoon, beginVibeTransition } = useVibe();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   // Optional dependency: expo-haptics. Fallback to no-op when not installed.
   const Haptics = React.useMemo(() => {
@@ -108,7 +110,7 @@ export default function VibeFAB() {
   const moonStyle = useAnimatedStyle(() => ({ opacity: moonOpacity.value, position: 'absolute' }));
 
   return (
-    <View pointerEvents="box-none" style={styles.container}>
+    <View pointerEvents="box-none" style={[styles.container, { bottom: TAB_BAR_HEIGHT + insets.bottom + 4 }]}>
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel={isMoon ? 'Passer en mode jour' : 'Passer en mode nuit'}
@@ -133,12 +135,12 @@ export default function VibeFAB() {
 }
 
 const FAB_SIZE = 56; // ≥ 44x44 ergonomic minimum
+const TAB_BAR_HEIGHT = 92; // must match MainTabBar's height so the FAB clears it
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 24,
     alignItems: 'center',
   },
   fab: {

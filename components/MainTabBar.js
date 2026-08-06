@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './contexts/ThemeContext';
@@ -7,7 +7,7 @@ import { useMainSwiper } from './contexts/MainSwiperContext';
 
 const TABS = [
   { page: 0, label: 'Recherche', icon: 'search-outline', iconActive: 'search' },
-  { page: 1, label: 'Lieux', icon: 'list-outline', iconActive: 'list' },
+  { page: 1, label: 'Lieux', icon: 'location-outline', iconActive: 'location' },
   { page: 2, label: 'Compte', icon: 'person-outline', iconActive: 'person' },
 ];
 
@@ -21,9 +21,10 @@ export default function MainTabBar() {
       style={[
         styles.container,
         {
-          paddingBottom: insets.bottom,
+          paddingBottom: insets.bottom + 8,
+          paddingTop: 22,
           backgroundColor: colors.surface,
-          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+          borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
         },
       ]}
     >
@@ -38,11 +39,31 @@ export default function MainTabBar() {
             activeOpacity={0.7}
             onPress={() => goToPage(tab.page)}
           >
-            <Ionicons
-              name={active ? tab.iconActive : tab.icon}
-              size={24}
-              color={active ? colors.accent : colors.textMuted}
-            />
+            <View
+              style={[
+                styles.iconPill,
+                active && {
+                  backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : colors.accentSoft || 'rgba(0,0,0,0.06)',
+                  shadowColor: colors.accent,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: isDark ? 0.35 : 0.18,
+                  shadowRadius: 6,
+                  elevation: active ? 3 : 0,
+                },
+              ]}
+            >
+              <Ionicons
+                name={active ? tab.iconActive : tab.icon}
+                size={22}
+                color={active ? colors.accent : colors.textMuted}
+              />
+            </View>
+            <Text
+              style={[styles.label, { color: active ? colors.accent : colors.textMuted }]}
+              numberOfLines={1}
+            >
+              {tab.label}
+            </Text>
           </TouchableOpacity>
         );
       })}
@@ -57,17 +78,32 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     flexDirection: 'row',
-    height: 56,
+    height: 92,
     borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconPill: {
+    width: 52,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    marginTop: 5,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.2,
   },
 });

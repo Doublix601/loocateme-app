@@ -1171,14 +1171,6 @@ const LocationListScreen = () => {
           <Ionicons name={viewMode === 'list' ? 'map-outline' : 'list-outline'} size={22} color="#00c2cb" />
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => goToPage(0)}
-          style={styles.headerIconButton}
-          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-          accessibilityLabel="Rechercher"
-        >
-          <Text style={{ fontSize: 22 }}>🔎</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           onPress={() => goToPage(2)}
           style={styles.headerProfileButton}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
