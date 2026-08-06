@@ -94,37 +94,45 @@ export default function MainTabBar() {
     <View style={[styles.wrapper, { bottom: insets.bottom + 8 }]} pointerEvents="box-none">
       <View
         style={[
-          styles.container,
+          styles.shadowWrap,
           {
-            backgroundColor: isDark ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.98)',
-            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
             shadowColor: '#000',
-            shadowOpacity: isDark ? 0.45 : 0.22,
+            shadowOpacity: isDark ? 0.5 : 0.28,
           },
         ]}
       >
-        <Animated.View
-          pointerEvents="none"
+        <View
           style={[
-            styles.indicator,
+            styles.container,
             {
-              width: TAB_WIDTH,
-              left: BAR_PADDING,
-              backgroundColor: colors.accentSoft,
-              transform: [{ translateX: indicatorX }],
+              backgroundColor: isDark ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.98)',
+              borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
             },
           ]}
-        />
-        {TABS.map((tab) => (
-          <TabItem
-            key={tab.page}
-            tab={tab}
-            active={currentPage === tab.page}
-            colors={colors}
-            isDark={isDark}
-            onPress={() => goToPage(tab.page)}
+        >
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.indicator,
+              {
+                width: TAB_WIDTH,
+                left: BAR_PADDING,
+                backgroundColor: colors.accentSoft,
+                transform: [{ translateX: indicatorX }],
+              },
+            ]}
           />
-        ))}
+          {TABS.map((tab) => (
+            <TabItem
+              key={tab.page}
+              tab={tab}
+              active={currentPage === tab.page}
+              colors={colors}
+              isDark={isDark}
+              onPress={() => goToPage(tab.page)}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -137,6 +145,12 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
+  shadowWrap: {
+    borderRadius: 34,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 20,
+    elevation: 12,
+  },
   container: {
     flexDirection: 'row',
     width: BAR_WIDTH,
@@ -144,9 +158,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: BAR_PADDING,
     borderRadius: 34,
     borderWidth: StyleSheet.hairlineWidth,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 20,
-    elevation: 12,
     overflow: 'hidden',
   },
   indicator: {
