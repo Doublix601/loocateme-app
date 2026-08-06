@@ -13,8 +13,9 @@ const TABS = [
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BAR_MARGIN = 16;
+const BAR_PADDING = 8;
 const BAR_WIDTH = SCREEN_WIDTH - BAR_MARGIN * 2;
-const TAB_WIDTH = BAR_WIDTH / TABS.length;
+const TAB_WIDTH = (BAR_WIDTH - BAR_PADDING * 2) / TABS.length;
 
 function TabItem({ tab, active, colors, isDark, onPress }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -65,7 +66,7 @@ function TabItem({ tab, active, colors, isDark, onPress }) {
         >
           <Ionicons
             name={active ? tab.iconActive : tab.icon}
-            size={21}
+            size={23}
             color={active ? '#ffffff' : colors.textMuted}
           />
         </View>
@@ -108,6 +109,7 @@ export default function MainTabBar() {
             styles.indicator,
             {
               width: TAB_WIDTH,
+              left: BAR_PADDING,
               backgroundColor: colors.accentSoft,
               transform: [{ translateX: indicatorX }],
             },
@@ -138,8 +140,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     width: BAR_WIDTH,
-    height: 52,
-    borderRadius: 26,
+    height: 68,
+    paddingHorizontal: BAR_PADDING,
+    borderRadius: 34,
     borderWidth: StyleSheet.hairlineWidth,
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 16,
@@ -148,9 +151,9 @@ const styles = StyleSheet.create({
   },
   indicator: {
     position: 'absolute',
-    top: 6,
-    bottom: 6,
-    borderRadius: 20,
+    top: 8,
+    bottom: 8,
+    borderRadius: 26,
   },
   tab: {
     width: TAB_WIDTH,
@@ -158,9 +161,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconPill: {
-    width: 44,
-    height: 34,
-    borderRadius: 17,
+    width: 48,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
