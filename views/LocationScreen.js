@@ -280,6 +280,34 @@ const LocationScreen = () => {
   // Sans la suppression du heartbeat, le prochain heartbeat GPS (toutes les
   // 30-60s, cf. hooks/usePresence.js) re-matche l'utilisateur sur ce même
   // lieu et annule le check-out en quelques secondes.
+  // "Je ne suis dans aucun lieu" depuis la modale de vérification "Es-tu bien
+  // ici ?" : contrairement à handleForceCheckoutPress (outil dev), disponible
+  // en production — corrige un faux positif de détection GPS.
+  const handleNotHereFromVerify = async () => {
+    setVerifyModalVisible(false);
+    if (correcting) return;
+    if (isBoosted) {
+      Alert.alert('Boost en cours', 'Ton boost est actif ici : attends qu\'il se termine pour te retirer de ce lieu.');
+      return;
+    }
+    setCorrecting(true);
+    try {
+      const res = await forceCheckOut();
+      suppressLocationHeartbeat();
+      await cancelCheckinVerification();
+      if (res?.user) updateUser(mapBackendUser(res.user));
+      refresh();
+    } catch (e) {
+      if (e?.code === 'BOOST_ACTIVE') {
+        Alert.alert('Boost en cours', e?.message || 'Ton boost est actif : attends qu\'il se termine.');
+      } else {
+        console.warn('[LocationScreen] handleNotHereFromVerify failed', e?.message || e);
+      }
+    } finally {
+      setCorrecting(false);
+    }
+  };
+
   const handleForceCheckoutPress = async () => {
     if (!__DEV__ || correcting) return;
     if (isBoosted) {
@@ -950,6 +978,7 @@ const LocationScreen = () => {
         locationName={location?.name}
         onConfirm={handleConfirmCheckin}
         onCorrect={handleCorrectCheckin}
+        onNotHere={handleNotHereFromVerify}
         onClose={() => setVerifyModalVisible(false)}
       />
       <NearbyLocationPicker

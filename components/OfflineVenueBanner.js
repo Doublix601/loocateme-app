@@ -8,7 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { subscribe } from './EventBus';
 import { useTheme } from './contexts/ThemeContext';
 import { getCachedNearbyVenues } from '../services/NearbyVenueCache';
-import { manuallyConfirmVenueOffline } from '../services/LocationService';
+import { manuallyConfirmVenueOffline, manuallyClearVenueOffline } from '../services/LocationService';
+
+const NONE_ITEM = { id: '__none__', name: 'Je ne suis dans aucun lieu' };
 
 export default function OfflineVenueBanner() {
   const insets = useSafeAreaInsets();
@@ -21,8 +23,16 @@ export default function OfflineVenueBanner() {
     const unsubResolved = subscribe('ble:local-venue-resolved', ({ locationId, name }) => {
       setState({ kind: 'resolved', locationId, name });
     });
-    const unsubUnresolved = subscribe('ble:local-venue-unresolved', ({ candidates }) => {
+    const unsubUnresolved = subscribe('ble:local-venue-unresolved', async ({ candidates }) => {
       setState({ kind: 'unresolved', candidates: candidates || [] });
+      // Relance systématique : on ne se contente pas d'une bannière discrète,
+      // on rouvre directement le sélecteur pour vraiment demander à
+      // l'utilisateur où il se trouve, à chaque cycle non répondu. Si les
+      // candidats stricts (rayon GPS) sont vides, on retombe sur tout le
+      // cache local pour laisser une chance de sélection manuelle.
+      const list = candidates?.length ? candidates : await getCachedNearbyVenues();
+      setPickerCandidates(list);
+      setPickerVisible(true);
     });
     // Dès qu'un check-in serveur normal réussit (réseau revenu), la bannière
     // hors-ligne n'a plus lieu d'être.
@@ -44,6 +54,11 @@ export default function OfflineVenueBanner() {
 
   const pick = async (venue) => {
     setPickerVisible(false);
+    if (venue.id === NONE_ITEM.id) {
+      await manuallyClearVenueOffline();
+      setState(null);
+      return;
+    }
     await manuallyConfirmVenueOffline(venue.id, venue.name);
   };
 
@@ -86,19 +101,27 @@ export default function OfflineVenueBanner() {
           <View style={[styles.modalContainer, { backgroundColor: colors.surface }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Sélectionnez votre lieu</Text>
             <FlatList
-              data={pickerCandidates}
+              data={[NONE_ITEM, ...pickerCandidates]}
               keyExtractor={(item) => item.id}
-              ListEmptyComponent={
-                <Text style={{ color: colors.textSecondary, padding: 16 }}>
-                  Aucun lieu en cache à proximité. Reconnectez-vous au réseau pour rafraîchir la liste.
-                </Text>
-              }
               renderItem={({ item }) => (
                 <TouchableOpacity style={styles.row} onPress={() => pick(item)}>
-                  <Text style={[styles.rowText, { color: colors.textPrimary }]}>{item.name || 'Lieu sans nom'}</Text>
+                  <Text
+                    style={[
+                      styles.rowText,
+                      { color: item.id === NONE_ITEM.id ? colors.textSecondary : colors.textPrimary },
+                      item.id === NONE_ITEM.id && { fontStyle: 'italic' },
+                    ]}
+                  >
+                    {item.name || 'Lieu sans nom'}
+                  </Text>
                 </TouchableOpacity>
               )}
             />
+            {pickerCandidates.length === 0 && (
+              <Text style={{ color: colors.textSecondary, padding: 12, fontSize: 12 }}>
+                Aucun autre lieu en cache à proximité. Reconnectez-vous au réseau pour rafraîchir la liste.
+              </Text>
+            )}
             <TouchableOpacity style={styles.closeModalBtn} onPress={() => setPickerVisible(false)}>
               <Text style={{ color: '#00c2cb', fontWeight: '700' }}>Annuler</Text>
             </TouchableOpacity>

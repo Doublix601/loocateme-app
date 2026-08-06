@@ -369,13 +369,17 @@ function AppShell({ purchasesReady }) {
   }, []);
 
   // Démarre/arrête le scan+advertising BLE selon le consentement explicite de
-  // l'utilisateur (opt-in, désactivé par défaut — cf. SettingsScreen).
+  // l'utilisateur (opt-in, désactivé par défaut — cf. SettingsScreen). La
+  // relance systématique hors-réseau (LocationService) suit le même cycle de
+  // vie : inutile sans Bluetooth actif.
   useEffect(() => {
     if (!isAuthenticated) return;
     if (appUser?.privacyPreferences?.bluetoothProximity) {
       BluetoothProximityService.start().catch(() => {});
+      LocationService.startOfflinePrompter();
     } else {
       BluetoothProximityService.stop().catch(() => {});
+      LocationService.stopOfflinePrompter();
     }
   }, [isAuthenticated, appUser?.privacyPreferences?.bluetoothProximity]);
 
@@ -383,6 +387,9 @@ function AppShell({ purchasesReady }) {
     return () => {
       try {
         BluetoothProximityService.stop();
+      } catch (_) {}
+      try {
+        LocationService.stopOfflinePrompter();
       } catch (_) {}
     };
   }, []);

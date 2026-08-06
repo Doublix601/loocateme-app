@@ -7,7 +7,7 @@ import { useVibeTheme } from '../hooks/useVibeTheme';
 // Demande de confirmation "Es-tu bien ici ?" affichée ~5 min après un check-in
 // (déclenchée par tap sur la notification programmée par
 // CheckinVerificationScheduler). Propose de confirmer ou de corriger le lieu.
-export default function CheckinVerifyModal({ visible, locationName, onConfirm, onCorrect, onClose }) {
+export default function CheckinVerifyModal({ visible, locationName, onConfirm, onCorrect, onNotHere, onClose }) {
   const { palette, typography, spacing, radius } = useVibeTheme();
 
   return (
@@ -36,10 +36,16 @@ export default function CheckinVerifyModal({ visible, locationName, onConfirm, o
 
           <TouchableOpacity
             onPress={onCorrect}
-            style={[styles.secondaryBtn, { borderColor: palette.border, borderRadius: radius.pill }]}
+            style={[styles.secondaryBtn, { borderColor: palette.border, borderRadius: radius.pill, marginBottom: spacing.sm }]}
           >
             <Text style={[typography.body, { color: palette.text, fontWeight: '700' }]}>Changer de lieu</Text>
           </TouchableOpacity>
+
+          {onNotHere && (
+            <TouchableOpacity onPress={onNotHere} style={styles.tertiaryBtn}>
+              <Text style={[typography.body, { color: palette.textMuted }]}>Je ne suis dans aucun lieu</Text>
+            </TouchableOpacity>
+          )}
         </SafeAreaView>
       </View>
     </Modal>
@@ -71,5 +77,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 1,
+  },
+  tertiaryBtn: {
+    paddingVertical: 10,
+    alignItems: 'center',
   },
 });

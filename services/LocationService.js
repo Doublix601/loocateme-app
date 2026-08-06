@@ -6,6 +6,7 @@ import { incrementCheckinCount } from '../hooks/useProgressiveUnlock';
 import { scheduleCheckinVerification, cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
+import NetInfo from '@react-native-community/netinfo';
 import { BluetoothProximityService } from './BluetoothProximityService';
 import { getCachedNearbyVenues } from './NearbyVenueCache';
 
@@ -58,8 +59,30 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
 // à moins de 12 m l'un de l'autre.
 const LOCAL_MIN_LEAD_M = 12;
 
-async function confirmLocalVenue(locationId, candidates) {
+// "Systématique" : tant qu'on est hors-réseau et sans réponse (ni résolution
+// auto, ni réponse manuelle), on retente/re-sollicite l'utilisateur toutes
+// les 3 min — plutôt que de le laisser sans lieu indéfiniment.
+const OFFLINE_REPROMPT_MS = 3 * 60 * 1000;
+// Une réponse (auto ou manuelle) n'est valable que tant qu'on ne s'est pas
+// éloigné de plus de 50 m — au-delà, on considère qu'on a pu changer de lieu.
+const OFFLINE_ANSWER_RESET_DISTANCE_M = 50;
+
+let offlineAnswer = null; // { locationId: string|null, at: number, lat: number, lon: number }
+let offlinePromptTimer = null;
+
+function isOfflineAnswerStillValid(lat, lon) {
+  if (!offlineAnswer) return false;
+  if (Date.now() - offlineAnswer.at > OFFLINE_REPROMPT_MS) return false;
+  return haversineMeters(lat, lon, offlineAnswer.lat, offlineAnswer.lon) <= OFFLINE_ANSWER_RESET_DISTANCE_M;
+}
+
+function markOfflineAnswered(locationId, lat, lon) {
+  offlineAnswer = { locationId, at: Date.now(), lat, lon };
+}
+
+async function confirmLocalVenue(locationId, candidates, lat, lon) {
   await BluetoothProximityService.setLocalConfirmedVenue(locationId);
+  markOfflineAnswered(locationId, lat, lon);
   try {
     const match = candidates?.find((c) => c.id === locationId);
     publish('ble:local-venue-resolved', { locationId, name: match?.name || '' });
@@ -85,6 +108,10 @@ async function confirmLocalVenue(locationId, candidates) {
 // components/OfflineVenueBanner.js) — on ne le laisse jamais sans recours.
 async function tryLocalOfflineResolution(lat, lon) {
   try {
+    // Déjà répondu récemment (auto ou manuellement) sans avoir bougé depuis :
+    // on ne re-sollicite pas l'utilisateur à chaque cycle.
+    if (isOfflineAnswerStillValid(lat, lon)) return offlineAnswer.locationId;
+
     const cached = await getCachedNearbyVenues();
     if (!cached.length) {
       try {
@@ -111,14 +138,14 @@ async function tryLocalOfflineResolution(lat, lon) {
     if (hasMinLead) {
       // Un seul lieu plausible (ou nettement le plus proche) : pas besoin de
       // confirmation par un pair, comme le ferait le serveur.
-      return await confirmLocalVenue(nearest.id, candidates);
+      return await confirmLocalVenue(nearest.id, candidates, lat, lon);
     }
 
     // Ambiguïté (plusieurs lieux trop proches) : on a besoin d'un pair déjà
     // confirmé sur l'un des candidats pour trancher.
     const candidateIds = candidates.map((v) => v.id);
     const resolved = BluetoothProximityService.resolveVenueLocally(candidateIds);
-    if (resolved) return await confirmLocalVenue(resolved, candidates);
+    if (resolved) return await confirmLocalVenue(resolved, candidates, lat, lon);
 
     try {
       publish('ble:local-venue-unresolved', {
@@ -131,15 +158,57 @@ async function tryLocalOfflineResolution(lat, lon) {
   }
 }
 
+async function getLastKnownCoordsOnly() {
+  try {
+    const last = await Location.getLastKnownPositionAsync({});
+    return last?.coords || null;
+  } catch (_) {
+    return null;
+  }
+}
+
 // Sélection manuelle par l'utilisateur (bannière offline) quand la
 // résolution automatique n'a pas pu trancher, ou pour corriger un lieu mal
 // détecté. Fonctionne sans réseau : uniquement local (diffusion BLE) tant
 // que la connexion n'est pas revenue.
 export async function manuallyConfirmVenueOffline(locationId, name = '') {
   await BluetoothProximityService.setLocalConfirmedVenue(locationId);
+  const coords = await getLastKnownCoordsOnly();
+  if (coords) markOfflineAnswered(locationId, coords.latitude, coords.longitude);
   try {
     publish('ble:local-venue-resolved', { locationId, name, manual: true });
   } catch (_) {}
+}
+
+// "Je ne suis dans aucun lieu" — répond explicitement à l'échelle de
+// confirmation, aussi bien hors-réseau (bannière offline) qu'en ligne. Arrête
+// la diffusion BLE d'un lieu et empêche la relance systématique de reproposer
+// une question déjà répondue tant qu'on ne bouge pas.
+export async function manuallyClearVenueOffline() {
+  await BluetoothProximityService.setLocalConfirmedVenue(null);
+  const coords = await getLastKnownCoordsOnly();
+  if (coords) markOfflineAnswered(null, coords.latitude, coords.longitude);
+  try {
+    publish('ble:local-venue-resolved', { locationId: null, name: '', manual: true });
+  } catch (_) {}
+}
+
+// Relance systématique : tant que le réseau est indisponible et que
+// l'utilisateur n'a pas répondu (auto ou manuellement), on retente la
+// résolution à intervalle régulier plutôt que de le laisser sans lieu et
+// sans question. Démarré/arrêté par App.js en même temps que le Bluetooth
+// (cf. privacyPreferences.bluetoothProximity).
+async function offlinePromptTick() {
+  try {
+    const net = await NetInfo.fetch();
+    if (net?.isConnected && net?.isInternetReachable) return; // réseau dispo : rien à faire ici
+    if (!BluetoothProximityService.isActive()) return;
+    const coords = await getLastKnownCoordsOnly();
+    if (!coords) return;
+    await tryLocalOfflineResolution(coords.latitude, coords.longitude);
+  } catch (_) {
+    // best-effort
+  }
 }
 
 async function getBalancedPosition() {
@@ -219,6 +288,18 @@ async function immediateCheckIn(force = true) {
 }
 
 export const LocationService = {
+  // Démarre la relance systématique hors-réseau (cf. offlinePromptTick).
+  startOfflinePrompter: () => {
+    if (offlinePromptTimer) return;
+    offlinePromptTick();
+    offlinePromptTimer = setInterval(offlinePromptTick, OFFLINE_REPROMPT_MS);
+  },
+  stopOfflinePrompter: () => {
+    if (offlinePromptTimer) clearInterval(offlinePromptTimer);
+    offlinePromptTimer = null;
+    offlineAnswer = null;
+  },
+
   // Utility to mark cold-start handled (used by App.js)
   markColdStartDone: async () => {
     try {
