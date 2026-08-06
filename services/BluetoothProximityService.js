@@ -18,6 +18,7 @@ import BleAdvertiser from 'react-native-ble-advertiser';
 import NetInfo from '@react-native-community/netinfo';
 import { issueBleToken } from '../components/ApiRequest';
 import { enqueueSighting, flushQueuedSightings } from './BleOfflineQueue';
+import { computeVenueHashBytes, bytesEqual } from './BleVenueHash';
 
 // Identifiant de société BLE "test/réservé" (Bluetooth SIG) — LoocateMe n'a
 // pas de company ID assigné ; suffisant pour filtrer nos propres trames sans
@@ -27,14 +28,19 @@ const TOKEN_ROTATION_MS = 9 * 60 * 1000; // avant l'expiration serveur (10 min)
 const SCAN_REPORT_INTERVAL_MS = 15 * 1000;
 const RSSI_MIN_THRESHOLD = -90;
 
+const LIVE_PEER_TTL_MS = 30 * 1000;
+
 let bleManager = null;
 let scanActive = false;
 let advertisingActive = false;
 let currentToken = null;
+let currentTokenBytes = null;
+let localConfirmedVenueId = null;
 let tokenRotationTimer = null;
 let reportTimer = null;
 let netUnsubscribe = null;
-let pendingBatch = new Map(); // token -> { rssi, seenAt }
+let pendingBatch = new Map(); // token -> { rssi, seenAt } — pour le report serveur périodique
+let livePeers = new Map(); // token -> { rssi, venueHashBytes, seenAt } — pour la résolution locale, sans serveur
 
 function getManager() {
   if (!bleManager) bleManager = new BleManager();
@@ -74,6 +80,7 @@ async function rotateToken() {
   try {
     const res = await issueBleToken();
     currentToken = res?.token || null;
+    currentTokenBytes = currentToken ? tokenToManufacturerBytes(currentToken) : null;
     if (currentToken && advertisingActive) {
       await restartAdvertising();
     }
@@ -133,11 +140,21 @@ function tokenToManufacturerBytes(token) {
   return base64ToBytes(b64);
 }
 
+function buildAdvertisedPayload() {
+  const tokenBytes = currentTokenBytes || tokenToManufacturerBytes(currentToken);
+  if (!localConfirmedVenueId) {
+    // Pas de lieu confirmé localement : juste le jeton + un flag "0".
+    return [...tokenBytes, 0];
+  }
+  const venueHashBytes = computeVenueHashBytes(localConfirmedVenueId, tokenBytes);
+  return [...tokenBytes, 1, ...venueHashBytes];
+}
+
 async function restartAdvertising() {
   try {
     await BleAdvertiser.stopBroadcast().catch(() => {});
     if (!currentToken) return;
-    await BleAdvertiser.broadcast(COMPANY_ID, tokenToManufacturerBytes(currentToken), {
+    await BleAdvertiser.broadcast(COMPANY_ID, buildAdvertisedPayload(), {
       advertiseMode: BleAdvertiser.ADVERTISE_MODE_BALANCED,
       txPowerLevel: BleAdvertiser.ADVERTISE_TX_POWER_MEDIUM,
       connectable: false,
@@ -153,23 +170,41 @@ function bytesToToken(bytes) {
   return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
+// crypto.randomBytes(12) côté serveur (voir ble.service.js issueBleToken) -> 12 octets bruts une fois décodés.
+const TOKEN_BYTE_LEN = 12;
+
 function handleScanResult(device) {
   if (!device?.manufacturerData || typeof device.rssi !== 'number') return;
   if (device.rssi < RSSI_MIN_THRESHOLD) return;
   try {
     // device.manufacturerData (react-native-ble-plx) est déjà du base64.
     const allBytes = base64ToBytes(device.manufacturerData);
-    // Les 2 premiers octets sont le company ID (little-endian), le reste est le jeton.
+    // Les 2 premiers octets sont le company ID (little-endian) ajoutés par l'OS.
     if (allBytes.length <= 2) return;
-    const bytes = allBytes.slice(2);
-    const token = bytesToToken(bytes);
-    pendingBatch.set(token, { rssi: device.rssi, seenAt: new Date().toISOString() });
+    const payload = allBytes.slice(2);
+    if (payload.length < TOKEN_BYTE_LEN + 1) return;
+    const tokenBytes = payload.slice(0, TOKEN_BYTE_LEN);
+    const hasVenueFlag = payload[TOKEN_BYTE_LEN];
+    const venueHashBytes = hasVenueFlag === 1 ? payload.slice(TOKEN_BYTE_LEN + 1, TOKEN_BYTE_LEN + 5) : null;
+    const token = bytesToToken(tokenBytes);
+    const seenAt = new Date().toISOString();
+
+    pendingBatch.set(token, { rssi: device.rssi, seenAt });
+    livePeers.set(token, { rssi: device.rssi, tokenBytes, venueHashBytes, seenAt: Date.now() });
   } catch (_) {
     // Trame illisible ou provenant d'un autre appareil/app : ignorée
   }
 }
 
+function pruneLivePeers() {
+  const cutoff = Date.now() - LIVE_PEER_TTL_MS;
+  for (const [token, peer] of livePeers) {
+    if (peer.seenAt < cutoff) livePeers.delete(token);
+  }
+}
+
 async function flushBatch() {
+  pruneLivePeers();
   if (pendingBatch.size === 0) return;
   const sightings = Array.from(pendingBatch.entries()).map(([token, v]) => ({ token, rssi: v.rssi, seenAt: v.seenAt }));
   pendingBatch = new Map();
@@ -241,6 +276,8 @@ export const BluetoothProximityService = {
     } catch (_) {}
     advertisingActive = false;
     currentToken = null;
+    currentTokenBytes = null;
+    localConfirmedVenueId = null;
     if (tokenRotationTimer) clearInterval(tokenRotationTimer);
     if (reportTimer) clearInterval(reportTimer);
     tokenRotationTimer = null;
@@ -248,7 +285,45 @@ export const BluetoothProximityService = {
     if (netUnsubscribe) netUnsubscribe();
     netUnsubscribe = null;
     pendingBatch = new Map();
+    livePeers = new Map();
   },
 
   isActive: () => scanActive,
+
+  // Appelé par LocationService dès qu'un check-in serveur (ou une résolution
+  // locale, voir ci-dessous) confirme le lieu courant : on le diffuse
+  // (haché, salé par le jeton) pour que les pairs à proximité puissent s'y
+  // recaler localement, y compris sans réseau.
+  setLocalConfirmedVenue: async (venueId) => {
+    const normalized = venueId ? String(venueId) : null;
+    if (normalized === localConfirmedVenueId) return;
+    localConfirmedVenueId = normalized;
+    if (advertisingActive && currentToken) {
+      await restartAdvertising();
+    }
+  },
+
+  // Résolution 100% locale, sans aucun appel serveur : parmi les lieux
+  // candidats (issus du GPS + du cache local, cf. NearbyVenueCache), renvoie
+  // celui pour lequel un pair BLE actuellement à proximité diffuse un hash
+  // correspondant — preuve locale que ce pair est déjà confirmé à ce lieu.
+  // Utilisé en dernier recours quand le réseau est indisponible et ne
+  // revient pas (cf. LocationService.immediateCheckIn).
+  resolveVenueLocally: (candidateVenueIds) => {
+    if (!candidateVenueIds?.length || livePeers.size === 0) return null;
+    pruneLivePeers();
+    // Le pair le plus proche (meilleur RSSI) tranche en priorité.
+    const peers = Array.from(livePeers.values())
+      .filter((p) => p.venueHashBytes)
+      .sort((a, b) => b.rssi - a.rssi);
+    for (const peer of peers) {
+      for (const candidateId of candidateVenueIds) {
+        const expected = computeVenueHashBytes(candidateId, peer.tokenBytes);
+        if (bytesEqual(expected, peer.venueHashBytes)) {
+          return candidateId;
+        }
+      }
+    }
+    return null;
+  },
 };

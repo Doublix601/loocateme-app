@@ -6,6 +6,8 @@ import { incrementCheckinCount } from '../hooks/useProgressiveUnlock';
 import { scheduleCheckinVerification, cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
+import { BluetoothProximityService } from './BluetoothProximityService';
+import { getCachedNearbyVenues } from './NearbyVenueCache';
 
 // Location check-in orchestration with three explicit modes
 export const ScanMode = Object.freeze({
@@ -38,6 +40,44 @@ async function getPermissionProfile() {
     };
   } catch (e) {
     return { hasFg: false, hasBg: false };
+  }
+}
+
+function haversineMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Dernier recours quand le réseau est indisponible (et peut ne jamais
+// revenir) : au lieu d'abandonner le check-in, on tente une résolution
+// purement locale, en confrontant les lieux GPS-candidats proches (cache
+// local, cf. NearbyVenueCache) aux détections BLE d'autres utilisateurs déjà
+// confirmés sur place — sans aucun appel serveur. Optimiste et best-effort :
+// la vérité "officielle" sera de toute façon recalculée côté serveur dès que
+// le réseau (et donc le heartbeat GPS normal) reviendra.
+async function tryLocalOfflineResolution(lat, lon) {
+  try {
+    const cached = await getCachedNearbyVenues();
+    if (!cached.length) return null;
+    const candidateIds = cached
+      .filter((v) => haversineMeters(lat, lon, v.lat, v.lon) <= (v.radius || 50))
+      .map((v) => v.id);
+    if (!candidateIds.length) return null;
+    const resolved = BluetoothProximityService.resolveVenueLocally(candidateIds);
+    if (resolved) {
+      await BluetoothProximityService.setLocalConfirmedVenue(resolved);
+      try {
+        publish('ble:local-venue-resolved', { locationId: resolved });
+      } catch (_) {}
+    }
+    return resolved;
+  } catch (_) {
+    return null;
   }
 }
 
@@ -87,8 +127,8 @@ async function immediateCheckIn(force = true) {
     try {
       await incrementCheckinCount();
     } catch (_) {}
+    const locationId = res?.user?.currentLocation;
     try {
-      const locationId = res?.user?.currentLocation;
       if (locationId) {
         await scheduleCheckinVerification({
           locationId: String(locationId),
@@ -99,9 +139,20 @@ async function immediateCheckIn(force = true) {
         await cancelCheckinVerification();
       }
     } catch (_) {}
+    // Tient l'annonce BLE à jour avec le lieu réellement confirmé côté
+    // serveur, pour que les pairs à proximité puissent s'y recaler localement.
+    try {
+      await BluetoothProximityService.setLocalConfirmedVenue(locationId ? String(locationId) : null);
+    } catch (_) {}
     return true;
   } catch (e) {
     console.warn('[LocationService] immediateCheckIn failed', e?.message || e);
+    // Réseau indisponible (et peut-être durablement) : on tente une
+    // résolution 100% locale via BLE avant d'abandonner ce cycle.
+    if (BluetoothProximityService.isActive()) {
+      const resolved = await tryLocalOfflineResolution(lat, lon);
+      if (resolved) return true;
+    }
     return false;
   }
 }

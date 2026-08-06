@@ -581,7 +581,14 @@ export async function getLocations({ lat, lon, limit, vibe } = {}) {
   if (limit != null) params.limit = String(limit);
   if (vibe) params.vibe = String(vibe);
   const qs = new URLSearchParams(params);
-  return request(`/locations?${qs.toString()}`, { method: 'GET' });
+  const res = await request(`/locations?${qs.toString()}`, { method: 'GET' });
+  try {
+    // Cache léger (id/coords/rayon) pour permettre une résolution de check-in
+    // 100% locale via BLE si le réseau venait à disparaître durablement.
+    const { cacheNearbyVenues } = await import('../services/NearbyVenueCache');
+    cacheNearbyVenues(res?.locations).catch(() => {});
+  } catch (_) {}
+  return res;
 }
 
 export async function getLocationById(id) {
