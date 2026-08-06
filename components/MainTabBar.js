@@ -36,8 +36,7 @@ function TabItem({ tab, active, colors, isDark, onPress }) {
     Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }).start();
   };
 
-  const translateY = lift.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
-  const labelOpacity = lift;
+  const translateY = lift.interpolate({ inputRange: [0, 1], outputRange: [0, -2] });
 
   return (
     <TouchableOpacity
@@ -50,7 +49,7 @@ function TabItem({ tab, active, colors, isDark, onPress }) {
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
     >
-      <Animated.View style={{ transform: [{ scale }, { translateY }], alignItems: 'center' }}>
+      <Animated.View style={{ transform: [{ scale }, { translateY }] }}>
         <View
           style={[
             styles.iconPill,
@@ -70,19 +69,6 @@ function TabItem({ tab, active, colors, isDark, onPress }) {
             color={active ? '#ffffff' : colors.textMuted}
           />
         </View>
-        <Animated.Text
-          numberOfLines={1}
-          style={[
-            styles.label,
-            {
-              color: colors.accent,
-              opacity: labelOpacity,
-              transform: [{ translateY: Animated.multiply(labelOpacity, -1).interpolate({ inputRange: [-1, 0], outputRange: [0, 4] }) }],
-            },
-          ]}
-        >
-          {tab.label}
-        </Animated.Text>
       </Animated.View>
     </TouchableOpacity>
   );
@@ -104,7 +90,7 @@ export default function MainTabBar() {
   }, [currentPage, indicatorX]);
 
   return (
-    <View style={[styles.wrapper, { bottom: insets.bottom + 10 }]} pointerEvents="box-none">
+    <View style={[styles.wrapper, { bottom: insets.bottom + 8 }]} pointerEvents="box-none">
       <View
         style={[
           styles.container,
@@ -152,8 +138,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     width: BAR_WIDTH,
-    height: 68,
-    borderRadius: 34,
+    height: 52,
+    borderRadius: 26,
     borderWidth: StyleSheet.hairlineWidth,
     shadowOffset: { width: 0, height: 6 },
     shadowRadius: 16,
@@ -162,9 +148,9 @@ const styles = StyleSheet.create({
   },
   indicator: {
     position: 'absolute',
-    top: 8,
-    bottom: 8,
-    borderRadius: 26,
+    top: 6,
+    bottom: 6,
+    borderRadius: 20,
   },
   tab: {
     width: TAB_WIDTH,
@@ -177,11 +163,5 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '700',
-    marginTop: 2,
-    letterSpacing: 0.2,
   },
 });
