@@ -1669,12 +1669,6 @@ const MyAccountScreen = () => {
             </View>
           </Modal>
 
-          <TouchableOpacity style={styles.returnToListButton} onPress={() => goToPage(1)}>
-            <Image source={require('../assets/appIcons/userList.png')} style={styles.roundButtonImage} />
-          </TouchableOpacity>
-
-          {/* Bouton texte supprimé et remplacé par un bouton circulaire 📈 à côté des boutons de partage */}
-
           <Toast message={toastMessage} visible={toastVisible} onHide={() => setToastVisible(false)} />
         </SafeAreaView>
       </View>
@@ -2181,22 +2175,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.8,
   },
-  returnToListButton: {
-    backgroundColor: '#00c2cb',
-    width: Math.min(width * 0.14, 56),
-    height: Math.min(width * 0.14, 56),
-    borderRadius: Math.min(width * 0.07, 28),
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: Math.max(height * 0.02, 16),
-    right: Math.max(width * 0.05, 16) + Math.min(width * 0.14, 56) + Math.max(width * 0.03, 12),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
   dataButton: {
     backgroundColor: '#00c2cb',
     height: Math.min(width * 0.14, 56),
@@ -2216,11 +2194,6 @@ const styles = StyleSheet.create({
   dataButtonText: {
     color: '#fff',
     fontWeight: '700',
-  },
-  roundButtonImage: {
-    width: Math.min(Math.min(width * 0.14, 56) * 0.55, 28),
-    height: Math.min(Math.min(width * 0.14, 56) * 0.55, 28),
-    tintColor: '#fff',
   },
   backButton: {
     position: 'absolute',
