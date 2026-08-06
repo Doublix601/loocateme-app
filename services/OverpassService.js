@@ -27,24 +27,17 @@ let lastResult = { bboxKey: null, pois: [] };
 // On répartit selon la clé OSM utilisée (amenity vs leisure).
 const CATEGORIES_BY_VIBE = {
   moon: {
-    amenity: ['bar', 'pub', 'biergarten', 'nightclub', 'restaurant', 'cinema', 'fast_food', 'food_court'],
-    leisure: ['bowling_alley'],
+    amenity: ['bar', 'pub', 'biergarten', 'nightclub'],
+    leisure: [],
     backend: [
       'Bar 🍺',
       'Boîte de nuit 🪩',
-      'Restaurant 🍴',
-      'Cinéma 🎬',
-      'Fast food 🍔',
-      'Bowling 🎳',
-      'Rooftop 🌆',
-      'Karaoké 🎤',
-      'Club de jeux 🎮',
       'TEST 🤖',
     ],
   },
   sun: {
-    amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'marketplace', 'museum'],
-    leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach'],
+    amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'marketplace', 'museum', 'restaurant', 'cinema', 'fast_food', 'food_court'],
+    leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach', 'bowling_alley'],
     backend: [
       'Café ☕',
       'Coworking 🧑‍💻',
@@ -59,6 +52,13 @@ const CATEGORIES_BY_VIBE = {
       'Marché 🛒',
       'Musée 🏛️',
       'Brunch 🥞',
+      'Restaurant 🍴',
+      'Cinéma 🎬',
+      'Fast food 🍔',
+      'Bowling 🎳',
+      'Rooftop 🌆',
+      'Karaoké 🎤',
+      'Club de jeux 🎮',
       'TEST 🤖',
     ],
   },
