@@ -18,13 +18,17 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native';
 import { BlurView } from 'expo-blur';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
+import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import { UserContext } from '../components/contexts/UserContext';
 import {
   updateProfile as apiUpdateProfile,
   getMyUser,
   updateDemographics as apiUpdateDemographics,
+  uploadProfilePhoto as apiUploadProfilePhoto,
+  deleteProfilePhoto as apiDeleteProfilePhoto,
 } from '../components/ApiRequest';
 import { isAtLeast18 } from '../utils/age';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -50,6 +54,7 @@ const FIELDS = [
   { type: 'firstName', icon: '🙋', label: 'Prénom' },
   { type: 'lastName', icon: '👤', label: 'Nom' },
   { type: 'customName', icon: '✨', label: 'Nom personnalisé' },
+  { type: 'bio', icon: '📝', label: 'Bio' },
   { type: 'birthdate', icon: '🎂', label: 'Date de naissance' },
   { type: 'gender', icon: '🚻', label: 'Sexe' },
 ];
@@ -75,6 +80,8 @@ const EditProfileScreen = () => {
   const [newValue, setNewValue] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [photoOptionsModalVisible, setPhotoOptionsModalVisible] = useState(false);
+  const [photoActionLoading, setPhotoActionLoading] = useState(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -111,6 +118,103 @@ const EditProfileScreen = () => {
         privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
       });
     } catch (_) {}
+  };
+
+  const handleCamera = async () => {
+    if (photoActionLoading) return;
+    if (Platform.OS === 'web') {
+      Alert.alert('Non supporté', "La caméra n'est pas disponible sur le web.");
+      return;
+    }
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Autorisation requise', "L'application a besoin de l'accès à la caméra pour prendre une photo.");
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 });
+      const canceled = result?.canceled ?? result?.cancelled;
+      const uri = result?.assets?.[0]?.uri ?? result?.uri;
+      if (canceled || !uri) return;
+
+      setPhotoActionLoading('camera');
+      try {
+        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+        const file = { uri, name, type: 'image/jpeg' };
+        const res = await apiUploadProfilePhoto(file);
+        const updated = res?.user || {};
+        updateUser({ ...user, photo: updated.profileImageUrl || uri });
+        await refreshMyProfile();
+        setPhotoOptionsModalVisible(false);
+      } catch (e2) {
+        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+      } finally {
+        setPhotoActionLoading(null);
+      }
+    } catch (e) {
+      Alert.alert('Erreur', "Impossible d'ouvrir la caméra.");
+    }
+  };
+
+  const handleGallery = async () => {
+    if (photoActionLoading) return;
+    try {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Autorisation requise',
+            "L'application a besoin de l'accès à vos photos pour sélectionner une image.",
+          );
+          return;
+        }
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.8 });
+      const canceled = result?.canceled ?? result?.cancelled;
+      const uri = result?.assets?.[0]?.uri ?? result?.uri;
+      if (canceled || !uri) return;
+
+      setPhotoActionLoading('gallery');
+      try {
+        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+        const file = { uri, name, type: 'image/jpeg' };
+        const res = await apiUploadProfilePhoto(file);
+        const updated = res?.user || {};
+        updateUser({ ...user, photo: updated.profileImageUrl || uri });
+        await refreshMyProfile();
+        setPhotoOptionsModalVisible(false);
+      } catch (e2) {
+        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+      } finally {
+        setPhotoActionLoading(null);
+      }
+    } catch (e) {
+      Alert.alert('Erreur', "Impossible d'ouvrir la galerie.");
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (photoActionLoading) return;
+    setPhotoActionLoading('delete');
+    try {
+      const res = await apiDeleteProfilePhoto();
+      const updated = res?.user || {};
+      updateUser({ ...user, photo: updated.profileImageUrl || null });
+      await refreshMyProfile();
+      setPhotoOptionsModalVisible(false);
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de supprimer la photo de profil');
+    } finally {
+      setPhotoActionLoading(null);
+    }
+  };
+
+  const confirmDeletePhoto = () => {
+    if (photoActionLoading) return;
+    Alert.alert('Supprimer la photo de profil ?', 'Cette action est définitive.', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: handleDeletePhoto },
+    ]);
   };
 
   const handleEdit = (type) => {
@@ -256,6 +360,10 @@ const EditProfileScreen = () => {
           privacyPreferences: updated.privacyPreferences ?? user.privacyPreferences,
         });
         await refreshMyProfile();
+      } else if (editType === 'bio') {
+        const res = await apiUpdateProfile({ bio: raw });
+        const updated = res?.user || {};
+        updateUser({ ...user, bio: updated.bio ?? raw });
       }
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
@@ -286,6 +394,24 @@ const EditProfileScreen = () => {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.title}>Modifier mon profil</Text>
           <Text style={[styles.subtitle, textSecondaryStyle]}>Appuie longuement sur un champ pour le modifier</Text>
+
+          <TouchableOpacity
+            style={styles.avatarWrapper}
+            activeOpacity={0.8}
+            onPress={() => setPhotoOptionsModalVisible(true)}
+            disabled={!!photoActionLoading}
+          >
+            {user?.photo ? (
+              <ImageWithPlaceholder source={{ uri: user.photo }} style={styles.avatarImage} />
+            ) : (
+              <View style={[styles.avatarImage, styles.avatarPlaceholder, { backgroundColor: colors.surface }]}>
+                <Text style={styles.avatarPlaceholderText}>📷</Text>
+              </View>
+            )}
+            <View style={styles.avatarEditBadge}>
+              <Text style={styles.avatarEditBadgeText}>✏️</Text>
+            </View>
+          </TouchableOpacity>
 
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             {FIELDS.map((field, idx) => {
@@ -421,6 +547,9 @@ const EditProfileScreen = () => {
                   value={newValue}
                   onChangeText={setNewValue}
                   autoFocus
+                  multiline={editType === 'bio'}
+                  numberOfLines={editType === 'bio' ? 5 : 1}
+                  textAlignVertical={editType === 'bio' ? 'top' : 'center'}
                   placeholder={
                     editType === 'firstName'
                       ? 'Votre prénom'
@@ -428,11 +557,14 @@ const EditProfileScreen = () => {
                         ? 'Votre nom'
                         : editType === 'customName'
                           ? 'Votre nom personnalisé'
-                          : 'Votre texte'
+                          : editType === 'bio'
+                            ? 'Parle un peu de toi...'
+                            : 'Votre texte'
                   }
                   placeholderTextColor={isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'}
                   style={[
                     styles.modalInput,
+                    editType === 'bio' && styles.modalInputMultiline,
                     {
                       borderColor: colors.border,
                       color: colors.textPrimary,
@@ -456,6 +588,61 @@ const EditProfileScreen = () => {
                   <Text style={styles.modalButtonPrimaryText}>Enregistrer</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={photoOptionsModalVisible} transparent={true} animationType="fade">
+        <View style={styles.modalContainer}>
+          <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => !photoActionLoading && setPhotoOptionsModalVisible(false)}
+          />
+          <View style={styles.modalKeyboardView} pointerEvents="box-none">
+            <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, textPrimaryStyle]}>Photo de profil</Text>
+              <TouchableOpacity
+                style={[styles.photoOptionButton, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}
+                onPress={handleCamera}
+                disabled={!!photoActionLoading}
+              >
+                <Text style={[styles.photoOptionText, textPrimaryStyle]}>
+                  {photoActionLoading === 'camera' ? 'Envoi...' : '📸 Prendre une photo'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.photoOptionButton, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}
+                onPress={handleGallery}
+                disabled={!!photoActionLoading}
+              >
+                <Text style={[styles.photoOptionText, textPrimaryStyle]}>
+                  {photoActionLoading === 'gallery' ? 'Envoi...' : '🖼️ Choisir dans la galerie'}
+                </Text>
+              </TouchableOpacity>
+              {!!user?.photo && (
+                <TouchableOpacity
+                  style={[styles.photoOptionButton, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}
+                  onPress={confirmDeletePhoto}
+                  disabled={!!photoActionLoading}
+                >
+                  <Text style={styles.photoOptionDeleteText}>
+                    {photoActionLoading === 'delete' ? 'Suppression...' : '🗑️ Supprimer la photo'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={() => setPhotoOptionsModalVisible(false)}
+                style={[
+                  styles.modalButton,
+                  styles.modalButtonGhost,
+                  { marginTop: 10, borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' },
+                ]}
+                disabled={!!photoActionLoading}
+              >
+                <Text style={[styles.modalButtonGhostText, textSecondaryStyle]}>Annuler</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -501,6 +688,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     marginBottom: height * 0.03,
+  },
+  avatarWrapper: {
+    alignSelf: 'center',
+    marginBottom: height * 0.025,
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarPlaceholderText: {
+    fontSize: 34,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#00c2cb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  avatarEditBadgeText: {
+    fontSize: 13,
   },
   card: {
     width: '100%',
@@ -601,6 +821,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.04,
     marginBottom: height * 0.015,
     fontSize: 15,
+  },
+  modalInputMultiline: {
+    height: height * 0.16,
+    paddingVertical: 12,
+  },
+  photoOptionButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  photoOptionText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  photoOptionDeleteText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#e0245e',
   },
   genderPillRow: {
     flexDirection: 'row',
