@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from './contexts/ThemeContext';
@@ -58,12 +58,6 @@ export default function MainTabBar() {
                 color={active ? colors.accent : colors.textMuted}
               />
             </View>
-            <Text
-              style={[styles.label, { color: active ? colors.accent : colors.textMuted }]}
-              numberOfLines={1}
-            >
-              {tab.label}
-            </Text>
           </TouchableOpacity>
         );
       })}
@@ -99,11 +93,5 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  label: {
-    marginTop: 5,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.2,
   },
 });
