@@ -470,8 +470,23 @@ const LocationScreen = () => {
       ]}
     >
       <View style={styles.rowBetween}>
-        <View style={[styles.typePill, { backgroundColor: palette.accentSoft }]}>
-          <Text style={[styles.typePillText, { color: palette.accent }]}>{formatLocationType(location.type)}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+          <View style={[styles.typePill, { backgroundColor: palette.accentSoft }]}>
+            <Text style={[styles.typePillText, { color: palette.accent }]}>{formatLocationType(location.type)}</Text>
+          </View>
+          {isUserHere && (
+            <View
+              style={[
+                styles.typePill,
+                { backgroundColor: palette.accent, marginLeft: spacing.xs, flexDirection: 'row', alignItems: 'center' },
+              ]}
+            >
+              <View style={styles.hereDot} />
+              <Text style={[styles.typePillText, { color: isMoon ? '#050505' : '#FFFFFF', marginLeft: 4 }]}>
+                Vous êtes ici
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.popularityWrap}>
           {Array.from({ length: 3 }).map((_, i) => (
@@ -1140,6 +1155,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
+  },
+  hereDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.85)',
   },
   popularityWrap: { flexDirection: 'row', alignItems: 'center' },
 
