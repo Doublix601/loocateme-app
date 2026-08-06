@@ -187,11 +187,20 @@ out center;
         })
         .filter((loc) => loc !== null);
 
-      // 5. Envoyer au backend par paquets (pour éviter les payloads trop gros)
+      // 5. Envoyer au backend par paquets (pour éviter les payloads trop gros).
+      // La liste complète des osmId de ce rayon (activeOsmIds) n'est envoyée
+      // qu'avec le dernier paquet, accompagnée du centre/rayon interrogés : le
+      // backend s'en sert pour purger les lieux OSM disparus d'Overpass dans
+      // cette zone, sans jamais toucher aux lieux situés hors de ce rayon.
+      const activeOsmIds = locationsToSync.map((loc) => loc.osmId);
       const chunkSize = 100;
       for (let i = 0; i < locationsToSync.length; i += chunkSize) {
         const chunk = locationsToSync.slice(i, i + chunkSize);
-        await post('/locations/sync-osm', { locations: chunk });
+        const isLastChunk = i + chunkSize >= locationsToSync.length;
+        await post('/locations/sync-osm', {
+          locations: chunk,
+          ...(isLastChunk ? { activeOsmIds, lat, lon, radius: OVERPASS_RADIUS_M } : {}),
+        });
       }
 
       // 6. Enregistrer la date ET la position de la sync réussie
