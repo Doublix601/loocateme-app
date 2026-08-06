@@ -40,7 +40,7 @@ const CATEGORIES_BY_VIBE = {
     ],
   },
   sun: {
-    amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'marketplace', 'museum', 'restaurant', 'cinema', 'fast_food', 'food_court'],
+    amenity: ['cafe', 'coworking_space', 'library', 'gym', 'university', 'college', 'marketplace', 'museum', 'restaurant', 'cinema'],
     leisure: ['sports_centre', 'fitness_centre', 'stadium', 'pitch', 'park', 'beach'],
     shop: ['marketplace'],
     tourism: ['museum'],
@@ -61,7 +61,6 @@ const CATEGORIES_BY_VIBE = {
       'Brunch 🥞',
       'Restaurant 🍴',
       'Cinéma 🎬',
-      'Fast food 🍔',
       'Rooftop 🌆',
       'Karaoké 🎤',
       'Club de jeux 🎮',

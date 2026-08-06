@@ -20,8 +20,11 @@ const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // catégorie "Loisir 🎯" (mode nuit exclusivement) regroupant bowling, karting, escape
 // game, laser game, salle de jeux — fusionnée avec l'ancienne catégorie "Bowling 🎳".
 // Bump pour forcer un re-sync qui repeuple/recatégorise avec ces nouveaux tags.
-const LAST_SYNC_KEY = 'loocateme_last_osm_sync_v6';
-const LAST_SYNC_POS_KEY = 'loocateme_last_osm_sync_pos_v6';
+// v7: suppression de la catégorie "Fast food 🍔" (amenity=fast_food/food_court) —
+// trop de résultats pour trop peu de valeur en termes de rencontre, ça polluait
+// l'interface. Bump pour forcer un re-sync qui arrête de les remonter.
+const LAST_SYNC_KEY = 'loocateme_last_osm_sync_v7';
+const LAST_SYNC_POS_KEY = 'loocateme_last_osm_sync_pos_v7';
 
 // Rayon de recherche Overpass (en mètres). 50 km couvre la majorité des
 // déplacements quotidiens / week-end sans saturer la requête Overpass.
@@ -83,7 +86,7 @@ export const LocationSyncService = {
       // Catégories alignées sur les enum Location.type côté backend, couvrant
       // les deux vibes (jour/nuit) pour garantir un minimum de lieux affichables.
       const AMENITY_RE =
-        'bar|pub|nightclub|library|university|college|food_court|cinema|ice_cream|restaurant|cafe|fast_food|gym';
+        'bar|pub|nightclub|library|university|college|cinema|ice_cream|restaurant|cafe|gym';
       const LEISURE_RE =
         'fitness_centre|beach_resort|theme_park|sports_centre|bowling_alley|stadium|pitch|park|escape_game|laser_tag|adult_gaming_centre';
       const SHOP_RE = 'marketplace';
@@ -147,7 +150,6 @@ out center;
           else if (amenity === 'nightclub') type = 'Boîte de nuit 🪩';
           else if (amenity === 'restaurant') type = 'Restaurant 🍴';
           else if (amenity === 'cafe') type = 'Café ☕';
-          else if (amenity === 'fast_food' || amenity === 'food_court') type = 'Fast food 🍔';
           else if (amenity === 'gym' || leisure === 'fitness_centre') type = 'Salle de sport 🏋️';
           else if (leisure === 'beach_resort') type = 'Plage 🏖️';
           else if (leisure === 'theme_park') type = "Parc d'attractions 🎢";
