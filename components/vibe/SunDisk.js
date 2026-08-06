@@ -52,21 +52,44 @@ export default function SunDisk({ size = 96, top = 60, right = 36, style, animat
 
   return (
     <Animated.View pointerEvents="none" style={[{ position: 'absolute', top, right }, style]}>
+      {/* Halo externe : très large et très doux, pose l'ambiance lumineuse
+          autour du soleil sans dessiner de contour visible */}
       <Animated.View
         style={[
           {
             position: 'absolute',
-            top: -size * 1.4,
-            right: -size * 1.4,
-            width: size * 3.8,
-            height: size * 3.8,
+            top: -size * 2.2,
+            right: -size * 2.2,
+            width: size * 5.4,
+            height: size * 5.4,
           },
           glowStyle,
         ]}
       >
         <LinearGradient
-          colors={['rgba(255, 240, 210, 0.85)', 'rgba(255, 220, 170, 0.35)', 'rgba(255, 220, 170, 0)']}
-          style={{ flex: 1, borderRadius: size * 1.9 }}
+          colors={['rgba(255, 245, 220, 0.4)', 'rgba(255, 226, 175, 0.14)', 'rgba(255, 226, 175, 0)']}
+          style={{ flex: 1, borderRadius: size * 2.7 }}
+          start={{ x: 0.5, y: 0.5 }}
+          end={{ x: 1, y: 1 }}
+        />
+      </Animated.View>
+      {/* Halo interne : plus resserré et plus lumineux, fait le pont entre
+          le disque et le halo externe */}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            top: -size * 1.1,
+            right: -size * 1.1,
+            width: size * 3.2,
+            height: size * 3.2,
+          },
+          glowStyle,
+        ]}
+      >
+        <LinearGradient
+          colors={['rgba(255, 248, 225, 0.85)', 'rgba(255, 224, 170, 0.4)', 'rgba(255, 224, 170, 0)']}
+          style={{ flex: 1, borderRadius: size * 1.6 }}
           start={{ x: 0.5, y: 0.5 }}
           end={{ x: 1, y: 1 }}
         />
@@ -80,18 +103,19 @@ export default function SunDisk({ size = 96, top = 60, right = 36, style, animat
             overflow: 'hidden',
             shadowColor: '#FFD58A',
             shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.5,
-            shadowRadius: 28,
+            shadowOpacity: 0.55,
+            shadowRadius: 32,
             elevation: 8,
           },
           breathe,
         ]}
       >
         <LinearGradient
-          colors={['#FFF6DC', '#FFE3A8']}
+          colors={['#FFFDF6', '#FFF2CE', '#FFDD96']}
+          locations={[0, 0.5, 1]}
           style={StyleSheet.absoluteFill}
-          start={{ x: 0.35, y: 0.25 }}
-          end={{ x: 0.85, y: 1 }}
+          start={{ x: 0.3, y: 0.2 }}
+          end={{ x: 0.9, y: 1 }}
         />
       </Animated.View>
     </Animated.View>

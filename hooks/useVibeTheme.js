@@ -37,23 +37,27 @@ export function useVibeTheme() {
         }
       : {
           // ── SUN ────────────────────────────────────────────────
-          bg: '#F9F9F9',
+          // Fond légèrement plus soutenu que les cartes (au lieu d'un blanc
+          // quasi identique bg/surface) : ça donne du relief aux cartes sans
+          // toucher à l'identité "Clean & Productif", et réduit l'effet
+          // "blanc éblouissant" d'un fond quasi-blanc uni.
+          bg: '#EEF1F4',
           bgElevated: '#FFFFFF',
           surface: '#FFFFFF',
           surfaceStrong: '#FFFFFF',
-          overlay: 'rgba(255,255,255,0.65)',
+          overlay: 'rgba(238,241,244,0.65)',
           text: '#0E1116',
-          textMuted: '#4A5260',
-          textFaint: '#8A93A1',
-          border: 'rgba(14,17,22,0.08)',
-          borderStrong: 'rgba(14,17,22,0.16)',
+          textMuted: '#3D4552',
+          textFaint: '#7A8492',
+          border: 'rgba(14,17,22,0.12)',
+          borderStrong: 'rgba(14,17,22,0.22)',
           accent: '#00C2CB',
           accentAlt: '#0091A0',
-          accentSoft: 'rgba(0,194,203,0.12)',
+          accentSoft: 'rgba(0,194,203,0.16)',
           gradient: ['#00C2CB', '#5BD4D9'],
-          heroGradient: ['rgba(249,249,249,0)', 'rgba(249,249,249,0.55)', 'rgba(249,249,249,1)'],
+          heroGradient: ['rgba(238,241,244,0)', 'rgba(238,241,244,0.55)', 'rgba(238,241,244,1)'],
           heroFallback: ['#A8D8FF', '#87CEEB'],
-          shadow: 'rgba(14,17,22,0.10)',
+          shadow: 'rgba(14,17,22,0.14)',
         };
 
     const radius = { sm: 10, md: 16, lg: 22, xl: 28, pill: 999 };
@@ -78,18 +82,18 @@ export function useVibeTheme() {
         }
       : {
           card: {
-            shadowColor: '#000',
+            shadowColor: '#0E1116',
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.08,
+            shadowOpacity: 0.12,
             shadowRadius: 16,
-            elevation: 3,
+            elevation: 4,
           },
           floating: {
-            shadowColor: '#000',
+            shadowColor: '#0E1116',
             shadowOffset: { width: 0, height: 12 },
-            shadowOpacity: 0.14,
+            shadowOpacity: 0.18,
             shadowRadius: 24,
-            elevation: 12,
+            elevation: 14,
           },
         };
 

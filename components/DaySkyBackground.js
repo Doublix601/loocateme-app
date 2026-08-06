@@ -19,21 +19,26 @@ const { height: SCREEN_H } = Dimensions.get('window');
 export default function DaySkyBackground({ style, pointerEvents = 'none' }) {
   return (
     <View style={[styles.fill, style]} pointerEvents={pointerEvents}>
-      {/* Ciel : dégradé doux, du bleu pâle haut vers un bleu plus dense bas */}
+      {/* Ciel : dégradé plus riche, du bleu profond en haut vers une lueur
+          dorée diffuse près de l'horizon (plutôt qu'un bleu plat uniforme) —
+          donne de la profondeur atmosphérique tout en restant un "ciel bleu
+          avec du soleil" classique. */}
       <LinearGradient
-        colors={['#C9E3F2', '#A7CFE6', '#8FBDD9']}
-        locations={[0, 0.55, 1]}
+        colors={['#4C97D9', '#7DBBE8', '#B7DCEF', '#F3E3C4']}
+        locations={[0, 0.32, 0.68, 1]}
         style={StyleSheet.absoluteFill}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
       />
 
-      {/* Voile chaud diffus côté soleil (vers le haut-droit) */}
+      {/* Voile chaud diffus côté soleil (vers le haut-droit), plus ample et
+          plus doux pour mieux fondre avec le ciel environnant */}
       <LinearGradient
-        colors={['rgba(255, 224, 178, 0.35)', 'rgba(255, 224, 178, 0)']}
+        colors={['rgba(255, 226, 175, 0.45)', 'rgba(255, 214, 150, 0.12)', 'rgba(255, 214, 150, 0)']}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
         start={{ x: 1, y: 0 }}
-        end={{ x: 0.2, y: 0.7 }}
+        end={{ x: 0.1, y: 0.85 }}
         pointerEvents="none"
       />
 
@@ -47,9 +52,10 @@ export default function DaySkyBackground({ style, pointerEvents = 'none' }) {
       <CloudBand topRatio={0.52} scale={0.9} duration={160000} delay={-30000} opacity={0.35} />
       <CloudBand topRatio={0.66} scale={1.1} duration={200000} delay={-120000} opacity={0.3} />
 
-      {/* Brume atmosphérique très subtile en bas */}
+      {/* Brume atmosphérique très subtile en bas, teintée pour se fondre
+          avec la lueur dorée de l'horizon plutôt qu'un blanc froid */}
       <LinearGradient
-        colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.18)']}
+        colors={['rgba(255,244,222,0)', 'rgba(255,244,222,0.22)']}
         style={styles.haze}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
