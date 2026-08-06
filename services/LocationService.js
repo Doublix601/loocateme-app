@@ -70,9 +70,12 @@ const OFFLINE_ANSWER_RESET_DISTANCE_M = 50;
 let offlineAnswer = null; // { locationId: string|null, at: number, lat: number, lon: number }
 let offlinePromptTimer = null;
 
+// Une réponse déjà donnée (auto ou manuelle) reste valable indéfiniment tant
+// qu'on ne s'éloigne pas — pas de re-demande sur simple écoulement du temps.
+// Seule l'ABSENCE de réponse est retentée périodiquement (cf.
+// offlinePromptTick), pour ne jamais reposer une question déjà répondue.
 function isOfflineAnswerStillValid(lat, lon) {
   if (!offlineAnswer) return false;
-  if (Date.now() - offlineAnswer.at > OFFLINE_REPROMPT_MS) return false;
   return haversineMeters(lat, lon, offlineAnswer.lat, offlineAnswer.lon) <= OFFLINE_ANSWER_RESET_DISTANCE_M;
 }
 
