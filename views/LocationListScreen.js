@@ -402,6 +402,15 @@ const LocationListScreen = () => {
   const REFRESH_MIN_INTERVAL_MS = 3 * 1000;
   const lastRefreshAtRef = useRef(0);
 
+  // Garde anti-race : fetchNearbyLocations peut être déclenché par plusieurs
+  // sources concurrentes (mount, useFocusEffect, changement de vibe, pull-to-
+  // refresh, load more). Si une requête lancée en mode "moon" résout APRÈS une
+  // requête plus récente lancée en mode "sun" (résolution hors-ordre côté
+  // réseau), elle écraserait `locations` avec des lieux de nuit périmés alors
+  // que l'utilisateur est déjà en mode jour. On ne garde que la réponse de la
+  // requête la plus récente (pattern "latest wins").
+  const fetchRequestIdRef = useRef(0);
+
   // Cache mémoire de session par vibe (sun/moon), pour éviter de refetch
   // /api/locations + Overpass à chaque bascule jour/nuit si on revient sur
   // une vibe déjà consultée récemment sans avoir bougé. L'intérêt n'est pas
@@ -858,6 +867,7 @@ const LocationListScreen = () => {
   const fetchNearbyLocations = async (options = {}) => {
     const { skipUpdateMyLocation = false, silent = false, skipLastKnown = false, vibe: overrideVibe } = options;
     const currentVibe = overrideVibe || vibe;
+    const myRequestId = ++fetchRequestIdRef.current;
     try {
       if (!silent) setLoading(true);
 
@@ -970,6 +980,12 @@ const LocationListScreen = () => {
       // Sinon, c'est le 1er élément (index 0).
       const res = skipUpdateMyLocation ? results[0] : results[1];
 
+      // Une requête plus récente (autre vibe, autre déclencheur) a déjà résolu :
+      // on ignore cette réponse périmée pour ne jamais écraser l'état courant.
+      if (myRequestId !== fetchRequestIdRef.current) {
+        return;
+      }
+
       if (res && Array.isArray(res.locations)) {
         const normalized = res.locations.map((it) => {
           const userCount = it?.userCount || 0;
@@ -997,7 +1013,7 @@ const LocationListScreen = () => {
     } catch (e) {
       console.error('Error fetching locations:', e);
     } finally {
-      if (!silent) setLoading(false);
+      if (!silent && myRequestId === fetchRequestIdRef.current) setLoading(false);
     }
   };
 
