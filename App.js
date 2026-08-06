@@ -29,6 +29,7 @@ import { reportPermissionStatus } from './services/EngagementTrackingService';
 import DevLocationOverride from './components/DevLocationOverride';
 import PolicyUpdateBanner from './components/PolicyUpdateBanner';
 import PremiumNudgeBanner from './components/PremiumNudgeBanner';
+import OfflineVenueBanner from './components/OfflineVenueBanner';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { VibeProvider, useVibe } from './components/contexts/VibeContext';
@@ -561,6 +562,7 @@ function AppShell({ purchasesReady }) {
 
       <PolicyUpdateBanner />
       <PremiumNudgeBanner />
+      <OfflineVenueBanner />
 
       <ConsumablesShopSheet
         visible={shopSheetVisible}

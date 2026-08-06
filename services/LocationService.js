@@ -58,10 +58,11 @@ function haversineMeters(lat1, lon1, lat2, lon2) {
 // à moins de 12 m l'un de l'autre.
 const LOCAL_MIN_LEAD_M = 12;
 
-async function confirmLocalVenue(locationId) {
+async function confirmLocalVenue(locationId, candidates) {
   await BluetoothProximityService.setLocalConfirmedVenue(locationId);
   try {
-    publish('ble:local-venue-resolved', { locationId });
+    const match = candidates?.find((c) => c.id === locationId);
+    publish('ble:local-venue-resolved', { locationId, name: match?.name || '' });
   } catch (_) {}
   return locationId;
 }
@@ -77,17 +78,32 @@ async function confirmLocalVenue(locationId) {
 // ferait le serveur. Le pairing BLE (resolveVenueLocally) n'intervient qu'en
 // cas d'ambiguïté (plusieurs lieux proches), pour départager comme le fait
 // resolveAmbiguousVenueViaBle côté serveur.
+//
+// Dans tous les cas où on ne peut pas confirmer automatiquement (aucun lieu
+// à portée, ambiguïté non résolue), on publie quand même la liste des
+// candidats pour que l'utilisateur puisse choisir lui-même (cf.
+// components/OfflineVenueBanner.js) — on ne le laisse jamais sans recours.
 async function tryLocalOfflineResolution(lat, lon) {
   try {
     const cached = await getCachedNearbyVenues();
-    if (!cached.length) return null;
+    if (!cached.length) {
+      try {
+        publish('ble:local-venue-unresolved', { candidates: [] });
+      } catch (_) {}
+      return null;
+    }
 
     const candidates = cached
       .map((v) => ({ ...v, dist: haversineMeters(lat, lon, v.lat, v.lon) }))
       .filter((v) => v.dist <= (v.radius || 50))
       .sort((a, b) => a.dist - b.dist);
 
-    if (!candidates.length) return null;
+    if (!candidates.length) {
+      try {
+        publish('ble:local-venue-unresolved', { candidates: [] });
+      } catch (_) {}
+      return null;
+    }
 
     const nearest = candidates[0];
     const second = candidates[1];
@@ -95,18 +111,35 @@ async function tryLocalOfflineResolution(lat, lon) {
     if (hasMinLead) {
       // Un seul lieu plausible (ou nettement le plus proche) : pas besoin de
       // confirmation par un pair, comme le ferait le serveur.
-      return await confirmLocalVenue(nearest.id);
+      return await confirmLocalVenue(nearest.id, candidates);
     }
 
     // Ambiguïté (plusieurs lieux trop proches) : on a besoin d'un pair déjà
     // confirmé sur l'un des candidats pour trancher.
     const candidateIds = candidates.map((v) => v.id);
     const resolved = BluetoothProximityService.resolveVenueLocally(candidateIds);
-    if (resolved) return await confirmLocalVenue(resolved);
+    if (resolved) return await confirmLocalVenue(resolved, candidates);
+
+    try {
+      publish('ble:local-venue-unresolved', {
+        candidates: candidates.map((c) => ({ id: c.id, name: c.name, dist: Math.round(c.dist) })),
+      });
+    } catch (_) {}
     return null;
   } catch (_) {
     return null;
   }
+}
+
+// Sélection manuelle par l'utilisateur (bannière offline) quand la
+// résolution automatique n'a pas pu trancher, ou pour corriger un lieu mal
+// détecté. Fonctionne sans réseau : uniquement local (diffusion BLE) tant
+// que la connexion n'est pas revenue.
+export async function manuallyConfirmVenueOffline(locationId, name = '') {
+  await BluetoothProximityService.setLocalConfirmedVenue(locationId);
+  try {
+    publish('ble:local-venue-resolved', { locationId, name, manual: true });
+  } catch (_) {}
 }
 
 async function getBalancedPosition() {

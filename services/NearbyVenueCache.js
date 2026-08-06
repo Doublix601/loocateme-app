@@ -19,6 +19,7 @@ export async function cacheNearbyVenues(locations) {
       .slice(0, MAX_ENTRIES)
       .map((l) => ({
         id: String(l._id),
+        name: l.name || '',
         lon: l.location.coordinates[0],
         lat: l.location.coordinates[1],
         radius: l.radius || 50,
