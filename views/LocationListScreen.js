@@ -21,7 +21,18 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
-import { getLocations, updateMyLocation, seedOsmLocation, getUsersAroundMe, forceCheckIn, getMyReferralInfo } from '../components/ApiRequest';
+import {
+  getLocations,
+  updateMyLocation,
+  seedOsmLocation,
+  getUsersAroundMe,
+  forceCheckIn,
+  getMyReferralInfo,
+  apiUpdateCheckInMode,
+  apiUpdateInvisibleMode,
+} from '../components/ApiRequest';
+import { LocationService } from '../services/LocationService';
+import Toast from '../components/Toast';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import NearbyLocationPicker from '../components/NearbyLocationPicker';
 import { markCheckinVerified } from '../components/CheckinVerificationScheduler';
@@ -32,8 +43,10 @@ import { useBoost } from '../hooks/useBoost';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance, formatDistance } from '../components/ServerUtils';
 import { UserContext } from '../components/contexts/UserContext';
+import { mapBackendUser } from '../utils/mappers';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
+import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
 import { OverpassService, isTypeAllowedForVibe } from '../services/OverpassService';
@@ -75,6 +88,15 @@ const LocationListScreen = () => {
   const navigation = useNavigation();
   const { colors, isDark } = useTheme();
   const { isMoon, vibe, transitioningTo } = useVibe();
+  const { lockSwiper, unlockSwiper } = useMainSwiper();
+  // Réf toujours à jour sur la vibe courante, à utiliser dans les callbacks/
+  // effets à dépendances figées (ex: l'abonnement 'api:mutation' ci-dessous,
+  // monté une seule fois au mount) qui ne peuvent pas dépendre de `vibe` sans
+  // se ré-abonner à chaque bascule jour/nuit.
+  const vibeRef = useRef(vibe);
+  useEffect(() => {
+    vibeRef.current = vibe;
+  }, [vibe]);
   const insets = useSafeAreaInsets();
   const skyFillStyle = {
     position: 'absolute',
@@ -104,7 +126,137 @@ const LocationListScreen = () => {
   // Cela évite l'affichage prématuré du message « Vous avez exploré tous les
   // lieux actifs à proximité » lorsque la DB locale est peu peuplée.
   const [hasMore, setHasMore] = useState(true);
-  const { user: currentUser } = useContext(UserContext);
+  const { user: currentUser, updateUser } = useContext(UserContext);
+  const checkInMode = currentUser?.checkInMode === 'manual' ? 'manual' : 'auto';
+  const [togglingCheckInMode, setTogglingCheckInMode] = useState(false);
+  const [checkingInLocationId, setCheckingInLocationId] = useState(null);
+  // Compteur "latest wins" (même pattern que fetchRequestIdRef) : si l'utilisateur
+  // tape sur "je suis là" pour un 2e lieu avant que la 1re requête ait fini, on ne
+  // veut appliquer que la réponse du DERNIER tap, quel que soit l'ordre de résolution.
+  const checkInRequestIdRef = useRef(0);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+  const showToast = useCallback((message) => {
+    setToastMessage(message);
+    setToastVisible(true);
+  }, []);
+  // Le service côté client (heartbeat GPS déclenchant le check-in auto backend)
+  // doit toujours refléter le mode courant de l'utilisateur — cf. LocationService.
+  useEffect(() => {
+    LocationService.setCheckInMode(checkInMode);
+  }, [checkInMode]);
+  // Etat "mode invisible actif" renvoyé par le backend sur /api/locations (403
+  // INVISIBLE_MODE_ACTIVE) : bloque l'affichage de la liste/carte tant qu'il
+  // n'est pas désactivé par l'utilisateur.
+  const [invisibleModeBlocking, setInvisibleModeBlocking] = useState(false);
+  const [disablingInvisibleMode, setDisablingInvisibleMode] = useState(false);
+
+  const handleToggleCheckInMode = useCallback(async () => {
+    if (togglingCheckInMode) return;
+    const nextMode = checkInMode === 'auto' ? 'manual' : 'auto';
+    setTogglingCheckInMode(true);
+    try {
+      await apiUpdateCheckInMode(nextMode);
+      LocationService.setCheckInMode(nextMode);
+      updateUser?.({ ...currentUser, checkInMode: nextMode });
+      showToast(nextMode === 'manual' ? 'Check-in manuel activé' : 'Check-in automatique activé');
+    } catch (e) {
+      console.warn('[LocationListScreen] apiUpdateCheckInMode failed', e?.message || e);
+      Alert.alert('Erreur', "Impossible de changer le mode de check-in pour l'instant.");
+    } finally {
+      setTogglingCheckInMode(false);
+    }
+  }, [togglingCheckInMode, checkInMode, currentUser, updateUser, showToast]);
+
+  const handleManualCheckIn = useCallback(
+    async (item) => {
+      const c = userCoordsRef.current;
+      if (!c || checkingInLocationId) return;
+      // Capturé avant l'appel réseau : si un 2e tap (autre lieu) démarre une
+      // requête plus récente pendant que celle-ci est encore en vol, on doit
+      // ignorer la réponse de celle-ci quel que soit l'ordre de résolution
+      // (sinon le 1er lieu tapé peut "gagner" si sa requête répond en dernier).
+      const myRequestId = ++checkInRequestIdRef.current;
+      const previousPoiId = currentUser?.currentPoiId || null;
+      setCheckingInLocationId(item._id);
+      try {
+        const res = await forceCheckIn({ locationId: item._id, lat: c.latitude, lon: c.longitude, mode: 'manual' });
+        if (myRequestId !== checkInRequestIdRef.current) {
+          // Une requête plus récente a été lancée entre-temps : on abandonne
+          // silencieusement cette réponse obsolète sans toucher au state.
+          return;
+        }
+        // Mise à jour immédiate (optimiste depuis la réponse serveur) du
+        // UserContext global : sans ça, currentUser.currentPoiId ne bouge
+        // qu'après le fetchNearbyLocations ci-dessous (silencieux, donc pas
+        // instantané visuellement) et l'utilisateur ne se voit pas "checké"
+        // tout de suite après avoir appuyé sur "Je suis là".
+        if (res?.user) updateUser(mapBackendUser(res.user));
+
+        // Patch optimiste des cartes lieux : `fetchNearbyLocations` ci-dessous
+        // retape le cache Redis 60s de `getLocations` côté backend, donc un
+        // refetch immédiat après check-in peut renvoyer des `userCount`/
+        // `activeUsers` encore périmés — l'ancien lieu continue d'afficher
+        // l'utilisateur dans sa pile d'avatars pendant jusqu'à 60s. On corrige
+        // localement les deux cartes concernées sans attendre le cache.
+        const myRawId = res?.user?._id ? String(res.user._id) : null;
+        if (myRawId) {
+          setLocations((prev) =>
+            prev.map((loc) => {
+              if (previousPoiId && String(loc._id) === String(previousPoiId) && loc._id !== item._id) {
+                const nextActiveUsers = (loc.activeUsers || []).filter((u) => String(u._id) !== myRawId);
+                if (nextActiveUsers.length === (loc.activeUsers || []).length) return loc;
+                return {
+                  ...loc,
+                  activeUsers: nextActiveUsers,
+                  userCount: Math.max(0, (loc.userCount || 0) - 1),
+                };
+              }
+              if (String(loc._id) === String(item._id)) {
+                const already = (loc.activeUsers || []).some((u) => String(u._id) === myRawId);
+                if (already) return loc;
+                const meEntry = {
+                  _id: myRawId,
+                  profileImageUrl: res.user.profileImageUrl || null,
+                  boostUntil: res.user.boostUntil || null,
+                  status: res.user.status || 'green',
+                  location: { updatedAt: new Date().toISOString() },
+                };
+                return {
+                  ...loc,
+                  activeUsers: [meEntry, ...(loc.activeUsers || [])],
+                  userCount: (loc.userCount || 0) + 1,
+                };
+              }
+              return loc;
+            }),
+          );
+        }
+
+        showToast(`Tu es maintenant à ${item.name} !`);
+        // reuseCoords: `c` (la position qui vient de servir au check-in) pour éviter
+        // qu'un nouveau fix GPS ne retarde l'affichage du userCount à jour (cf.
+        // commentaire détaillé dans fetchNearbyLocations).
+        fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe, reuseCoords: c });
+      } catch (e) {
+        console.warn('[LocationListScreen] manual forceCheckIn failed', e?.message || e);
+        Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
+      } finally {
+        // Ne réinitialise l'indicateur "en vol" que si aucune requête plus
+        // récente n'a pris le relais entre-temps, pour ne pas ré-activer les
+        // boutons alors qu'un autre check-in est toujours en cours.
+        if (myRequestId === checkInRequestIdRef.current) setCheckingInLocationId(null);
+      }
+    },
+    // currentUser (objet entier, ré-instancié à chaque heartbeat GPS/mise à
+    // jour du UserContext) ne doit PAS être une dépendance ici : ce callback
+    // ne lit que currentPoiId (previousPoiId ci-dessus). Dépendre de l'objet
+    // entier recréait cette fonction à chaque heartbeat, ce qui recréait
+    // LocationItem (cf. son useMemo plus bas) et remontait toute la liste —
+    // d'où le "reload" visible des photos des cartes toutes les quelques
+    // secondes alors que rien n'avait réellement changé.
+    [checkingInLocationId, showToast, vibe, updateUser, currentUser?.currentPoiId],
+  );
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const { isBoosted } = useBoost();
   const flatListRef = useRef(null);
@@ -482,6 +634,18 @@ const LocationListScreen = () => {
     task();
   }, [osmPois, vibe, transitioningTo]);
 
+  // Une fois la transition jour/nuit terminée (transitioningTo repasse à null
+  // après avoir été non-null), on rafraîchit les lieux pour refléter le nouveau vibe.
+  const wasTransitioningRef = useRef(false);
+  useEffect(() => {
+    if (transitioningTo) {
+      wasTransitioningRef.current = true;
+    } else if (wasTransitioningRef.current) {
+      wasTransitioningRef.current = false;
+      fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe });
+    }
+  }, [transitioningTo, vibe]);
+
   // Locations backend : le filtre par vibe est désormais entièrement délégué au
   // backend (`TYPES_BY_VIBE` + élargissement progressif du rayon + remplissage
   // jusqu'au minimum requis). On NE re-filtre PAS ici côté client, sinon on
@@ -554,6 +718,67 @@ const LocationListScreen = () => {
     return pulseItems.slice(0, Math.min(displayLimit, MAX_LOCATIONS));
   }, [pulseItems, displayLimit]);
 
+  // Restructuration en 3 sections (mode liste uniquement, cf. plan §2.3) :
+  // - "Mis en avant" : lieux isSponsored (peut aussi apparaître ailleurs).
+  // - "Ça bouge maintenant" : top N par nombre de visiteurs actuels.
+  // - "D'autres lieux pour toi" : reste, via le même score composite client
+  //   déjà utilisé (pulseItems), en excluant seulement les lieux déjà montrés
+  //   dans "Ça bouge maintenant" (dédupliqué par id).
+  const NOW_TRENDING_COUNT = 10;
+  const sponsoredItems = useMemo(() => pulseItems.filter((it) => it.isSponsored), [pulseItems]);
+  // Auto-défilement du carousel "Mis en avant" toutes les 7s quand il y a
+  // plusieurs lieux sponsorisés (sinon un seul est affiché en carte pleine
+  // largeur, pas de FlatList - cf. renderListSectionsHeader). En pause tant
+  // que l'utilisateur interagit avec le carousel (cf. onTouchStart/onTouchEnd).
+  const sponsoredListRef = useRef(null);
+  const sponsoredScrollIndexRef = useRef(0);
+  const sponsoredTouchActiveRef = useRef(false);
+  const sponsoredAutoScrollIntervalRef = useRef(null);
+  const stopSponsoredAutoScroll = useCallback(() => {
+    if (sponsoredAutoScrollIntervalRef.current) {
+      clearInterval(sponsoredAutoScrollIntervalRef.current);
+      sponsoredAutoScrollIntervalRef.current = null;
+    }
+  }, []);
+  const startSponsoredAutoScroll = useCallback(() => {
+    stopSponsoredAutoScroll();
+    if (sponsoredItems.length <= 1) return;
+    sponsoredAutoScrollIntervalRef.current = setInterval(() => {
+      if (sponsoredTouchActiveRef.current) return;
+      const nextIndex = (sponsoredScrollIndexRef.current + 1) % sponsoredItems.length;
+      sponsoredScrollIndexRef.current = nextIndex;
+      sponsoredListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
+    }, 7000);
+  }, [sponsoredItems.length, stopSponsoredAutoScroll]);
+  useEffect(() => {
+    sponsoredScrollIndexRef.current = 0;
+    startSponsoredAutoScroll();
+    return stopSponsoredAutoScroll;
+  }, [sponsoredItems.length, startSponsoredAutoScroll, stopSponsoredAutoScroll]);
+  const handleSponsoredScrollToIndexFailed = useCallback((info) => {
+    sponsoredListRef.current?.scrollToOffset({
+      offset: info.averageItemLength * info.index,
+      animated: true,
+    });
+  }, []);
+  const trendingItems = useMemo(() => {
+    return [...pulseItems]
+      // Un lieu sponsorisé a déjà sa propre section "Mis en avant" : on évite
+      // qu'il apparaisse une seconde fois ici.
+      .filter((it) => !it.isSponsored)
+      .sort((a, b) => (b.userCount || 0) - (a.userCount || 0))
+      .filter((it) => (it.userCount || 0) > 0)
+      .slice(0, NOW_TRENDING_COUNT);
+  }, [pulseItems]);
+  const trendingIds = useMemo(
+    () => new Set(trendingItems.map((it) => it._id ?? it.osmId)),
+    [trendingItems],
+  );
+  const otherItems = useMemo(
+    () => visibleItems.filter((it) => !trendingIds.has(it._id ?? it.osmId) && !it.isSponsored),
+    [visibleItems, trendingIds],
+  );
+
   // Vue carte : n'afficher que les lieux réellement enregistrés dans notre
   // backend (id Mongo réel), pour exclure les POI OSM bruts jamais ajoutés à
   // l'app (id synthétique `osm:<id>` généré par OverpassService, cf.
@@ -625,9 +850,22 @@ const LocationListScreen = () => {
   }).current;
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
+  const MANUAL_CHECKIN_DISTANCE_M = 50;
+
   const LocationItem = useMemo(() => {
     return React.memo(({ item, index }) => {
       const isUserHere = item._id === currentUser?.currentPoiId;
+      const canManualCheckIn =
+        checkInMode === 'manual' &&
+        !isUserHere &&
+        typeof item.distance === 'number' &&
+        item.distance <= MANUAL_CHECKIN_DISTANCE_M;
+      const isCheckingInHere = checkingInLocationId === item._id;
+      // Désactive TOUS les boutons "je suis là" (pas seulement celui tapé) tant
+      // qu'un check-in est en vol, pour empêcher un 2e tap sur un autre lieu
+      // pendant que le 1er est encore en cours (source de la course décrite
+      // plus haut sur checkInRequestIdRef).
+      const isAnyCheckInInFlight = !!checkingInLocationId;
 
       const card = (
         <TouchableOpacity
@@ -662,21 +900,13 @@ const LocationListScreen = () => {
               </View>
             )}
             <View style={styles.locationHeaderRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                <Text style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.textPrimary }]}>
-                  {item.name}
-                </Text>
-                {item.isPro && (
-                  <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedText}>✓</Text>
-                  </View>
-                )}
-                {item.isSponsored && (
-                  <View style={styles.sponsoredBadge}>
-                    <Text style={styles.sponsoredText}>SPONSORISÉ</Text>
-                  </View>
-                )}
-              </View>
+              <Text
+                style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.textPrimary }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Text>
               {isUserHere ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>Actuellement ici</Text>
@@ -699,6 +929,20 @@ const LocationListScreen = () => {
                 )
               )}
             </View>
+            {(item.isPro || item.isSponsored) && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                {item.isPro && (
+                  <View style={styles.verifiedBadge}>
+                    <Text style={styles.verifiedText}>✓</Text>
+                  </View>
+                )}
+                {item.isSponsored && (
+                  <View style={styles.sponsoredBadge}>
+                    <Text style={styles.sponsoredText}>SPONSORISÉ</Text>
+                  </View>
+                )}
+              </View>
+            )}
             <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
               <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
             </View>
@@ -744,6 +988,25 @@ const LocationListScreen = () => {
                 })}
               </View>
             </View>
+            {canManualCheckIn && (
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  handleManualCheckIn(item);
+                }}
+                disabled={isAnyCheckInInFlight}
+                style={[styles.manualCheckinButton, { opacity: isAnyCheckInInFlight ? 0.6 : 1 }]}
+              >
+                {isCheckingInHere ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle-outline" size={16} color="#fff" />
+                    <Text style={styles.manualCheckinButtonText}>Je suis là</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
           <View style={styles.popularityContainer}>
             <Text style={styles.popularityStars}>{getStars(item, isDark)}</Text>
@@ -778,7 +1041,18 @@ const LocationListScreen = () => {
 
       return card;
     });
-  }, [colors, isDark, isMoon, currentUser?.currentPoiId, handleCorrectCheckinPress, handleSelectLocation, isBoosted]);
+  }, [
+    colors,
+    isDark,
+    isMoon,
+    currentUser?.currentPoiId,
+    handleCorrectCheckinPress,
+    handleSelectLocation,
+    isBoosted,
+    checkInMode,
+    checkingInLocationId,
+    handleManualCheckIn,
+  ]);
 
   const renderLocation = ({ item, index }) => <LocationItem item={item} index={index} />;
 
@@ -833,7 +1107,32 @@ const LocationListScreen = () => {
         path &&
         (path.includes('/users/location') || path.includes('/user/location') || path.includes('/user/heartbeat'))
       ) {
-        fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true });
+        // BUG (root cause de l'asymétrie sun→moon vs moon→sun) : cet effet a
+        // un tableau de dépendances vide ([]), donc ce callback ferme sur la
+        // valeur de `vibe` telle qu'elle était AU MOMENT DU MONT (souvent
+        // 'sun', l'app étant généralement ouverte de jour). Sans le override
+        // explicite ci-dessous, `fetchNearbyLocations` retombe sur son propre
+        // closure de `vibe` (tout aussi figé) et interroge TOUJOURS le
+        // backend avec la vibe de mount, jamais la vibe actuelle.
+        // Combiné à la garde anti-race "latest wins" (fetchRequestIdRef), ce
+        // fetch périmé peut résoudre APRÈS le fetch légitime déclenché par le
+        // changement de vibe et écraser silencieusement `locations` avec des
+        // lieux de la mauvaise vibe (ex: places de jour alors que l'UI est
+        // passée en mode nuit) — d'où les sections qui se vident après un
+        // switch jour→nuit tant qu'on n'a pas forcé un fetch explicite
+        // (pull-to-refresh) avec la bonne vibe. Le sens nuit→jour semblait
+        // "fonctionner" uniquement parce que la vibe de mount (sun) coïncidait
+        // avec la vibe cible dans ce cas précis, masquant le bug.
+        // reuseCoords: on vient de faire un heartbeat/check-in avec une position
+        // fraîche il y a quelques ms, inutile de ré-acquérir le GPS (cf. commentaire
+        // détaillé dans fetchNearbyLocations) — sans ça, ce refresh peut être retardé
+        // de dizaines de secondes en intérieur/signal faible.
+        fetchNearbyLocations({
+          skipUpdateMyLocation: true,
+          silent: true,
+          vibe: vibeRef.current,
+          reuseCoords: userCoordsRef.current,
+        });
       }
     });
 
@@ -865,50 +1164,66 @@ const LocationListScreen = () => {
   };
 
   const fetchNearbyLocations = async (options = {}) => {
-    const { skipUpdateMyLocation = false, silent = false, skipLastKnown = false, vibe: overrideVibe } = options;
+    const { skipUpdateMyLocation = false, silent = false, skipLastKnown = false, vibe: overrideVibe, reuseCoords = null } = options;
     const currentVibe = overrideVibe || vibe;
     const myRequestId = ++fetchRequestIdRef.current;
     try {
       if (!silent) setLoading(true);
 
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        console.warn('Permission to access location was denied');
-        setLocationError(true);
-        if (!silent) setLoading(false);
-        return;
-      }
+      let latitude;
+      let longitude;
 
-      const servicesEnabled = await Location.hasServicesEnabledAsync();
-      if (!servicesEnabled) {
-        console.warn('Location services are disabled at the OS level (Settings > Location)');
-        setLocationError(true);
-        if (!silent) setLoading(false);
-        return;
-      }
+      if (reuseCoords) {
+        // Refresh "données serveur uniquement" après une mutation (check-in manuel,
+        // heartbeat) : on a déjà une position fraîche de quelques centaines de ms
+        // (celle utilisée pour l'appel qui vient de se terminer), donc pas besoin de
+        // ré-acquérir le GPS. Sans ce court-circuit, `getCurrentPositionSmart` peut
+        // retomber sur `getCurrentPositionAsync` (jusqu'à ~1 min en intérieur/signal
+        // faible) si aucune position "last known" récente n'est disponible côté OS,
+        // et retarder d'autant l'affichage du nouveau compteur de visiteurs alors que
+        // le serveur, lui, a déjà la bonne donnée depuis longtemps.
+        ({ latitude, longitude } = reuseCoords);
+      } else {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.warn('Permission to access location was denied');
+          setLocationError(true);
+          if (!silent) setLoading(false);
+          return;
+        }
 
-      let location;
-      try {
-        // getCurrentPositionSmart applique l'override dev (si défini) et retente en
-        // Accuracy.Low si Balanced échoue (voir utils/locationHelper.js).
-        location = await getCurrentPositionSmart({ skipLastKnown });
-      } catch (locErr) {
-        // Position indisponible (GPS/services de localisation désactivés au niveau OS)
-        console.warn('Location unavailable:', locErr?.message);
-        setLocationError(true);
-        if (!silent) setLoading(false);
-        return;
-      }
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        if (!servicesEnabled) {
+          console.warn('Location services are disabled at the OS level (Settings > Location)');
+          setLocationError(true);
+          if (!silent) setLoading(false);
+          return;
+        }
 
-      if (!location) {
-        console.warn('Could not determine position');
-        setLocationError(true);
-        if (!silent) setLoading(false);
-        return;
+        let location;
+        try {
+          // getCurrentPositionSmart applique l'override dev (si défini) et retente en
+          // Accuracy.Low si Balanced échoue (voir utils/locationHelper.js).
+          location = await getCurrentPositionSmart({ skipLastKnown });
+        } catch (locErr) {
+          // Position indisponible (GPS/services de localisation désactivés au niveau OS)
+          console.warn('Location unavailable:', locErr?.message);
+          setLocationError(true);
+          if (!silent) setLoading(false);
+          return;
+        }
+
+        if (!location) {
+          console.warn('Could not determine position');
+          setLocationError(true);
+          if (!silent) setLoading(false);
+          return;
+        }
+
+        ({ latitude, longitude } = location.coords);
       }
 
       setLocationError(false);
-      const { latitude, longitude } = location.coords;
       setUserCoords({ latitude, longitude });
 
       // Nudge Premium (signal passif, fire-and-forget) : uniquement au tout premier
@@ -1010,8 +1325,15 @@ const LocationListScreen = () => {
       // NOTE: On a supprimé l'appel OverpassService.fetchAround ici
       // car il est déjà géré par le useEffect([roundedLat, roundedLon, vibe])
       // qui se déclenchera suite au setUserCoords(...) ci-dessus.
+      setInvisibleModeBlocking(false);
     } catch (e) {
-      console.error('Error fetching locations:', e);
+      const isInvisibleModeError =
+        e?.status === 403 && (e?.code === 'INVISIBLE_MODE_ACTIVE' || e?.response?.error === 'INVISIBLE_MODE_ACTIVE');
+      if (isInvisibleModeError) {
+        setInvisibleModeBlocking(true);
+      } else {
+        console.error('Error fetching locations:', e);
+      }
     } finally {
       // NB: `setLoading` n'est PAS gardé par `myRequestId` contrairement à
       // `setLocations`/`setHasMore` ci-dessus. Chaque fetchNearbyLocations()
@@ -1139,6 +1461,96 @@ const LocationListScreen = () => {
     return null;
   };
 
+  // "Mis en avant" (sponsorisés, scroll horizontal) + "Ça bouge maintenant"
+  // (top visiteurs) : rendus en ListHeaderComponent de la FlatList principale
+  // ("D'autres lieux pour toi"), pour conserver la virtualisation/pagination
+  // existante sur la plus grosse liste tout en gardant un seul scroll global.
+  // En mode "sun", colors.accent (cyan/bleu) manque de contraste sur le
+  // fond bleu de DaySkyBackground : on bascule sur du blanc, lisible sur
+  // le ciel bleu comme sur le ciel nocturne.
+  const sectionTitleColor = isMoon ? colors.accent : '#ffffff';
+
+  const renderListSectionsHeader = () => {
+    if (viewMode === 'map') return null;
+    if (sponsoredItems.length === 0 && trendingItems.length === 0 && otherItems.length === 0) return null;
+    return (
+      <View>
+        {sponsoredItems.length > 0 && (
+          <View style={[styles.sectionContainer, styles.sponsoredSectionContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.28)' : 'rgba(0,0,0,0.16)' }]}>
+            <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>Mis en avant</Text>
+            {sponsoredItems.length === 1 ? (
+              // Un seul item dans un FlatList horizontal de 280px laisse un grand vide
+              // à droite (l'écran ne fait presque jamais 280px de large) : on l'affiche
+              // en carte pleine largeur, comme le reste de la liste, plutôt qu'en scroll
+              // horizontal qui n'a de sens qu'avec plusieurs items à faire défiler.
+              <LocationItem item={sponsoredItems[0]} index={0} />
+            ) : (
+              <FlatList
+                ref={sponsoredListRef}
+                data={sponsoredItems}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => `sponsored-${item._id || item.osmId || item.name}`}
+                renderItem={({ item, index }) => (
+                  <View style={styles.horizontalCardWrapper}>
+                    <LocationItem item={item} index={index} />
+                  </View>
+                )}
+                contentContainerStyle={{ paddingRight: 20 }}
+                onScrollToIndexFailed={handleSponsoredScrollToIndexFailed}
+                onMomentumScrollEnd={(e) => {
+                  // Resynchronise l'index de l'auto-scroll sur la position réelle
+                  // après un scroll manuel, pour que le prochain saut auto-scroll
+                  // reparte de là où l'utilisateur a laissé le carousel plutôt que
+                  // de sauter en arrière à l'ancien index.
+                  const itemWidth = styles.horizontalCardWrapper.width + styles.horizontalCardWrapper.marginRight;
+                  const index = Math.round(e.nativeEvent.contentOffset.x / itemWidth);
+                  sponsoredScrollIndexRef.current = Math.max(0, Math.min(index, sponsoredItems.length - 1));
+                }}
+                onTouchStart={() => {
+                  // onTouchStart précède tout mouvement, donc précède
+                  // l'évaluation de onMoveShouldSetPanResponderCapture du
+                  // swiper de navigation (cf. MainSwiper.js) : lockSwiper()
+                  // doit être posé ici et non sur onScrollBeginDrag, qui ne se
+                  // déclenche qu'après que le geste a déjà pu être capturé par
+                  // le parent (pattern repris de LocationMapView.js).
+                  if (sponsoredTouchActiveRef.current) return;
+                  sponsoredTouchActiveRef.current = true;
+                  stopSponsoredAutoScroll();
+                  lockSwiper();
+                }}
+                onTouchEnd={() => {
+                  sponsoredTouchActiveRef.current = false;
+                  unlockSwiper();
+                  startSponsoredAutoScroll();
+                }}
+                onTouchCancel={() => {
+                  sponsoredTouchActiveRef.current = false;
+                  unlockSwiper();
+                  startSponsoredAutoScroll();
+                }}
+              />
+            )}
+            {/* Délimitation visuelle entre "Mis en avant" et le reste de la liste
+                (sinon les sections s'enchaînent sans distinction claire). */}
+            <View style={[styles.sponsoredDivider, { borderBottomColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.1)' }]} />
+          </View>
+        )}
+        {trendingItems.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>Ça bouge maintenant</Text>
+            {trendingItems.map((item, index) => (
+              <LocationItem key={item._id || item.osmId || item.name} item={item} index={index} />
+            ))}
+          </View>
+        )}
+        {otherItems.length > 0 && trendingItems.length > 0 && (
+          <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>D'autres lieux pour toi</Text>
+        )}
+      </View>
+    );
+  };
+
   const renderHeader = () => (
     <View
       style={[
@@ -1163,6 +1575,22 @@ const LocationListScreen = () => {
       </Text>
       <View style={styles.headerIcons}>
         <TouchableOpacity
+          onPress={handleToggleCheckInMode}
+          disabled={togglingCheckInMode}
+          style={[styles.checkInModeToggle, { opacity: togglingCheckInMode ? 0.6 : 1 }]}
+          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+          accessibilityLabel={
+            checkInMode === 'auto' ? 'Passer en check-in manuel' : 'Passer en check-in automatique'
+          }
+        >
+          <Ionicons
+            name={checkInMode === 'auto' ? 'radio-button-on-outline' : 'hand-left-outline'}
+            size={16}
+            color="#00c2cb"
+          />
+          <Text style={styles.checkInModeToggleText}>{checkInMode === 'auto' ? 'Auto' : 'Manuel'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={toggleViewMode}
           style={styles.headerIconButton}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
@@ -1180,7 +1608,54 @@ const LocationListScreen = () => {
       {isMoon ? <NightSkyBackground style={skyFillStyle} /> : <DaySkyBackground style={skyFillStyle} />}
       <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
         {renderHeader()}
-        {loading && !refreshing ? (
+        {invisibleModeBlocking ? (
+          <View style={styles.invisibleModeContainer}>
+            <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🕶️</Text>
+            <Text
+              style={[
+                styles.emptyText,
+                { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' },
+              ]}
+            >
+              Mode invisible actif
+            </Text>
+            <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
+              Tu ne peux pas voir les lieux autour de toi tant que le mode invisible est activé. Désactive-le pour
+              parcourir les lieux.
+            </Text>
+            <TouchableOpacity
+              disabled={disablingInvisibleMode}
+              onPress={async () => {
+                if (disablingInvisibleMode) return;
+                setDisablingInvisibleMode(true);
+                try {
+                  await apiUpdateInvisibleMode(false);
+                  updateUser?.({ ...currentUser, invisibleMode: false });
+                  setInvisibleModeBlocking(false);
+                  fetchNearbyLocations({ vibe });
+                } catch (e) {
+                  console.warn('[LocationListScreen] apiUpdateInvisibleMode failed', e?.message || e);
+                  Alert.alert('Erreur', 'Impossible de désactiver le mode invisible pour l’instant.');
+                } finally {
+                  setDisablingInvisibleMode(false);
+                }
+              }}
+              style={{
+                backgroundColor: '#00c2cb',
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                borderRadius: 10,
+                opacity: disablingInvisibleMode ? 0.6 : 1,
+              }}
+            >
+              {disablingInvisibleMode ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={{ color: '#fff', fontWeight: '700' }}>Désactiver le mode invisible</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : loading && !refreshing ? (
           <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
         ) : locationError ? (
           <ScrollView
@@ -1305,7 +1780,7 @@ const LocationListScreen = () => {
         ) : (
           <FlatList
             ref={flatListRef}
-            data={visibleItems}
+            data={otherItems}
             keyExtractor={(item) => item._id || item.osmId || String(item.name)}
             renderItem={renderLocation}
             onViewableItemsChanged={onViewableItemsChanged}
@@ -1330,6 +1805,7 @@ const LocationListScreen = () => {
             removeClippedSubviews={Platform.OS === 'android'}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.4}
+            ListHeaderComponent={renderListSectionsHeader}
             ListFooterComponent={renderListFooter}
             // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
             contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
@@ -1356,6 +1832,7 @@ const LocationListScreen = () => {
         ) : null}
       </SafeAreaView>
       <VibeFAB />
+      <Toast message={toastMessage} visible={toastVisible} onHide={() => setToastVisible(false)} />
       <NearbyLocationPicker
         visible={!!placePicker}
         lat={placePicker?.lat}
@@ -1499,6 +1976,67 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.3,
+  },
+  manualCheckinButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#00c2cb',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    marginTop: 10,
+    gap: 6,
+  },
+  manualCheckinButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 12,
+    marginTop: 4,
+    letterSpacing: -0.2,
+  },
+  sectionContainer: {
+    marginBottom: 8,
+  },
+  sponsoredSectionContainer: {
+    marginBottom: 20,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  sponsoredDivider: {
+    marginTop: 12,
+    borderBottomWidth: 1,
+  },
+  horizontalCardWrapper: {
+    width: 280,
+    marginRight: 14,
+  },
+  checkInModeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 194, 203, 0.1)',
+    marginRight: 8,
+    gap: 4,
+  },
+  checkInModeToggleText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#00c2cb',
+  },
+  invisibleModeContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
   },
 });
 

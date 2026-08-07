@@ -32,7 +32,6 @@ const GENDER_OPTIONS = [
 
 const SignupScreen = () => {
   const navigation = useNavigation();
-  const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [customName, setCustomName] = useState('');
@@ -62,26 +61,11 @@ const SignupScreen = () => {
   const insets = useSafeAreaInsets();
 
   const handleSignup = async () => {
-    // Normaliser et valider le username selon les règles Instagram
-    let normalized = String(username || '')
-      .trim()
-      .toLowerCase();
-    const INSTAGRAM_USERNAME_REGEX = /^(?!.*\..)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
-    // Note: la 1ère conjonction (?!.*\..)
-    // doit vérifier « pas de deux points consécutifs » → utiliser (?!.*\.{2})
-    // Corrigeons la regex:
-    const IG_RE = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
-    if (!IG_RE.test(normalized)) {
-      setErrorMessage(
-        "Nom d'utilisateur invalide. Utilise 1–30 caractères: lettres, chiffres, points et underscores. Pas de point au début/à la fin ni deux points consécutifs.",
-      );
-      return;
-    }
     if (password !== confirmPassword) {
       setErrorMessage('Les mots de passe ne correspondent pas.');
       return;
     }
-    if (!normalized || !email || !password) {
+    if (!email || !password) {
       setErrorMessage('Tous les champs doivent être remplis.');
       return;
     }
@@ -114,18 +98,7 @@ const SignupScreen = () => {
   const doSignupWithConsent = async () => {
     // Called from GDPR modal after user accepted policy and set preferences
     // Re-run minimal validations to be safe
-    let normalized = String(username || '')
-      .trim()
-      .toLowerCase();
-    const IG_RE = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
-    if (
-      !IG_RE.test(normalized) ||
-      !email ||
-      !password ||
-      password !== confirmPassword ||
-      !birthdate ||
-      !isAtLeast18(birthdate)
-    ) {
+    if (!email || !password || password !== confirmPassword || !birthdate || !isAtLeast18(birthdate)) {
       Alert.alert('Erreur', 'Vérifiez les informations saisies.');
       return;
     }
@@ -135,7 +108,6 @@ const SignupScreen = () => {
       const res = await apiSignup({
         email,
         password,
-        username: normalized,
         firstName,
         lastName,
         customName,
@@ -213,16 +185,6 @@ const SignupScreen = () => {
             <ThemedText style={styles.cardSubtitle} type="secondary">
               Rejoignez la communauté LoocateMe
             </ThemedText>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Nom d'utilisateur"
-              placeholderTextColor={colors.placeholder}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              returnKeyType="next"
-            />
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <TextInput

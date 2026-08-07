@@ -142,12 +142,12 @@ export default function SearchView() {
 
   const getDisplayName = (item) => {
     if (item._type === 'location') return item.name;
+    const custom = (item.customName || '').trim();
+    if (custom) return custom;
     const first = (item.firstName || '').trim();
     const last = (item.lastName || '').trim();
-    const hasFull = first && last;
-    const full = hasFull ? `${first} ${last}`.trim() : '';
-    const custom = (item.customName || '').trim();
-    return full || custom || item.username || 'Utilisateur';
+    if (first && last) return `${first} ${last}`.trim();
+    return item.username || 'Utilisateur';
   };
 
   const renderRow = ({ item, index }) => {

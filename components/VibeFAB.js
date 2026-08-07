@@ -135,7 +135,7 @@ export default function VibeFAB() {
 }
 
 const FAB_SIZE = 56; // ≥ 44x44 ergonomic minimum
-const TAB_BAR_HEIGHT = 92; // must match MainTabBar's height so the FAB clears it
+const TAB_BAR_HEIGHT = 79; // must match MainTabBar's height so the FAB clears it
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',

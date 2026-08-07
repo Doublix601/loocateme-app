@@ -40,7 +40,8 @@ import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import ProfileCard from '../components/ProfileCard';
 import UltraBoostProgressBar from '../components/UltraBoostProgressBar';
 import CheckinVerifyModal from '../components/CheckinVerifyModal';
-import NearbyLocationPicker from '../components/NearbyLocationPicker';
+import * as Location from 'expo-location';
+import { calculateDistance } from '../components/ServerUtils';
 import { forceCheckIn, forceCheckOut } from '../components/ApiRequest';
 import { cancelCheckinVerification, markCheckinVerified } from '../components/CheckinVerificationScheduler';
 import { getCurrentPositionSmart } from '../utils/locationHelper';
@@ -51,6 +52,7 @@ import { getPdfIconName } from '../constants/pdfIcons';
 import { trackLocationView } from '../components/ApiRequest';
 
 const ULTRA_BOOST_TARGET_MS = 20 * 60 * 1000;
+const MANUAL_CHECKIN_DISTANCE_M = 50;
 const MAX_PDF_MEDIA = 3;
 // L'Android WebView ne sait pas rendre un PDF nativement (contrairement à
 // WKWebView sur iOS) : on passe par la visionneuse Google Docs en lecture
@@ -101,8 +103,92 @@ const LocationScreen = () => {
   const [pdfViewer, setPdfViewer] = useState(null); // { url, title } | null
   const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
-  const [placePicker, setPlacePicker] = useState(null); // { lat, lon } | null
   const [correcting, setCorrecting] = useState(false);
+
+  // Bouton "Je suis là" (cf. plan §2.4) : nécessite de connaître la distance
+  // au lieu affiché. On ne watch le GPS que quand ça peut réellement servir
+  // (mode manuel + pas déjà check-in ici), pour ne pas consommer de batterie
+  // inutilement sur cet écran par ailleurs statique côté position.
+  const checkInMode = user?.checkInMode === 'manual' ? 'manual' : 'auto';
+  const isUserHereForManualCheckin = !!(
+    user?.currentPoiId &&
+    locationId &&
+    String(user.currentPoiId) === String(locationId)
+  );
+  const [manualCheckinCoords, setManualCheckinCoords] = useState(null);
+  const [manualCheckinLoading, setManualCheckinLoading] = useState(false);
+  const [manualCheckinSuccess, setManualCheckinSuccess] = useState(false);
+
+  useEffect(() => {
+    if (checkInMode !== 'manual' || isUserHereForManualCheckin) return;
+    let subscription;
+    let cancelled = false;
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted' || cancelled) return;
+      const sub = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.Balanced, distanceInterval: 10 },
+        (pos) => {
+          if (!cancelled) {
+            setManualCheckinCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+          }
+        },
+      );
+      // La permission/le watcher peuvent résoudre APRÈS que le composant se
+      // soit démonté ou que l'effet ait été ré-exécuté (changement de
+      // checkInMode/isUserHereForManualCheckin) : si `cancelled` est déjà
+      // vrai à ce moment-là, la fonction de cleanup ci-dessous s'est déjà
+      // exécutée et n'a rien pu retirer puisque `subscription` n'était pas
+      // encore assignée — on retire donc immédiatement dans ce cas, sinon on
+      // fuit un watcher GPS natif actif en continu (jamais nettoyé).
+      if (cancelled) {
+        try {
+          sub.remove();
+        } catch (_) {}
+      } else {
+        subscription = sub;
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (subscription) subscription.remove();
+    };
+  }, [checkInMode, isUserHereForManualCheckin]);
+
+  const distanceToLocation = useMemo(() => {
+    if (!manualCheckinCoords || !location?.location?.coordinates) return null;
+    const [lon, lat] = location.location.coordinates;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return null;
+    return calculateDistance(manualCheckinCoords.latitude, manualCheckinCoords.longitude, lat, lon);
+  }, [manualCheckinCoords, location]);
+
+  const showManualCheckinButton =
+    checkInMode === 'manual' &&
+    !isUserHereForManualCheckin &&
+    typeof distanceToLocation === 'number' &&
+    distanceToLocation <= MANUAL_CHECKIN_DISTANCE_M;
+
+  const handleManualCheckin = async () => {
+    if (manualCheckinLoading || !manualCheckinCoords || !locationId) return;
+    setManualCheckinLoading(true);
+    try {
+      const res = await forceCheckIn({
+        locationId,
+        lat: manualCheckinCoords.latitude,
+        lon: manualCheckinCoords.longitude,
+        mode: 'manual',
+      });
+      if (res?.user) updateUser(mapBackendUser(res.user));
+      setManualCheckinSuccess(true);
+      setTimeout(() => setManualCheckinSuccess(false), 2500);
+      refresh();
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
+      console.warn('[LocationScreen] handleManualCheckin failed', e?.message || e);
+    } finally {
+      setManualCheckinLoading(false);
+    }
+  };
 
   // Événements créés par le pro (palier pro2+, cf. dashboard business) :
   // affichés tant que non expirés. Plusieurs événements peuvent coexister.
@@ -197,53 +283,14 @@ const LocationScreen = () => {
     }
   };
 
-  const openPlacePickerFromCurrentPosition = async () => {
-    const pos = await getCurrentPositionSmart();
-    if (!pos?.coords) return;
-    setPlacePicker({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-  };
-
   const handleCorrectCheckin = () => {
     setVerifyModalVisible(false);
-    openPlacePickerFromCurrentPosition();
-  };
-
-  const handleForceCheckinPress = () => {
-    if (isBoosted) {
-      Alert.alert('Boost en cours', 'Ton boost est actif ici : attends qu\'il se termine pour changer de lieu.');
-      return;
-    }
-    openPlacePickerFromCurrentPosition();
-  };
-
-  const handleSelectPlace = async (place) => {
-    if (!placePicker || correcting) return;
-    setCorrecting(true);
-    try {
-      await forceCheckIn({ locationId: place._id, lat: placePicker.lat, lon: placePicker.lon });
-      await markCheckinVerified({ locationId: place._id, lat: placePicker.lat, lon: placePicker.lon });
-      setPlacePicker(null);
-      refresh();
-      if (String(place._id) === String(locationId)) {
-        // Déjà sur cet écran : rien à faire de plus, le refresh suffit.
-      } else {
-        navigation.replace('Location', { locationId: place._id });
-      }
-    } catch (e) {
-      if (e?.code === 'BOOST_ACTIVE') {
-        setPlacePicker(null);
-        Alert.alert('Boost en cours', e?.message || 'Ton boost est actif : attends qu\'il se termine pour changer de lieu.');
-      } else {
-        console.warn('[LocationScreen] forceCheckIn failed', e?.message || e);
-      }
-    } finally {
-      setCorrecting(false);
-    }
+    // Le choix manuel du lieu se fait désormais via le mode de check-in
+    // manuel ("Je suis là"), plus via un sélecteur de lieux proches ici.
   };
 
   // Dev only: force le check-in sur CE lieu (celui affiché par l'écran),
-  // peu importe la distance réelle. Distinct de "Ce n'est pas le bon lieu ?"
-  // (handleForceCheckinPress) qui reste identique à la prod.
+  // peu importe la distance réelle.
   const handleDevForceCheckinPress = async () => {
     if (!__DEV__ || correcting || !locationId) return;
     if (isBoosted) {
@@ -888,26 +935,38 @@ const LocationScreen = () => {
               {isBoosted ? 'Boosté' : boostUnlocked ? 'Booster mon profil ici' : 'Boost 🔓 après 2 check-ins'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleForceCheckinPress}
-            style={[styles.forceCheckinLink, isBoosted && { opacity: 0.4 }]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons name="locate-outline" size={15} color={palette.textMuted} />
-            <Text
+          {showManualCheckinButton && (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={handleManualCheckin}
+              disabled={manualCheckinLoading}
               style={[
-                typography.caption,
+                styles.primaryButton,
                 {
-                  color: palette.textMuted,
-                  fontWeight: '600',
-                  marginLeft: 4,
-                  textDecorationLine: 'underline',
+                  borderRadius: radius.pill,
+                  paddingVertical: spacing.md,
+                  marginTop: spacing.sm,
+                  backgroundColor: manualCheckinSuccess ? '#4CAF50' : palette.accent,
+                  opacity: manualCheckinLoading ? 0.7 : 1,
                 },
               ]}
             >
-              Ce n'est pas le bon lieu ?
-            </Text>
-          </TouchableOpacity>
+              {manualCheckinLoading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Ionicons
+                    name={manualCheckinSuccess ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                    size={18}
+                    color="#fff"
+                  />
+                  <Text style={styles.primaryButtonText}>
+                    {manualCheckinSuccess ? "C'est confirmé !" : 'Je suis là'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
           {__DEV__ && (
             <TouchableOpacity
               onPress={handleDevForceCheckinPress}
@@ -995,13 +1054,6 @@ const LocationScreen = () => {
         onCorrect={handleCorrectCheckin}
         onNotHere={handleNotHereFromVerify}
         onClose={() => setVerifyModalVisible(false)}
-      />
-      <NearbyLocationPicker
-        visible={!!placePicker}
-        lat={placePicker?.lat}
-        lon={placePicker?.lon}
-        onSelect={handleSelectPlace}
-        onClose={() => setPlacePicker(null)}
       />
     </View>
   );

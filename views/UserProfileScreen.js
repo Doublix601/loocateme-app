@@ -44,10 +44,19 @@ import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { incrementSuperlikeSentCount, useProgressiveUnlock } from '../hooks/useProgressiveUnlock';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
+import { useVibeTheme } from '../hooks/useVibeTheme';
 import { Feather } from '@expo/vector-icons';
 import socialMediaIcons from '../constants/socialMediaIcons';
 
 const { width, height } = Dimensions.get('window');
+const HERO_HEIGHT = Math.round(height * 0.48);
+
+// Fondu bas du hero : plutôt qu'un dégradé blanc/clair (palette.heroGradient,
+// pensé pour des overlays de type carte au-dessus de fonds Sun/Moon), on force
+// un dégradé NOIR concentré sur les ~35% bas de la photo pour garantir la
+// lisibilité du texte blanc (nom/âge/statut) quel que soit le thème Sun/Moon.
+const HERO_PHOTO_GRADIENT = ['transparent', 'transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.92)'];
+const HERO_PHOTO_GRADIENT_LOCATIONS = [0, 0.55, 0.8, 1];
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
@@ -59,6 +68,37 @@ const REPORT_CATEGORIES = [
   { value: 'scam', label: 'Arnaque' },
   { value: 'other', label: 'Autre' },
 ];
+
+// TODO: pas de copy officielle "Dispo ce soir" trouvée ailleurs dans l'app
+// (MyAccountScreen n'a que des phrases longues de confirmation de statut).
+// Libellés courts provisoires en attendant une validation produit/UX.
+const STATUS_LABELS = {
+  green: 'Disponible',
+  orange: 'Visibilité restreinte',
+  red: 'Invisible',
+};
+const STATUS_COLORS = {
+  red: '#F44336',
+  orange: '#FF9800',
+  green: '#4CAF50',
+};
+
+// Pas de helper d'âge générique existant dans utils/age.js (uniquement
+// isAtLeast18). Calcul local à partir de user.birthdate.
+const computeAge = (birthdate) => {
+  if (!birthdate) return null;
+  try {
+    const dob = new Date(birthdate);
+    if (isNaN(dob.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    const m = now.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age -= 1;
+    return age >= 0 ? age : null;
+  } catch (_) {
+    return null;
+  }
+};
 
 const UserProfileScreen = () => {
   const navigation = useNavigation();
@@ -80,6 +120,7 @@ const UserProfileScreen = () => {
   const [superlikeLoading, setSuperlikeLoading] = React.useState(false);
   const { isDark, colors } = useTheme();
   const { isMoon } = useVibe();
+  const { palette, radius, spacing, shadows, typography } = useVibeTheme();
   const insets = useSafeAreaInsets();
   const skyFillStyle = {
     position: 'absolute',
@@ -101,24 +142,13 @@ const UserProfileScreen = () => {
     return 0.8;
   };
 
-  const [measuredNameWidth, setMeasuredNameWidth] = React.useState(0);
   const scale = computeScale(socialCountForScale);
-  const imgSize = Math.min(width * 0.4, 160) * scale;
-  const iconSize = Math.min(width * 0.2, 72) * scale;
-  const usernameFont = Math.min(width * 0.075, 30) * scale;
+  // 4 icônes par ligne : gabarit de tuile calibré pour tenir 4 par ligne tout
+  // en restant lisible (icône plus grande qu'avant + marges/padding resserrés
+  // sur la tuile, voir socialMediaTile ci-dessous).
+  const iconSize = Math.min(width * 0.19, 68) * scale;
   const baseBioFont = Math.min(width * 0.04, 18) * scale;
   const bioFont = Math.max(14, Math.min(baseBioFont, 22));
-  const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
-
-  const SAFE_LEFT_FOR_BACK = 56;
-  const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
-  const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
-  const extraSlack = Math.max(10, Math.round(width * 0.025));
-  const minBoxWidth = Math.min(maxBoxWidth, Math.round(width * 0.92));
-  const desiredBoxWidth = Math.max(
-    minBoxWidth,
-    Math.min(maxBoxWidth, Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack),
-  );
 
   // Swipe-back handled natively by React Navigation native stack.
 
@@ -304,6 +334,12 @@ const UserProfileScreen = () => {
       'Utilisateur'
     );
   }, [user]);
+
+  const age = React.useMemo(() => computeAge(user?.birthdate), [user?.birthdate]);
+
+  // Ville dérivée côté backend (reverse geocoding). Peut être vide pour les
+  // comptes récents/pas encore géocodés : on masque alors proprement ce segment.
+  const cityLabel = user?.city || null;
 
   // Compute distance on the fly if not provided (e.g., when coming from search)
   const [computedDistance, setComputedDistance] = React.useState(null);
@@ -499,224 +535,218 @@ const UserProfileScreen = () => {
     }
   };
 
+  const statusKey = user.status === 'red' ? 'red' : user.status === 'orange' ? 'orange' : 'green';
+  const statusColor = STATUS_COLORS[statusKey];
+  const statusLabel = STATUS_LABELS[statusKey];
+
+  // ─── Hero : photo pleine largeur sur ~1/3 de l'écran + fondu ────────
+  const renderHero = () => (
+    <View style={styles.hero}>
+      {user.photo ? (
+        <ImageWithPlaceholder uri={user.photo} style={StyleSheet.absoluteFill} />
+      ) : (
+        <LinearGradient
+          colors={palette.heroFallback}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
+      {!user.photo && (
+        <View style={styles.heroIconWrap}>
+          <Image
+            source={require('../assets/appIcons/userProfile.png')}
+            style={{ width: 96, height: 96, tintColor: 'rgba(255,255,255,0.45)' }}
+          />
+        </View>
+      )}
+      <LinearGradient
+        colors={HERO_PHOTO_GRADIENT}
+        locations={HERO_PHOTO_GRADIENT_LOCATIONS}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
+      {/* Boutons flottants (retour / menu / suivre / superlike) */}
+      <SafeAreaView edges={['top']} style={styles.heroSafeTop} pointerEvents="box-none">
+        <View style={styles.heroTopRow}>
+          <TouchableOpacity
+            style={[styles.heroRoundBtn, { backgroundColor: palette.overlay }]}
+            onPress={() => navigation.goBack()}
+            hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+            accessibilityLabel="Retour"
+          >
+            <Feather name="chevron-left" size={22} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.heroRoundBtn, { backgroundColor: palette.overlay }]}
+            onPress={() => setActionMenuVisible(true)}
+            hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+            accessibilityLabel="Plus d'options"
+          >
+            <Text style={styles.menuButtonText}>⋯</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.heroActionsColumn}>
+          <TouchableOpacity
+            style={[
+              styles.heroRoundBtn,
+              {
+                backgroundColor: followStatus === 'accepted' ? palette.accent : palette.overlay,
+                opacity: followLoading || followStatus === 'pending' ? 0.6 : 1,
+              },
+            ]}
+            onPress={handleFollowPress}
+            disabled={followLoading || followStatus === 'accepted' || followStatus === 'pending'}
+            hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+            accessibilityLabel={
+              followStatus === 'accepted'
+                ? 'Déjà suivi'
+                : followStatus === 'pending'
+                  ? 'Demande en attente'
+                  : 'Envoyer une demande de suivi'
+            }
+          >
+            {followLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Feather name={followStatus === 'accepted' ? 'check' : 'link-2'} size={20} color="#fff" />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.heroRoundBtn,
+              {
+                marginTop: spacing.sm,
+                backgroundColor: superlikeSent ? 'rgba(255,215,0,0.35)' : palette.overlay,
+                opacity: superlikeLoading || superlikeSent ? 0.75 : superlikeUnlocked ? 1 : 0.4,
+              },
+            ]}
+            onPress={handleSuperlike}
+            disabled={superlikeLoading || superlikeSent}
+            hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
+            accessibilityLabel={superlikeUnlocked ? 'Envoyer un superlike' : 'Superlike verrouillé, débloqué après ton premier check-in'}
+          >
+            {superlikeLoading ? (
+              <ActivityIndicator size="small" color="#FFD700" />
+            ) : (
+              <Text style={{ fontSize: 18 }}>{superlikeSent ? '✓' : superlikeUnlocked ? '⭐' : '🔒'}</Text>
+            )}
+            {superlikeBalance > 0 && !superlikeSent && (
+              <View style={styles.superlikeBadge}>
+                <Text style={styles.superlikeBadgeText}>{superlikeBalance}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+
+      {/* Nom + âge + statut/ville en overlay bas du fondu (sur la photo) */}
+      <View style={styles.heroNameOverlay} pointerEvents="none">
+        <Text style={styles.heroNameText} numberOfLines={1}>
+          {displayName}
+          {age != null ? `, ${age}` : ''}
+        </Text>
+        <View style={[styles.statusRow, { marginTop: spacing.xs }]}>
+          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+          <Text style={styles.heroStatusText}>{statusLabel}</Text>
+          {!!cityLabel && (
+            <>
+              <Text style={styles.heroStatusSeparator}>·</Text>
+              <Text style={styles.heroCityText}>{cityLabel}</Text>
+            </>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <View style={{ flex: 1 }}>
       {isMoon ? <NightSkyBackground style={skyFillStyle} /> : <DaySkyBackground style={skyFillStyle} />}
       <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
-        <TouchableOpacity
-          style={[
-            styles.backButton,
-            { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' },
-          ]}
-          onPress={() => navigation.goBack()}
-          hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-          accessibilityLabel="Retour"
-        >
-          <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backButtonImage} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.menuButton,
-            { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' },
-          ]}
-          onPress={() => setActionMenuVisible(true)}
-          hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-          accessibilityLabel="Plus d'options"
-        >
-          <Text style={styles.menuButtonText}>⋯</Text>
-        </TouchableOpacity>
-        {/* Bouton Suivre/Message en icône seule (lien) */}
-        <TouchableOpacity
-          style={[
-            styles.followIconButton,
-            {
-              top: insets.top + 56,
-              backgroundColor: followStatus === 'accepted' ? colors.accent : colors.surfaceAlt,
-              borderColor: colors.accent,
-              opacity: followLoading || followStatus === 'pending' ? 0.6 : 1,
-            },
-          ]}
-          onPress={handleFollowPress}
-          disabled={followLoading || followStatus === 'accepted' || followStatus === 'pending'}
-          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-          accessibilityLabel={
-            followStatus === 'accepted'
-              ? 'Déjà suivi'
-              : followStatus === 'pending'
-                ? 'Demande en attente'
-                : 'Envoyer une demande de suivi'
-          }
-        >
-          {followLoading ? (
-            <ActivityIndicator color={followStatus === 'accepted' ? '#fff' : colors.accent} />
-          ) : (
-            <Feather name={followStatus === 'accepted' ? 'check' : 'link-2'} size={22} color={followStatus === 'accepted' ? '#fff' : colors.accent} />
-          )}
-        </TouchableOpacity>
-
-        {/* Superlike button */}
-        <TouchableOpacity
-          style={[
-            styles.superlikeButton,
-            {
-              top: insets.top + 110,
-              backgroundColor: superlikeSent
-                ? 'rgba(255,215,0,0.2)'
-                : superlikeBalance > 0
-                  ? 'rgba(255,215,0,0.12)'
-                  : isDark
-                    ? 'rgba(255,255,255,0.08)'
-                    : 'rgba(0,0,0,0.05)',
-              borderColor: superlikeSent ? '#FFD700' : 'rgba(255,215,0,0.4)',
-              opacity: superlikeLoading || superlikeSent ? 0.75 : superlikeUnlocked ? 1 : 0.4,
-            },
-          ]}
-          onPress={handleSuperlike}
-          disabled={superlikeLoading || superlikeSent}
-          hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-          accessibilityLabel={superlikeUnlocked ? 'Envoyer un superlike' : 'Superlike verrouillé, débloqué après ton premier check-in'}
-        >
-          {superlikeLoading ? (
-            <ActivityIndicator size="small" color="#FFD700" />
-          ) : (
-            <Text style={{ fontSize: 20 }}>{superlikeSent ? '✓' : superlikeUnlocked ? '⭐' : '🔒'}</Text>
-          )}
-          {superlikeBalance > 0 && !superlikeSent && (
-            <View style={styles.superlikeBadge}>
-              <Text style={styles.superlikeBadgeText}>{superlikeBalance}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
-            paddingHorizontal: width * 0.05,
-            paddingTop: height * 0.06,
             paddingBottom: Math.max(24, height * 0.06) + insets.bottom,
             flexGrow: 1,
           }}
         >
-          <View style={styles.userInfoContainer}>
-            <View style={styles.profileHeader}>
+          {renderHero()}
+
+          <View style={{ paddingHorizontal: spacing.lg }}>
+            {!!user.mutualConnection && (
               <View
                 style={[
-                  styles.imgUsernameSplitBox,
+                  styles.mutualBanner,
                   {
-                    backgroundColor: colors.surfaceAlt,
-                    width: desiredBoxWidth,
-                    paddingHorizontal: boxHorizontalPadding,
+                    backgroundColor: palette.accentSoft,
+                    borderRadius: radius.md,
+                    marginTop: spacing.md,
+                    paddingVertical: spacing.sm,
+                    paddingHorizontal: spacing.md,
                   },
                 ]}
               >
-                <View style={styles.userProfilePictureContainer}>
-                  {user.photo ? (
-                    <ImageWithPlaceholder
-                      uri={user.photo}
-                      style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
-                    />
-                  ) : (
-                    <View
-                      style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
+                <Feather name="heart" size={16} color={palette.accent} />
+                <Text style={{ marginLeft: 8, color: palette.accent, fontWeight: '700', flex: 1 }}>
+                  Cette personne veut entrer en contact
+                </Text>
+              </View>
+            )}
+
+            {user.updatedAt && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.md }}>
+                <View
+                  style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}
+                >
+                  <Text style={[styles.distanceText, { color: colors.accent }]}>
+                    {formatLastSeen(user.updatedAt)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Bio */}
+            <View
+              style={[
+                styles.bioContainer,
+                { backgroundColor: palette.surface, borderRadius: radius.lg, marginTop: spacing.lg },
+                shadows.card,
+              ]}
+            >
+              <View style={styles.bioTitleContainer}>
+                <Text style={[typography.caption, { color: palette.textFaint, fontWeight: '700' }]}>BIO</Text>
+              </View>
+              <View style={styles.bioTextContainer}>
+                {(() => {
+                  const bioText = String(user?.bio || '').trim();
+                  const isEmpty = bioText.length === 0;
+                  return (
+                    <Text
+                      style={[
+                        styles.value,
+                        {
+                          fontSize: bioFont,
+                          textAlign: 'left',
+                          width: '100%',
+                          color: isEmpty ? palette.textFaint : palette.text,
+                          fontStyle: isEmpty ? 'italic' : 'normal',
+                          lineHeight: bioFont * 1.4,
+                        },
+                      ]}
                     >
-                      <Image
-                        source={require('../assets/appIcons/userProfile.png')}
-                        style={[styles.placeholderIcon, { width: placeholderIconSize, height: placeholderIconSize }]}
-                      />
-                    </View>
-                  )}
-                </View>
-                <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                  <Text
-                    style={[
-                      styles.usernameUnderPhoto,
-                      isDark && styles.usernameUnderPhotoDark,
-                      { fontSize: usernameFont },
-                    ]}
-                  >
-                    {displayName}
-                  </Text>
-                  {/* Traffic Light UI for Status (Read-only) */}
-                  <View style={styles.statusSelector}>
-                    <View
-                      style={[
-                        styles.statusCircle,
-                        { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.1 },
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.statusCircle,
-                        { backgroundColor: '#FF9800', opacity: user.status === 'orange' ? 1 : 0.1 },
-                      ]}
-                    />
-                    <View
-                      style={[
-                        styles.statusCircle,
-                        { backgroundColor: '#4CAF50', opacity: user.status === 'green' || !user.status ? 1 : 0.1 },
-                      ]}
-                    />
-                  </View>
-                  {/* Mesure invisible en une seule ligne */}
-                  <Text
-                    style={[styles.usernameUnderPhoto, { fontSize: usernameFont, position: 'absolute', opacity: 0 }]}
-                    numberOfLines={1}
-                    onLayout={(e) => {
-                      const w = e?.nativeEvent?.layout?.width || 0;
-                      if (w && Math.abs(w - measuredNameWidth) > 0.5) setMeasuredNameWidth(w);
-                    }}
-                  >
-                    {displayName}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
-                <View style={styles.bioTitleContainer}>
-                  <Text style={[styles.label, isDark && styles.labelDark, { marginBottom: 0, fontWeight: '700' }]}>
-                    Bio
-                  </Text>
-                </View>
-                <View style={styles.bioTextContainer}>
-                  {(() => {
-                    const bioText = String(user?.bio || '').trim();
-                    const isEmpty = bioText.length === 0;
-                    return (
-                      <Text
-                        style={[
-                          styles.value,
-                          isDark && styles.valueDark,
-                          {
-                            fontSize: bioFont,
-                            textAlign: 'left',
-                            width: '100%',
-                            color: isEmpty ? colors.textMuted : colors.textPrimary,
-                            fontStyle: isEmpty ? 'italic' : 'normal',
-                            lineHeight: bioFont * 1.4,
-                          },
-                        ]}
-                      >
-                        {isEmpty ? 'Aucune bio renseignée.' : bioText}
-                      </Text>
-                    );
-                  })()}
-                </View>
-              </View>
-
-              {user.updatedAt && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: height * 0.025 }}>
-                  <View
-                    style={[styles.distancePill, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}
-                  >
-                    <Text style={[styles.distanceText, { color: colors.accent }]}>
-                      {formatLastSeen(user.updatedAt)}
+                      {isEmpty ? 'Aucune bio renseignée.' : bioText}
                     </Text>
-                  </View>
-                </View>
-              )}
+                  );
+                })()}
+              </View>
             </View>
 
-            <View style={styles.socialMediaContainer}>
+            {/* Réseaux sociaux */}
+            <View style={[styles.socialMediaContainer, { marginTop: spacing.lg }]}>
               {(() => {
                 const isMe = String(currentUser?._id || currentUser?.id) === String(user?._id || user?.id);
                 if (!isMe && (user.status === 'orange' || user.status === 'red') && !user.mutualConnection) {
@@ -749,7 +779,7 @@ const UserProfileScreen = () => {
                     return (
                       <TouchableOpacity
                         key={index}
-                        style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}
+                        style={[styles.socialMediaTile, { backgroundColor: palette.surface, borderRadius: radius.md }]}
                         onPress={() => {
                           // Support de plusieurs schémas: username | handle | link | identifier
                           const handle = social.username || social.handle || social.link || social.identifier || '';
@@ -764,9 +794,7 @@ const UserProfileScreen = () => {
                     );
                   })
                 ) : (
-                  <Text style={[styles.value, isDark && styles.valueDark, { color: colors.textSecondary }]}>
-                    Aucun réseau social
-                  </Text>
+                  <Text style={[styles.value, { color: palette.textMuted }]}>Aucun réseau social</Text>
                 );
               })()}
             </View>
@@ -903,27 +931,92 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: width * 0.08,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: height * 0.02,
-    marginBottom: height * 0.03,
-    color: '#00c2cb',
+  hero: {
+    width: '100%',
+    height: HERO_HEIGHT,
+    backgroundColor: '#0A0A12',
+    justifyContent: 'space-between',
   },
-  userInfoContainer: {
-    marginBottom: height * 0.04,
+  heroIconWrap: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroSafeTop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  heroTopRow: {
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? 8 : 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroActionsColumn: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    alignItems: 'center',
+  },
+  heroRoundBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroNameOverlay: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    bottom: 16,
+  },
+  heroNameText: {
+    color: '#fff',
+    fontSize: Math.min(width * 0.08, 32),
+    fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  heroStatusText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  heroStatusSeparator: {
+    color: 'rgba(255,255,255,0.75)',
+    marginHorizontal: 6,
+    fontWeight: '700',
+  },
+  heroCityText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    fontWeight: '500',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
+  },
+  mutualBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   bioContainer: {
     width: '100%',
-    marginTop: height * 0.025,
     padding: 15,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   bioTitleContainer: {
     flexDirection: 'row',
@@ -933,130 +1026,22 @@ const styles = StyleSheet.create({
   bioTextContainer: {
     width: '100%',
   },
-  profileHeader: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: height * 0.03,
-  },
-  imgUsernameSplitBox: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    alignSelf: 'center',
-    paddingVertical: height * 0.03,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  userProfilePictureContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: height * 0.02,
-  },
-  usernameUnderPhoto: {
-    marginTop: 8,
-    fontSize: Math.min(width * 0.075, 30),
-    color: '#00c2cb',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  usernameUnderPhotoDark: {
-    color: '#fff',
-  },
-  statusSelector: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  statusCircle: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    marginHorizontal: 6,
-  },
-  profileImage: {
-    width: Math.min(width * 0.4, 160),
-    height: Math.min(width * 0.4, 160),
-    borderRadius: Math.min(width * 0.2, 80),
-  },
-  placeholderImage: {
-    width: Math.min(width * 0.4, 160),
-    height: Math.min(width * 0.4, 160),
-    backgroundColor: '#00c2cb',
-    borderRadius: Math.min(width * 0.2, 80),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderIcon: {
-    width: Math.min(width * 0.18, 72),
-    height: Math.min(width * 0.18, 72),
-    tintColor: '#fff',
-  },
-  label: {
-    fontSize: Math.min(width * 0.045, 18),
-    color: '#00c2cb',
-    marginBottom: 5,
-  },
-  labelDark: {
-    color: '#fff',
-  },
   value: {
     fontSize: Math.min(width * 0.04, 16),
     color: '#3f4a4b',
-  },
-  valueDark: {
-    color: '#eee',
-  },
-  identityCard: {
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    minHeight: 70,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  identityLabel: {
-    fontSize: 10,
-    color: '#00c2cb',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  identityLabelDark: {
-    color: '#fff',
-  },
-  identityValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    width: '100%',
   },
   socialMediaContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
   },
   socialMediaTile: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: height * 0.02,
-    marginHorizontal: width * 0.03,
-    padding: Math.max(8, width * 0.025),
-    borderRadius: 18,
+    marginHorizontal: width * 0.01,
+    padding: Math.max(5, width * 0.01),
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -1064,13 +1049,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   socialMediaIcon: {
-    width: Math.min(width * 0.2, 72),
-    height: Math.min(width * 0.2, 72),
+    width: Math.min(width * 0.19, 68),
+    height: Math.min(width * 0.19, 68),
     resizeMode: 'contain',
   },
-  socialMediaText: {
-    fontSize: width * 0.04,
-    marginTop: height * 0.01,
+  orangeStatusText: {
+    fontSize: Math.min(width * 0.04, 16),
+    textAlign: 'center',
   },
   distancePill: {
     paddingHorizontal: 10,
@@ -1083,13 +1068,6 @@ const styles = StyleSheet.create({
   distanceText: {
     color: '#00aab2',
     fontWeight: '600',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: width * 0.05,
-    paddingTop: height * 0.05,
   },
   reportCard: {
     width: '100%',
@@ -1129,97 +1107,11 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#f44336',
   },
-  iconContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  selectedTile: {
-    borderWidth: 2,
-    borderColor: '#4CAF50',
-  },
-  returnToListButton: {
-    backgroundColor: '#00c2cb',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 30,
-    right: 110,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  settingsButton: {
-    backgroundColor: '#00c2cb',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  roundButtonImage: {
-    width: 30,
-    height: 30,
-    tintColor: '#fff',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 10,
-    left: 12,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuButton: {
-    position: 'absolute',
-    top: 10,
-    right: 12,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  followIconButton: {
-    position: 'absolute',
-    top: 56,
-    right: 14,
-    zIndex: 10,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  superlikeButton: {
-    position: 'absolute',
-    top: 110,
-    right: 14,
-    zIndex: 10,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  menuButtonText: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 2,
   },
   superlikeBadge: {
     position: 'absolute',
@@ -1234,80 +1126,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   superlikeBadgeText: { color: '#000', fontSize: 9, fontWeight: '900' },
-  menuButtonText: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#00c2cb',
-    letterSpacing: 2,
-  },
-  backButtonImage: {
-    width: 22,
-    height: 22,
-    tintColor: '#00c2cb',
-  },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: width * 0.05,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 420,
-    borderRadius: 12,
-    padding: 16,
-    alignSelf: 'center',
-  },
-  modalLabel: {
-    fontSize: width * 0.04,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-  },
-  primaryButton: {
-    backgroundColor: '#00c2cb',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  cancelButton: {
-    backgroundColor: '#e0f7f9',
-  },
-  cancelButtonText: {
-    color: '#00c2cb',
-  },
-  targetRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  targetChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-  targetChipActive: {
-    borderColor: '#00c2cb',
-    backgroundColor: '#e6fbfc',
-  },
-  targetChipText: {
-    fontSize: width * 0.04,
-    color: '#333',
-  },
-  targetChipTextActive: {
-    color: '#00aab2',
-    fontWeight: '600',
   },
   menuCard: {
     width: '100%',

@@ -16,7 +16,7 @@ import {
   Linking,
   Share,
   KeyboardAvoidingView,
-  ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -25,15 +25,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { BlurView } from 'expo-blur';
-import * as ImagePicker from 'expo-image-picker';
 import { UserContext } from '../components/contexts/UserContext';
 import {
   updateProfile as apiUpdateProfile,
-  uploadProfilePhoto as apiUploadProfilePhoto,
   upsertSocial as apiUpsertSocial,
   removeSocial as apiRemoveSocial,
   getMyUser,
   updateUserStatus as apiUpdateUserStatus,
+  claimSupervise as apiClaimSupervise,
+  claimBoost as apiClaimBoost,
 } from '../components/ApiRequest';
 import { proxifyImageUrl } from '../components/ServerUtils';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
@@ -50,7 +50,7 @@ import { hasSeenProfileOnboarding, markProfileOnboardingDone } from '../utils/on
 import SuperlikeHistoryModal from '../components/SuperlikeHistoryModal';
 import ConsumablesShopSheet from '../components/ConsumablesShopSheet';
 import PremiumService from '../services/PremiumService';
-import CoteCard from '../components/CoteCard';
+import StreakCard from '../components/StreakCard';
 import { subscribe } from '../components/EventBus';
 
 const { width, height } = Dimensions.get('window');
@@ -92,6 +92,32 @@ const MyAccountScreen = () => {
   const [myUserId, setMyUserId] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [measuredNameWidth, setMeasuredNameWidth] = useState(0);
+  const [statusPickerVisible, setStatusPickerVisible] = useState(false);
+  const [streakClaiming, setStreakClaiming] = useState(false);
+
+  // ── Pulse animations : icônes Superlike (étoile) et Boost (éclair) ────
+  // Même pattern que l'animation "press" de StreakCard (Animated de react-native,
+  // aucune lib d'animation dédiée type reanimated n'est utilisée ailleurs dans ce fichier).
+  const superlikePulse = useRef(new Animated.Value(1)).current;
+  const boostPulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const makeLoop = (val, delay = 0) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(val, { toValue: 1.15, duration: 800, useNativeDriver: true }),
+          Animated.timing(val, { toValue: 1, duration: 800, useNativeDriver: true }),
+        ]),
+      );
+    const loop1 = makeLoop(superlikePulse, 0);
+    const loop2 = makeLoop(boostPulse, 400);
+    loop1.start();
+    loop2.start();
+    return () => {
+      loop1.stop();
+      loop2.stop();
+    };
+  }, []);
 
   // ── Spotlight onboarding ──────────────────────────────────────
   const [spotStep, setSpotStep] = useState(-1);
@@ -106,9 +132,9 @@ const MyAccountScreen = () => {
   const SPOT_STEPS = [
     {
       ref: photoRef,
-      borderRadius: 999,
+      borderRadius: 16,
       title: 'Ta photo de profil',
-      description: 'Reste appuyé sur ta photo pour la modifier ou en choisir une nouvelle depuis ta galerie.',
+      description: 'Modifie ta photo de profil depuis les réglages (icône en haut à droite).',
     },
     {
       ref: bioRef,
@@ -124,10 +150,10 @@ const MyAccountScreen = () => {
     },
     {
       ref: statusRef,
-      borderRadius: 99,
+      borderRadius: 16,
       title: 'Ton statut',
       description:
-        'Vert = disponible · Orange = occupé · Rouge = ne pas déranger. Visible par les autres en temps réel.',
+        'Profil public = visible par tous · Profil privé = réseaux masqués · Incognito = invisible. Appuie pour changer.',
     },
   ];
 
@@ -210,8 +236,17 @@ const MyAccountScreen = () => {
     return 0.8; // many socials -> reduce to fit
   };
   const scale = computeScale(socialCountForScale);
+  // Grille des réseaux sociaux : même approche que UserProfileScreen — 4 tuiles
+  // par ligne (flexWrap sur des tuiles de taille fixe), au lieu de l'ancien
+  // découpage explicite en lignes de `socialGridColumns` tuiles. Cet ancien
+  // calcul visait un nombre MAXIMAL de lignes (4), pas un nombre de tuiles par
+  // ligne : pour 8 tuiles (7 réseaux + bouton "ajouter"), il donnait
+  // `socialGridColumns = ceil(8/4) = 2`, donc systématiquement 2 colonnes —
+  // c'était la cause du bug "toujours 2 colonnes" remonté par l'utilisateur.
+  // iconSize suit la même formule que UserProfileScreen.iconSize, chaque écran
+  // ayant son propre padding horizontal de conteneur (voir socialMediaTile).
   const imgSize = Math.min(width * 0.4, 160) * scale;
-  const iconSize = Math.min(width * 0.2, 72) * scale;
+  const iconSize = Math.min(width * 0.19, 68) * scale;
   const usernameFont = Math.min(width * 0.075, 30) * scale;
   const baseBioFont = Math.min(width * 0.04, 18) * scale;
   const bioFont = Math.max(14, Math.min(baseBioFont, 22));
@@ -228,6 +263,9 @@ const MyAccountScreen = () => {
   const textPrimaryStyle = { color: isDark ? '#fff' : colors.textPrimary };
   const textSecondaryStyle = { color: isDark ? '#eee' : colors.textSecondary };
   const subTextStyle = { color: isDark ? 'rgba(255,255,255,0.9)' : colors.textSecondary };
+  // Ville dérivée côté backend (reverse geocoding). Peut être vide pour les
+  // comptes récents/pas encore géocodés : on masque alors proprement ce segment.
+  const cityLabel = user?.city || null;
   const SAFE_LEFT_FOR_BACK = 56; // espace minimum à gauche pour le bouton retour (padding+icône)
   const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
   const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
@@ -288,7 +326,13 @@ const MyAccountScreen = () => {
             photo: me.profileImageUrl || user?.photo || null,
             socialMedia: mappedSocial,
             isPremium: !!me.isPremium,
-            cotePercent: typeof me.cotePercent === 'number' ? me.cotePercent : (user?.cotePercent ?? 100),
+            streak: {
+              count: typeof me?.streak?.count === 'number' ? me.streak.count : (user?.streak?.count ?? 0),
+              lastCheckInDate: me?.streak?.lastCheckInDate ?? user?.streak?.lastCheckInDate ?? null,
+              supervisePendingClaim: !!(me?.streak?.supervisePendingClaim ?? user?.streak?.supervisePendingClaim),
+              boostPendingClaim: !!(me?.streak?.boostPendingClaim ?? user?.streak?.boostPendingClaim),
+              lastClaimedAt: me?.streak?.lastClaimedAt ?? user?.streak?.lastClaimedAt ?? null,
+            },
             role: me.role || user?.role || 'user',
             premiumTrialEnd: me.premiumTrialEnd || null,
             consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
@@ -356,7 +400,13 @@ const MyAccountScreen = () => {
             ? mapNetworksToSocialMedia(me.socialNetworks)
             : user?.socialMedia || [],
           isPremium: nowPremium,
-          cotePercent: typeof me.cotePercent === 'number' ? me.cotePercent : (user?.cotePercent ?? 100),
+          streak: {
+            count: typeof me?.streak?.count === 'number' ? me.streak.count : (user?.streak?.count ?? 0),
+            lastCheckInDate: me?.streak?.lastCheckInDate ?? user?.streak?.lastCheckInDate ?? null,
+            supervisePendingClaim: !!(me?.streak?.supervisePendingClaim ?? user?.streak?.supervisePendingClaim),
+            boostPendingClaim: !!(me?.streak?.boostPendingClaim ?? user?.streak?.boostPendingClaim),
+            lastClaimedAt: me?.streak?.lastClaimedAt ?? user?.streak?.lastClaimedAt ?? null,
+          },
           role: me.role || user?.role || 'user',
           premiumTrialEnd: me.premiumTrialEnd || null,
           consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
@@ -436,9 +486,6 @@ const MyAccountScreen = () => {
     setQrImageUri(proxifyImageUrl(qrUrl));
   }, [qrUrl]);
   const [selectedSocialLink, setSelectedSocialLink] = useState(null);
-  const [photoOptionsModalVisible, setPhotoOptionsModalVisible] = useState(false);
-  // Which photo action is currently in flight: null | 'camera' | 'gallery' | 'delete'
-  const [photoActionLoading, setPhotoActionLoading] = useState(null);
 
   // Allowed social platforms (must match backend validation)
   const ALLOWED_PLATFORMS = ['instagram', 'facebook', 'x', 'snapchat', 'tiktok', 'linkedin', 'youtube'];
@@ -514,6 +561,13 @@ const MyAccountScreen = () => {
           ? mapNetworksToSocialMedia(me.socialNetworks)
           : user.socialMedia || [],
         isPremium: !!me.isPremium,
+        streak: {
+          count: typeof me?.streak?.count === 'number' ? me.streak.count : (user?.streak?.count ?? 0),
+          lastCheckInDate: me?.streak?.lastCheckInDate ?? user?.streak?.lastCheckInDate ?? null,
+          supervisePendingClaim: !!(me?.streak?.supervisePendingClaim ?? user?.streak?.supervisePendingClaim),
+          boostPendingClaim: !!(me?.streak?.boostPendingClaim ?? user?.streak?.boostPendingClaim),
+          lastClaimedAt: me?.streak?.lastClaimedAt ?? user?.streak?.lastClaimedAt ?? null,
+        },
         role: me.role || user?.role || 'user',
         premiumTrialEnd: me.premiumTrialEnd || null,
         consent: me.consent || user.consent || { accepted: false, version: '', consentAt: null },
@@ -530,6 +584,29 @@ const MyAccountScreen = () => {
           },
       });
     } catch (_) {}
+  };
+
+  const handleClaimStreakReward = async () => {
+    if (streakClaiming) return;
+    setStreakClaiming(true);
+    try {
+      if (user?.streak?.boostPendingClaim) {
+        await apiClaimBoost();
+        setToastMessage('Boost récupéré 🚀');
+      } else if (user?.streak?.supervisePendingClaim) {
+        await apiClaimSupervise();
+        setToastMessage('Superlike récupéré ⭐️');
+      } else {
+        return;
+      }
+      setToastVisible(true);
+      await refreshMyProfile();
+      refreshConsumableCounts();
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de réclamer la récompense');
+    } finally {
+      setStreakClaiming(false);
+    }
   };
 
   const handleRefresh = async () => {
@@ -826,169 +903,6 @@ const MyAccountScreen = () => {
     }
   };
 
-  const handleProfileImageLongPress = () => {
-    setPhotoOptionsModalVisible(true);
-  };
-
-  const handleCamera = async () => {
-    if (photoActionLoading) return;
-    if (Platform.OS === 'web') {
-      Alert.alert('Non supporté', "La caméra n'est pas disponible sur le web.");
-      return;
-    }
-    try {
-      // Request camera permission first
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Autorisation requise', "L'application a besoin de l'accès à la caméra pour prendre une photo.");
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        quality: 0.8,
-      });
-
-      const canceled = result?.canceled ?? result?.cancelled;
-      const uri = result?.assets?.[0]?.uri ?? result?.uri;
-      if (canceled || !uri) return;
-
-      setPhotoActionLoading('camera');
-      try {
-        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
-        const file = { uri, name, type: 'image/jpeg' };
-        const res = await apiUploadProfilePhoto(file);
-        const updated = res?.user || {};
-        updateUser({
-          ...user,
-          photo: updated.profileImageUrl || uri,
-          username: updated.name ?? user.username,
-          bio: updated.bio ?? user.bio,
-        });
-        await refreshMyProfile();
-        setPhotoOptionsModalVisible(false);
-      } catch (e2) {
-        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
-      } finally {
-        setPhotoActionLoading(null);
-      }
-    } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir la caméra.");
-    }
-  };
-
-  const handleGallery = async () => {
-    if (photoActionLoading) return;
-    try {
-      if (Platform.OS === 'web') {
-        // Web: pick and upload as well so backend profileImageUrl stays in sync
-        const result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.8 });
-        const canceled = result?.canceled ?? result?.cancelled;
-        const uri = result?.assets?.[0]?.uri ?? result?.uri;
-        if (canceled || !uri) return;
-
-        setPhotoActionLoading('gallery');
-        try {
-          const res = await apiUploadProfilePhoto(uri);
-          const updated = res?.user || {};
-          updateUser({
-            ...user,
-            photo: updated.profileImageUrl || uri,
-            username: updated.name ?? user.username,
-            bio: updated.bio ?? user.bio,
-          });
-          await refreshMyProfile();
-          setPhotoOptionsModalVisible(false);
-        } catch (e2) {
-          console.error('[MyAccount] Upload photo (web) error', {
-            code: e2?.code,
-            message: e2?.message,
-            status: e2?.status,
-          });
-          Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
-        } finally {
-          setPhotoActionLoading(null);
-        }
-        return;
-      }
-
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Autorisation requise',
-          "L'application a besoin de l'accès à vos photos pour sélectionner une image.",
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: true,
-        quality: 0.8,
-      });
-      const canceled = result?.canceled ?? result?.cancelled;
-      const uri = result?.assets?.[0]?.uri ?? result?.uri;
-      if (canceled || !uri) return;
-
-      setPhotoActionLoading('gallery');
-      try {
-        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
-        const file = { uri, name, type: 'image/jpeg' };
-        const res = await apiUploadProfilePhoto(file);
-        const updated = res?.user || {};
-        updateUser({
-          ...user,
-          photo: updated.profileImageUrl || uri,
-          username: updated.name ?? user.username,
-          bio: updated.bio ?? user.bio,
-        });
-        await refreshMyProfile();
-        setPhotoOptionsModalVisible(false);
-      } catch (e2) {
-        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
-      } finally {
-        setPhotoActionLoading(null);
-      }
-    } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir la galerie.");
-    }
-  };
-
-  const confirmDeletePhoto = () => {
-    if (photoActionLoading) return;
-    Alert.alert('Supprimer la photo de profil ?', 'Cette action est définitive.', [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: handleDeletePhoto },
-    ]);
-  };
-
-  const handleDeletePhoto = async () => {
-    setPhotoActionLoading('delete');
-    try {
-      const { deleteProfilePhoto: apiDelete } = await import('../components/ApiRequest');
-      const res = await apiDelete();
-      const updated = res?.user || {};
-      updateUser({
-        ...user,
-        photo: updated.profileImageUrl || null,
-        username: updated.name ?? user.username,
-        bio: updated.bio ?? user.bio,
-      });
-      await refreshMyProfile();
-      setPhotoOptionsModalVisible(false);
-    } catch (e) {
-      console.error('[MyAccount] Delete photo error', {
-        code: e?.code,
-        message: e?.message,
-        status: e?.status,
-        details: e?.details,
-        response: e?.response,
-      });
-      Alert.alert('Erreur', e?.message || 'Impossible de supprimer la photo de profil');
-    } finally {
-      setPhotoActionLoading(null);
-    }
-  };
-
   return (
     <>
       <View style={{ flex: 1 }}>
@@ -1031,7 +945,6 @@ const MyAccountScreen = () => {
             }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
           >
-            <Text style={styles.title}>Mon Compte</Text>
             <View style={styles.userInfoContainer}>
               <View style={styles.profileHeader}>
                 <View
@@ -1045,19 +958,38 @@ const MyAccountScreen = () => {
                   ]}
                 >
                   <View style={styles.userProfilePictureContainer}>
-                    <TouchableOpacity ref={photoRef} onLongPress={handleProfileImageLongPress}>
+                    {/* Style photo aligné sur UserProfileScreen : coins arrondis + fondu noir bas
+                        (même langage visuel que le hero de UserProfileScreen, adapté à la taille
+                        plus petite/inline de MyAccountScreen). */}
+                    <View
+                      ref={photoRef}
+                      style={{
+                        width: imgSize,
+                        height: imgSize,
+                        borderRadius: 24,
+                        overflow: 'hidden',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.18,
+                        shadowRadius: 8,
+                        elevation: 4,
+                      }}
+                    >
                       {user.photo ? (
-                        <ImageWithPlaceholder
-                          uri={user.photo}
-                          style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: imgSize / 2 }]}
-                        />
+                        <>
+                          <ImageWithPlaceholder
+                            uri={user.photo}
+                            style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: 0 }]}
+                          />
+                          <LinearGradient
+                            colors={['transparent', 'transparent', 'rgba(0,0,0,0.35)']}
+                            locations={[0, 0.6, 1]}
+                            style={StyleSheet.absoluteFill}
+                            pointerEvents="none"
+                          />
+                        </>
                       ) : (
-                        <View
-                          style={[
-                            styles.placeholderImage,
-                            { width: imgSize, height: imgSize, borderRadius: imgSize / 2 },
-                          ]}
-                        >
+                        <View style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: 0 }]}>
                           <Image
                             source={require('../assets/appIcons/userProfile.png')}
                             style={[
@@ -1067,16 +999,21 @@ const MyAccountScreen = () => {
                           />
                         </View>
                       )}
-                    </TouchableOpacity>
+                    </View>
                   </View>
                   <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                     <View>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont }, textPrimaryStyle]}>
+                        <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont, color: colors.accent }]}>
                           {user?.customName ||
                             (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
                         </Text>
                       </View>
+                      {!user?.customName ? (
+                        <Text style={[styles.usernameSubText, { fontSize: Math.max(11, usernameFont * 0.4) }]}>
+                          Nom personnalisé non renseigné
+                        </Text>
+                      ) : null}
                       {/* Mesure invisible sur une ligne pour calculer la largeur exacte du nom */}
                       <Text
                         style={[
@@ -1095,49 +1032,104 @@ const MyAccountScreen = () => {
                     </View>
                   </View>
                 </View>
-                {/* Traffic Light UI for Status */}
-                <View ref={statusRef} style={[styles.statusSelector]}>
+
+                {/* Sélecteur de statut (dropdown) */}
+                <View ref={statusRef} style={{ width: '100%', alignItems: 'center' }}>
                   <TouchableOpacity
                     style={[
-                      styles.statusCircle,
-                      { backgroundColor: '#F44336', opacity: user.status === 'red' ? 1 : 0.3 },
+                      styles.statusPickerButton,
+                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
                     ]}
-                    onPress={() => handleUpdateStatus('red')}
-                  />
-                  <TouchableOpacity
-                    style={[
-                      styles.statusCircle,
-                      { backgroundColor: '#FF9800', opacity: user.status === 'orange' ? 1 : 0.3 },
-                    ]}
-                    onPress={() => handleUpdateStatus('orange')}
-                  />
-                  <TouchableOpacity
-                    style={[
-                      styles.statusCircle,
-                      { backgroundColor: '#4CAF50', opacity: user.status === 'green' ? 1 : 0.3 },
-                    ]}
-                    onPress={() => handleUpdateStatus('green')}
-                  />
+                    onPress={() => setStatusPickerVisible(true)}
+                    accessibilityLabel="Choisir mon statut"
+                  >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor:
+                            user.status === 'red' ? '#F44336' : user.status === 'orange' ? '#FF9800' : '#4CAF50',
+                        },
+                      ]}
+                    />
+                    <Text style={[styles.statusPickerLabel, textPrimaryStyle]}>
+                      {user.status === 'red'
+                        ? 'Incognito'
+                        : user.status === 'orange'
+                          ? 'Profil privé'
+                          : 'Profil public'}
+                      {!!cityLabel && (
+                        <Text style={{ color: colors.textSecondary, fontWeight: '400' }}> · {cityLabel}</Text>
+                      )}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
+                  </TouchableOpacity>
                 </View>
 
-                <CoteCard
-                  percent={user?.cotePercent ?? 100}
+                {/* Bandeau parrainage compact */}
+                <TouchableOpacity
+                  style={styles.referralBanner}
+                  activeOpacity={0.85}
+                  onPress={() => navigation.navigate('Referral')}
+                  accessibilityLabel="Parrainage : invite tes amis"
+                >
+                  <LinearGradient
+                    colors={['#00c2cb', '#7b5cff']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.referralBannerGradient}
+                  >
+                    <Ionicons name="gift-outline" size={22} color="#fff" />
+                    <Text style={styles.referralBannerText}>Invite tes amis</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#fff" />
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <StreakCard
+                  count={user?.streak?.count ?? 0}
+                  supervisePendingClaim={!!user?.streak?.supervisePendingClaim}
+                  boostPendingClaim={!!user?.streak?.boostPendingClaim}
+                  claiming={streakClaiming}
                   colors={colors}
                   isDark={isDark}
+                  onClaim={handleClaimStreakReward}
                   onPress={() =>
                     Alert.alert(
-                      'Ta Cote 🔥',
-                      "Ta Cote reflète ton assiduité. Connecte-toi au moins une fois par jour pour la garder à 100%. Si tu rates un jour, elle retombe à 0%, puis remonte de 25% par jour de connexion. Plus elle est haute, plus tu apparais en premier dans la liste des utilisateurs d'un lieu.",
+                      'Ta série 🔥',
+                      "Connecte-toi chaque jour pour faire grimper ta série. À J7, réclame un superlike. À J14, réclame un boost — ta série repart alors à 0.",
                     )
                   }
                 />
 
-                <TouchableOpacity
-                  style={[styles.editButton, { alignSelf: 'center' }]}
-                  onPress={() => navigation.navigate('EditProfile')}
-                >
-                  <Text style={styles.editButtonText}>Modifier mon profil</Text>
-                </TouchableOpacity>
+                {/* Superlikes & Boosts (conteneur combiné) */}
+                <View style={[styles.consumablesCard, { backgroundColor: colors.surfaceAlt }]}>
+                  <TouchableOpacity
+                    style={styles.consumablesStat}
+                    onPress={() => setSuperlikeHistoryVisible(true)}
+                    accessibilityLabel={`Voir l'historique des superlikes, ${superlikeBalance} restant${superlikeBalance !== 1 ? 's' : ''}`}
+                  >
+                    <Animated.View style={{ transform: [{ scale: superlikePulse }] }}>
+                      <Ionicons name="star" size={18} color="#FFB800" />
+                    </Animated.View>
+                    <Text style={[styles.consumablesStatLabel, textPrimaryStyle]}>Superlikes</Text>
+                    <Text style={[styles.consumablesStatValue, textPrimaryStyle]}>{superlikeBalance}</Text>
+                  </TouchableOpacity>
+                  <View style={[styles.consumablesDivider, { backgroundColor: colors.border }]} />
+                  <View style={styles.consumablesStat}>
+                    <Animated.View style={{ transform: [{ scale: boostPulse }] }}>
+                      <Ionicons name="flash" size={18} color="#00c2cb" />
+                    </Animated.View>
+                    <Text style={[styles.consumablesStatLabel, textPrimaryStyle]}>Boosts</Text>
+                    <Text style={[styles.consumablesStatValue, textPrimaryStyle]}>{boostBalance}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.consumablesBuyButton}
+                    onPress={() => setConsumablesShopVisible(true)}
+                    accessibilityLabel="Acheter des superlikes ou boosters"
+                  >
+                    <Text style={styles.consumablesBuyButtonText}>Acheter</Text>
+                  </TouchableOpacity>
+                </View>
 
                 <View ref={bioRef} style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
                   <View style={styles.bioTitleContainer}>
@@ -1168,7 +1160,7 @@ const MyAccountScreen = () => {
                             },
                           ]}
                         >
-                          {isEmpty ? 'Maintenir pour ajouter une bio...' : bioText}
+                          {isEmpty ? 'Ajoute une phrase pour te présenter.' : bioText}
                         </Text>
                       );
                     })()}
@@ -1191,121 +1183,96 @@ const MyAccountScreen = () => {
                   </TouchableOpacity>
                 )}
 
-                {/* Boutons de partage entre la bio et les réseaux sociaux (icône + label) */}
-                <View
-                  style={[
-                    styles.shareIconsRow,
-                    { backgroundColor: isDark ? 'rgba(0, 194, 203, 0.1)' : 'rgba(0, 194, 203, 0.05)' },
-                  ]}
-                >
-                  <TouchableOpacity
-                    style={styles.shareIconItem}
-                    onPress={handleShareProfile}
-                    accessibilityLabel="Partager mon profil"
-                  >
-                    <View style={styles.shareIconBtn}>
-                      <Ionicons name="share-social-outline" size={20} color="#fff" />
-                    </View>
-                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Partager</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.shareIconItem}
-                    onPress={() => setQrVisible(true)}
-                    accessibilityLabel="Afficher mon QR code"
-                  >
-                    <View style={styles.shareIconBtn}>
-                      <Ionicons name="qr-code-outline" size={20} color="#fff" />
-                    </View>
-                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>QR code</Text>
-                  </TouchableOpacity>
-                  {/* Bouton statistiques */}
-                  <TouchableOpacity
-                    style={styles.shareIconItem}
-                    onPress={handleOpenStats}
-                    accessibilityLabel="Voir mes statistiques"
-                  >
-                    <View style={styles.shareIconBtn}>
-                      <Ionicons name="stats-chart-outline" size={20} color="#fff" />
-                    </View>
-                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Stats</Text>
-                  </TouchableOpacity>
-                  {/* Bouton historique des superlikes reçus */}
-                  <TouchableOpacity
-                    style={styles.shareIconItem}
-                    onPress={() => setSuperlikeHistoryVisible(true)}
-                    accessibilityLabel={`Voir les superlikes reçus, ${superlikeBalance} superlike${superlikeBalance !== 1 ? 's' : ''} restant${superlikeBalance !== 1 ? 's' : ''}`}
-                  >
-                    <View style={{ position: 'relative' }}>
-                      <View style={styles.shareIconBtn}>
-                        <Ionicons name="star-outline" size={20} color="#fff" />
-                      </View>
-                      {superlikeBalance > 0 && (
-                        <View style={styles.countBadge}>
-                          <Text style={styles.countBadgeText}>{superlikeBalance}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Superlikes</Text>
-                  </TouchableOpacity>
-                  {/* Bouton boosts */}
-                  <TouchableOpacity
-                    style={styles.shareIconItem}
-                    onPress={() => setConsumablesShopVisible(true)}
-                    accessibilityLabel={`Voir mes boosts, ${boostBalance} boost${boostBalance !== 1 ? 's' : ''} disponible${boostBalance !== 1 ? 's' : ''}`}
-                  >
-                    <View style={{ position: 'relative' }}>
-                      <View style={styles.shareIconBtn}>
-                        <Ionicons name="flash-outline" size={20} color="#fff" />
-                      </View>
-                      {boostBalance > 0 && (
-                        <View style={styles.countBadge}>
-                          <Text style={styles.countBadgeText}>{boostBalance}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Boosts</Text>
-                  </TouchableOpacity>
-                  {/* Bouton parrainage */}
-                  <TouchableOpacity
-                    style={styles.shareIconItem}
-                    onPress={() => navigation.navigate('Referral')}
-                    accessibilityLabel="Parrainage"
-                  >
-                    <View style={styles.shareIconBtn}>
-                      <Ionicons name="people-outline" size={20} color="#fff" />
-                    </View>
-                    <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Parrainage</Text>
-                  </TouchableOpacity>
-                </View>
               </View>
 
               <View ref={socialRef} style={styles.socialMediaContainer}>
-                <TouchableOpacity
-                  onPress={() => setShowSocialModal(true)}
-                  style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}
-                >
-                  <Image
-                    source={require('../assets/socialMediaIcons/addSocialNetwork_logo.png')}
-                    style={[
-                      styles.socialMediaIcon,
-                      { width: iconSize, height: iconSize, tintColor: isDark ? colors.textPrimary : undefined },
-                    ]}
-                  />
-                </TouchableOpacity>
-                {socialLinks.map((social, index) => {
-                  const icon = social?.platform ? socialMediaIcons[social.platform] : undefined;
-                  if (!icon) return null;
-                  return (
+                {(() => {
+                  const addTile = (
                     <TouchableOpacity
-                      key={index}
-                      style={[styles.socialMediaTile, { backgroundColor: colors.surfaceAlt }]}
-                      onPress={() => openSocial(social.platform, social.username || social.handle)}
-                      onLongPress={() => handleSocialLongPress(social)}
+                      key="add-social"
+                      onPress={() => setShowSocialModal(true)}
+                      style={[
+                        styles.socialMediaTile,
+                        { backgroundColor: colors.surfaceAlt },
+                      ]}
                     >
-                      <Image source={icon} style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]} />
+                      <Image
+                        source={require('../assets/socialMediaIcons/addSocialNetwork_logo.png')}
+                        style={[
+                          styles.socialMediaIcon,
+                          { width: iconSize, height: iconSize, tintColor: isDark ? colors.textPrimary : undefined },
+                        ]}
+                      />
                     </TouchableOpacity>
                   );
-                })}
+                  const linkTiles = socialLinks
+                    .map((social, index) => {
+                      const icon = social?.platform ? socialMediaIcons[social.platform] : undefined;
+                      if (!icon) return null;
+                      return (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.socialMediaTile,
+                            { backgroundColor: colors.surfaceAlt },
+                          ]}
+                          onPress={() => openSocial(social.platform, social.username || social.handle)}
+                          onLongPress={() => handleSocialLongPress(social)}
+                        >
+                          <Image
+                            source={icon}
+                            style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
+                          />
+                        </TouchableOpacity>
+                      );
+                    })
+                    .filter(Boolean);
+                  // Tuiles de taille fixe + flexWrap sur le conteneur (voir
+                  // styles.socialMediaContainer) : le nombre de tuiles par ligne se
+                  // déduit naturellement de la largeur disponible, comme dans
+                  // UserProfileScreen, au lieu d'un découpage manuel en lignes.
+                  return [addTile, ...linkTiles];
+                })()}
+              </View>
+
+              {/* Boutons de partage : déplacés tout en bas de l'écran, sous les réseaux sociaux */}
+              <View
+                style={[
+                  styles.shareIconsRow,
+                  { backgroundColor: isDark ? 'rgba(0, 194, 203, 0.1)' : 'rgba(0, 194, 203, 0.05)' },
+                ]}
+              >
+                <TouchableOpacity
+                  style={styles.shareIconItem}
+                  onPress={handleShareProfile}
+                  accessibilityLabel="Partager mon profil"
+                >
+                  <View style={styles.shareIconBtn}>
+                    <Ionicons name="share-social-outline" size={20} color="#fff" />
+                  </View>
+                  <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Partager</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.shareIconItem}
+                  onPress={() => setQrVisible(true)}
+                  accessibilityLabel="Afficher mon QR code"
+                >
+                  <View style={styles.shareIconBtn}>
+                    <Ionicons name="qr-code-outline" size={20} color="#fff" />
+                  </View>
+                  <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>QR code</Text>
+                </TouchableOpacity>
+                {/* Bouton statistiques */}
+                <TouchableOpacity
+                  style={styles.shareIconItem}
+                  onPress={handleOpenStats}
+                  accessibilityLabel="Voir mes statistiques"
+                >
+                  <View style={styles.shareIconBtn}>
+                    <Ionicons name="stats-chart-outline" size={20} color="#fff" />
+                  </View>
+                  <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Stats</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -1528,145 +1495,52 @@ const MyAccountScreen = () => {
               </View>
             </Modal>
 
-            <Modal
-              visible={photoOptionsModalVisible}
-              transparent={true}
-              animationType="slide"
-              onRequestClose={() => {
-                if (!photoActionLoading) setPhotoOptionsModalVisible(false);
-              }}
-            >
-              <View style={styles.photoModalOverlay}>
-                <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-                <Pressable
-                  style={StyleSheet.absoluteFill}
-                  onPress={() => {
-                    if (!photoActionLoading) setPhotoOptionsModalVisible(false);
-                  }}
-                />
-                <View
-                  style={[
-                    styles.photoModalSheet,
-                    { backgroundColor: colors.surface, paddingBottom: insets.bottom + 20 },
-                  ]}
-                >
-                  <View style={[styles.photoModalHandle, { backgroundColor: colors.border }]} />
-                  <TouchableOpacity
-                    style={styles.photoModalCloseButton}
-                    onPress={() => setPhotoOptionsModalVisible(false)}
-                    disabled={!!photoActionLoading}
-                    hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-                    accessibilityLabel="Fermer"
-                  >
-                    <Ionicons name="close" size={22} color={colors.textSecondary} />
-                  </TouchableOpacity>
-
-                  <Text style={[styles.photoModalTitle, { color: colors.textPrimary }]}>Photo de profil</Text>
-
-                  <View style={styles.photoModalPreviewWrap}>
-                    {user.photo ? (
-                      <ImageWithPlaceholder
-                        uri={user.photo}
-                        style={[styles.photoModalPreview, { borderColor: colors.border }]}
-                      />
-                    ) : (
-                      <View style={[styles.placeholderImage, styles.photoModalPreview, { borderColor: colors.border }]}>
-                        <Image
-                          source={require('../assets/appIcons/userProfile.png')}
-                          style={[
-                            styles.placeholderIcon,
-                            { width: Math.min(width * 0.14, 48), height: Math.min(width * 0.14, 48) },
-                          ]}
-                        />
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={styles.photoModalActions}>
-                    {Platform.OS !== 'web' && (
-                      <TouchableOpacity
-                        onPress={handleCamera}
-                        disabled={!!photoActionLoading}
-                        style={[
-                          styles.photoModalRow,
-                          {
-                            borderColor: colors.border,
-                            opacity: photoActionLoading && photoActionLoading !== 'camera' ? 0.4 : 1,
-                          },
-                        ]}
-                        accessibilityLabel="Prendre une photo"
-                      >
-                        <View style={[styles.photoModalRowIcon, { backgroundColor: colors.accentSoft }]}>
-                          {photoActionLoading === 'camera' ? (
-                            <ActivityIndicator size="small" color={colors.accent} />
-                          ) : (
-                            <Ionicons name="camera-outline" size={20} color={colors.accent} />
-                          )}
-                        </View>
-                        <Text style={[styles.photoModalRowLabel, { color: colors.textPrimary }]}>
-                          Prendre une photo
-                        </Text>
-                        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      onPress={handleGallery}
-                      disabled={!!photoActionLoading}
-                      style={[
-                        styles.photoModalRow,
-                        {
-                          borderColor: colors.border,
-                          opacity: photoActionLoading && photoActionLoading !== 'gallery' ? 0.4 : 1,
-                        },
-                      ]}
-                      accessibilityLabel="Choisir depuis la galerie"
-                    >
-                      <View style={[styles.photoModalRowIcon, { backgroundColor: colors.accentSoft }]}>
-                        {photoActionLoading === 'gallery' ? (
-                          <ActivityIndicator size="small" color={colors.accent} />
-                        ) : (
-                          <Ionicons name="images-outline" size={20} color={colors.accent} />
-                        )}
-                      </View>
-                      <Text style={[styles.photoModalRowLabel, { color: colors.textPrimary }]}>
-                        Choisir depuis la galerie
-                      </Text>
-                      <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                    </TouchableOpacity>
-                    {!!user.photo && (
-                      <TouchableOpacity
-                        onPress={confirmDeletePhoto}
-                        disabled={!!photoActionLoading}
-                        style={[
-                          styles.photoModalRow,
-                          {
-                            borderColor: colors.border,
-                            borderBottomWidth: 0,
-                            opacity: photoActionLoading && photoActionLoading !== 'delete' ? 0.4 : 1,
-                          },
-                        ]}
-                        accessibilityLabel="Supprimer la photo"
-                      >
-                        <View
-                          style={[
-                            styles.photoModalRowIcon,
-                            { backgroundColor: isDark ? 'rgba(239,83,80,0.15)' : 'rgba(244,67,54,0.1)' },
-                          ]}
-                        >
-                          {photoActionLoading === 'delete' ? (
-                            <ActivityIndicator size="small" color={colors.danger} />
-                          ) : (
-                            <Ionicons name="trash-outline" size={20} color={colors.danger} />
-                          )}
-                        </View>
-                        <Text style={[styles.photoModalRowLabel, { color: colors.danger }]}>Supprimer la photo</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </View>
-              </View>
-            </Modal>
           </ScrollView>
+
+          {/* Modal du sélecteur de statut */}
+          <Modal
+            visible={statusPickerVisible}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setStatusPickerVisible(false)}
+          >
+            <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
+              <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+              <Pressable style={StyleSheet.absoluteFill} onPress={() => setStatusPickerVisible(false)} />
+              <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
+                <Text style={[styles.modalTitle, textPrimaryStyle]}>Ton statut</Text>
+                {[
+                  { key: 'green', label: 'Profil public', color: '#4CAF50' },
+                  { key: 'orange', label: 'Profil privé', color: '#FF9800' },
+                  { key: 'red', label: 'Incognito', color: '#F44336' },
+                ].map((opt) => (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[
+                      styles.statusOptionRow,
+                      { borderColor: colors.border },
+                      user.status === opt.key && { backgroundColor: colors.accentSoft },
+                    ]}
+                    onPress={() => {
+                      setStatusPickerVisible(false);
+                      handleUpdateStatus(opt.key);
+                    }}
+                  >
+                    <View style={[styles.statusDot, { backgroundColor: opt.color }]} />
+                    <Text style={[styles.statusOptionLabel, textPrimaryStyle]}>{opt.label}</Text>
+                    {user.status === opt.key ? (
+                      <Ionicons name="checkmark" size={18} color="#00c2cb" />
+                    ) : null}
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity onPress={() => setStatusPickerVisible(false)} style={styles.modalButton}>
+                  <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>
+                    Fermer
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
 
           <SuperlikeHistoryModal
             visible={superlikeHistoryVisible}
@@ -1786,17 +1660,101 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-  statusSelector: {
+  statusPickerButton: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
     marginVertical: height * 0.02,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 8,
   },
-  statusCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginHorizontal: 15,
+  statusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  statusPickerLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statusOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  statusOptionLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  referralBanner: {
+    width: '100%',
+    marginTop: height * 0.015,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  referralBannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    height: 58,
+    paddingHorizontal: 16,
+  },
+  referralBannerText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  consumablesCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  consumablesStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  consumablesStatLabel: {
+    fontSize: 11,
+    opacity: 0.7,
+  },
+  consumablesStatValue: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  consumablesDivider: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: 'stretch',
+    marginHorizontal: 8,
+  },
+  consumablesBuyButton: {
+    backgroundColor: '#00c2cb',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  consumablesBuyButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
   },
   warningCard: {
     width: '100%',
@@ -1866,6 +1824,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  usernameSubText: {
+    marginTop: 2,
+    color: '#8a8a8a',
+    fontWeight: '400',
+    textAlign: 'center',
+  },
   profileImage: {
     width: Math.min(width * 0.4, 160),
     height: Math.min(width * 0.4, 160),
@@ -1912,14 +1876,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
     marginTop: 14,
   },
   socialMediaTile: {
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: height * 0.02,
-    marginHorizontal: width * 0.03,
-    padding: Math.max(8, width * 0.025),
+    marginHorizontal: width * 0.01,
+    padding: Math.max(5, width * 0.01),
     borderWidth: 0,
     borderColor: 'transparent',
     borderRadius: 18,
@@ -1930,8 +1895,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   socialMediaIcon: {
-    width: Math.min(width * 0.2, 72),
-    height: Math.min(width * 0.2, 72),
+    width: Math.min(width * 0.19, 68),
+    height: Math.min(width * 0.19, 68),
     resizeMode: 'contain',
   },
   modalSocialMediaIcon: {

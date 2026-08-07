@@ -34,7 +34,7 @@ const CATEGORIES_BY_VIBE = {
     sport: ['karting'],
     backend: [
       'Bar 🍺',
-      'Boîte de nuit 🪩',
+      'Boîte de nuit 💃',
       'Loisir 🎯',
       'TEST 🤖',
     ],

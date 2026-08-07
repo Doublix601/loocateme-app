@@ -13,6 +13,7 @@ function mapBackendUser(u = {}) {
     lastName: u.lastName || '',
     customName: u.customName || '',
     bio: u.bio || '',
+    city: u.city || '',
     photo: u.profileImageUrl || null,
     birthdate: u.birthdate || null,
     gender: u.gender || '',
@@ -23,12 +24,19 @@ function mapBackendUser(u = {}) {
     isPremium: !!u.isPremium,
     currentPoiId: u.currentLocation ? String(u.currentLocation) : null,
     currentLocationSince: u.currentLocationSince || null,
+    // 'auto' (par défaut) : check-in automatique par proximité GPS. 'manual' :
+    // l'utilisateur check-in lui-même via le bouton "Je suis là".
+    checkInMode: u.checkInMode === 'manual' ? 'manual' : 'auto',
     // User role: 'user', 'moderator', or 'admin'
     role: u.role || 'user',
     // Include GDPR consent and privacy preferences if present
     status: u.status || 'green',
     consent: u.consent || { accepted: false, version: '', consentAt: null },
     privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false, bluetoothProximity: false },
+    // Mode invisible (masque l'utilisateur des autres dans les lieux)
+    invisibleMode: !!u.invisibleMode,
+    // Préférences de notifications push par kind (passthrough générique du backend)
+    notificationPreferences: u.notificationPreferences || {},
     moderation: u.moderation || {
       warningsCount: 0,
       lastWarningAt: null,
@@ -40,8 +48,14 @@ function mapBackendUser(u = {}) {
     },
     boostBalance: u.boostBalance || 0,
     boostUntil: u.boostUntil || null,
-    // "Cote" : score de présence (0/25/50/75/100), voir MyAccountScreen
-    cotePercent: typeof u.cotePercent === 'number' ? u.cotePercent : 100,
+    // "Ta série" : streak quotidien (0-14 jours), voir MyAccountScreen/StreakCard
+    streak: {
+      count: typeof u?.streak?.count === 'number' ? u.streak.count : 0,
+      lastCheckInDate: u?.streak?.lastCheckInDate || null,
+      supervisePendingClaim: !!u?.streak?.supervisePendingClaim,
+      boostPendingClaim: !!u?.streak?.boostPendingClaim,
+      lastClaimedAt: u?.streak?.lastClaimedAt || null,
+    },
   };
 }
 
@@ -60,10 +74,13 @@ export const UserProvider = ({ children }) => {
     isPremium: false,
     currentPoiId: null,
     currentLocationSince: null,
+    checkInMode: 'auto',
     role: 'user',
     status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
     privacyPreferences: { analytics: false, marketing: false, bluetoothProximity: false },
+    invisibleMode: false,
+    notificationPreferences: {},
     moderation: {
       warningsCount: 0,
       lastWarningAt: null,
@@ -136,10 +153,13 @@ export const UserProvider = ({ children }) => {
         isPremium: false,
         currentPoiId: null,
         currentLocationSince: null,
+        checkInMode: 'auto',
         role: 'user',
         status: 'green',
         consent: { accepted: false, version: '', consentAt: null },
         privacyPreferences: { analytics: false, marketing: false, bluetoothProximity: false },
+        invisibleMode: false,
+        notificationPreferences: {},
         moderation: {
           warningsCount: 0,
           lastWarningAt: null,

@@ -147,7 +147,7 @@ out center;
           const sport = el.tags?.sport;
 
           if (amenity === 'bar' || amenity === 'pub') type = 'Bar 🍺';
-          else if (amenity === 'nightclub') type = 'Boîte de nuit 🪩';
+          else if (amenity === 'nightclub') type = 'Boîte de nuit 💃';
           else if (amenity === 'restaurant') type = 'Restaurant 🍴';
           else if (amenity === 'cafe') type = 'Café ☕';
           else if (amenity === 'gym' || leisure === 'fitness_centre') type = 'Salle de sport 🏋️';

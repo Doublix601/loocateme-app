@@ -20,7 +20,54 @@ export const ScanMode = Object.freeze({
 const TWO_MIN_MS = 2 * 60 * 1000;
 const K_COLD_START_DONE = 'lm_cold_start_done_v1';
 
+// Règle "5 minutes minimum" pour le check-in AUTOMATIQUE côté client : le
+// backend (user.service.js updateLocation) assigne currentLocation dès le
+// premier heartbeat qui matche un POI ("Entrée immédiate dans le POI matché
+// (instant)") — le délai de 5 min qu'il applique (MIN_STAY_MS) ne gate que
+// l'enregistrement d'un `location_visit` (stats/parrainage/Ultra Boost), pas
+// l'assignation de currentPoiId elle-même. Pour que l'auto check-in n'ait
+// visuellement lieu qu'après 5 minutes passées en continu à proximité d'un
+// même lieu (et pas dès la première position captée au démarrage de l'app),
+// on retient donc côté client l'envoi du heartbeat qui déclencherait cette
+// assignation, tant que ce délai n'est pas écoulé. Seul le mode 'auto' est
+// concerné (le mode 'manual' n'envoie déjà plus ce heartbeat du tout, cf.
+// currentCheckInMode plus bas) ; le bouton explicite "Je suis là"
+// (forceCheckIn) reste, lui, toujours instantané.
+const AUTO_CHECKIN_DWELL_MS = 5 * 60 * 1000;
+let autoDwellPoiId = null;
+let autoDwellStartedAt = null;
+
+// Retourne true si l'utilisateur est resté sans interruption à proximité du
+// même lieu `poiId` depuis au moins AUTO_CHECKIN_DWELL_MS. Réinitialise (et
+// redémarre) le compteur dès que le lieu candidat change ou disparaît.
+function isAutoCheckinDwellSatisfied(poiId) {
+  if (!poiId) {
+    autoDwellPoiId = null;
+    autoDwellStartedAt = null;
+    return false;
+  }
+  if (autoDwellPoiId !== poiId) {
+    autoDwellPoiId = poiId;
+    autoDwellStartedAt = Date.now();
+    return false;
+  }
+  return Date.now() - autoDwellStartedAt >= AUTO_CHECKIN_DWELL_MS;
+}
+
 let backgroundTimer = null;
+
+// Mode de check-in courant ('auto' | 'manual'), reflété depuis user.checkInMode
+// (cf. UserContext). En mode 'manual', on n'envoie plus la position en
+// arrière-plan pour déclencher le check-in automatique côté backend — seul le
+// bouton explicite "Je suis là" (forceCheckIn avec mode: 'manual') doit
+// déclencher un check-in. On ne peut pas empêcher le backend de traiter un
+// heartbeat GPS s'il en reçoit un (il reste distance-driven), donc le levier
+// côté client est bien de ne plus émettre ce heartbeat automatique.
+let currentCheckInMode = 'auto';
+
+function setCheckInMode(mode) {
+  currentCheckInMode = mode === 'manual' ? 'manual' : 'auto';
+}
 
 function clearBgTimer() {
   if (backgroundTimer) {
@@ -331,6 +378,11 @@ async function publishOptimisticCheckIn() {
 
 async function immediateCheckIn(force = true) {
   if (isLocationHeartbeatSuppressed()) return false;
+  // En mode manuel, on n'émet plus le heartbeat GPS qui déclenche le check-in
+  // automatique côté backend — seul le bouton "Je suis là" (forceCheckIn avec
+  // mode: 'manual') doit assigner currentPoiId. On garde ce garde-fou tôt,
+  // avant même d'acquérir le GPS, pour éviter tout appel réseau inutile.
+  if (currentCheckInMode === 'manual') return false;
   const pos = await getBalancedPosition();
   if (!pos?.coords) {
     // Pas de GPS du tout (ex : sous-sol avec wifi, satellites bloqués) :
@@ -344,6 +396,18 @@ async function immediateCheckIn(force = true) {
 
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
+
+  // Règle "5 min minimum" pour l'auto check-in (cf. AUTO_CHECKIN_DWELL_MS
+  // ci-dessus) : on n'envoie le heartbeat qui déclenche l'assignation
+  // automatique de currentPoiId côté backend que si l'utilisateur est estimé
+  // (via le cache local des lieux proches) à proximité du même lieu depuis au
+  // moins 5 minutes en continu. Tant que ce n'est pas le cas, on ne bloque
+  // pas pour autant tout le reste (BLE, résolution offline, retour visuel
+  // optimiste) : seule cette assignation "officielle" est retardée.
+  const guessedPoiId = await guessLikelyVenueLocally(lat, lon);
+  if (!isAutoCheckinDwellSatisfied(guessedPoiId)) {
+    return false;
+  }
 
   if (!shouldSend(lat, lon, { force })) {
     // Un heartbeat (usePresence) vient déjà d'envoyer une position quasi
@@ -395,6 +459,12 @@ async function immediateCheckIn(force = true) {
 }
 
 export const LocationService = {
+  // Reflète le user.checkInMode courant (cf. UserContext) pour piloter le
+  // heartbeat GPS automatique. À appeler depuis les écrans qui connaissent le
+  // user (LocationListScreen, LocationScreen) après hydratation/mise à jour.
+  setCheckInMode,
+  getCheckInMode: () => currentCheckInMode,
+
   // Démarre la relance systématique hors-réseau (cf. offlinePromptTick).
   startOfflinePrompter: () => {
     if (offlinePromptTimer) return;

@@ -17,6 +17,9 @@ const BAR_PADDING = 8;
 const BAR_WIDTH = SCREEN_WIDTH - BAR_MARGIN * 2;
 const TAB_WIDTH = (BAR_WIDTH - BAR_PADDING * 2) / TABS.length;
 
+export const TAB_BAR_HEIGHT = 68;
+export const TAB_BAR_BOTTOM_OFFSET = -12;
+
 function TabItem({ tab, active, colors, isDark, onPress }) {
   const scale = useRef(new Animated.Value(1)).current;
   const lift = useRef(new Animated.Value(active ? 1 : 0)).current;
@@ -91,7 +94,7 @@ export default function MainTabBar() {
   }, [currentPage, indicatorX]);
 
   return (
-    <View style={[styles.wrapper, { bottom: insets.bottom + 8 }]} pointerEvents="box-none">
+    <View style={[styles.wrapper, { bottom: insets.bottom + TAB_BAR_BOTTOM_OFFSET }]} pointerEvents="box-none">
       <View
         style={[
           styles.shadowWrap,
@@ -154,7 +157,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     width: BAR_WIDTH,
-    height: 68,
+    height: TAB_BAR_HEIGHT,
     paddingHorizontal: BAR_PADDING,
     borderRadius: 34,
     borderWidth: StyleSheet.hairlineWidth,

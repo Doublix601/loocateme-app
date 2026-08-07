@@ -169,15 +169,6 @@ async function request(
   const isGet = String(method).toUpperCase() === 'GET';
   const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(method).toUpperCase());
 
-  // Auto-invalidate cache on mutation
-  if (isMutation) {
-    try {
-      apiCache.clear();
-      // Also notify the UI that data has likely changed
-      publish('api:mutation', { path, method });
-    } catch (_) {}
-  }
-
   const cacheKey = `${String(method).toUpperCase()}:${url}`;
   const inflightKey = `${cacheKey}|${cacheMode}`;
 
@@ -409,6 +400,19 @@ async function request(
         apiCache.set(cacheKey, { expiry, data });
       } catch (_) {}
     }
+
+    // Invalidation + notification APRÈS que la mutation ait réellement abouti
+    // côté backend (et donc après que celui-ci ait lui-même invalidé son cache
+    // Redis, ex: locations:v1:*) : publier avant l'envoi de la requête faisait
+    // courir fetchNearbyLocations() avant même que le heartbeat/check-in ait
+    // atteint le serveur, donc il retombait sur des données encore périmées.
+    if (isMutation) {
+      try {
+        apiCache.clear();
+        publish('api:mutation', { path, method });
+      } catch (_) {}
+    }
+
     return data;
   })();
 
@@ -528,6 +532,10 @@ export async function forgotPassword(email) {
   return request('/auth/forgot-password', { method: 'POST', body: { email } });
 }
 
+export async function apiChangePassword(currentPassword, newPassword) {
+  return request('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } });
+}
+
 // USERS
 export async function getMyUser() {
   // Always bypass cache to avoid stale profile (socials, photo, premium, etc.)
@@ -544,8 +552,25 @@ export async function updateMyLocation({ lat, lon }) {
   return request('/users/location', { method: 'POST', body: { lat, lon } });
 }
 
-export async function forceCheckIn({ locationId, lat, lon, bypassDistance }) {
-  return request('/users/location/force', { method: 'POST', body: { locationId, lat, lon, bypassDistance } });
+export async function forceCheckIn({ locationId, lat, lon, bypassDistance, mode }) {
+  return request('/users/location/force', { method: 'POST', body: { locationId, lat, lon, bypassDistance, mode } });
+}
+
+// Bascule le mode de check-in de l'utilisateur ('auto' : check-in automatique
+// par proximité GPS, 'manual' : uniquement via le bouton "Je suis là").
+export async function apiUpdateCheckInMode(checkInMode) {
+  return request('/users/me/check-in-mode', { method: 'PATCH', body: { checkInMode } });
+}
+
+// Active/désactive le mode invisible (masque l'utilisateur des listes/lieux).
+export async function apiUpdateInvisibleMode(invisibleMode) {
+  return request('/users/me/invisible-mode', { method: 'PATCH', body: { invisibleMode } });
+}
+
+// Active/désactive un type de notification push précis (kind: 'chat_message',
+// 'superlike', 'story', 'weekly_digest', etc. — voir push.service.js côté backend).
+export async function apiUpdateNotificationPreferences(kind, enabled) {
+  return request('/users/me/notification-preferences', { method: 'PATCH', body: { kind, enabled: !!enabled } });
 }
 
 // Dev only: force un check-out immédiat sans passer par le heartbeat GPS.
@@ -588,7 +613,11 @@ export async function getLocations({ lat, lon, limit, vibe } = {}) {
   if (limit != null) params.limit = String(limit);
   if (vibe) params.vibe = String(vibe);
   const qs = new URLSearchParams(params);
-  const res = await request(`/locations?${qs.toString()}`, { method: 'GET' });
+  // Bypass le cache client (sinon jusqu'à 30s de retard sur un userCount/
+  // activeUsers qui vient de changer suite à un check-in, en plus du cache
+  // Redis serveur déjà invalidé côté backend) : cf. getLocationById ci-dessous,
+  // même raisonnement pour éviter des données de présence périmées.
+  const res = await request(`/locations?${qs.toString()}`, { method: 'GET', cache: 'reload' });
   try {
     // Cache léger (id/coords/rayon) pour permettre une résolution de check-in
     // 100% locale via BLE si le réseau venait à disparaître durablement.
@@ -623,6 +652,14 @@ export async function updateUserStatus(status) {
     method: 'PATCH',
     body: { status },
   });
+}
+
+export async function claimSupervise() {
+  return request('/users/streak/claim-supervise', { method: 'POST' });
+}
+
+export async function claimBoost() {
+  return request('/users/streak/claim-boost', { method: 'POST' });
 }
 
 export async function searchUsers({ q, limit = 10, lat, lon, includeUsers = true, includeLocations = true }) {
@@ -670,6 +707,15 @@ export async function updateProfile({ username, firstName, lastName, customName,
   if (customName !== undefined) body.customName = customName;
   if (bio !== undefined) body.bio = bio;
   return request('/profile', { method: 'PUT', body });
+}
+
+export async function apiRequestEmailChange(newEmail, currentPassword) {
+  return request('/users/me/email', { method: 'POST', body: { newEmail, currentPassword } });
+}
+
+// Endpoint public (token-based), pas besoin d'authentification.
+export async function apiConfirmEmailChange(token) {
+  return request('/users/me/email/confirm', { method: 'POST', body: { token } });
 }
 
 function guessMimeFromName(name = '') {
@@ -922,6 +968,9 @@ export async function exportMyData() {
 export async function deleteMyAccount({ password }) {
   return request('/gdpr/account', { method: 'DELETE', body: { password }, retry: false });
 }
+
+// Préférences de notifications push, par "kind" (ex: new_follower, new_message, ...)
+// (apiUpdateInvisibleMode et apiUpdateNotificationPreferences sont déjà définis plus haut)
 
 // ADMIN / DEBUG
 export async function getAllUsers({ page = 1, limit = 100 } = {}) {

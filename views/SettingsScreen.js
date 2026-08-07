@@ -13,12 +13,17 @@ import {
   ActivityIndicator,
   TextInput,
   Platform,
+  Pressable,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import * as ImagePicker from 'expo-image-picker';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
+import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
+import socialMediaIcons from '../constants/socialMediaIcons';
 
 import { UserContext } from '../components/contexts/UserContext';
 import {
@@ -32,6 +37,17 @@ import {
   redeemReferralCode,
   getMyUser,
   updateBluetoothConsent,
+  apiUpdateInvisibleMode,
+  apiUpdateNotificationPreferences,
+  updateProfile as apiUpdateProfile,
+  uploadProfilePhoto as apiUploadProfilePhoto,
+  deleteProfilePhoto as apiDeleteProfilePhoto,
+  upsertSocial as apiUpsertSocial,
+  removeSocial as apiRemoveSocial,
+  unblockUser as apiUnblockUser,
+  getBlockedUsers,
+  apiChangePassword,
+  apiRequestEmailChange,
 } from '../components/ApiRequest';
 import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 import { BluetoothProximityService } from '../services/BluetoothProximityService';
@@ -42,6 +58,29 @@ import { useVibe } from '../components/contexts/VibeContext';
 const { width, height } = Dimensions.get('window');
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
+
+// Types de notifications push exposés côté backend (voir push.service.js,
+// littéraux `kind: '...'`). Libellés FR pensés pour un usage utilisateur ; les
+// kinds purement internes/admin (ban, report_created, social_click,
+// boost_purchase, ultra_boost) sont volontairement omis de cette liste.
+const NOTIFICATION_KINDS = [
+  { kind: 'chat_message', label: 'Nouveaux messages' },
+  { kind: 'superlike', label: 'Superlikes reçus' },
+  { kind: 'superlike_accepted', label: 'Superlikes acceptés' },
+  { kind: 'story', label: 'Nouvelles stories' },
+  { kind: 'event', label: 'Événements à proximité' },
+  { kind: 'event_boost', label: "Boosts d'événements" },
+  { kind: 'streak_expiring', label: 'Rappels de série' },
+  { kind: 'profile_view', label: 'Vues de profil' },
+  { kind: 'inactive_profile_views', label: 'Vues reçues pendant votre absence' },
+  { kind: 'referral_validated', label: 'Parrainage validé' },
+  { kind: 'referral_reward_granted', label: 'Récompense de parrainage' },
+  { kind: 'night_mode_activated', label: 'Activation du mode nuit' },
+  { kind: 'at_risk_reactivation', label: 'Relances de réactivation' },
+  { kind: 'weekly_digest', label: 'Résumé hebdomadaire' },
+];
+
+const SOCIAL_PLATFORMS = Object.keys(socialMediaIcons || {});
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
@@ -55,6 +94,30 @@ const SettingsScreen = () => {
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const [referralSubmitting, setReferralSubmitting] = useState(false);
 
+  // Onglets Profil / Paramètres
+  const [activeTab, setActiveTab] = useState('settings');
+
+  // Profil tab state
+  const [profileFirstName, setProfileFirstName] = useState(user?.firstName || '');
+  const [profileLastName, setProfileLastName] = useState(user?.lastName || '');
+  const [profileCustomName, setProfileCustomName] = useState(user?.customName || '');
+  const [profileBio, setProfileBio] = useState(user?.bio || '');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [photoOptionsVisible, setPhotoOptionsVisible] = useState(false);
+  const [photoActionLoading, setPhotoActionLoading] = useState(null);
+  const [socialModalVisible, setSocialModalVisible] = useState(false);
+  const [selectedSocialPlatform, setSelectedSocialPlatform] = useState(null);
+  const [socialHandleInput, setSocialHandleInput] = useState('');
+  const [socialSaving, setSocialSaving] = useState(false);
+
+  // Notifications tab state
+  const [notifPrefs, setNotifPrefs] = useState(user?.notificationPreferences || {});
+  const [notifSavingKind, setNotifSavingKind] = useState(null);
+
+  // Mode invisible
+  const [invisibleMode, setInvisibleMode] = useState(!!user?.invisibleMode);
+  const [invisibleSaving, setInvisibleSaving] = useState(false);
+
   // GDPR state
   const [policyModalVisible, setPolicyModalVisible] = useState(false);
   const [policyLoading, setPolicyLoading] = useState(false);
@@ -67,10 +130,31 @@ const SettingsScreen = () => {
   const [bluetoothProximity, setBluetoothProximity] = useState(!!user?.privacyPreferences?.bluetoothProximity);
   const [bluetoothSaving, setBluetoothSaving] = useState(false);
 
+  // Comptes bloqués (pas d'écran dédié existant : liste minimale réutilisant
+  // getBlockedUsers/unblockUser directement dans Paramètres)
+  const [blockedModalVisible, setBlockedModalVisible] = useState(false);
+  const [blockedLoading, setBlockedLoading] = useState(false);
+  const [blockedList, setBlockedList] = useState([]);
+
   // Revocation (delete account) modal state
   const [revokeVisible, setRevokeVisible] = useState(false);
   const [revokePassword, setRevokePassword] = useState('');
   const [revokeWorking, setRevokeWorking] = useState(false);
+
+  // Changement de mot de passe (modal in-app)
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmNewPasswordInput, setConfirmNewPasswordInput] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+
+  // Changement d'email (modal in-app)
+  const [emailModalVisible, setEmailModalVisible] = useState(false);
+  const [newEmailInput, setNewEmailInput] = useState('');
+  const [emailCurrentPasswordInput, setEmailCurrentPasswordInput] = useState('');
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   useEffect(() => {
     // Hydrate GDPR toggles from user when context changes
@@ -81,6 +165,12 @@ const SettingsScreen = () => {
       setMarketing(!!user?.privacyPreferences?.marketing);
       setDoNotSell(!!user?.privacyPreferences?.doNotSell);
       setBluetoothProximity(!!user?.privacyPreferences?.bluetoothProximity);
+      setInvisibleMode(!!user?.invisibleMode);
+      setNotifPrefs(user?.notificationPreferences || {});
+      setProfileFirstName(user?.firstName || '');
+      setProfileLastName(user?.lastName || '');
+      setProfileCustomName(user?.customName || '');
+      setProfileBio(user?.bio || '');
     } catch (_) {}
   }, [user]);
 
@@ -253,6 +343,47 @@ const SettingsScreen = () => {
     }
   };
 
+  // Mode invisible : accessible en free tier (pas de gate premium). Masque
+  // l'utilisateur des autres utilisateurs des lieux, mais le prive en retour
+  // de la carte / liste des lieux tant qu'il est actif.
+  const handleToggleInvisible = async (v) => {
+    setInvisibleMode(v);
+    setInvisibleSaving(true);
+    try {
+      const res = await apiUpdateInvisibleMode(v);
+      if (updateUser) {
+        updateUser({
+          ...user,
+          invisibleMode: typeof res?.user?.invisibleMode === 'boolean' ? res.user.invisibleMode : v,
+        });
+      }
+    } catch (e) {
+      setInvisibleMode(!v);
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le mode invisible');
+    } finally {
+      setInvisibleSaving(false);
+    }
+  };
+
+  const handleToggleNotifKind = async (kind, v) => {
+    setNotifPrefs((prev) => ({ ...prev, [kind]: v }));
+    setNotifSavingKind(kind);
+    try {
+      const res = await apiUpdateNotificationPreferences(kind, v);
+      if (updateUser) {
+        updateUser({
+          ...user,
+          notificationPreferences: res?.user?.notificationPreferences || { ...(user?.notificationPreferences || {}), [kind]: v },
+        });
+      }
+    } catch (e) {
+      setNotifPrefs((prev) => ({ ...prev, [kind]: !v }));
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour cette préférence de notification');
+    } finally {
+      setNotifSavingKind(null);
+    }
+  };
+
   const saveConsent = async (accepted) => {
     try {
       const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing, doNotSell });
@@ -321,6 +452,79 @@ const SettingsScreen = () => {
     }
   };
 
+  const openPasswordModal = () => {
+    setCurrentPasswordInput('');
+    setNewPasswordInput('');
+    setConfirmNewPasswordInput('');
+    setPasswordError('');
+    setPasswordModalVisible(true);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    if (!currentPasswordInput) {
+      setPasswordError('Merci de saisir votre mot de passe actuel.');
+      return;
+    }
+    if (!newPasswordInput || newPasswordInput.length < 6) {
+      setPasswordError('Le nouveau mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    if (newPasswordInput !== confirmNewPasswordInput) {
+      setPasswordError('La confirmation ne correspond pas au nouveau mot de passe.');
+      return;
+    }
+    try {
+      setPasswordSaving(true);
+      await apiChangePassword(currentPasswordInput, newPasswordInput);
+      setPasswordModalVisible(false);
+      setCurrentPasswordInput('');
+      setNewPasswordInput('');
+      setConfirmNewPasswordInput('');
+      Alert.alert('Mot de passe modifié', 'Votre mot de passe a bien été mis à jour.');
+    } catch (e) {
+      setPasswordError(e?.message || 'Mot de passe actuel invalide ou erreur serveur.');
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const openEmailModal = () => {
+    setNewEmailInput('');
+    setEmailCurrentPasswordInput('');
+    setEmailError('');
+    setEmailModalVisible(true);
+  };
+
+  const handleRequestEmailChange = async () => {
+    setEmailError('');
+    const email = (newEmailInput || '').trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Merci de saisir une adresse email valide.');
+      return;
+    }
+    if (!emailCurrentPasswordInput) {
+      setEmailError('Merci de saisir votre mot de passe pour confirmer.');
+      return;
+    }
+    try {
+      setEmailSaving(true);
+      await apiRequestEmailChange(email, emailCurrentPasswordInput);
+      setEmailModalVisible(false);
+      setNewEmailInput('');
+      setEmailCurrentPasswordInput('');
+      Alert.alert(
+        'Vérifie ta boîte mail',
+        `Un email de confirmation a été envoyé à ${email}. Clique sur le lien pour valider le changement.`,
+      );
+    } catch (e) {
+      setEmailError(e?.message || 'Impossible de démarrer le changement. Mot de passe invalide ou erreur serveur.');
+    } finally {
+      setEmailSaving(false);
+    }
+  };
+
   const handleExport = async () => {
     try {
       const data = await exportMyData();
@@ -353,6 +557,247 @@ const SettingsScreen = () => {
     } catch (_) {}
   };
 
+  const handleLogout = async () => {
+    try {
+      await apiLogout();
+    } catch (_) {}
+    try {
+      clearApiCache();
+    } catch (_) {}
+    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+  };
+
+  // --- Photo de profil (migré depuis EditProfileScreen) ---
+  const refreshMyProfile = async () => {
+    try {
+      const res = await getMyUser();
+      const me = res?.user;
+      if (!me || !updateUser) return;
+      updateUser({
+        ...user,
+        firstName: typeof me.firstName === 'string' ? me.firstName : user?.firstName || '',
+        lastName: typeof me.lastName === 'string' ? me.lastName : user?.lastName || '',
+        customName: typeof me.customName === 'string' ? me.customName : user?.customName || '',
+        bio: typeof me.bio === 'string' ? me.bio : user?.bio || '',
+        photo: me.profileImageUrl ?? user?.photo ?? null,
+        socialMedia: Array.isArray(me.socialNetworks)
+          ? me.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
+          : user?.socialMedia || [],
+      });
+    } catch (_) {}
+  };
+
+  const handleCamera = async () => {
+    if (photoActionLoading) return;
+    if (Platform.OS === 'web') {
+      Alert.alert('Non supporté', "La caméra n'est pas disponible sur le web.");
+      return;
+    }
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Autorisation requise', "L'application a besoin de l'accès à la caméra pour prendre une photo.");
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 });
+      const canceled = result?.canceled ?? result?.cancelled;
+      const uri = result?.assets?.[0]?.uri ?? result?.uri;
+      if (canceled || !uri) return;
+
+      setPhotoActionLoading('camera');
+      try {
+        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+        const file = { uri, name, type: 'image/jpeg' };
+        const res = await apiUploadProfilePhoto(file);
+        const updated = res?.user || {};
+        updateUser({ ...user, photo: updated.profileImageUrl || uri });
+        await refreshMyProfile();
+        setPhotoOptionsVisible(false);
+      } catch (e2) {
+        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+      } finally {
+        setPhotoActionLoading(null);
+      }
+    } catch (e) {
+      Alert.alert('Erreur', "Impossible d'ouvrir la caméra.");
+    }
+  };
+
+  const handleGallery = async () => {
+    if (photoActionLoading) return;
+    try {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Autorisation requise',
+            "L'application a besoin de l'accès à vos photos pour sélectionner une image.",
+          );
+          return;
+        }
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({ allowsEditing: true, quality: 0.8 });
+      const canceled = result?.canceled ?? result?.cancelled;
+      const uri = result?.assets?.[0]?.uri ?? result?.uri;
+      if (canceled || !uri) return;
+
+      setPhotoActionLoading('gallery');
+      try {
+        const name = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+        const file = { uri, name, type: 'image/jpeg' };
+        const res = await apiUploadProfilePhoto(file);
+        const updated = res?.user || {};
+        updateUser({ ...user, photo: updated.profileImageUrl || uri });
+        await refreshMyProfile();
+        setPhotoOptionsVisible(false);
+      } catch (e2) {
+        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+      } finally {
+        setPhotoActionLoading(null);
+      }
+    } catch (e) {
+      Alert.alert('Erreur', "Impossible d'ouvrir la galerie.");
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (photoActionLoading) return;
+    setPhotoActionLoading('delete');
+    try {
+      const res = await apiDeleteProfilePhoto();
+      const updated = res?.user || {};
+      updateUser({ ...user, photo: updated.profileImageUrl || null });
+      await refreshMyProfile();
+      setPhotoOptionsVisible(false);
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de supprimer la photo de profil');
+    } finally {
+      setPhotoActionLoading(null);
+    }
+  };
+
+  const confirmDeletePhoto = () => {
+    if (photoActionLoading) return;
+    Alert.alert('Supprimer la photo de profil ?', 'Cette action est définitive.', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Supprimer', style: 'destructive', onPress: handleDeletePhoto },
+    ]);
+  };
+
+  // --- Enregistrement du profil (Prénom/Nom/Custom/Bio) ---
+  const handleSaveProfile = async () => {
+    setProfileSaving(true);
+    try {
+      const candidateFirst = profileFirstName.trim();
+      const candidateLast = profileLastName.trim();
+      const candidateCustom = profileCustomName.trim();
+      const hasCustom = candidateCustom.length > 0;
+      const hasFirst = candidateFirst.length > 0;
+      const hasLast = candidateLast.length > 0;
+      if (!hasCustom && !(hasFirst && hasLast)) {
+        Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
+        setProfileSaving(false);
+        return;
+      }
+      const res = await apiUpdateProfile({
+        firstName: candidateFirst,
+        lastName: candidateLast,
+        customName: candidateCustom,
+        bio: profileBio,
+      });
+      const updated = res?.user || {};
+      updateUser({
+        ...user,
+        firstName: updated.firstName ?? candidateFirst,
+        lastName: updated.lastName ?? candidateLast,
+        customName: updated.customName ?? candidateCustom,
+        bio: updated.bio ?? profileBio,
+        username: updated.username ?? updated.name ?? user.username,
+        photo: updated.profileImageUrl ?? user.photo,
+      });
+      await refreshMyProfile();
+      Alert.alert('Profil', 'Votre profil a été mis à jour.');
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  // --- Réseaux sociaux ---
+  const openAddSocial = () => {
+    setSelectedSocialPlatform(SOCIAL_PLATFORMS[0] || null);
+    setSocialHandleInput('');
+    setSocialModalVisible(true);
+  };
+
+  const openEditSocial = (social) => {
+    setSelectedSocialPlatform(social.platform);
+    setSocialHandleInput(social.username || '');
+    setSocialModalVisible(true);
+  };
+
+  const handleSaveSocial = async () => {
+    if (!selectedSocialPlatform || !socialHandleInput.trim()) {
+      Alert.alert('Réseau social', 'Merci de choisir un réseau et de saisir un identifiant.');
+      return;
+    }
+    setSocialSaving(true);
+    try {
+      await apiUpsertSocial({ type: selectedSocialPlatform, handle: socialHandleInput.trim() });
+      await refreshMyProfile();
+      setSocialModalVisible(false);
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || "Impossible d'enregistrer ce réseau social");
+    } finally {
+      setSocialSaving(false);
+    }
+  };
+
+  const handleRemoveSocial = (platform) => {
+    Alert.alert('Supprimer ce réseau ?', 'Ce lien sera retiré de votre profil.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await apiRemoveSocial(platform);
+            await refreshMyProfile();
+          } catch (e) {
+            Alert.alert('Erreur', e?.message || 'Impossible de supprimer ce réseau social');
+          }
+        },
+      },
+    ]);
+  };
+
+  const socialList = Array.isArray(user?.socialMedia) ? user.socialMedia : [];
+
+  // --- Comptes bloqués ---
+  const openBlockedUsers = async () => {
+    setBlockedModalVisible(true);
+    setBlockedLoading(true);
+    try {
+      const res = await getBlockedUsers();
+      const list = Array.isArray(res?.blocks) ? res.blocks : Array.isArray(res) ? res : [];
+      setBlockedList(list);
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de charger les comptes bloqués');
+    } finally {
+      setBlockedLoading(false);
+    }
+  };
+
+  const handleUnblock = async (blockId) => {
+    try {
+      await apiUnblockUser(blockId);
+      setBlockedList((prev) => prev.filter((b) => (b?._id || b?.id) !== blockId));
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de débloquer cet utilisateur');
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: 'transparent' }]}>
       {isMoon ? (
@@ -372,229 +817,444 @@ const SettingsScreen = () => {
         <View style={{ width: 44 }} />
       </View>
 
+      {/* Double tab Profil / Paramètres */}
+      <View style={[styles.tabRow, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity
+          onPress={() => setActiveTab('profile')}
+          style={[styles.tabPill, activeTab === 'profile' && { backgroundColor: '#00c2cb' }]}
+        >
+          <Text style={[styles.tabPillText, { color: activeTab === 'profile' ? '#fff' : colors.textSecondary }]}>
+            Profil
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setActiveTab('settings')}
+          style={[styles.tabPill, activeTab === 'settings' && { backgroundColor: '#00c2cb' }]}
+        >
+          <Text style={[styles.tabPillText, { color: activeTab === 'settings' ? '#fff' : colors.textSecondary }]}>
+            Paramètres
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={styles.sectionTitle}>GÉNÉRAL</Text>
-
-          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode d'affichage</Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary }}>
-                {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}
-              </Text>
-            </View>
+        {activeTab === 'profile' ? (
+          <>
             <TouchableOpacity
-              onPress={toggleDisplayNameMode}
-              style={[styles.smallPill, { backgroundColor: colors.background }]}
+              style={styles.avatarWrapper}
+              activeOpacity={0.8}
+              onPress={() => setPhotoOptionsVisible(true)}
+              disabled={!!photoActionLoading}
             >
-              <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>
-                {displayNameMode === 'full' ? 'Classique' : 'Custom'}
-              </Text>
+              {user?.photo ? (
+                <ImageWithPlaceholder source={{ uri: user.photo }} style={styles.avatarImage} />
+              ) : (
+                <View style={[styles.avatarImage, styles.avatarPlaceholder, { backgroundColor: colors.surface }]}>
+                  <Text style={styles.avatarPlaceholderText}>📷</Text>
+                </View>
+              )}
+              <View style={styles.avatarEditBadge}>
+                <Text style={styles.avatarEditBadgeText}>✏️</Text>
+              </View>
             </TouchableOpacity>
-          </View>
-        </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={styles.sectionTitle}>PARRAINAGE</Text>
-          {user?.referredBy ? (
-            <Text style={{ fontSize: 14, color: colors.textSecondary, paddingVertical: 10 }}>
-              Vous avez déjà été parrainé.
-            </Text>
-          ) : (
-            <View style={{ paddingVertical: 10 }}>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
-                Un ami vous a partagé un code ? Entrez-le ici.
-              </Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <TextInput
-                  style={[
-                    styles.revokeInput,
-                    {
-                      flex: 1,
-                      marginBottom: 0,
-                      borderColor: colors.border,
-                      color: isDark ? '#fff' : colors.textPrimary,
-                      backgroundColor: isDark ? '#0f1115' : '#ffffff',
-                    },
-                  ]}
-                  placeholder="Code de parrainage"
-                  placeholderTextColor={isDark ? '#999' : '#666'}
-                  autoCapitalize="characters"
-                  value={referralCodeInput}
-                  onChangeText={setReferralCodeInput}
-                />
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>IDENTITÉ</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Prénom</Text>
+              <TextInput
+                style={[
+                  styles.textField,
+                  { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#f7f9fa' },
+                ]}
+                value={profileFirstName}
+                onChangeText={setProfileFirstName}
+                placeholder="Votre prénom"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+              />
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nom</Text>
+              <TextInput
+                style={[
+                  styles.textField,
+                  { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#f7f9fa' },
+                ]}
+                value={profileLastName}
+                onChangeText={setProfileLastName}
+                placeholder="Votre nom"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+              />
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nom personnalisé</Text>
+              <TextInput
+                style={[
+                  styles.textField,
+                  { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#f7f9fa' },
+                ]}
+                value={profileCustomName}
+                onChangeText={setProfileCustomName}
+                placeholder="Votre nom personnalisé"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+              />
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Bio</Text>
+              <TextInput
+                style={[
+                  styles.textField,
+                  styles.textFieldMultiline,
+                  { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#f7f9fa' },
+                ]}
+                value={profileBio}
+                onChangeText={setProfileBio}
+                placeholder="Parle un peu de toi..."
+                placeholderTextColor={isDark ? '#999' : '#666'}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
+
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
+                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>RÉSEAUX SOCIAUX</Text>
+                <TouchableOpacity onPress={openAddSocial} style={[styles.smallPill, { backgroundColor: '#00c2cb' }]}>
+                  <Text style={[styles.smallPillText, { color: '#fff' }]}>+ Ajouter</Text>
+                </TouchableOpacity>
+              </View>
+              {socialList.length === 0 ? (
+                <Text style={{ fontSize: 13, color: colors.textSecondary, paddingVertical: 6 }}>
+                  Aucun réseau social ajouté pour le moment.
+                </Text>
+              ) : (
+                socialList.map((social, idx) => (
+                  <View
+                    key={social.platform}
+                    style={[
+                      styles.optionContainer,
+                      { borderBottomColor: colors.border, borderBottomWidth: idx < socialList.length - 1 ? 1 : 0 },
+                    ]}
+                  >
+                    <TouchableOpacity style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }} onPress={() => openEditSocial(social)}>
+                      {!!socialMediaIcons[social.platform] && (
+                        <Image source={socialMediaIcons[social.platform]} style={styles.socialIcon} />
+                      )}
+                      <View>
+                        <Text style={[styles.optionText, { color: colors.textPrimary }]}>{social.platform}</Text>
+                        <Text style={{ fontSize: 12, color: colors.textSecondary }}>{social.username}</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleRemoveSocial(social.platform)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Text style={{ color: '#ff4d4d', fontSize: 13, fontWeight: '700' }}>Retirer</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveButton, { backgroundColor: '#00c2cb', opacity: profileSaving ? 0.7 : 1 }]}
+              onPress={handleSaveProfile}
+              disabled={profileSaving}
+            >
+              {profileSaving ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.saveButtonText}>Enregistrer</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>GÉNÉRAL</Text>
+
+              <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode d'affichage</Text>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                    {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}
+                  </Text>
+                </View>
                 <TouchableOpacity
-                  onPress={handleRedeemReferralCode}
-                  disabled={referralSubmitting || !referralCodeInput.trim()}
-                  style={[styles.smallPill, { backgroundColor: '#00c2cb', marginLeft: 10, opacity: referralSubmitting ? 0.6 : 1 }]}
+                  onPress={toggleDisplayNameMode}
+                  style={[styles.smallPill, { backgroundColor: colors.background }]}
                 >
-                  {referralSubmitting ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={[styles.smallPillText, { color: '#fff' }]}>Valider</Text>
-                  )}
+                  <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>
+                    {displayNameMode === 'full' ? 'Classique' : 'Custom'}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
-          )}
-        </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={styles.sectionTitle}>APPARENCE</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
-            <TouchableOpacity
-              onPress={() => setThemeMode('light')}
-              style={[styles.themePill, themeMode === 'light' && { backgroundColor: '#00c2cb' }]}
-            >
-              <Text style={[styles.themePillText, { color: themeMode === 'light' ? '#fff' : colors.textSecondary }]}>
-                Clair
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setThemeMode('dark')}
-              style={[styles.themePill, themeMode === 'dark' && { backgroundColor: '#00c2cb' }]}
-            >
-              <Text style={[styles.themePillText, { color: themeMode === 'dark' ? '#fff' : colors.textSecondary }]}>
-                Sombre
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setThemeMode('system')}
-              style={[styles.themePill, themeMode === 'system' && { backgroundColor: '#00c2cb' }]}
-            >
-              <Text style={[styles.themePillText, { color: themeMode === 'system' ? '#fff' : colors.textSecondary }]}>
-                Auto
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={styles.sectionTitle}>CONFIDENTIALITÉ & RGPD</Text>
-          <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={openPolicy}>
-            <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Politique de confidentialité</Text>
-          </TouchableOpacity>
-
-          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Consentement</Text>
-            <Switch
-              value={consentAccepted}
-              onValueChange={handleToggleConsent}
-              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-              thumbColor={consentAccepted ? '#fff' : '#f4f3f4'}
-            />
-          </View>
-          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Analytics</Text>
-            <Switch
-              value={analytics}
-              onValueChange={handleToggleAnalytics}
-              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-              thumbColor={analytics ? '#fff' : '#f4f3f4'}
-            />
-          </View>
-          <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.optionText, { color: colors.textPrimary }]}>Marketing</Text>
-            <Switch
-              value={marketing}
-              onValueChange={handleToggleMarketing}
-              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-              thumbColor={marketing ? '#fff' : '#f4f3f4'}
-            />
-          </View>
-          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.optionText, { color: colors.textPrimary }]}>Vente de données (CCPA)</Text>
-              <Text style={{ fontSize: 11, color: colors.textSecondary }}>
-                Ne pas vendre mes informations personnelles
-              </Text>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>PARRAINAGE</Text>
+              {user?.referredBy ? (
+                <Text style={{ fontSize: 14, color: colors.textSecondary, paddingVertical: 10 }}>
+                  Vous avez déjà été parrainé.
+                </Text>
+              ) : (
+                <View style={{ paddingVertical: 10 }}>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
+                    Un ami vous a partagé un code ? Entrez-le ici.
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <TextInput
+                      style={[
+                        styles.revokeInput,
+                        {
+                          flex: 1,
+                          marginBottom: 0,
+                          borderColor: colors.border,
+                          color: isDark ? '#fff' : colors.textPrimary,
+                          backgroundColor: isDark ? '#0f1115' : '#ffffff',
+                        },
+                      ]}
+                      placeholder="Code de parrainage"
+                      placeholderTextColor={isDark ? '#999' : '#666'}
+                      autoCapitalize="characters"
+                      value={referralCodeInput}
+                      onChangeText={setReferralCodeInput}
+                    />
+                    <TouchableOpacity
+                      onPress={handleRedeemReferralCode}
+                      disabled={referralSubmitting || !referralCodeInput.trim()}
+                      style={[styles.smallPill, { backgroundColor: '#00c2cb', marginLeft: 10, opacity: referralSubmitting ? 0.6 : 1 }]}
+                    >
+                      {referralSubmitting ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={[styles.smallPillText, { color: '#fff' }]}>Valider</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
             </View>
-            <Switch
-              value={doNotSell}
-              onValueChange={handleToggleDoNotSell}
-              trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-              thumbColor={doNotSell ? '#fff' : '#f4f3f4'}
-            />
-          </View>
-        </View>
 
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={styles.sectionTitle}>PROXIMITÉ BLUETOOTH</Text>
-          <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={[styles.optionText, { color: colors.textPrimary }]}>Détection Bluetooth à proximité</Text>
-              <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
-                Détecte les autres utilisateurs très proches de vous (quelques mètres) pour continuer à fonctionner
-                sans réseau et affiner votre position dans un lieu. Désactivé par défaut, distinct du consentement de
-                localisation GPS. Un identifiant temporaire et anonyme est utilisé, jamais votre identité.
-              </Text>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>APPARENCE</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
+                <TouchableOpacity
+                  onPress={() => setThemeMode('light')}
+                  style={[styles.themePill, themeMode === 'light' && { backgroundColor: '#00c2cb' }]}
+                >
+                  <Text style={[styles.themePillText, { color: themeMode === 'light' ? '#fff' : colors.textSecondary }]}>
+                    Clair
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setThemeMode('dark')}
+                  style={[styles.themePill, themeMode === 'dark' && { backgroundColor: '#00c2cb' }]}
+                >
+                  <Text style={[styles.themePillText, { color: themeMode === 'dark' ? '#fff' : colors.textSecondary }]}>
+                    Sombre
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setThemeMode('system')}
+                  style={[styles.themePill, themeMode === 'system' && { backgroundColor: '#00c2cb' }]}
+                >
+                  <Text style={[styles.themePillText, { color: themeMode === 'system' ? '#fff' : colors.textSecondary }]}>
+                    Auto
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            {bluetoothSaving ? (
-              <ActivityIndicator size="small" color="#00c2cb" />
-            ) : (
-              <Switch
-                value={bluetoothProximity}
-                onValueChange={handleToggleBluetooth}
-                trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-                thumbColor={bluetoothProximity ? '#fff' : '#f4f3f4'}
-              />
-            )}
-          </View>
-        </View>
 
-        {['admin', 'moderator'].includes(user?.role) && (
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={styles.sectionTitle}>MODÉRATION</Text>
-            <TouchableOpacity
-              style={[styles.linkRow, { borderBottomColor: colors.border }]}
-              onPress={() => navigation.navigate('Moderator')}
-            >
-              <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Espace modérateur</Text>
-            </TouchableOpacity>
-            {user?.role === 'admin' && (
-              <TouchableOpacity
-                style={[styles.linkRow, { borderBottomWidth: 0 }]}
-                onPress={() => navigation.navigate('Debug')}
-              >
-                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Debug Console</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+              {NOTIFICATION_KINDS.map((item, idx) => {
+                const enabled = notifPrefs?.[item.kind] !== false; // opt-out : activé par défaut
+                return (
+                  <View
+                    key={item.kind}
+                    style={[
+                      styles.optionContainer,
+                      { borderBottomColor: colors.border, borderBottomWidth: idx < NOTIFICATION_KINDS.length - 1 ? 1 : 0 },
+                    ]}
+                  >
+                    <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1 }]}>{item.label}</Text>
+                    {notifSavingKind === item.kind ? (
+                      <ActivityIndicator size="small" color="#00c2cb" />
+                    ) : (
+                      <Switch
+                        value={enabled}
+                        onValueChange={(v) => handleToggleNotifKind(item.kind, v)}
+                        trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                        thumbColor={enabled ? '#fff' : '#f4f3f4'}
+                      />
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>CONFIDENTIALITÉ & RGPD</Text>
+              <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={openPolicy}>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Politique de confidentialité</Text>
               </TouchableOpacity>
+
+              <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Consentement</Text>
+                <Switch
+                  value={consentAccepted}
+                  onValueChange={handleToggleConsent}
+                  trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                  thumbColor={consentAccepted ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+              <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Analytics</Text>
+                <Switch
+                  value={analytics}
+                  onValueChange={handleToggleAnalytics}
+                  trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                  thumbColor={analytics ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+              <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Marketing</Text>
+                <Switch
+                  value={marketing}
+                  onValueChange={handleToggleMarketing}
+                  trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                  thumbColor={marketing ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+              <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Vente de données (CCPA)</Text>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+                    Ne pas vendre mes informations personnelles
+                  </Text>
+                </View>
+                <Switch
+                  value={doNotSell}
+                  onValueChange={handleToggleDoNotSell}
+                  trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                  thumbColor={doNotSell ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+
+              <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode invisible</Text>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
+                    Vous serez invisible pour les autres utilisateurs des lieux, mais vous ne pourrez plus consulter
+                    la carte ni la liste des lieux tant que ce mode est actif.
+                  </Text>
+                </View>
+                {invisibleSaving ? (
+                  <ActivityIndicator size="small" color="#00c2cb" />
+                ) : (
+                  <Switch
+                    value={invisibleMode}
+                    onValueChange={handleToggleInvisible}
+                    trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                    thumbColor={invisibleMode ? '#fff' : '#f4f3f4'}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>PROXIMITÉ BLUETOOTH</Text>
+              <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Détection Bluetooth à proximité</Text>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
+                    Détecte les autres utilisateurs très proches de vous (quelques mètres) pour continuer à fonctionner
+                    sans réseau et affiner votre position dans un lieu. Désactivé par défaut, distinct du consentement de
+                    localisation GPS. Un identifiant temporaire et anonyme est utilisé, jamais votre identité.
+                  </Text>
+                </View>
+                {bluetoothSaving ? (
+                  <ActivityIndicator size="small" color="#00c2cb" />
+                ) : (
+                  <Switch
+                    value={bluetoothProximity}
+                    onValueChange={handleToggleBluetooth}
+                    trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                    thumbColor={bluetoothProximity ? '#fff' : '#f4f3f4'}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>COMPTE</Text>
+              <TouchableOpacity
+                style={[styles.optionContainer, { borderBottomColor: colors.border }]}
+                onPress={openEmailModal}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Email</Text>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>{user?.email || 'Non renseigné'}</Text>
+                </View>
+                <Text style={{ fontSize: 12, color: '#00c2cb', fontWeight: '700' }}>Changer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.optionContainer, { borderBottomColor: colors.border }]}
+                onPress={openPasswordModal}
+              >
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mot de passe</Text>
+                <Text style={{ fontSize: 12, color: '#00c2cb', fontWeight: '700' }}>Changer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.linkRow, { borderBottomColor: colors.border }]}
+                onPress={openBlockedUsers}
+              >
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Comptes bloqués</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={openPolicy}>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Aide et confidentialité</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={handleLogout}>
+                <Text style={[styles.linkRowText, { color: '#ff8a00' }]}>Se déconnecter</Text>
+              </TouchableOpacity>
+            </View>
+
+            {['admin', 'moderator'].includes(user?.role) && (
+              <View style={[styles.card, { backgroundColor: colors.surface }]}>
+                <Text style={styles.sectionTitle}>MODÉRATION</Text>
+                <TouchableOpacity
+                  style={[styles.linkRow, { borderBottomColor: colors.border }]}
+                  onPress={() => navigation.navigate('Moderator')}
+                >
+                  <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Espace modérateur</Text>
+                </TouchableOpacity>
+                {user?.role === 'admin' && (
+                  <TouchableOpacity
+                    style={[styles.linkRow, { borderBottomWidth: 0 }]}
+                    onPress={() => navigation.navigate('Debug')}
+                  >
+                    <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Debug Console</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             )}
-          </View>
+
+            <View style={{ gap: 12, marginTop: 20 }}>
+              <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.surface }]} onPress={handleExport}>
+                <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>Exporter mes données</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(255,77,77,0.1)' : '#ffe6e6' }]}
+                onPress={handleDelete}
+              >
+                <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>Supprimer mon compte</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]} onPress={handleLogout}>
+                <Text style={styles.logoutText}>Déconnexion</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text
+              style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 12, marginTop: 30, marginBottom: 20 }}
+            >
+              LoocateMe v1.0.0 (39)
+            </Text>
+          </>
         )}
-
-        <View style={{ gap: 12, marginTop: 20 }}>
-          <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.surface }]} onPress={handleExport}>
-            <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>Exporter mes données</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(255,77,77,0.1)' : '#ffe6e6' }]}
-            onPress={handleDelete}
-          >
-            <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>Supprimer mon compte</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]}
-            onPress={async () => {
-              try {
-                await apiLogout();
-              } catch (_) {}
-              try {
-                clearApiCache();
-              } catch (_) {}
-              navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-            }}
-          >
-            <Text style={styles.logoutText}>Déconnexion</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text
-          style={{ textAlign: 'center', color: colors.textSecondary, fontSize: 12, marginTop: 30, marginBottom: 20 }}
-        >
-          LoocateMe v1.0.0 (39)
-        </Text>
       </ScrollView>
 
       <Modal visible={policyModalVisible} animationType="slide" onRequestClose={() => setPolicyModalVisible(false)}>
@@ -661,6 +1321,325 @@ const SettingsScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Changement de mot de passe */}
+      <Modal
+        transparent
+        visible={passwordModalVisible}
+        animationType="fade"
+        onRequestClose={() => !passwordSaving && setPasswordModalVisible(false)}
+      >
+        <View style={styles.blurModalContainer}>
+          <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => !passwordSaving && setPasswordModalVisible(false)}
+          />
+          <View style={styles.blurModalCenter} pointerEvents="box-none">
+            <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 12 }]}>
+                Changer le mot de passe
+              </Text>
+              <TextInput
+                style={[
+                  styles.revokeInput,
+                  { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
+                ]}
+                placeholder="Mot de passe actuel"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+                secureTextEntry
+                value={currentPasswordInput}
+                onChangeText={setCurrentPasswordInput}
+                editable={!passwordSaving}
+              />
+              <TextInput
+                style={[
+                  styles.revokeInput,
+                  { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
+                ]}
+                placeholder="Nouveau mot de passe (6 caractères min.)"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+                secureTextEntry
+                value={newPasswordInput}
+                onChangeText={setNewPasswordInput}
+                editable={!passwordSaving}
+              />
+              <TextInput
+                style={[
+                  styles.revokeInput,
+                  { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
+                ]}
+                placeholder="Confirmer le nouveau mot de passe"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+                secureTextEntry
+                value={confirmNewPasswordInput}
+                onChangeText={setConfirmNewPasswordInput}
+                editable={!passwordSaving}
+              />
+              {!!passwordError && (
+                <Text style={{ color: '#ff4d4d', fontSize: 12, marginBottom: 8 }}>{passwordError}</Text>
+              )}
+              <View style={styles.revokeButtons}>
+                <TouchableOpacity
+                  style={[styles.primaryButton, styles.secondaryButton]}
+                  onPress={() => setPasswordModalVisible(false)}
+                  disabled={passwordSaving}
+                >
+                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.primaryButton, { backgroundColor: '#00c2cb' }]}
+                  onPress={handleChangePassword}
+                  disabled={passwordSaving}
+                >
+                  {passwordSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.dangerButtonText}>Valider</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Changement d'email */}
+      <Modal
+        transparent
+        visible={emailModalVisible}
+        animationType="fade"
+        onRequestClose={() => !emailSaving && setEmailModalVisible(false)}
+      >
+        <View style={styles.blurModalContainer}>
+          <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => !emailSaving && setEmailModalVisible(false)} />
+          <View style={styles.blurModalCenter} pointerEvents="box-none">
+            <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 12 }]}>
+                Changer d'email
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
+                Email actuel : {user?.email || 'Non renseigné'}
+              </Text>
+              <TextInput
+                style={[
+                  styles.revokeInput,
+                  { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
+                ]}
+                placeholder="Nouvel email"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                value={newEmailInput}
+                onChangeText={setNewEmailInput}
+                editable={!emailSaving}
+              />
+              <TextInput
+                style={[
+                  styles.revokeInput,
+                  { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
+                ]}
+                placeholder="Mot de passe actuel"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+                secureTextEntry
+                value={emailCurrentPasswordInput}
+                onChangeText={setEmailCurrentPasswordInput}
+                editable={!emailSaving}
+              />
+              {!!emailError && <Text style={{ color: '#ff4d4d', fontSize: 12, marginBottom: 8 }}>{emailError}</Text>}
+              <View style={styles.revokeButtons}>
+                <TouchableOpacity
+                  style={[styles.primaryButton, styles.secondaryButton]}
+                  onPress={() => setEmailModalVisible(false)}
+                  disabled={emailSaving}
+                >
+                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.primaryButton, { backgroundColor: '#00c2cb' }]}
+                  onPress={handleRequestEmailChange}
+                  disabled={emailSaving}
+                >
+                  {emailSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.dangerButtonText}>Valider</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Photo options modal (migré depuis EditProfileScreen) */}
+      <Modal visible={photoOptionsVisible} transparent animationType="fade">
+        <View style={styles.blurModalContainer}>
+          <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => !photoActionLoading && setPhotoOptionsVisible(false)}
+          />
+          <View style={styles.blurModalCenter} pointerEvents="box-none">
+            <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 16 }]}>Photo de profil</Text>
+              <TouchableOpacity
+                style={[styles.photoOptionButton, { borderColor: colors.border }]}
+                onPress={handleCamera}
+                disabled={!!photoActionLoading}
+              >
+                <Text style={[styles.photoOptionText, { color: colors.textPrimary }]}>
+                  {photoActionLoading === 'camera' ? 'Envoi...' : '📸 Prendre une photo'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.photoOptionButton, { borderColor: colors.border }]}
+                onPress={handleGallery}
+                disabled={!!photoActionLoading}
+              >
+                <Text style={[styles.photoOptionText, { color: colors.textPrimary }]}>
+                  {photoActionLoading === 'gallery' ? 'Envoi...' : '🖼️ Choisir dans la galerie'}
+                </Text>
+              </TouchableOpacity>
+              {!!user?.photo && (
+                <TouchableOpacity
+                  style={[styles.photoOptionButton, { borderColor: colors.border }]}
+                  onPress={confirmDeletePhoto}
+                  disabled={!!photoActionLoading}
+                >
+                  <Text style={styles.photoOptionDeleteText}>
+                    {photoActionLoading === 'delete' ? 'Suppression...' : '🗑️ Supprimer la photo'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={() => setPhotoOptionsVisible(false)}
+                style={[styles.photoOptionButton, { borderColor: colors.border, marginBottom: 0 }]}
+                disabled={!!photoActionLoading}
+              >
+                <Text style={{ color: colors.textSecondary, fontSize: 15, fontWeight: '600' }}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Social network add/edit modal */}
+      <Modal visible={socialModalVisible} transparent animationType="fade">
+        <View style={styles.blurModalContainer}>
+          <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => !socialSaving && setSocialModalVisible(false)} />
+          <View style={styles.blurModalCenter} pointerEvents="box-none">
+            <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 16 }]}>Réseau social</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14, maxHeight: 50 }}>
+                {SOCIAL_PLATFORMS.map((platform) => (
+                  <TouchableOpacity
+                    key={platform}
+                    onPress={() => setSelectedSocialPlatform(platform)}
+                    style={[
+                      styles.platformPill,
+                      {
+                        backgroundColor: selectedSocialPlatform === platform ? '#00c2cb' : colors.background,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
+                    {!!socialMediaIcons[platform] && (
+                      <Image source={socialMediaIcons[platform]} style={styles.platformPillIcon} />
+                    )}
+                    <Text
+                      style={{
+                        color: selectedSocialPlatform === platform ? '#fff' : colors.textPrimary,
+                        fontSize: 12,
+                        fontWeight: '700',
+                      }}
+                    >
+                      {platform}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              <TextInput
+                style={[
+                  styles.textField,
+                  { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#f7f9fa' },
+                ]}
+                value={socialHandleInput}
+                onChangeText={setSocialHandleInput}
+                placeholder="Identifiant / nom d'utilisateur"
+                placeholderTextColor={isDark ? '#999' : '#666'}
+                autoCapitalize="none"
+              />
+              <View style={styles.revokeButtons}>
+                <TouchableOpacity
+                  style={[styles.primaryButton, styles.secondaryButton]}
+                  onPress={() => setSocialModalVisible(false)}
+                  disabled={socialSaving}
+                >
+                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.primaryButton, { backgroundColor: '#00c2cb' }]}
+                  onPress={handleSaveSocial}
+                  disabled={socialSaving}
+                >
+                  {socialSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.dangerButtonText}>Enregistrer</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Comptes bloqués */}
+      <Modal
+        visible={blockedModalVisible}
+        animationType="slide"
+        onRequestClose={() => setBlockedModalVisible(false)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
+            <TouchableOpacity style={styles.modalCloseButton} onPress={() => setBlockedModalVisible(false)}>
+              <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Fermer</Text>
+            </TouchableOpacity>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Comptes bloqués</Text>
+            <View style={{ width: 60 }} />
+          </View>
+          <View style={styles.modalContent}>
+            {blockedLoading ? (
+              <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
+            ) : blockedList.length === 0 ? (
+              <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 30 }}>
+                Aucun compte bloqué.
+              </Text>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {blockedList.map((b) => {
+                  const id = b?._id || b?.id;
+                  const name = b?.targetUser?.username || b?.targetUser?.name || b?.username || 'Utilisateur';
+                  return (
+                    <View key={id} style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
+                      <Text style={[styles.optionText, { color: colors.textPrimary }]}>{name}</Text>
+                      <TouchableOpacity
+                        style={[styles.smallPill, { backgroundColor: '#00c2cb' }]}
+                        onPress={() => handleUnblock(id)}
+                      >
+                        <Text style={[styles.smallPillText, { color: '#fff' }]}>Débloquer</Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -685,6 +1664,25 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginTop: 16,
+    padding: 4,
+    borderRadius: 16,
+    gap: 4,
+  },
+  tabPill: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,194,203,0.05)',
+  },
+  tabPillText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   content: {
     padding: 20,
@@ -866,6 +1864,151 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+  },
+  primaryButton: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryButton: {
+    backgroundColor: 'rgba(0,0,0,0.06)',
+  },
+  secondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  dangerButton: {
+    backgroundColor: '#ff4d4d',
+  },
+  dangerButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  // Profil tab
+  avatarWrapper: {
+    alignSelf: 'center',
+    marginBottom: 20,
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarPlaceholderText: {
+    fontSize: 34,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#00c2cb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  avatarEditBadgeText: {
+    fontSize: 13,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  textField: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+  },
+  textFieldMultiline: {
+    height: 100,
+    paddingTop: 12,
+  },
+  socialIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  saveButton: {
+    paddingVertical: 16,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 16,
+  },
+  blurModalContainer: {
+    flex: 1,
+  },
+  blurModalCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  blurModalCard: {
+    width: '100%',
+    maxWidth: 460,
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  photoOptionButton: {
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  photoOptionText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  photoOptionDeleteText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#e0245e',
+  },
+  platformPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  platformPillIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 6,
+    borderRadius: 4,
   },
 });
 

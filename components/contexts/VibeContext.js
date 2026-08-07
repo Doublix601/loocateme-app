@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, LayoutAnimation, Platform, UIManager } from 'react-native';
 import {
   VIBE_AMBIENT_PULSE_MS,
+  VIBE_THEME_SWAP_RATIO,
   VIBE_TRANSITION_DURATION_MS,
   VIBE_TRANSITION_MIN_MS,
 } from '../vibe/vibeTransition.constants';
@@ -43,8 +44,13 @@ export function VibeProvider({ children, onVibeChanged }) {
   const [autoVibe, setAutoVibeState] = useState(getAutoVibe());
   const autoTimer = useRef(null);
   const transitionTimer = useRef(null);
+  const themeSwapTimer = useRef(null);
   const ambientPulseTimer = useRef(null);
   const [transitioningTo, setTransitioningTo] = useState(null);
+  const transitioningToRef = useRef(null);
+  useEffect(() => {
+    transitioningToRef.current = transitioningTo;
+  }, [transitioningTo]);
   const [ambientVibeShift, setAmbientVibeShift] = useState(null);
 
   const pulseAmbientVibeShift = useCallback((target) => {
@@ -126,6 +132,26 @@ export function VibeProvider({ children, onVibeChanged }) {
     // franchissement d'une frontière (7h/19h), le timer n'a pas pu se déclencher.
     const onAppState = (state) => {
       if (state !== 'active') return;
+      // L'app peut avoir été suspendue pendant une transition de vibe en
+      // cours (overlay plein écran qui capte les touches) : le setTimeout
+      // JS ne se déclenche pas de façon fiable en arrière-plan, ce qui
+      // laissait l'overlay bloqué et gelait l'app au retour au premier
+      // plan. On force la résolution immédiate de la transition.
+      if (transitionTimer.current) {
+        try {
+          clearTimeout(transitionTimer.current);
+        } catch (_) {}
+        transitionTimer.current = null;
+        if (themeSwapTimer.current) {
+          try {
+            clearTimeout(themeSwapTimer.current);
+          } catch (_) {}
+          themeSwapTimer.current = null;
+        }
+        const target = transitioningToRef.current;
+        setTransitioningTo(null);
+        if (target) setVibe(target);
+      }
       const curr = getAutoVibe();
       setAutoVibeState((prev) => {
         if (prev !== curr) {
@@ -143,6 +169,8 @@ export function VibeProvider({ children, onVibeChanged }) {
     return () => {
       autoTimer.current && clearTimeout(autoTimer.current);
       ambientPulseTimer.current && clearTimeout(ambientPulseTimer.current);
+      transitionTimer.current && clearTimeout(transitionTimer.current);
+      themeSwapTimer.current && clearTimeout(themeSwapTimer.current);
       try {
         sub && sub.remove && sub.remove();
       } catch (_) {}
@@ -157,10 +185,15 @@ export function VibeProvider({ children, onVibeChanged }) {
         const payload = JSON.stringify({ value: val, setAtAuto: getAutoVibe() });
         await AsyncStorage.setItem(K_VIBE_KEY, payload);
       } catch {}
-      // Animate reorder/layout on change
-      try {
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      } catch {}
+      // Pas de LayoutAnimation ici : la transition visuelle est déjà gérée
+      // par VibeTransitOverlay (pendant que l'overlay est opaque). Une
+      // LayoutAnimation.configureNext() déclenchée ici s'applique au PROCHAIN
+      // rendu affectant le layout, pas forcément à celui du changement de
+      // vibe (surtout après l'await AsyncStorage, qui introduit un vrai délai
+      // avant cet appel) — elle peut donc s'accrocher à un rendu ultérieur
+      // sans rapport et faire apparaître un changement de thème animé bien
+      // après la fin de l'overlay, ce qui est exactement le bug qu'on évite
+      // en laissant ce changement se faire instantanément.
       if (typeof onVibeChanged === 'function') {
         try {
           onVibeChanged(val);
@@ -183,15 +216,25 @@ export function VibeProvider({ children, onVibeChanged }) {
         } catch (_) {}
         transitionTimer.current = null;
       }
+      if (themeSwapTimer.current) {
+        try {
+          clearTimeout(themeSwapTimer.current);
+        } catch (_) {}
+        themeSwapTimer.current = null;
+      }
       setTransitioningTo(target);
-      transitionTimer.current = setTimeout(
+      const effectiveDuration = Math.max(VIBE_TRANSITION_MIN_MS, durationMs);
+      themeSwapTimer.current = setTimeout(
         async () => {
-          transitionTimer.current = null;
+          themeSwapTimer.current = null;
           await setVibe(target);
-          setTransitioningTo(null);
         },
-        Math.max(VIBE_TRANSITION_MIN_MS, durationMs),
+        Math.round(effectiveDuration * VIBE_THEME_SWAP_RATIO),
       );
+      transitionTimer.current = setTimeout(() => {
+        transitionTimer.current = null;
+        setTransitioningTo(null);
+      }, effectiveDuration);
     },
     [autoVibe, manualVibe, setVibe, transitioningTo],
   );
@@ -205,6 +248,12 @@ export function VibeProvider({ children, onVibeChanged }) {
         clearTimeout(transitionTimer.current);
       } catch (_) {}
       transitionTimer.current = null;
+    }
+    if (themeSwapTimer.current) {
+      try {
+        clearTimeout(themeSwapTimer.current);
+      } catch (_) {}
+      themeSwapTimer.current = null;
     }
     const target = transitioningTo;
     setTransitioningTo(null);
