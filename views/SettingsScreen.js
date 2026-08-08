@@ -49,7 +49,6 @@ import {
   apiChangePassword,
   apiRequestEmailChange,
 } from '../components/ApiRequest';
-import { startBackgroundLocationForOneHour, stopBackgroundLocation } from '../components/BackgroundLocation';
 import { BluetoothProximityService } from '../services/BluetoothProximityService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';

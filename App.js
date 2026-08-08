@@ -39,6 +39,7 @@ import { LocationSyncService } from './services/LocationSyncService';
 import { LocationService, ScanMode } from './services/LocationService';
 import { BluetoothProximityService } from './services/BluetoothProximityService';
 import { checkPendingCheckinVerification } from './components/CheckinVerificationScheduler';
+import { startBackgroundLocationForSixHours, stopBackgroundLocation } from './components/BackgroundLocation';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { usePresence } from './hooks/usePresence';
@@ -246,6 +247,9 @@ function AppShell({ purchasesReady }) {
       try {
         clearApiCache();
       } catch (_) {}
+      try {
+        stopBackgroundLocation();
+      } catch (_) {}
       navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
     });
     return () => {
@@ -323,6 +327,13 @@ function AppShell({ purchasesReady }) {
           hasShownLocationModal.current = true;
         } else {
           setLocationModal((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+          // Sans ça, la permission "Toujours" est accordée mais aucune mise à jour
+          // de position n'est jamais émise une fois l'écran verrouillé : le
+          // heartbeat foreground (usePresence) s'arrête dès que l'app quitte l'état
+          // 'active', et rien ne prenait le relai côté OS. Idempotent (cf.
+          // startBackgroundLocationForSixHours) : rafraîchit juste la fenêtre de 6h
+          // si déjà démarrée.
+          startBackgroundLocationForSixHours();
         }
       } catch (err) {
         console.warn('[App] Error checking location permissions:', err);
