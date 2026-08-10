@@ -2,13 +2,27 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateMyLocation, post } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
-import { incrementCheckinCount } from '../hooks/useProgressiveUnlock';
 import { scheduleCheckinVerification, cancelCheckinVerification } from '../components/CheckinVerificationScheduler';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
 import NetInfo from '@react-native-community/netinfo';
 import { BluetoothProximityService } from './BluetoothProximityService';
 import { getCachedNearbyVenues } from './NearbyVenueCache';
+
+// Injecté depuis App.js (LocationService est hors arbre React) : permet de
+// répercuter un check-in automatique (dwell GPS ou BLE) sur UserContext,
+// sans attendre le prochain heartbeat au premier plan (cf. usePresence.js)
+// qui ne tourne pas quand l'app est en arrière-plan.
+let userUpdater = null;
+function setUserUpdater(fn) {
+  userUpdater = typeof fn === 'function' ? fn : null;
+}
+function applyServerUser(backendUser) {
+  if (!backendUser || !userUpdater) return;
+  try {
+    userUpdater(backendUser);
+  } catch (_) {}
+}
 
 // Location check-in orchestration with three explicit modes
 export const ScanMode = Object.freeze({
@@ -311,6 +325,7 @@ async function tryGpsLessCheckIn() {
         try {
           publish('userlist:refresh');
         } catch (_) {}
+        applyServerUser(res.user);
         const locationId = res.user.currentLocation;
         try {
           await BluetoothProximityService.setLocalConfirmedVenue(locationId ? String(locationId) : null);
@@ -425,9 +440,11 @@ async function immediateCheckIn(force = true) {
     try {
       publish('userlist:refresh');
     } catch (_) {}
-    try {
-      await incrementCheckinCount();
-    } catch (_) {}
+    applyServerUser(res?.user);
+    // incrementCheckinCount() est désormais déclenché de façon centralisée
+    // par UserContext.js sur toute transition currentPoiId null -> défini
+    // (cf. son abonnement à api:mutation), qu'importe le flow de check-in —
+    // plus besoin de le dupliquer ici.
     const locationId = res?.user?.currentLocation;
     try {
       if (locationId) {
@@ -458,12 +475,31 @@ async function immediateCheckIn(force = true) {
   }
 }
 
+// À appeler à la déconnexion (auth:logout, cf. App.js) pour éviter que l'état
+// de dwell/offline d'un compte ne fuite sur le compte suivant connecté sur le
+// même appareil sans redémarrage de l'app.
+function resetState() {
+  autoDwellPoiId = null;
+  autoDwellStartedAt = null;
+  clearBgTimer();
+  currentCheckInMode = 'auto';
+  offlineAnswer = null;
+  if (offlinePromptTimer) {
+    try {
+      clearInterval(offlinePromptTimer);
+    } catch (_) {}
+  }
+  offlinePromptTimer = null;
+}
+
 export const LocationService = {
   // Reflète le user.checkInMode courant (cf. UserContext) pour piloter le
   // heartbeat GPS automatique. À appeler depuis les écrans qui connaissent le
   // user (LocationListScreen, LocationScreen) après hydratation/mise à jour.
   setCheckInMode,
   getCheckInMode: () => currentCheckInMode,
+  resetState,
+  setUserUpdater,
 
   // Démarre la relance systématique hors-réseau (cf. offlinePromptTick).
   startOfflinePrompter: () => {

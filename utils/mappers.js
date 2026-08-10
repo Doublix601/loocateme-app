@@ -23,7 +23,7 @@ export const mapBackendUser = (u = {}) => {
     role: u.role || 'user',
     status: u.status || 'green',
     consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false, bluetoothProximity: false },
     moderation: u.moderation || {
       warningsCount: 0,
       lastWarningAt: null,
@@ -35,6 +35,23 @@ export const mapBackendUser = (u = {}) => {
     },
     currentPoiId: u.currentLocation ? String(u.currentLocation) : null,
     currentLocationSince: u.currentLocationSince || null,
+    boostBalance: u.boostBalance || 0,
+    boostUntil: u.boostUntil || null,
+    // 'auto' (par défaut) : check-in automatique par proximité GPS. 'manual' :
+    // l'utilisateur check-in lui-même via le bouton "Je suis là".
+    checkInMode: u.checkInMode === 'manual' ? 'manual' : 'auto',
+    // Mode invisible (masque l'utilisateur des autres dans les lieux)
+    invisibleMode: !!u.invisibleMode,
+    // Préférences de notifications push par kind (passthrough générique du backend)
+    notificationPreferences: u.notificationPreferences || {},
+    // "Ta série" : streak quotidien (0-14 jours), voir MyAccountScreen/StreakCard
+    streak: {
+      count: typeof u?.streak?.count === 'number' ? u.streak.count : 0,
+      lastCheckInDate: u?.streak?.lastCheckInDate || null,
+      supervisePendingClaim: !!u?.streak?.supervisePendingClaim,
+      boostPendingClaim: !!u?.streak?.boostPendingClaim,
+      lastClaimedAt: u?.streak?.lastClaimedAt || null,
+    },
     updatedAt: u.updatedAt,
   };
 };

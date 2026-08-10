@@ -84,6 +84,37 @@ function mergeByOsmId(...lists) {
   return list;
 }
 
+// Patch optimiste de `activeUsers`/`userCount` sur les cartes de la liste :
+// `fetchNearbyLocations` retape le cache Redis 60s de `getLocations` côté
+// backend, donc un refetch immédiat après check-in/check-out peut renvoyer
+// des `userCount`/`activeUsers` encore périmés — l'ancien lieu continue
+// d'afficher l'utilisateur dans sa pile d'avatars pendant jusqu'à 60s. Gère
+// les deux sens (contrairement à l'ancien patch, appliqué uniquement au
+// check-in manuel) : `nextPoiId` null = check-out (retire seulement),
+// `nextPoiId` défini = check-in (retire de l'ancien lieu si différent,
+// ajoute au nouveau).
+function applyOptimisticLocationPatch(locations, { myRawId, previousPoiId, nextPoiId, meEntry }) {
+  if (!myRawId) return locations;
+  let changed = false;
+  const next = locations.map((loc) => {
+    const locId = String(loc._id);
+    if (previousPoiId && locId === String(previousPoiId) && locId !== String(nextPoiId || '')) {
+      const nextActiveUsers = (loc.activeUsers || []).filter((u) => String(u._id) !== myRawId);
+      if (nextActiveUsers.length === (loc.activeUsers || []).length) return loc;
+      changed = true;
+      return { ...loc, activeUsers: nextActiveUsers, userCount: Math.max(0, (loc.userCount || 0) - 1) };
+    }
+    if (nextPoiId && locId === String(nextPoiId)) {
+      const already = (loc.activeUsers || []).some((u) => String(u._id) === myRawId);
+      if (already) return loc;
+      changed = true;
+      return { ...loc, activeUsers: [meEntry, ...(loc.activeUsers || [])], userCount: (loc.userCount || 0) + 1 };
+    }
+    return loc;
+  });
+  return changed ? next : locations;
+}
+
 const LocationListScreen = () => {
   const navigation = useNavigation();
   const { colors, isDark } = useTheme();
@@ -127,6 +158,14 @@ const LocationListScreen = () => {
   // lieux actifs à proximité » lorsque la DB locale est peu peuplée.
   const [hasMore, setHasMore] = useState(true);
   const { user: currentUser, updateUser } = useContext(UserContext);
+  // Réf toujours à jour sur le lieu checké courant, pour connaître l'ANCIEN
+  // lieu au moment où l'abonnement 'api:mutation' ci-dessous (monté une
+  // seule fois, deps []) reçoit un check-in/check-out confirmé par le
+  // serveur — cf. applyOptimisticLocationPatch.
+  const previousPoiIdRef = useRef(currentUser?.currentPoiId || null);
+  useEffect(() => {
+    previousPoiIdRef.current = currentUser?.currentPoiId || null;
+  }, [currentUser?.currentPoiId]);
   const checkInMode = currentUser?.checkInMode === 'manual' ? 'manual' : 'auto';
   const [togglingCheckInMode, setTogglingCheckInMode] = useState(false);
   const [checkingInLocationId, setCheckingInLocationId] = useState(null);
@@ -193,42 +232,25 @@ const LocationListScreen = () => {
         // tout de suite après avoir appuyé sur "Je suis là".
         if (res?.user) updateUser(mapBackendUser(res.user));
 
-        // Patch optimiste des cartes lieux : `fetchNearbyLocations` ci-dessous
-        // retape le cache Redis 60s de `getLocations` côté backend, donc un
-        // refetch immédiat après check-in peut renvoyer des `userCount`/
-        // `activeUsers` encore périmés — l'ancien lieu continue d'afficher
-        // l'utilisateur dans sa pile d'avatars pendant jusqu'à 60s. On corrige
-        // localement les deux cartes concernées sans attendre le cache.
+        // Patch optimiste de la carte lieu (cf. applyOptimisticLocationPatch) :
+        // `fetchNearbyLocations` ci-dessous retape le cache Redis 60s de
+        // `getLocations` côté backend, donc un refetch immédiat après check-in
+        // peut renvoyer des `userCount`/`activeUsers` encore périmés.
         const myRawId = res?.user?._id ? String(res.user._id) : null;
         if (myRawId) {
+          const meEntry = {
+            _id: myRawId,
+            profileImageUrl: res.user.profileImageUrl || null,
+            boostUntil: res.user.boostUntil || null,
+            status: res.user.status || 'green',
+            location: { updatedAt: new Date().toISOString() },
+          };
           setLocations((prev) =>
-            prev.map((loc) => {
-              if (previousPoiId && String(loc._id) === String(previousPoiId) && loc._id !== item._id) {
-                const nextActiveUsers = (loc.activeUsers || []).filter((u) => String(u._id) !== myRawId);
-                if (nextActiveUsers.length === (loc.activeUsers || []).length) return loc;
-                return {
-                  ...loc,
-                  activeUsers: nextActiveUsers,
-                  userCount: Math.max(0, (loc.userCount || 0) - 1),
-                };
-              }
-              if (String(loc._id) === String(item._id)) {
-                const already = (loc.activeUsers || []).some((u) => String(u._id) === myRawId);
-                if (already) return loc;
-                const meEntry = {
-                  _id: myRawId,
-                  profileImageUrl: res.user.profileImageUrl || null,
-                  boostUntil: res.user.boostUntil || null,
-                  status: res.user.status || 'green',
-                  location: { updatedAt: new Date().toISOString() },
-                };
-                return {
-                  ...loc,
-                  activeUsers: [meEntry, ...(loc.activeUsers || [])],
-                  userCount: (loc.userCount || 0) + 1,
-                };
-              }
-              return loc;
+            applyOptimisticLocationPatch(prev, {
+              myRawId,
+              previousPoiId,
+              nextPoiId: String(item._id),
+              meEntry,
             }),
           );
         }
@@ -533,7 +555,8 @@ const LocationListScreen = () => {
     try {
       const c = userCoordsRef.current;
       if (!c) return;
-      await forceCheckIn({ locationId: place._id, lat: c.latitude, lon: c.longitude });
+      const res = await forceCheckIn({ locationId: place._id, lat: c.latitude, lon: c.longitude });
+      if (res?.user) updateUser(mapBackendUser(res.user));
       await markCheckinVerified({ locationId: place._id, lat: c.latitude, lon: c.longitude });
       setPlacePicker(null);
     } catch (e) {
@@ -546,7 +569,7 @@ const LocationListScreen = () => {
     } finally {
       setCorrectingCheckin(false);
     }
-  }, [correctingCheckin]);
+  }, [correctingCheckin, updateUser]);
   // Anti double-déclenchement du pull-to-refresh manuel (le backend a déjà
   // son propre rate-limit + cache 10s, cf. locationsListLimiter côté API) :
   // on bloque juste les appels quasi simultanés (double tir accidentel du
@@ -755,6 +778,18 @@ const LocationListScreen = () => {
     startSponsoredAutoScroll();
     return stopSponsoredAutoScroll;
   }, [sponsoredItems.length, startSponsoredAutoScroll, stopSponsoredAutoScroll]);
+  // BUG: une transition jour/nuit (overlay plein écran + LocationItem redéfini
+  // via useMemo([...,  isMoon]), donc remonté) peut interrompre en plein vol
+  // une séquence tactile en cours sur le carousel, sans jamais délivrer le
+  // onTouchEnd/onTouchCancel correspondant. `sponsoredTouchActiveRef` reste
+  // alors bloqué à `true`, et la garde en tête de onTouchStart empêche tout
+  // futur lockSwiper() de s'exécuter : le carousel ne verrouille plus jamais
+  // le swipe de navigation entre onglets après un changement de vibe. On
+  // force donc un reset propre à chaque transition.
+  useEffect(() => {
+    sponsoredTouchActiveRef.current = false;
+    unlockSwiper();
+  }, [transitioningTo, isMoon, unlockSwiper]);
   const handleSponsoredScrollToIndexFailed = useCallback((info) => {
     sponsoredListRef.current?.scrollToOffset({
       offset: info.averageItemLength * info.index,
@@ -1100,13 +1135,37 @@ const LocationListScreen = () => {
     fetchNearbyLocations();
 
     // Listen for mutations that should trigger a refresh
-    const unsub = subscribe('api:mutation', ({ path }) => {
+    const unsub = subscribe('api:mutation', ({ path, user: backendUser }) => {
       // Rafraîchir la liste suite aux mutations liées à la position MAIS sans renvoyer un POST
       // pour éviter une boucle infinie (mitraillette à requêtes).
       if (
         path &&
         (path.includes('/users/location') || path.includes('/user/location') || path.includes('/user/heartbeat'))
       ) {
+        // Patch optimiste (cf. applyOptimisticLocationPatch), généralisé ici à
+        // TOUS les flows de check-in/check-out (correction de check-in, QR
+        // code, BLE, heartbeat auto GPS, heartbeat en arrière-plan) — pas
+        // seulement le "Je suis là" manuel (qui applique en plus son propre
+        // patch synchrone juste après l'await, ci-dessus : idempotent avec
+        // celui-ci grâce aux gardes "already"/"length inchangée"). Couvre
+        // aussi le check-out, jusqu'ici jamais reflété sur les cartes.
+        if (backendUser?._id) {
+          const myRawId = String(backendUser._id);
+          const previousPoiId = previousPoiIdRef.current;
+          const nextPoiId = backendUser.currentLocation ? String(backendUser.currentLocation) : null;
+          if (previousPoiId !== nextPoiId) {
+            const meEntry = {
+              _id: myRawId,
+              profileImageUrl: backendUser.profileImageUrl || null,
+              boostUntil: backendUser.boostUntil || null,
+              status: backendUser.status || 'green',
+              location: { updatedAt: new Date().toISOString() },
+            };
+            setLocations((prev) =>
+              applyOptimisticLocationPatch(prev, { myRawId, previousPoiId, nextPoiId, meEntry }),
+            );
+          }
+        }
         // BUG (root cause de l'asymétrie sun→moon vs moon→sun) : cet effet a
         // un tableau de dépendances vide ([]), donc ce callback ferme sur la
         // valeur de `vibe` telle qu'elle était AU MOMENT DU MONT (souvent
@@ -1164,7 +1223,7 @@ const LocationListScreen = () => {
   };
 
   const fetchNearbyLocations = async (options = {}) => {
-    const { skipUpdateMyLocation = false, silent = false, skipLastKnown = false, vibe: overrideVibe, reuseCoords = null } = options;
+    const { skipUpdateMyLocation = false, silent = false, skipLastKnown = false, vibe: overrideVibe, reuseCoords = null, forceFresh = false } = options;
     const currentVibe = overrideVibe || vibe;
     const myRequestId = ++fetchRequestIdRef.current;
     try {
@@ -1288,7 +1347,7 @@ const LocationListScreen = () => {
         );
       }
 
-      tasks.push(getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe }));
+      tasks.push(getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe, forceFresh }));
 
       const results = await Promise.all(tasks);
       // Si on n'a PAS skippé updateMyLocation, alors getLocations est le 2ème élément (index 1)
@@ -1333,6 +1392,10 @@ const LocationListScreen = () => {
         setInvisibleModeBlocking(true);
       } else {
         console.error('Error fetching locations:', e);
+        // Sans ça, un refresh manuel qui échoue (réseau, 429...) est
+        // indiscernable d'un refresh qui a réussi mais n'a rien trouvé de
+        // nouveau : le spinner s'arrête silencieusement dans les deux cas.
+        if (!silent) showToast("Impossible d'actualiser pour l'instant.");
       }
     } finally {
       // NB: `setLoading` n'est PAS gardé par `myRequestId` contrairement à
@@ -1360,7 +1423,7 @@ const LocationListScreen = () => {
     lastRefreshAtRef.current = now;
     setRefreshing(true);
     setDisplayLimit(MIN_LOCATIONS);
-    await fetchNearbyLocations({ limit: MIN_LOCATIONS, vibe, skipLastKnown: true });
+    await fetchNearbyLocations({ limit: MIN_LOCATIONS, vibe, skipLastKnown: true, forceFresh: true });
     setRefreshing(false);
   };
 
@@ -1531,9 +1594,6 @@ const LocationListScreen = () => {
                 }}
               />
             )}
-            {/* Délimitation visuelle entre "Mis en avant" et le reste de la liste
-                (sinon les sections s'enchaînent sans distinction claire). */}
-            <View style={[styles.sponsoredDivider, { borderBottomColor: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.1)' }]} />
           </View>
         )}
         {trendingItems.length > 0 && (
@@ -2008,10 +2068,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
-  },
-  sponsoredDivider: {
-    marginTop: 12,
-    borderBottomWidth: 1,
   },
   horizontalCardWrapper: {
     width: 280,

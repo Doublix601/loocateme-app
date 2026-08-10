@@ -51,6 +51,19 @@ export function invalidateApiCacheByPrefix(prefix = '') {
   }
 }
 
+// Préfixes de routes dont la réponse d'une mutation (POST/PUT/PATCH/DELETE)
+// contient toujours le document de l'appelant lui-même sous `{ user }` —
+// jamais celui d'un autre utilisateur (les actions admin sur d'autres users
+// vivent sous /admin, et la lecture du profil d'un autre user est un GET, qui
+// ne passe jamais par cette branche). Sert à diffuser cet objet `user` sur
+// `api:mutation` pour que UserContext reste synchronisé même si l'appelant
+// (ex: check-in via QR code, heartbeat en arrière-plan) ne pense pas à le
+// faire lui-même — cf. UserContext.js.
+const SELF_USER_MUTATION_PREFIXES = ['/user/', '/users/', '/profile/', '/social/'];
+function isSelfUserMutationPath(path) {
+  return typeof path === 'string' && SELF_USER_MUTATION_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
 export function setAccessToken(token) {
   accessToken = token || null;
   // Fire-and-forget persistence
@@ -409,7 +422,8 @@ async function request(
     if (isMutation) {
       try {
         apiCache.clear();
-        publish('api:mutation', { path, method });
+        const selfUser = isSelfUserMutationPath(path) && data && typeof data === 'object' ? data.user || null : null;
+        publish('api:mutation', { path, method, user: selfUser });
       } catch (_) {}
     }
 
@@ -567,8 +581,8 @@ export async function apiUpdateInvisibleMode(invisibleMode) {
   return request('/users/me/invisible-mode', { method: 'PATCH', body: { invisibleMode } });
 }
 
-// Active/désactive un type de notification push précis (kind: 'chat_message',
-// 'superlike', 'story', 'weekly_digest', etc. — voir push.service.js côté backend).
+// Active/désactive un type de notification push précis (kind: 'superlike',
+// 'profile_view', 'weekly_digest', etc. — voir push.service.js côté backend).
 export async function apiUpdateNotificationPreferences(kind, enabled) {
   return request('/users/me/notification-preferences', { method: 'PATCH', body: { kind, enabled: !!enabled } });
 }
@@ -608,10 +622,14 @@ export async function getPopularUsers({ limit = 10 } = {}) {
   return request(`/users/popular?${qs.toString()}`, { method: 'GET' });
 }
 
-export async function getLocations({ lat, lon, limit, vibe } = {}) {
+export async function getLocations({ lat, lon, limit, vibe, forceFresh } = {}) {
   const params = { lat: String(lat), lon: String(lon) };
   if (limit != null) params.limit = String(limit);
   if (vibe) params.vibe = String(vibe);
+  // Contourne le cache Redis côté serveur (pas seulement le cache client déjà
+  // court-circuité par `cache: 'reload'` ci-dessous) : réservé au pull-to-refresh
+  // manuel, pour ne pas priver les appels silencieux/automatiques du cache.
+  if (forceFresh) params.fresh = '1';
   const qs = new URLSearchParams(params);
   // Bypass le cache client (sinon jusqu'à 30s de retard sur un userCount/
   // activeUsers qui vient de changer suite à un check-in, en plus du cache
@@ -1034,33 +1052,5 @@ export async function unbanUser(userId) {
 
 export async function triggerLocationSync() {
   return request('/admin/sync-locations', { method: 'POST' });
-}
-
-// FOLLOW / RELATIONS
-export async function getFollowStatus(targetUserId) {
-  const id = String(targetUserId || '');
-  if (!id) throw new Error('targetUserId requis');
-  return request(`/follow/status/${encodeURIComponent(id)}`, { method: 'GET', cache: 'reload' });
-}
-
-export async function createFollowRequest(targetUserId) {
-  return request('/follow/request', { method: 'POST', body: { targetUserId } });
-}
-
-export async function listFollowRequests({ type = 'incoming' } = {}) {
-  const qs = new URLSearchParams({ type: String(type || 'incoming') });
-  return request(`/follow/requests?${qs.toString()}`, { method: 'GET', cache: 'reload' });
-}
-
-export async function acceptFollowRequest(requestId) {
-  const id = String(requestId || '');
-  if (!id) throw new Error('requestId requis');
-  return request(`/follow/requests/${encodeURIComponent(id)}/accept`, { method: 'POST' });
-}
-
-export async function declineFollowRequest(requestId) {
-  const id = String(requestId || '');
-  if (!id) throw new Error('requestId requis');
-  return request(`/follow/requests/${encodeURIComponent(id)}/decline`, { method: 'POST' });
 }
 

@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateMyLocation, setVisibility } from './ApiRequest';
 import { reportPermissionStatus } from '../services/EngagementTrackingService';
+import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 
 const TASK_NAME = 'HEARTBEAT_TASK';
 const STORAGE_START_KEY = 'bg_loc_start_ts';
@@ -55,8 +56,18 @@ function defineTaskOnce() {
       const lon = last.coords.longitude;
       if (typeof lat !== 'number' || typeof lon !== 'number') return;
 
+      // Un check-out explicite récent (LocationScreen) suspend les heartbeats
+      // automatiques pour éviter qu'ils ne re-matchent l'utilisateur sur le
+      // lieu qu'il vient de quitter (cf. utils/devLocationSuppression.js).
+      if (isLocationHeartbeatSuppressed()) return;
+
       try {
         const { post } = await import('./ApiRequest');
+        // La réponse n'est pas exploitée ici : ApiRequest.request() diffuse déjà
+        // `res.user` sur l'event `api:mutation`, et UserContext.js s'y abonne
+        // pour se resynchroniser automatiquement — y compris quand cette tâche
+        // tourne hors arbre React pendant que l'app est en arrière-plan/tuée. Ne
+        // pas réintroduire un chemin de sync parallèle ici.
         await post('/user/heartbeat', { lat, lon });
       } catch (e) {
         // Swallow errors; task will run again later

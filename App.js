@@ -58,6 +58,7 @@ import PremiumService from './services/PremiumService';
 import PremiumNudgeService from './services/PremiumNudgeService';
 import { mapBackendUser, mapProfileUser } from './utils/mappers';
 import { hasSeenOnboarding } from './utils/onboarding';
+import { hydrateLocationHeartbeatSuppression } from './utils/devLocationSuppression';
 import RootNavigator from './navigation/RootNavigator';
 
 LogBox.ignoreLogs([
@@ -92,6 +93,15 @@ function AppShell({ purchasesReady }) {
   useEffect(() => {
     currentPoiIdRef.current = appUser?.currentPoiId || null;
   }, [appUser?.currentPoiId]);
+
+  // LocationService est un module hors arbre React (appelé depuis des tâches
+  // en arrière-plan) : on lui injecte updateUser pour qu'un check-in/check-out
+  // automatique (dwell GPS ou BLE) mette bien à jour l'utilisateur affiché,
+  // au lieu de compter uniquement sur le prochain heartbeat au premier plan.
+  useEffect(() => {
+    LocationService.setUserUpdater((backendUser) => updateUser(mapBackendUser(backendUser)));
+    return () => LocationService.setUserUpdater(null);
+  }, [updateUser]);
 
   // Vérification "Es-tu bien ici ?" en interne à l'app (pas de notification) :
   // ~5 min après le check-in, on ouvre le modal si l'utilisateur est toujours
@@ -146,6 +156,12 @@ function AppShell({ purchasesReady }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Doit être hydraté avant que les heartbeats GPS (usePresence,
+        // BackgroundLocation, LocationService) ne puissent démarrer : sinon
+        // une suspension posée juste avant un kill de l'app (check-out
+        // manuel) est perdue au redémarrage et le 1er heartbeat annule
+        // aussitôt l'état forcé — cf. devLocationSuppression.js.
+        await hydrateLocationHeartbeatSuppression();
         const token = await initApiFromStorage();
         if (token) {
           try {
@@ -249,6 +265,9 @@ function AppShell({ purchasesReady }) {
       } catch (_) {}
       try {
         stopBackgroundLocation();
+      } catch (_) {}
+      try {
+        LocationService.resetState();
       } catch (_) {}
       navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
     });
@@ -491,7 +510,8 @@ function AppShell({ purchasesReady }) {
             // Pas de fix GPS dispo : on check-in quand même (bypassDistance), le
             // heartbeat suivant recalera les coordonnées réelles.
           }
-          await forceCheckIn({ locationId: venueId, lat, lon, bypassDistance: true });
+          const res = await forceCheckIn({ locationId: venueId, lat, lon, bypassDistance: true });
+          if (res?.user && updateUser) updateUser(mapBackendUser(res.user));
         } catch (e) {
           console.warn('[App] venue QR check-in failed', e?.message || e);
         }
@@ -547,10 +567,16 @@ function AppShell({ purchasesReady }) {
           } else if (data.kind === 'superlike_accepted') {
             navigationRef.navigate('MainTabs');
             publish('ui:open_superlike_history', { tab: 'sent' });
-          } else if (data.kind === 'cote_expiring') {
+          } else if (data.kind === 'streak_expiring') {
             navigationRef.navigate('MainTabs');
           } else if (data.kind === 'referral_validated' || data.kind === 'referral_reward_granted') {
             navigationRef.navigate('Referral');
+          } else if (data.kind === 'profile_view' || data.kind === 'inactive_profile_views' || data.kind === 'weekly_digest') {
+            navigationRef.navigate('Statistics');
+          } else if (data.kind === 'at_risk_reactivation') {
+            navigationRef.navigate('Settings');
+          } else if (data.kind === 'night_mode_activated') {
+            navigationRef.navigate('MainTabs');
           }
         };
 

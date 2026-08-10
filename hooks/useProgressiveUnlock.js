@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePremiumAccess } from './usePremiumAccess';
 import { hasSeenOnboarding } from '../utils/onboarding';
+import { incrementCheckinCount, CHECKIN_KEY } from '../utils/checkinCounter';
 
-const CHECKIN_KEY = 'lm_progressive_checkin_count';
 const SUPERLIKE_KEY = 'lm_progressive_superlike_sent_count';
 const MIGRATED_KEY = 'lm_progressive_migrated_v1';
 
@@ -22,14 +22,12 @@ async function setCount(key, value) {
   } catch {}
 }
 
-/**
- * À appeler juste après un check-in réussi. Idempotent au-delà du premier check-in
- * (le compteur ne sert qu'à déclencher les paliers de déblocage, pas de statistique précise).
- */
-export async function incrementCheckinCount() {
-  const current = await getCount(CHECKIN_KEY);
-  if (current < 2) await setCount(CHECKIN_KEY, current + 1);
-}
+// Ré-exporté pour compatibilité avec les imports existants
+// (`import { incrementCheckinCount } from '../hooks/useProgressiveUnlock'`) —
+// l'implémentation vit désormais dans utils/checkinCounter.js (module sans
+// dépendance React) pour permettre à UserContext.js de l'importer sans créer
+// de cycle (UserContext → useProgressiveUnlock → usePremiumAccess → UserContext).
+export { incrementCheckinCount };
 
 /**
  * À appeler juste après l'envoi réussi d'un superlike.

@@ -39,4 +39,55 @@ describe('mapBackendUser', () => {
     expect(mapBackendUser({ currentLocation: 123 }).currentPoiId).toBe('123');
     expect(mapBackendUser({}).currentPoiId).toBeNull();
   });
+
+  it('normalizes checkInMode to auto unless explicitly manual', () => {
+    expect(mapBackendUser({}).checkInMode).toBe('auto');
+    expect(mapBackendUser({ checkInMode: 'manual' }).checkInMode).toBe('manual');
+    expect(mapBackendUser({ checkInMode: 'bogus' }).checkInMode).toBe('auto');
+  });
+
+  it('defaults invisibleMode and notificationPreferences', () => {
+    expect(mapBackendUser({}).invisibleMode).toBe(false);
+    expect(mapBackendUser({ invisibleMode: true }).invisibleMode).toBe(true);
+    expect(mapBackendUser({}).notificationPreferences).toEqual({});
+    expect(mapBackendUser({ notificationPreferences: { superlike: false } }).notificationPreferences).toEqual({
+      superlike: false,
+    });
+  });
+
+  it('defaults privacyPreferences.bluetoothProximity to false', () => {
+    expect(mapBackendUser({}).privacyPreferences).toEqual({
+      analytics: false,
+      marketing: false,
+      bluetoothProximity: false,
+    });
+  });
+
+  it('fills sensible defaults for the streak object', () => {
+    expect(mapBackendUser({}).streak).toEqual({
+      count: 0,
+      lastCheckInDate: null,
+      supervisePendingClaim: false,
+      boostPendingClaim: false,
+      lastClaimedAt: null,
+    });
+    expect(
+      mapBackendUser({ streak: { count: 3, lastCheckInDate: '2026-08-09', boostPendingClaim: true } }).streak,
+    ).toEqual({
+      count: 3,
+      lastCheckInDate: '2026-08-09',
+      supervisePendingClaim: false,
+      boostPendingClaim: true,
+      lastClaimedAt: null,
+    });
+  });
+
+  it('defaults boostBalance/boostUntil', () => {
+    expect(mapBackendUser({}).boostBalance).toBe(0);
+    expect(mapBackendUser({}).boostUntil).toBeNull();
+    expect(mapBackendUser({ boostBalance: 2, boostUntil: '2026-08-10T12:00:00.000Z' })).toMatchObject({
+      boostBalance: 2,
+      boostUntil: '2026-08-10T12:00:00.000Z',
+    });
+  });
 });

@@ -1011,6 +1011,29 @@ const LocationScreen = () => {
               </Text>
             </TouchableOpacity>
           )}
+          {isUserHere && (
+            <TouchableOpacity
+              onPress={handleNotHereFromVerify}
+              disabled={correcting}
+              style={[styles.forceCheckinLink, { opacity: correcting ? 0.6 : 1 }]}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="log-out-outline" size={15} color={palette.textMuted} />
+              <Text
+                style={[
+                  typography.caption,
+                  {
+                    color: palette.textMuted,
+                    fontWeight: '600',
+                    marginLeft: 4,
+                    textDecorationLine: 'underline',
+                  },
+                ]}
+              >
+                Je ne suis plus ici
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );

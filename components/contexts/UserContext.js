@@ -3,61 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAccessToken, getMyUser } from '../ApiRequest';
 import { registerCurrentDevicePushToken } from '../PushService';
 import { subscribe } from '../EventBus';
+import { mapBackendUser } from '../../utils/mappers';
+import { incrementCheckinCount } from '../../utils/checkinCounter';
 
 export const UserContext = createContext();
-
-function mapBackendUser(u = {}) {
-  return {
-    username: u.username || u.name || '',
-    firstName: u.firstName || '',
-    lastName: u.lastName || '',
-    customName: u.customName || '',
-    bio: u.bio || '',
-    city: u.city || '',
-    photo: u.profileImageUrl || null,
-    birthdate: u.birthdate || null,
-    gender: u.gender || '',
-    socialMedia: Array.isArray(u.socialNetworks)
-      ? u.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
-      : [],
-    // Premium flag from backend; free if falsy
-    isPremium: !!u.isPremium,
-    currentPoiId: u.currentLocation ? String(u.currentLocation) : null,
-    currentLocationSince: u.currentLocationSince || null,
-    // 'auto' (par défaut) : check-in automatique par proximité GPS. 'manual' :
-    // l'utilisateur check-in lui-même via le bouton "Je suis là".
-    checkInMode: u.checkInMode === 'manual' ? 'manual' : 'auto',
-    // User role: 'user', 'moderator', or 'admin'
-    role: u.role || 'user',
-    // Include GDPR consent and privacy preferences if present
-    status: u.status || 'green',
-    consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false, bluetoothProximity: false },
-    // Mode invisible (masque l'utilisateur des autres dans les lieux)
-    invisibleMode: !!u.invisibleMode,
-    // Préférences de notifications push par kind (passthrough générique du backend)
-    notificationPreferences: u.notificationPreferences || {},
-    moderation: u.moderation || {
-      warningsCount: 0,
-      lastWarningAt: null,
-      lastWarningReason: '',
-      lastWarningType: '',
-      warningsHistory: [],
-      bannedUntil: null,
-      bannedPermanent: false,
-    },
-    boostBalance: u.boostBalance || 0,
-    boostUntil: u.boostUntil || null,
-    // "Ta série" : streak quotidien (0-14 jours), voir MyAccountScreen/StreakCard
-    streak: {
-      count: typeof u?.streak?.count === 'number' ? u.streak.count : 0,
-      lastCheckInDate: u?.streak?.lastCheckInDate || null,
-      supervisePendingClaim: !!u?.streak?.supervisePendingClaim,
-      boostPendingClaim: !!u?.streak?.boostPendingClaim,
-      lastClaimedAt: u?.streak?.lastClaimedAt || null,
-    },
-  };
-}
 
 export const UserProvider = ({ children }) => {
   // Start with an empty user so hydration always fetches fresh data
@@ -207,11 +156,37 @@ export const UserProvider = ({ children }) => {
         } catch (_) {}
       } catch (_) {}
     });
+
+    // Source de vérité centrale pour l'état de présence : ApiRequest.js diffuse
+    // le `user` de la réponse pour toute mutation sous /user(s)//profile//social
+    // (cf. isSelfUserMutationPath), et on l'applique ici automatiquement, qu'un
+    // call site ait ou non pensé à appeler updateUser lui-même. Élimine la
+    // classe de bug "check-in enregistré côté serveur mais jamais reflété côté
+    // UI" (check-in via QR code, correction de check-in, heartbeat en
+    // arrière-plan — tous passent par ApiRequest.request() donc tous
+    // déclenchent ce chemin, indépendamment de ce que fait l'appelant avec la
+    // valeur de retour).
+    const offMutationSync = subscribe('api:mutation', ({ user: backendUser } = {}) => {
+      if (!backendUser) return;
+      const next = mapBackendUser(backendUser);
+      setUser((prev) => {
+        // Détecte une transition "pas checké" -> "checké" (n'importe quel
+        // flow : manuel, auto GPS, QR, BLE, heartbeat) pour piloter le
+        // déblocage progressif depuis un seul endroit plutôt que dupliquer
+        // l'appel à incrementCheckinCount() dans chaque call site.
+        if (!prev.currentPoiId && next.currentPoiId) {
+          incrementCheckinCount().catch(() => {});
+        }
+        return next;
+      });
+    });
+
     return () => {
       offLogout();
       offLogin();
       offOptimisticCheckIn();
       offUiReload();
+      offMutationSync();
     };
   }, []);
 

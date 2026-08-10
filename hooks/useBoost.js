@@ -5,6 +5,7 @@ import { publish } from '../components/EventBus';
 import { usePremiumAccess } from './usePremiumAccess';
 import ProfileBoostService from '../services/ProfileBoostService';
 import PremiumService from '../services/PremiumService';
+import { mapBackendUser } from '../utils/mappers';
 
 export function useBoost() {
   const [loading, setLoading] = useState(false);
@@ -26,8 +27,12 @@ export function useBoost() {
         if (result.success) {
           setBoostBalance(PremiumService.getBoostsRemaining());
           try {
-            const res = await api.get('/user/me');
-            if (res?.user && updateUser) updateUser(res.user);
+            // cache: 'reload' pour éviter de servir une réponse en cache
+            // jusqu'à 30s après l'activation du boost, et mapBackendUser pour
+            // ne pas polluer UserContext avec les noms de champs backend bruts
+            // (profileImageUrl au lieu de photo, etc.)
+            const res = await api.get('/user/me', { cache: 'reload' });
+            if (res?.user && updateUser) updateUser(mapBackendUser(res.user));
           } catch (_) {}
         } else if (result.reason === 'no_boosts') {
           publish('ui:open_consumables', { type: 'boost' });
