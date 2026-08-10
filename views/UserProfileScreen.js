@@ -33,8 +33,6 @@ import {
   trackSocialClick,
   createReport,
   blockUser,
-  getFollowStatus as apiGetFollowStatus,
-  createFollowRequest as apiCreateFollowRequest,
 } from '../components/ApiRequest';
 import { publish } from '../components/EventBus';
 import SuperlikeService from '../services/SuperlikeService';
@@ -113,8 +111,6 @@ const UserProfileScreen = () => {
   const [reportReason, setReportReason] = React.useState('');
   const [reportDescription, setReportDescription] = React.useState('');
   const [reportSubmitting, setReportSubmitting] = React.useState(false);
-  const [followStatus, setFollowStatus] = React.useState('none'); // 'none' | 'pending' | 'accepted'
-  const [followLoading, setFollowLoading] = React.useState(false);
   const [superlikeBalance, setSuperlikeBalance] = React.useState(() => PremiumService.getSuperlikesRemaining());
   const [superlikeSent, setSuperlikeSent] = React.useState(false);
   const [superlikeLoading, setSuperlikeLoading] = React.useState(false);
@@ -404,26 +400,6 @@ const UserProfileScreen = () => {
     })();
   }, [user, distanceBetweenMeters, formatDistance]);
 
-  // Charger l'état de suivi au montage
-  React.useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      if (!user?._id && !user?.id) return;
-      try {
-        const targetId = user._id || user.id;
-        const res = await apiGetFollowStatus(targetId);
-        const st = res?.status || 'none';
-        if (mounted) setFollowStatus(st);
-      } catch (_) {
-        if (mounted) setFollowStatus('none');
-      }
-    };
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [user?._id, user?.id]);
-
   const handleBlockUser = async () => {
     if (!user?._id) return;
     Alert.alert(
@@ -484,23 +460,6 @@ const UserProfileScreen = () => {
       </View>
     );
   }
-
-  const handleFollowPress = async () => {
-    if (!user) return;
-    if (followStatus === 'accepted' || followStatus === 'pending') return;
-    // none -> créer une demande de suivi
-    try {
-      setFollowLoading(true);
-      await apiCreateFollowRequest(user._id || user.id);
-      setFollowStatus('pending');
-    } catch (e) {
-      try {
-        Alert.alert('Erreur', e?.message || "Impossible d'envoyer la demande");
-      } catch (_) {}
-    } finally {
-      setFollowLoading(false);
-    }
-  };
 
   const handleSuperlike = async () => {
     if (superlikeSent || superlikeLoading) return;
@@ -567,7 +526,7 @@ const UserProfileScreen = () => {
         pointerEvents="none"
       />
 
-      {/* Boutons flottants (retour / menu / suivre / superlike) */}
+      {/* Boutons flottants (retour / menu / superlike) */}
       <SafeAreaView edges={['top']} style={styles.heroSafeTop} pointerEvents="box-none">
         <View style={styles.heroTopRow}>
           <TouchableOpacity
@@ -593,33 +552,6 @@ const UserProfileScreen = () => {
             style={[
               styles.heroRoundBtn,
               {
-                backgroundColor: followStatus === 'accepted' ? palette.accent : palette.overlay,
-                opacity: followLoading || followStatus === 'pending' ? 0.6 : 1,
-              },
-            ]}
-            onPress={handleFollowPress}
-            disabled={followLoading || followStatus === 'accepted' || followStatus === 'pending'}
-            hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-            accessibilityLabel={
-              followStatus === 'accepted'
-                ? 'Déjà suivi'
-                : followStatus === 'pending'
-                  ? 'Demande en attente'
-                  : 'Envoyer une demande de suivi'
-            }
-          >
-            {followLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Feather name={followStatus === 'accepted' ? 'check' : 'link-2'} size={20} color="#fff" />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.heroRoundBtn,
-              {
-                marginTop: spacing.sm,
                 backgroundColor: superlikeSent ? 'rgba(255,215,0,0.35)' : palette.overlay,
                 opacity: superlikeLoading || superlikeSent ? 0.75 : superlikeUnlocked ? 1 : 0.4,
               },
