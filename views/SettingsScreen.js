@@ -60,17 +60,18 @@ const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 // Types de notifications push exposés côté backend (voir push.service.js,
 // littéraux `kind: '...'`). Libellés FR pensés pour un usage utilisateur ; les
-// kinds purement internes/admin (ban, report_created, social_click,
-// boost_purchase, ultra_boost) sont volontairement omis de cette liste.
+// kinds purement internes/admin (ban, report_created, boost_purchase,
+// ultra_boost) sont volontairement omis de cette liste. 'story' et 'event'
+// retirés : aucune notification backend réelle ne porte ces kinds (les
+// littéraux `kind: 'story'`/`'event'` du backend sont des types de job
+// BullMQ de transcodage vidéo, pas des notifications).
 const NOTIFICATION_KINDS = [
-  { kind: 'chat_message', label: 'Nouveaux messages' },
   { kind: 'superlike', label: 'Superlikes reçus' },
   { kind: 'superlike_accepted', label: 'Superlikes acceptés' },
-  { kind: 'story', label: 'Nouvelles stories' },
-  { kind: 'event', label: 'Événements à proximité' },
   { kind: 'event_boost', label: "Boosts d'événements" },
   { kind: 'streak_expiring', label: 'Rappels de série' },
   { kind: 'profile_view', label: 'Vues de profil' },
+  { kind: 'social_click', label: 'Consultations de tes réseaux sociaux' },
   { kind: 'inactive_profile_views', label: 'Vues reçues pendant votre absence' },
   { kind: 'referral_validated', label: 'Parrainage validé' },
   { kind: 'referral_reward_granted', label: 'Récompense de parrainage' },
@@ -112,6 +113,7 @@ const SettingsScreen = () => {
   // Notifications tab state
   const [notifPrefs, setNotifPrefs] = useState(user?.notificationPreferences || {});
   const [notifSavingKind, setNotifSavingKind] = useState(null);
+  const [notifMasterSaving, setNotifMasterSaving] = useState(false);
 
   // Mode invisible
   const [invisibleMode, setInvisibleMode] = useState(!!user?.invisibleMode);
@@ -380,6 +382,28 @@ const SettingsScreen = () => {
       Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour cette préférence de notification');
     } finally {
       setNotifSavingKind(null);
+    }
+  };
+
+  // Toggle maître : active/désactive tous les kinds en une action, en gardant
+  // l'état individuel de chaque toggle en dessous (préférences par kind
+  // toujours conservées côté backend, juste écrites en lot).
+  const handleToggleAllNotifKinds = async (v) => {
+    const prevPrefs = notifPrefs;
+    const nextPrefs = { ...notifPrefs };
+    NOTIFICATION_KINDS.forEach((item) => { nextPrefs[item.kind] = v; });
+    setNotifPrefs(nextPrefs);
+    setNotifMasterSaving(true);
+    try {
+      await Promise.all(NOTIFICATION_KINDS.map((item) => apiUpdateNotificationPreferences(item.kind, v)));
+      if (updateUser) {
+        updateUser({ ...user, notificationPreferences: nextPrefs });
+      }
+    } catch (e) {
+      setNotifPrefs(prevPrefs);
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour les préférences de notification');
+    } finally {
+      setNotifMasterSaving(false);
     }
   };
 
@@ -1058,6 +1082,26 @@ const SettingsScreen = () => {
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+              <View
+                style={[
+                  styles.optionContainer,
+                  { borderBottomColor: colors.border, borderBottomWidth: 1 },
+                ]}
+              >
+                <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1, fontWeight: '600' }]}>
+                  Toutes les notifications
+                </Text>
+                {notifMasterSaving ? (
+                  <ActivityIndicator size="small" color="#00c2cb" />
+                ) : (
+                  <Switch
+                    value={NOTIFICATION_KINDS.every((item) => notifPrefs?.[item.kind] !== false)}
+                    onValueChange={handleToggleAllNotifKinds}
+                    trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                    thumbColor="#fff"
+                  />
+                )}
+              </View>
               {NOTIFICATION_KINDS.map((item, idx) => {
                 const enabled = notifPrefs?.[item.kind] !== false; // opt-out : activé par défaut
                 return (
