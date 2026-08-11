@@ -358,6 +358,21 @@ async function request(
         } catch (_) {}
       }
 
+      // Rate-limit spécifique aux endpoints de position (heartbeatLimiter côté
+      // API : heartbeat, check-in manuel, correction de check-in, check-in
+      // BLE). Centralisé ici (plutôt que dans chaque écran qui appelle ces
+      // endpoints) pour afficher une seule modale cohérente quel que soit le
+      // point d'entrée — cf. RateLimitModal.js, monté globalement dans App.js.
+      if (res.status === 429 && data?.code === 'RATE_LIMITED' && data?.message === 'Too many location updates') {
+        try {
+          const retryAfterHeader = res.headers?.get?.('Retry-After') || res.headers?.get?.('RateLimit-Reset');
+          const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : null;
+          publish('location_rate_limited', {
+            retryAfterSeconds: Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0 ? retryAfterSeconds : null,
+          });
+        } catch (_) {}
+      }
+
       // Detect authentication/user-not-found errors and auto-logout
       const code = data?.code;
       const msg = (data?.message || '').toString().toLowerCase();

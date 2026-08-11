@@ -262,7 +262,12 @@ const LocationListScreen = () => {
         fetchNearbyLocations({ skipUpdateMyLocation: true, silent: true, vibe, reuseCoords: c });
       } catch (e) {
         console.warn('[LocationListScreen] manual forceCheckIn failed', e?.message || e);
-        Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
+        // RATE_LIMITED est déjà affiché par la modale globale (cf. App.js,
+        // événement 'location_rate_limited' publié depuis ApiRequest.js) : ne
+        // pas doubler avec cette Alert générique.
+        if (e?.code !== 'RATE_LIMITED') {
+          Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
+        }
       } finally {
         // Ne réinitialise l'indicateur "en vol" que si aucune requête plus
         // récente n'a pris le relais entre-temps, pour ne pas ré-activer les

@@ -25,6 +25,7 @@ import Purchases from 'react-native-purchases';
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
 import ChurnSurveyModal from './components/ChurnSurveyModal';
+import RateLimitModal from './components/RateLimitModal';
 import { reportPermissionStatus } from './services/EngagementTrackingService';
 import DevLocationOverride from './components/DevLocationOverride';
 import PolicyUpdateBanner from './components/PolicyUpdateBanner';
@@ -76,6 +77,7 @@ function AppShell({ purchasesReady }) {
   const [authReady, setAuthReady] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
+  const [rateLimitInfo, setRateLimitInfo] = useState(null);
   const [shopSheetVisible, setShopSheetVisible] = useState(false);
   const [locationModal, setLocationModal] = useState({ visible: false });
   const [churnSurveyVisible, setChurnSurveyVisible] = useState(false);
@@ -250,6 +252,17 @@ function AppShell({ purchasesReady }) {
           { cancelable: false },
         );
       } catch (_) {}
+    });
+    return () => {
+      try {
+        unsub && unsub();
+      } catch (_) {}
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsub = subscribe('location_rate_limited', (payload) => {
+      setRateLimitInfo(payload || {});
     });
     return () => {
       try {
@@ -660,6 +673,11 @@ function AppShell({ purchasesReady }) {
         visible={churnSurveyVisible}
         context="location_permission_revoked"
         onClose={() => setChurnSurveyVisible(false)}
+      />
+      <RateLimitModal
+        visible={!!rateLimitInfo}
+        retryAfterSeconds={rateLimitInfo?.retryAfterSeconds}
+        onClose={() => setRateLimitInfo(null)}
       />
 
       {isLoading && (
