@@ -44,7 +44,11 @@ import * as Location from 'expo-location';
 import { calculateDistance } from '../components/ServerUtils';
 import { forceCheckIn, forceCheckOut } from '../components/ApiRequest';
 import { cancelCheckinVerification, markCheckinVerified } from '../components/CheckinVerificationScheduler';
-import { getCurrentPositionSmart } from '../utils/locationHelper';
+import {
+  loadDevLocationOverride,
+  getDevLocationOverride,
+  subscribeDevLocationOverride,
+} from '../utils/devLocationOverride';
 import { suppressLocationHeartbeat } from '../utils/devLocationSuppression';
 import { mapBackendUser } from '../utils/mappers';
 import socialMediaIcons from '../constants/socialMediaIcons';
@@ -106,10 +110,14 @@ const LocationScreen = () => {
   const [correcting, setCorrecting] = useState(false);
 
   // Bouton "Je suis là" (cf. plan §2.4) : nécessite de connaître la distance
-  // au lieu affiché. On ne watch le GPS que quand ça peut réellement servir
-  // (mode manuel + pas déjà check-in ici), pour ne pas consommer de batterie
-  // inutilement sur cet écran par ailleurs statique côté position.
-  const checkInMode = user?.checkInMode === 'manual' ? 'manual' : 'auto';
+  // au lieu affiché. Toujours actif sur cet écran (pas seulement en mode de
+  // check-in 'manuel') : contrairement à la liste des lieux, l'utilisateur a
+  // déjà explicitement ouvert la page de CE lieu précis, donc un bouton de
+  // secours pour confirmer manuellement sa présence a du sens même en mode
+  // 'auto', par exemple si la détection GPS automatique tarde à se
+  // déclencher. On ne watch le GPS que si ça peut réellement servir (pas déjà
+  // check-in ici), pour ne pas consommer de batterie inutilement sur cet
+  // écran par ailleurs statique côté position.
   const isUserHereForManualCheckin = !!(
     user?.currentPoiId &&
     locationId &&
@@ -120,10 +128,28 @@ const LocationScreen = () => {
   const [manualCheckinSuccess, setManualCheckinSuccess] = useState(false);
 
   useEffect(() => {
-    if (checkInMode !== 'manual' || isUserHereForManualCheckin) return;
+    if (isUserHereForManualCheckin) return;
     let subscription;
+    let offDevOverride;
     let cancelled = false;
     (async () => {
+      // watchPositionAsync interroge directement l'OS et ne peut pas être
+      // intercepté par l'override GPS de dev (cf. DevLocationOverride.js) —
+      // même limitation, même contournement que hooks/usePresence.js. Sans
+      // ça, la distance calculée ici ignore l'override alors que le reste de
+      // l'app (liste des lieux, heartbeat) l'applique, ce qui désynchronise
+      // ce bouton du reste de l'UI en dev.
+      if (__DEV__) {
+        await loadDevLocationOverride();
+        const override = getDevLocationOverride();
+        if (override) {
+          setManualCheckinCoords({ latitude: override.latitude, longitude: override.longitude });
+          offDevOverride = subscribeDevLocationOverride((next) => {
+            if (!cancelled && next) setManualCheckinCoords({ latitude: next.latitude, longitude: next.longitude });
+          });
+          return;
+        }
+      }
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted' || cancelled) return;
       const sub = await Location.watchPositionAsync(
@@ -136,7 +162,7 @@ const LocationScreen = () => {
       );
       // La permission/le watcher peuvent résoudre APRÈS que le composant se
       // soit démonté ou que l'effet ait été ré-exécuté (changement de
-      // checkInMode/isUserHereForManualCheckin) : si `cancelled` est déjà
+      // isUserHereForManualCheckin) : si `cancelled` est déjà
       // vrai à ce moment-là, la fonction de cleanup ci-dessous s'est déjà
       // exécutée et n'a rien pu retirer puisque `subscription` n'était pas
       // encore assignée — on retire donc immédiatement dans ce cas, sinon on
@@ -152,8 +178,9 @@ const LocationScreen = () => {
     return () => {
       cancelled = true;
       if (subscription) subscription.remove();
+      if (offDevOverride) offDevOverride();
     };
-  }, [checkInMode, isUserHereForManualCheckin]);
+  }, [isUserHereForManualCheckin]);
 
   const distanceToLocation = useMemo(() => {
     if (!manualCheckinCoords || !location?.location?.coordinates) return null;
@@ -163,7 +190,6 @@ const LocationScreen = () => {
   }, [manualCheckinCoords, location]);
 
   const showManualCheckinButton =
-    checkInMode === 'manual' &&
     !isUserHereForManualCheckin &&
     typeof distanceToLocation === 'number' &&
     distanceToLocation <= MANUAL_CHECKIN_DISTANCE_M;
@@ -183,8 +209,13 @@ const LocationScreen = () => {
       setTimeout(() => setManualCheckinSuccess(false), 2500);
       refresh();
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
       console.warn('[LocationScreen] handleManualCheckin failed', e?.message || e);
+      // RATE_LIMITED est déjà affiché par la modale globale (cf. App.js,
+      // événement 'location_rate_limited' publié depuis ApiRequest.js) : ne
+      // pas doubler avec cette Alert générique.
+      if (e?.code !== 'RATE_LIMITED') {
+        Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
+      }
     } finally {
       setManualCheckinLoading(false);
     }
@@ -289,47 +320,8 @@ const LocationScreen = () => {
     // manuel ("Je suis là"), plus via un sélecteur de lieux proches ici.
   };
 
-  // Dev only: force le check-in sur CE lieu (celui affiché par l'écran),
-  // peu importe la distance réelle.
-  const handleDevForceCheckinPress = async () => {
-    if (!__DEV__ || correcting || !locationId) return;
-    if (isBoosted) {
-      Alert.alert('Boost en cours', 'Impossible de changer de lieu tant que le boost est actif.');
-      return;
-    }
-    setCorrecting(true);
-    try {
-      const pos = await getCurrentPositionSmart().catch(() => null);
-      const [locLon, locLat] = location?.location?.coordinates || [];
-      const lat = pos?.coords?.latitude ?? locLat;
-      const lon = pos?.coords?.longitude ?? locLon;
-      if (lat == null || lon == null) return;
-      const res = await forceCheckIn({ locationId, lat, lon, bypassDistance: true });
-      await markCheckinVerified({ locationId, lat, lon });
-      // Sans ça, le prochain heartbeat GPS réel (position potentiellement
-      // très différente, puisque c'est tout l'intérêt du bypass) ne matche
-      // plus ce lieu et annule le check-in forcé en quelques secondes.
-      suppressLocationHeartbeat();
-      // forceCheckIn ne met à jour que ce lieu (via refresh() plus bas) : le
-      // UserContext global (currentPoiId, utilisé ailleurs dans l'app) ne
-      // bouge pas tout seul, il faut le pousser explicitement.
-      if (res?.user) updateUser(mapBackendUser(res.user));
-      refresh();
-    } catch (e) {
-      console.warn('[LocationScreen] dev forceCheckIn failed', e?.message || e);
-    } finally {
-      setCorrecting(false);
-    }
-  };
-
-  // Dev only: force un check-out immédiat, sans dépendre du heartbeat GPS.
-  // Le backend refuse cette route hors dev (voir forceCheckOut/ApiRequest).
-  // Sans la suppression du heartbeat, le prochain heartbeat GPS (toutes les
-  // 30-60s, cf. hooks/usePresence.js) re-matche l'utilisateur sur ce même
-  // lieu et annule le check-out en quelques secondes.
   // "Je ne suis dans aucun lieu" depuis la modale de vérification "Es-tu bien
-  // ici ?" : contrairement à handleForceCheckoutPress (outil dev), disponible
-  // en production — corrige un faux positif de détection GPS.
+  // ici ?", disponible en production — corrige un faux positif de détection GPS.
   const handleNotHereFromVerify = async () => {
     setVerifyModalVisible(false);
     if (correcting) return;
@@ -350,25 +342,6 @@ const LocationScreen = () => {
       } else {
         console.warn('[LocationScreen] handleNotHereFromVerify failed', e?.message || e);
       }
-    } finally {
-      setCorrecting(false);
-    }
-  };
-
-  const handleForceCheckoutPress = async () => {
-    if (!__DEV__ || correcting) return;
-    if (isBoosted) {
-      Alert.alert('Boost en cours', 'Impossible de se check-out tant que le boost est actif.');
-      return;
-    }
-    setCorrecting(true);
-    try {
-      const res = await forceCheckOut();
-      suppressLocationHeartbeat();
-      if (res?.user) updateUser(mapBackendUser(res.user));
-      refresh();
-    } catch (e) {
-      console.warn('[LocationScreen] forceCheckOut failed', e?.message || e);
     } finally {
       setCorrecting(false);
     }
@@ -596,6 +569,39 @@ const LocationScreen = () => {
           <Text style={[typography.body, { marginLeft: 4 }]}>{popularity.label}</Text>
         </View>
       </View>
+
+      {showManualCheckinButton && (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={handleManualCheckin}
+          disabled={manualCheckinLoading}
+          style={[
+            styles.primaryButton,
+            {
+              borderRadius: radius.pill,
+              paddingVertical: spacing.md,
+              marginTop: spacing.md,
+              backgroundColor: manualCheckinSuccess ? '#4CAF50' : palette.accent,
+              opacity: manualCheckinLoading ? 0.7 : 1,
+            },
+          ]}
+        >
+          {manualCheckinLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Ionicons
+                name={manualCheckinSuccess ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                size={18}
+                color="#fff"
+              />
+              <Text style={styles.primaryButtonText}>
+                {manualCheckinSuccess ? "C'est confirmé !" : 'Je suis là'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -935,82 +941,6 @@ const LocationScreen = () => {
               {isBoosted ? 'Boosté' : boostUnlocked ? 'Booster mon profil ici' : 'Boost 🔓 après 2 check-ins'}
             </Text>
           </TouchableOpacity>
-          {showManualCheckinButton && (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={handleManualCheckin}
-              disabled={manualCheckinLoading}
-              style={[
-                styles.primaryButton,
-                {
-                  borderRadius: radius.pill,
-                  paddingVertical: spacing.md,
-                  marginTop: spacing.sm,
-                  backgroundColor: manualCheckinSuccess ? '#4CAF50' : palette.accent,
-                  opacity: manualCheckinLoading ? 0.7 : 1,
-                },
-              ]}
-            >
-              {manualCheckinLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <Ionicons
-                    name={manualCheckinSuccess ? 'checkmark-circle' : 'checkmark-circle-outline'}
-                    size={18}
-                    color="#fff"
-                  />
-                  <Text style={styles.primaryButtonText}>
-                    {manualCheckinSuccess ? "C'est confirmé !" : 'Je suis là'}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-          {__DEV__ && (
-            <TouchableOpacity
-              onPress={handleDevForceCheckinPress}
-              style={styles.forceCheckinLink}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="enter-outline" size={15} color={palette.textMuted} />
-              <Text
-                style={[
-                  typography.caption,
-                  {
-                    color: palette.textMuted,
-                    fontWeight: '600',
-                    marginLeft: 4,
-                    textDecorationLine: 'underline',
-                  },
-                ]}
-              >
-                [DEV] Forcer le check-in ici
-              </Text>
-            </TouchableOpacity>
-          )}
-          {__DEV__ && (
-            <TouchableOpacity
-              onPress={handleForceCheckoutPress}
-              style={styles.forceCheckinLink}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="log-out-outline" size={15} color={palette.textMuted} />
-              <Text
-                style={[
-                  typography.caption,
-                  {
-                    color: palette.textMuted,
-                    fontWeight: '600',
-                    marginLeft: 4,
-                    textDecorationLine: 'underline',
-                  },
-                ]}
-              >
-                [DEV] Forcer le check-out
-              </Text>
-            </TouchableOpacity>
-          )}
           {isUserHere && (
             <TouchableOpacity
               onPress={handleNotHereFromVerify}

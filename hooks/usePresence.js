@@ -23,14 +23,21 @@ import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
  *    (check-in) pour éviter deux requêtes réseau pour le même déplacement.
  */
 export function usePresence(isEnabled) {
-  const { updateUser } = useContext(UserContext);
+  const { user, updateUser } = useContext(UserContext);
   const intervalRef = useRef(null);
   const watcherRef = useRef(null);
   const inFlightRef = useRef(false);
   const lastSentAtRef = useRef(0);
+  // En mode manuel, seul le bouton explicite "Je suis là" (forceCheckIn avec
+  // mode: 'manual') doit assigner currentPoiId — le backend ne connaît pas ce
+  // mode et check-in dès qu'un heartbeat matche un lieu par proximité GPS
+  // (cf. updateLocation côté API), donc le seul levier côté client est de ne
+  // pas émettre ce heartbeat du tout. Même garde-fou déjà appliqué au
+  // heartbeat en arrière-plan, cf. services/LocationService.js#immediateCheckIn.
+  const isManualMode = user?.checkInMode === 'manual';
 
   useEffect(() => {
-    if (!isEnabled) {
+    if (!isEnabled || isManualMode) {
       return undefined;
     }
 
@@ -157,5 +164,5 @@ export function usePresence(isEnabled) {
       subscription.remove();
       stopHeartbeat();
     };
-  }, [isEnabled, updateUser]);
+  }, [isEnabled, isManualMode, updateUser]);
 }

@@ -61,6 +61,18 @@ function defineTaskOnce() {
       // lieu qu'il vient de quitter (cf. utils/devLocationSuppression.js).
       if (isLocationHeartbeatSuppressed()) return;
 
+      // En mode manuel, seul le bouton explicite "Je suis là" doit assigner
+      // currentPoiId — le backend check-in dès qu'il reçoit un heartbeat qui
+      // matche un lieu par proximité GPS, donc le seul levier ici est de ne
+      // pas l'envoyer. Cette tâche tourne hors arbre React (app en arrière-
+      // plan/tuée) : pas d'accès à UserContext, d'où la lecture d'une copie
+      // persistée (cf. UserContext.js#updateUser). Même garde-fou que
+      // hooks/usePresence.js et LocationService.js#immediateCheckIn.
+      try {
+        const mode = await AsyncStorage.getItem('user_checkInMode');
+        if (mode === 'manual') return;
+      } catch (_) {}
+
       try {
         const { post } = await import('./ApiRequest');
         // La réponse n'est pas exploitée ici : ApiRequest.request() diffuse déjà

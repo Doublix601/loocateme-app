@@ -48,6 +48,14 @@ export const UserProvider = ({ children }) => {
     if (updatedUser?.status) {
       AsyncStorage.setItem('user_status', updatedUser.status).catch(() => {});
     }
+    if (updatedUser?.checkInMode) {
+      // Lu par la tâche de fond (components/BackgroundLocation.js), qui tourne
+      // hors arbre React (app en arrière-plan/tuée) et n'a donc pas accès à ce
+      // contexte : sans cette persistance, elle ne peut pas savoir que
+      // l'utilisateur a choisi le check-in manuel et continuerait de check-in
+      // automatiquement via le heartbeat en arrière-plan.
+      AsyncStorage.setItem('user_checkInMode', updatedUser.checkInMode).catch(() => {});
+    }
   }, []);
 
   // Auto-hydrate user from backend if a token exists (e.g., after auto-login)
