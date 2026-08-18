@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useVibeTheme } from '../hooks/useVibeTheme';
 
 // Affichée quand le backend renvoie RATE_LIMITED sur un endpoint de position
-// (heartbeat, check-in manuel, correction de check-in, check-in BLE — cf.
+// (heartbeat, check-in manuel, correction de check-in — cf.
 // heartbeatLimiter côté API) : remplace l'Alert.alert générique avec le
 // message technique brut du backend par un message compréhensible, avec un
 // compte à rebours basé sur le header Retry-After quand il est disponible.

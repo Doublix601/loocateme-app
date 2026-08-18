@@ -1088,7 +1088,7 @@ const LocationListScreen = () => {
       ) {
         // Patch optimiste (cf. applyOptimisticLocationPatch), généralisé ici à
         // TOUS les flows de check-in/check-out (correction de check-in, QR
-        // code, BLE, heartbeat auto GPS, heartbeat en arrière-plan) — pas
+        // code, heartbeat auto GPS, heartbeat en arrière-plan) — pas
         // seulement le "Je suis là" manuel (qui applique en plus son propre
         // patch synchrone juste après l'await, ci-dessus : idempotent avec
         // celui-ci grâce aux gardes "already"/"length inchangée"). Couvre

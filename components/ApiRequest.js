@@ -368,8 +368,8 @@ async function request(
       }
 
       // Rate-limit spécifique aux endpoints de position (heartbeatLimiter côté
-      // API : heartbeat, check-in manuel, correction de check-in, check-in
-      // BLE). Centralisé ici (plutôt que dans chaque écran qui appelle ces
+      // API : heartbeat, check-in manuel, correction de check-in).
+      // Centralisé ici (plutôt que dans chaque écran qui appelle ces
       // endpoints) pour afficher une seule modale cohérente quel que soit le
       // point d'entrée — cf. RateLimitModal.js, monté globalement dans App.js.
       if (
@@ -642,25 +642,6 @@ export async function forceCheckOut() {
   return request('/users/location/force-checkout', { method: 'POST' });
 }
 
-export async function updateBluetoothConsent(enabled) {
-  return request('/users/ble-consent', { method: 'PUT', body: { enabled: !!enabled } });
-}
-
-export async function issueBleToken() {
-  return request('/users/ble-token', { method: 'POST' });
-}
-
-export async function reportBleSightings(sightings) {
-  return request('/users/ble-sightings', { method: 'POST', body: { sightings } });
-}
-
-// Réseau disponible mais pas de position GPS exploitable (ex : sous-sol avec
-// wifi, satellites bloqués) : check-in basé uniquement sur les pairs BLE déjà
-// confirmés à proximité, sans aucune coordonnée.
-export async function checkInViaBle() {
-  return request('/users/ble-checkin', { method: 'POST' });
-}
-
 export async function getUsersAroundMe({ lat, lon, radius = 2000 }) {
   const qs = new URLSearchParams({ lat: String(lat), lon: String(lon), radius: String(radius) });
   return request(`/users/nearby?${qs.toString()}`, { method: 'GET' });
@@ -686,8 +667,8 @@ export async function getLocations({ lat, lon, limit, vibe, forceFresh } = {}) {
   // même raisonnement pour éviter des données de présence périmées.
   const res = await request(`/locations?${qs.toString()}`, { method: 'GET', cache: 'reload' });
   try {
-    // Cache léger (id/coords/rayon) pour permettre une résolution de check-in
-    // 100% locale via BLE si le réseau venait à disparaître durablement.
+    // Cache léger (id/coords/rayon) pour une estimation optimiste du lieu
+    // courant côté client, sans appel serveur (cf. guessLikelyVenueLocally).
     const { cacheNearbyVenues } = await import('../services/NearbyVenueCache');
     cacheNearbyVenues(res?.locations).catch(() => {});
   } catch (_) {}

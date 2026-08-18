@@ -23,7 +23,7 @@ export const mapBackendUser = (u = {}) => {
     role: u.role || 'user',
     status: u.status || 'green',
     consent: u.consent || { accepted: false, version: '', consentAt: null },
-    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false, bluetoothProximity: false },
+    privacyPreferences: u.privacyPreferences || { analytics: false, marketing: false },
     moderation: u.moderation || {
       warningsCount: 0,
       lastWarningAt: null,

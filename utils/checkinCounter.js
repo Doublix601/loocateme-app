@@ -19,7 +19,7 @@ async function setCount(key, value) {
 
 /**
  * À appeler juste après un check-in réussi (n'importe quel flow : manuel, auto
- * GPS, QR, BLE). Idempotent au-delà du 2e appel (le compteur ne sert qu'à
+ * GPS, QR). Idempotent au-delà du 2e appel (le compteur ne sert qu'à
  * déclencher les paliers de déblocage progressif, pas de statistique précise).
  *
  * Module volontairement sans dépendance React/hooks : UserContext.js

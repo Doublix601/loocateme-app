@@ -43,7 +43,7 @@ export const UserProvider = ({ children }) => {
     role: 'user',
     status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
-    privacyPreferences: { analytics: false, marketing: false, bluetoothProximity: false },
+    privacyPreferences: { analytics: false, marketing: false },
     invisibleMode: false,
     notificationPreferences: {},
     moderation: {
@@ -132,7 +132,7 @@ export const UserProvider = ({ children }) => {
         role: 'user',
         status: 'green',
         consent: { accepted: false, version: '', consentAt: null },
-        privacyPreferences: { analytics: false, marketing: false, bluetoothProximity: false },
+        privacyPreferences: { analytics: false, marketing: false },
         invisibleMode: false,
         notificationPreferences: {},
         moderation: {
@@ -200,7 +200,7 @@ export const UserProvider = ({ children }) => {
       const next = mapBackendUser(backendUser);
       setUser((prev) => {
         // Détecte une transition "pas checké" -> "checké" (n'importe quel
-        // flow : manuel, auto GPS, QR, BLE, heartbeat) pour piloter le
+        // flow : manuel, auto GPS, QR, heartbeat) pour piloter le
         // déblocage progressif depuis un seul endroit plutôt que dupliquer
         // l'appel à incrementCheckinCount() dans chaque call site.
         if (!prev.currentPoiId && next.currentPoiId) {

@@ -32,7 +32,6 @@ import { reportPermissionStatus } from './services/EngagementTrackingService';
 import DevLocationOverride from './components/DevLocationOverride';
 import PolicyUpdateBanner from './components/PolicyUpdateBanner';
 import PremiumNudgeBanner from './components/PremiumNudgeBanner';
-import OfflineVenueBanner from './components/OfflineVenueBanner';
 import { UserProvider, UserContext } from './components/contexts/UserContext';
 import { ThemeProvider, useTheme } from './components/contexts/ThemeContext';
 import { VibeProvider, useVibe } from './components/contexts/VibeContext';
@@ -40,7 +39,6 @@ import VibeTransitOverlay from './components/VibeTransitOverlay';
 import VibeAmbientPulse from './components/VibeAmbientPulse';
 import { LocationSyncService } from './services/LocationSyncService';
 import { LocationService, ScanMode } from './services/LocationService';
-import { BluetoothProximityService } from './services/BluetoothProximityService';
 import { checkPendingCheckinVerification } from './components/CheckinVerificationScheduler';
 import { startBackgroundLocationForSixHours, stopBackgroundLocation } from './components/BackgroundLocation';
 import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext';
@@ -116,7 +114,7 @@ function AppShell({ purchasesReady }) {
 
   // LocationService est un module hors arbre React (appelé depuis des tâches
   // en arrière-plan) : on lui injecte updateUser pour qu'un check-in/check-out
-  // automatique (dwell GPS ou BLE) mette bien à jour l'utilisateur affiché,
+  // automatique (dwell GPS) mette bien à jour l'utilisateur affiché,
   // au lieu de compter uniquement sur le prochain heartbeat au premier plan.
   useEffect(() => {
     LocationService.setUserUpdater((backendUser) => updateUser(mapBackendUser(backendUser)));
@@ -432,31 +430,6 @@ function AppShell({ purchasesReady }) {
     };
   }, []);
 
-  // Démarre/arrête le scan+advertising BLE selon le consentement explicite de
-  // l'utilisateur (opt-in, désactivé par défaut — cf. SettingsScreen). La
-  // relance systématique hors-réseau (LocationService) suit le même cycle de
-  // vie : inutile sans Bluetooth actif.
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    if (appUser?.privacyPreferences?.bluetoothProximity) {
-      BluetoothProximityService.start().catch(() => {});
-      LocationService.startOfflinePrompter();
-    } else {
-      BluetoothProximityService.stop().catch(() => {});
-      LocationService.stopOfflinePrompter();
-    }
-  }, [isAuthenticated, appUser?.privacyPreferences?.bluetoothProximity]);
-
-  useEffect(() => {
-    return () => {
-      try {
-        BluetoothProximityService.stop();
-      } catch (_) {}
-      try {
-        LocationService.stopOfflinePrompter();
-      } catch (_) {}
-    };
-  }, []);
 
   // Deep link handling: loocateme://profile/:userId et loocateme://invite/:code
   useEffect(() => {
@@ -666,7 +639,6 @@ function AppShell({ purchasesReady }) {
 
       <PolicyUpdateBanner />
       <PremiumNudgeBanner />
-      <OfflineVenueBanner />
 
       <ConsumablesShopSheet
         visible={shopSheetVisible}

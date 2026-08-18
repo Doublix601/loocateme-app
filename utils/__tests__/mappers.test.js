@@ -55,11 +55,10 @@ describe('mapBackendUser', () => {
     });
   });
 
-  it('defaults privacyPreferences.bluetoothProximity to false', () => {
+  it('defaults privacyPreferences', () => {
     expect(mapBackendUser({}).privacyPreferences).toEqual({
       analytics: false,
       marketing: false,
-      bluetoothProximity: false,
     });
   });
 

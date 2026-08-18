@@ -1,7 +1,6 @@
-// Cache local (léger) des lieux à proximité récemment vus par l'app, pour
-// pouvoir tenter une résolution de check-in 100% locale (via BLE, cf.
-// BluetoothProximityService.resolveVenueLocally) quand il n'y a plus de
-// réseau du tout — y compris si la connexion ne revient jamais.
+// Cache local (léger) des lieux à proximité récemment vus par l'app, utilisé
+// pour une estimation optimiste du lieu courant côté client, sans appel
+// serveur (cf. LocationService.guessLikelyVenueLocally).
 //
 // Minimisation : seuls id/coordonnées/rayon sont conservés (pas le contenu
 // complet du lieu), avec une fenêtre de fraîcheur courte.
