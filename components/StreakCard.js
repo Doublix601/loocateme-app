@@ -22,6 +22,7 @@ const StreakCard = ({
   onClaim,
 }) => {
   const safeCount = Math.max(0, Math.min(MAX_DAYS, count || 0));
+  const displayCount = Math.max(1, safeCount);
   const scale = useRef(new Animated.Value(1)).current;
   const canClaim = supervisePendingClaim || boostPendingClaim;
 
@@ -63,7 +64,7 @@ const StreakCard = ({
             <Text style={[styles.flame, safeCount === 0 && styles.flameDim]}>🔥</Text>
             <Text style={[styles.title, { color: isDark ? '#fff' : colors.textPrimary }]}>Ta série</Text>
           </View>
-          <Text style={[styles.percent, { color: '#FF6B35' }]}>{safeCount}/{MAX_DAYS}</Text>
+          <Text style={[styles.percent, { color: '#FF6B35' }]}>{displayCount}/{MAX_DAYS}</Text>
         </View>
 
         <View style={styles.gaugeRow}>

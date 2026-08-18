@@ -50,7 +50,7 @@ export default function PremiumNudgeBanner() {
   if (!nudge) return null;
 
   return (
-    <SafeAreaView edges={['top']} style={styles.wrapper} pointerEvents="box-none">
+    <SafeAreaView edges={['bottom']} style={styles.wrapper} pointerEvents="box-none">
       <TouchableOpacity
         style={[
           styles.container,
@@ -85,10 +85,10 @@ export default function PremiumNudgeBanner() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { position: 'absolute', top: 0, left: 0, right: 0 },
+  wrapper: { position: 'absolute', bottom: 0, left: 0, right: 0 },
   container: {
     marginHorizontal: 10,
-    marginTop: 6,
+    marginBottom: 6,
     paddingHorizontal: 14,
     paddingVertical: 12,
     borderRadius: 14,

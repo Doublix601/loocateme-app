@@ -11,11 +11,13 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Markdown from 'react-native-markdown-display';
 import { useNavigation } from '@react-navigation/native';
 import { getPrivacyPolicy, acceptPolicyVersion, logout } from '../components/ApiRequest';
 import { navigateAfterAuth } from '../utils/onboarding';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
+import { useAgeVerificationEnabled } from '../components/contexts/FeatureFlagsContext';
 import { publish } from '../components/EventBus';
 
 export default function ConsentScreen() {
@@ -27,6 +29,7 @@ export default function ConsentScreen() {
   const [accepting, setAccepting] = useState(false);
   const { user, updateUser } = useContext(UserContext);
   const { colors, isDark } = useTheme();
+  const ageVerificationEnabled = useAgeVerificationEnabled();
 
   useEffect(() => {
     let mounted = true;
@@ -64,7 +67,15 @@ export default function ConsentScreen() {
           /* ignore mapping issues */
         }
       }
-      await navigateAfterAuth(navigation);
+      // La vérification d'âge tierce (Didit) n'est requise que si activée
+      // globalement côté API (feature flag piloté par variable d'environnement,
+      // désactivée tant que la loi "majorité numérique" n'est pas promulguée),
+      // et sauf si déjà approuvée lors d'une session précédente.
+      if (!ageVerificationEnabled || user?.ageVerification?.status === 'approved') {
+        await navigateAfterAuth(navigation);
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'AgeVerification' }] });
+      }
       setTimeout(() => publish('userlist:refresh'), 1000);
     } catch (e) {
       Alert.alert('Erreur', "Impossible d'enregistrer votre consentement. Réessayez.");
@@ -102,11 +113,11 @@ export default function ConsentScreen() {
               <Text style={[styles.changelogTitle, { color: colors.textPrimary }]}>
                 Ce qui a changé{version ? ` (v${version})` : ''}
               </Text>
-              <Text style={[styles.policyText, { color: colors.textSecondary }]}>{changelog}</Text>
+              <Markdown style={markdownStyles(colors)}>{changelog}</Markdown>
             </View>
           )}
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.policyText, { color: colors.textSecondary }]}>{policy}</Text>
+            <Markdown style={markdownStyles(colors)}>{policy}</Markdown>
           </View>
         </ScrollView>
       )}
@@ -130,6 +141,17 @@ export default function ConsentScreen() {
     </SafeAreaView>
   );
 }
+
+const markdownStyles = (colors) => ({
+  body: { color: colors.textSecondary, fontSize: 14, lineHeight: 22 },
+  heading1: { color: colors.textPrimary, fontSize: 20, fontWeight: '800', marginTop: 16, marginBottom: 8 },
+  heading2: { color: colors.textPrimary, fontSize: 17, fontWeight: '700', marginTop: 14, marginBottom: 6 },
+  heading3: { color: colors.textPrimary, fontSize: 15, fontWeight: '700', marginTop: 12, marginBottom: 6 },
+  strong: { fontWeight: '700', color: colors.textPrimary },
+  bullet_list: { marginBottom: 8 },
+  ordered_list: { marginBottom: 8 },
+  link: { color: '#00c2cb' },
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

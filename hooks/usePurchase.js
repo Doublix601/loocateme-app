@@ -41,15 +41,15 @@ export const usePurchase = () => {
         return { success: true, isMock: true };
       }
 
-      const { purchaserInfo } = await Purchases.purchasePackage(pkg);
+      const { customerInfo } = await Purchases.purchasePackage(pkg);
 
       // Handle premium entitlement
-      if (purchaserInfo?.entitlements?.active && typeof purchaserInfo.entitlements.active['premium'] !== 'undefined') {
+      if (customerInfo?.entitlements?.active && typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
         // Entitlement is active
-        return { success: true, purchaserInfo };
+        return { success: true, customerInfo };
       }
 
-      return { success: true, purchaserInfo };
+      return { success: true, customerInfo };
     } catch (e) {
       if (!e.userCancelled) {
         console.error('[usePurchase] Purchase error:', e);

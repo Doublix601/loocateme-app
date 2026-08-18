@@ -37,6 +37,15 @@ const apiCache = new Map();
 // In-flight dedupe for GET requests (avoid bursts)
 const inflightRequests = new Map();
 
+// Une rafale de requêtes (ex: plusieurs pull-to-refresh manuels rapprochés)
+// peut avoir plusieurs appels en vol simultanément ; si le backend est déjà
+// en rate-limit, chacun peut recevoir son propre 429. Sans garde, chaque 429
+// republie 'location_rate_limited' et rouvre RateLimitModal (cf. App.js),
+// y compris après que l'utilisateur l'a déjà fermée. On ne republie donc
+// l'event qu'une fois par fenêtre de rate-limit réelle.
+let rateLimitNotifiedUntil = 0;
+const RATE_LIMIT_DEFAULT_SUPPRESS_MS = 10 * 1000; // fallback si le header Retry-After/RateLimit-Reset est absent
+
 export function clearApiCache() {
   try {
     apiCache.clear();
@@ -363,10 +372,20 @@ async function request(
       // BLE). Centralisé ici (plutôt que dans chaque écran qui appelle ces
       // endpoints) pour afficher une seule modale cohérente quel que soit le
       // point d'entrée — cf. RateLimitModal.js, monté globalement dans App.js.
-      if (res.status === 429 && data?.code === 'RATE_LIMITED' && data?.message === 'Too many location updates') {
+      if (
+        res.status === 429 &&
+        data?.code === 'RATE_LIMITED' &&
+        data?.message === 'Too many location updates' &&
+        Date.now() >= rateLimitNotifiedUntil
+      ) {
         try {
           const retryAfterHeader = res.headers?.get?.('Retry-After') || res.headers?.get?.('RateLimit-Reset');
           const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : null;
+          const suppressMs =
+            Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+              ? retryAfterSeconds * 1000
+              : RATE_LIMIT_DEFAULT_SUPPRESS_MS;
+          rateLimitNotifiedUntil = Date.now() + suppressMs;
           publish('location_rate_limited', {
             retryAfterSeconds: Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0 ? retryAfterSeconds : null,
           });
@@ -477,6 +496,15 @@ export async function signup({
     publish('auth:login', { user: data?.user || null });
   } catch (_) {}
   return data;
+}
+
+// AGE VERIFICATION (Didit)
+export async function startAgeVerificationSession() {
+  return post('/age-verification/session', {});
+}
+
+export async function getAgeVerificationStatus() {
+  return get('/age-verification/status');
 }
 
 export async function login({ email, password }) {
@@ -594,6 +622,12 @@ export async function apiUpdateCheckInMode(checkInMode) {
 // Active/désactive le mode invisible (masque l'utilisateur des listes/lieux).
 export async function apiUpdateInvisibleMode(invisibleMode) {
   return request('/users/me/invisible-mode', { method: 'PATCH', body: { invisibleMode } });
+}
+
+// Active/désactive le partage du lieu précis actuel (currentLocation) avec
+// les autres utilisateurs, en plus de la ville. Défaut désactivé (RGPD).
+export async function apiUpdateShareCurrentLocation(shareCurrentLocation) {
+  return request('/users/me/share-current-location', { method: 'PATCH', body: { shareCurrentLocation } });
 }
 
 // Active/désactive un type de notification push précis (kind: 'superlike',
@@ -806,6 +840,14 @@ export async function deleteProfilePhoto() {
 export async function upsertSocial({ type, handle }) {
   const data = await request('/social', { method: 'PUT', body: { type, handle } });
   // Clear GET cache so subsequent getMyUser or lists reflect latest socials immediately
+  try {
+    clearApiCache();
+  } catch (_) {}
+  return data;
+}
+
+export async function reorderSocial(order) {
+  const data = await request('/social/reorder', { method: 'PUT', body: { order } });
   try {
     clearApiCache();
   } catch (_) {}

@@ -28,6 +28,25 @@ ${cssLib}
 .rn-marker { display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); box-sizing: border-box; }
 .rn-marker-emoji { line-height: 1; }
 .maplibregl-ctrl-attrib { font-size: 9px; }
+/* Halo pulsant du pin sponsorisé (Pro Boost) : un seul lieu sponsorisé à la
+   fois (cf. backend location.controller.js), donc pas de risque de saturer
+   la carte de pulses simultanés. */
+@keyframes rn-marker-sponsor-pulse {
+  0% { transform: scale(0.92); opacity: 0.55; }
+  70% { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+.rn-marker-sponsor-halo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #FFD700;
+  animation: rn-marker-sponsor-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>

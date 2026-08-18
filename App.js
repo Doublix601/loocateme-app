@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useRef, useContext } from 'react';
 import {
@@ -21,6 +22,7 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import Purchases from 'react-native-purchases';
+import { IS_EXPO_GO } from './services/DebugConfig';
 
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
@@ -69,12 +71,28 @@ LogBox.ignoreLogs([
 
 const navigationRef = createNavigationContainerRef();
 
+// Au cold-start (app fermée, ouverte directement via un deep link ou un tap
+// sur une notification), navigationRef.isReady() résout souvent avant que le
+// NavigationContainer soit monté : navigate() est alors un no-op silencieux
+// et l'app reste sur sa route par défaut au lieu d'ouvrir la bonne cible.
+// Utilisé par les effets deep-link et notification-tap ci-dessous (étaient
+// deux copies indépendantes de cette même attente).
+async function waitForNavigationReady() {
+  if (navigationRef.isReady()) return true;
+  for (let i = 0; i < 50; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    if (navigationRef.isReady()) return true;
+  }
+  return false;
+}
+
 function AppShell({ purchasesReady }) {
   const { user: appUser, updateUser } = useContext(UserContext);
   const { colors, isDark, setMode } = useTheme();
   const { isMoon } = useVibe();
   const [assetsReady, setAssetsReady] = useState(false);
   const [authReady, setAuthReady] = useState(false);
+  const [initialRoute, setInitialRoute] = useState('Login');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [forceUpdateInfo, setForceUpdateInfo] = useState(null);
   const [rateLimitInfo, setRateLimitInfo] = useState(null);
@@ -157,6 +175,7 @@ function AppShell({ purchasesReady }) {
 
   useEffect(() => {
     const initAuth = async () => {
+      let resolvedRoute = 'Login';
       try {
         // Doit être hydraté avant que les heartbeats GPS (usePresence,
         // BackgroundLocation, LocationService) ne puissent démarrer : sinon
@@ -182,27 +201,28 @@ function AppShell({ purchasesReady }) {
             }
             if (consentAccepted && !policyBlocking) {
               const seen = await hasSeenOnboarding();
-              navigationRef.reset({ index: 0, routes: [{ name: seen ? 'MainTabs' : 'Onboarding' }] });
+              resolvedRoute = seen ? 'MainTabs' : 'Onboarding';
               setTimeout(() => publish('userlist:refresh'), 1000);
             } else {
-              navigationRef.reset({ index: 0, routes: [{ name: 'Consent' }] });
+              resolvedRoute = 'Consent';
             }
             setIsAuthenticated(true);
           } catch (err) {
             if (err?.status === 401) {
               await apiLogout();
-              navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
+              resolvedRoute = 'Login';
             } else {
               const seen = await hasSeenOnboarding();
-              navigationRef.reset({ index: 0, routes: [{ name: seen ? 'MainTabs' : 'Onboarding' }] });
+              resolvedRoute = seen ? 'MainTabs' : 'Onboarding';
             }
           }
         } else {
-          navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
+          resolvedRoute = 'Login';
         }
       } catch (err) {
-        navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
+        resolvedRoute = 'Login';
       } finally {
+        setInitialRoute(resolvedRoute);
         setAuthReady(true);
       }
     };
@@ -476,19 +496,6 @@ function AppShell({ purchasesReady }) {
       }
     };
 
-    // Au cold-start (app fermée, ouverte directement via le lien), Linking.getInitialURL()
-    // résout souvent avant que le NavigationContainer soit monté : navigate() est alors un
-    // no-op silencieux et l'app atterrit sur sa route initiale par défaut. On attend que
-    // navigationRef soit prêt (comme ailleurs dans ce fichier) avant de naviguer.
-    const waitForNavigationReady = async () => {
-      if (navigationRef.isReady()) return true;
-      for (let i = 0; i < 50; i += 1) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        if (navigationRef.isReady()) return true;
-      }
-      return false;
-    };
-
     const handleUrl = async (url) => {
       const inviteCode = extractInviteCode(url);
       if (inviteCode) {
@@ -567,9 +574,10 @@ function AppShell({ purchasesReady }) {
       try {
         const Notifications = await import('expo-notifications');
 
-        const handleResponse = (response) => {
+        const handleResponse = async (response) => {
           const data = response?.notification?.request?.content?.data;
-          if (!data || !navigationRef.isReady()) return;
+          if (!data) return;
+          if (!(await waitForNavigationReady())) return;
           if (data.kind === 'ultra_boost' && data.locationId) {
             navigationRef.navigate('Location', { locationId: data.locationId });
           } else if (data.kind === 'event_boost' && data.locationId) {
@@ -649,9 +657,9 @@ function AppShell({ purchasesReady }) {
               </TouchableOpacity>
             ) : null}
           </SafeAreaView>
-        ) : (
-          <RootNavigator />
-        )}
+        ) : authReady ? (
+          <RootNavigator initialRouteName={initialRoute} />
+        ) : null}
         <VibeTransitOverlay />
         <VibeAmbientPulse />
       </NavigationContainer>
@@ -698,15 +706,17 @@ function AppShell({ purchasesReady }) {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <VibeProvider>
-          <LocalizationProvider>
-            <AppWithReadyStatus />
-          </LocalizationProvider>
-        </VibeProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <VibeProvider>
+            <LocalizationProvider>
+              <AppWithReadyStatus />
+            </LocalizationProvider>
+          </VibeProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -720,7 +730,12 @@ function AppWithReadyStatus() {
           ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
           android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
         });
-        const finalApiKey = __DEV__ ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey;
+        // Expo Go n'embarque pas le module natif RevenueCat : seule sa "Test
+        // Store API Key" (mode Browser) y fonctionne. Un vrai build (dev
+        // client, preview, production) doit toujours utiliser la vraie clé,
+        // même en __DEV__ — sinon les achats en dev-client pointent vers un
+        // projet RevenueCat de test sans rapport avec le vrai catalogue.
+        const finalApiKey = IS_EXPO_GO ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey;
         await Purchases.configure({ apiKey: finalApiKey });
         setPurchasesReady(true);
       } catch (e) {

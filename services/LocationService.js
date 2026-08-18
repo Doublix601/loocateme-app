@@ -8,6 +8,7 @@ import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
 import NetInfo from '@react-native-community/netinfo';
 import { BluetoothProximityService } from './BluetoothProximityService';
 import { getCachedNearbyVenues } from './NearbyVenueCache';
+import { haversineMeters } from '../utils/geo';
 
 // Injecté depuis App.js (LocationService est hors arbre React) : permet de
 // répercuter un check-in automatique (dwell GPS ou BLE) sur UserContext,
@@ -79,7 +80,24 @@ let backgroundTimer = null;
 // côté client est bien de ne plus émettre ce heartbeat automatique.
 let currentCheckInMode = 'auto';
 
+// Hydratation initiale depuis AsyncStorage (même clé que UserContext) pour que
+// le check-in déclenché au lancement (App.js, ScanMode.INITIAL_SCAN) respecte
+// déjà le mode manuel, sans attendre que LocationListScreen ait monté son
+// useEffect qui appelle setCheckInMode.
+let checkInModeHydrated = false;
+const checkInModeHydration = AsyncStorage.getItem('user_checkInMode')
+  .then((mode) => {
+    if (!checkInModeHydrated) {
+      currentCheckInMode = mode === 'manual' ? 'manual' : 'auto';
+    }
+  })
+  .catch(() => {})
+  .finally(() => {
+    checkInModeHydrated = true;
+  });
+
 function setCheckInMode(mode) {
+  checkInModeHydrated = true;
   currentCheckInMode = mode === 'manual' ? 'manual' : 'auto';
 }
 
@@ -103,16 +121,6 @@ async function getPermissionProfile() {
   } catch (e) {
     return { hasFg: false, hasBg: false };
   }
-}
-
-function haversineMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const toRad = (d) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // Même marge que MIN_LEAD_M côté serveur (user.service.js) : évite un faux
@@ -397,6 +405,7 @@ async function immediateCheckIn(force = true) {
   // automatique côté backend — seul le bouton "Je suis là" (forceCheckIn avec
   // mode: 'manual') doit assigner currentPoiId. On garde ce garde-fou tôt,
   // avant même d'acquérir le GPS, pour éviter tout appel réseau inutile.
+  if (!checkInModeHydrated) await checkInModeHydration;
   if (currentCheckInMode === 'manual') return false;
   const pos = await getBalancedPosition();
   if (!pos?.coords) {
@@ -541,8 +550,14 @@ export const LocationService = {
     }
 
     if (mode === ScanMode.INITIAL_SCAN) {
-      // Highest priority: bypass buffer on cold start regardless of permission level
-      return await immediateCheckIn();
+      // Highest priority: bypass the 5-minute auto-checkin dwell buffer on
+      // cold start regardless of permission level. Ne force PAS le guard
+      // shouldSend/markSent (locationSendGuard) : un vrai cold start a de
+      // toute façon lastCoords=null donc shouldSend laisse déjà passer le
+      // premier envoi ; forcer inconditionnellement ne fait que dupliquer un
+      // heartbeat que usePresence vient parfois d'envoyer pour la même
+      // position (ex: reconnexion sans redémarrage de l'app).
+      return await immediateCheckIn(false);
     }
 
     if (mode === ScanMode.BACKGROUND_STAY) {

@@ -402,7 +402,7 @@ const EditProfileScreen = () => {
             disabled={!!photoActionLoading}
           >
             {user?.photo ? (
-              <ImageWithPlaceholder source={{ uri: user.photo }} style={styles.avatarImage} />
+              <ImageWithPlaceholder uri={user.photo} style={styles.avatarImage} />
             ) : (
               <View style={[styles.avatarImage, styles.avatarPlaceholder, { backgroundColor: colors.surface }]}>
                 <Text style={styles.avatarPlaceholderText}>📷</Text>

@@ -82,6 +82,7 @@ export default function LocationMapView({
           isSponsored: !!loc.isSponsored,
           isPro: !!loc.isPro,
           emoji: getLocationTypeEmoji(loc.type),
+          logoUrl: loc.logoThumbUrl || loc.logoUrl || null,
         })),
     [locations]
   );

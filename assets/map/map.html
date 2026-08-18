@@ -14,6 +14,25 @@ html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; background:
 .rn-marker { display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2); box-sizing: border-box; }
 .rn-marker-emoji { line-height: 1; }
 .maplibregl-ctrl-attrib { font-size: 9px; }
+/* Halo pulsant du pin sponsorisé (Pro Boost) : un seul lieu sponsorisé à la
+   fois (cf. backend location.controller.js), donc pas de risque de saturer
+   la carte de pulses simultanés. */
+@keyframes rn-marker-sponsor-pulse {
+  0% { transform: scale(0.92); opacity: 0.55; }
+  70% { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+.rn-marker-sponsor-halo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #FFD700;
+  animation: rn-marker-sponsor-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -118,19 +137,30 @@ return maplibregl$1;
   }
 
   var AVATAR_SIZE = 40;
+  var PRESENCE_AVATAR_SIZE = 18;
+  var PRESENCE_AVATAR_OVERLAP = 8;
+  var MAX_PRESENCE_AVATARS = 3;
 
-  // Pin = avatar (photo d'un utilisateur présent, ou pastille de secours) +
-  // badge "+N" (nombre total de personnes au lieu) + nom du lieu en dessous.
-  // Pas de priorisation "utilisateur suivi" (aucun endpoint bulk pour ça côté
-  // backend) : on prend simplement le premier utilisateur actif renvoyé.
+  // Pin = bulle du lieu (photo/logo du lieu, ou pastille emoji de secours) +
+  // rangée [étoiles de popularité] [mini-avatars des personnes présentes,
+  // jusqu'à 3, + badge "+N" au-delà] + nom du lieu en dessous.
+  // La bulle du lieu ne dépend plus de la présence d'utilisateurs : elle
+  // représente toujours le lieu lui-même.
+  // Pin sponsorisé (Pro Boost) : bulle agrandie (52px vs 40px) pour se
+  // distinguer d'un coup d'œil dans la liste des pins environnants.
+  var AVATAR_SIZE_SPONSORED = 52;
+
   function buildMarkerEl(location, palette) {
     var activeUsers = location.activeUsers || [];
-    var hasActiveUsers = activeUsers.length > 0;
-    var isFeatured = !!(location.isSponsored || location.isPro);
+    var isSponsored = !!location.isSponsored;
     var userCount = location.userCount || 0;
-    var firstUser = activeUsers[0];
-    var borderColor = isFeatured ? '#FFD700' : palette.accentSoft;
-    var borderWidth = isFeatured ? 2.5 : 1.5;
+    // La bordure/badge dorés sont réservés au Pro Boost actif (isSponsored) :
+    // "isPro" (lieu simplement revendiqué par un pro, tout palier confondu)
+    // ne doit plus donner cette mise en avant, sous peine de laisser croire
+    // à un Pro Boost actif qui ne l'est pas.
+    var borderColor = isSponsored ? '#FFD700' : palette.accentSoft;
+    var borderWidth = isSponsored ? 2.5 : 1.5;
+    var avatarSize = isSponsored ? AVATAR_SIZE_SPONSORED : AVATAR_SIZE;
 
     var el = document.createElement('div');
     el.className = 'rn-marker-card';
@@ -141,34 +171,43 @@ return maplibregl$1;
 
     var avatarWrap = document.createElement('div');
     avatarWrap.style.position = 'relative';
-    avatarWrap.style.width = AVATAR_SIZE + 'px';
-    avatarWrap.style.height = AVATAR_SIZE + 'px';
+    avatarWrap.style.width = avatarSize + 'px';
+    avatarWrap.style.height = avatarSize + 'px';
 
-    // Pastille de secours (couleur + emoji) : visible par défaut, masquée si
-    // une photo se charge avec succès.
+    // Halo pulsant : élément séparé en arrière-plan (derrière la bulle),
+    // légèrement plus grand pour dépasser visuellement autour du pin.
+    if (isSponsored) {
+      var pulseHalo = document.createElement('div');
+      pulseHalo.className = 'rn-marker-sponsor-halo';
+      avatarWrap.appendChild(pulseHalo);
+    }
+
+    // Pastille de secours (couleur + emoji du type de lieu) : visible par
+    // défaut, masquée si le logo/photo du lieu se charge avec succès.
     var fallback = document.createElement('div');
-    fallback.style.width = AVATAR_SIZE + 'px';
-    fallback.style.height = AVATAR_SIZE + 'px';
+    fallback.style.position = 'relative';
+    fallback.style.width = avatarSize + 'px';
+    fallback.style.height = avatarSize + 'px';
     fallback.style.borderRadius = '50%';
     fallback.style.display = 'flex';
     fallback.style.alignItems = 'center';
     fallback.style.justifyContent = 'center';
-    fallback.style.backgroundColor = hasActiveUsers ? palette.accent : palette.surface;
+    fallback.style.backgroundColor = palette.surface;
     fallback.style.border = borderWidth + 'px solid ' + borderColor;
     fallback.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-    fallback.style.fontSize = (AVATAR_SIZE * 0.45) + 'px';
+    fallback.style.fontSize = (avatarSize * 0.45) + 'px';
     fallback.style.boxSizing = 'border-box';
     fallback.textContent = location.emoji || '📍';
     avatarWrap.appendChild(fallback);
 
-    if (firstUser && firstUser.profileImageUrl) {
+    if (location.logoUrl) {
       var img = document.createElement('img');
-      img.src = firstUser.profileImageUrl;
+      img.src = location.logoUrl;
       img.style.position = 'absolute';
       img.style.top = '0';
       img.style.left = '0';
-      img.style.width = AVATAR_SIZE + 'px';
-      img.style.height = AVATAR_SIZE + 'px';
+      img.style.width = avatarSize + 'px';
+      img.style.height = avatarSize + 'px';
       img.style.borderRadius = '50%';
       img.style.objectFit = 'cover';
       img.style.border = borderWidth + 'px solid ' + borderColor;
@@ -180,25 +219,90 @@ return maplibregl$1;
       avatarWrap.appendChild(img);
     }
 
-    if (userCount > 0) {
-      var badge = document.createElement('div');
-      badge.textContent = '+' + userCount;
-      badge.style.position = 'absolute';
-      badge.style.bottom = '-4px';
-      badge.style.right = '-6px';
-      badge.style.backgroundColor = palette.accent;
-      badge.style.color = '#fff';
-      badge.style.fontSize = '10px';
-      badge.style.fontWeight = '700';
-      badge.style.lineHeight = '1.4';
-      badge.style.borderRadius = '999px';
-      badge.style.padding = '1px 5px';
-      badge.style.border = '1.5px solid #fff';
-      badge.style.boxShadow = '0 1px 2px rgba(0,0,0,0.25)';
-      avatarWrap.appendChild(badge);
-    }
-
     el.appendChild(avatarWrap);
+
+    // Rangée sous la bulle du lieu : étoiles de popularité (0-3, même
+    // rendu que LocationCard.js `getStars`) + mini-bulles de présence.
+    var hasStars = true; // toujours affiché, même à 0 étoile (pastille vide)
+    var hasPresence = userCount > 0 && activeUsers.length > 0;
+    if (hasStars || hasPresence) {
+      var infoRow = document.createElement('div');
+      infoRow.style.display = 'flex';
+      infoRow.style.flexDirection = 'row';
+      infoRow.style.alignItems = 'center';
+      infoRow.style.marginTop = '2px';
+      infoRow.style.gap = '4px';
+
+      var starsCount = location.stars || 0;
+      var starsWrap = document.createElement('div');
+      starsWrap.style.fontSize = '12px';
+      starsWrap.style.lineHeight = '1';
+      starsWrap.style.textShadow = '0 1px 2px rgba(0,0,0,0.6)';
+      if (starsCount > 0) {
+        starsWrap.textContent = new Array(Math.min(starsCount, 3) + 1).join('⭐');
+      } else {
+        starsWrap.textContent = '★';
+        starsWrap.style.color = '#fff';
+        starsWrap.style.opacity = '0.4';
+      }
+      infoRow.appendChild(starsWrap);
+
+      if (hasPresence) {
+        var presenceWrap = document.createElement('div');
+        presenceWrap.style.display = 'flex';
+        presenceWrap.style.flexDirection = 'row';
+        presenceWrap.style.alignItems = 'center';
+
+        var shownUsers = activeUsers.slice(0, MAX_PRESENCE_AVATARS);
+        shownUsers.forEach(function (user, idx) {
+          var bubble = document.createElement('div');
+          bubble.style.width = PRESENCE_AVATAR_SIZE + 'px';
+          bubble.style.height = PRESENCE_AVATAR_SIZE + 'px';
+          bubble.style.borderRadius = '50%';
+          bubble.style.border = '1.5px solid #fff';
+          bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.3)';
+          bubble.style.boxSizing = 'border-box';
+          bubble.style.overflow = 'hidden';
+          bubble.style.backgroundColor = palette.accent;
+          bubble.style.marginLeft = idx === 0 ? '0' : '-' + PRESENCE_AVATAR_OVERLAP + 'px';
+          bubble.style.flexShrink = '0';
+
+          if (user && user.profileImageUrl) {
+            var avatarImg = document.createElement('img');
+            avatarImg.src = user.profileImageUrl;
+            avatarImg.style.width = '100%';
+            avatarImg.style.height = '100%';
+            avatarImg.style.objectFit = 'cover';
+            avatarImg.onerror = function () {
+              avatarImg.style.display = 'none';
+            };
+            bubble.appendChild(avatarImg);
+          }
+
+          presenceWrap.appendChild(bubble);
+        });
+
+        if (userCount > MAX_PRESENCE_AVATARS) {
+          var overflowBadge = document.createElement('div');
+          overflowBadge.textContent = '+' + (userCount - MAX_PRESENCE_AVATARS);
+          overflowBadge.style.marginLeft = '3px';
+          overflowBadge.style.backgroundColor = palette.accent;
+          overflowBadge.style.color = '#fff';
+          overflowBadge.style.fontSize = '9px';
+          overflowBadge.style.fontWeight = '700';
+          overflowBadge.style.lineHeight = '1.4';
+          overflowBadge.style.borderRadius = '999px';
+          overflowBadge.style.padding = '1px 5px';
+          overflowBadge.style.border = '1.5px solid #fff';
+          overflowBadge.style.boxShadow = '0 1px 2px rgba(0,0,0,0.25)';
+          presenceWrap.appendChild(overflowBadge);
+        }
+
+        infoRow.appendChild(presenceWrap);
+      }
+
+      el.appendChild(infoRow);
+    }
 
     if (location.name) {
       var label = document.createElement('div');
@@ -214,6 +318,22 @@ return maplibregl$1;
       label.style.textShadow = '0 1px 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.6)';
       label.style.textAlign = 'center';
       el.appendChild(label);
+    }
+
+    if (isSponsored) {
+      var sponsorBadge = document.createElement('div');
+      sponsorBadge.textContent = 'Sponsorisé';
+      sponsorBadge.style.marginTop = '2px';
+      sponsorBadge.style.fontSize = '9px';
+      sponsorBadge.style.fontWeight = '800';
+      sponsorBadge.style.letterSpacing = '0.3px';
+      sponsorBadge.style.textTransform = 'uppercase';
+      sponsorBadge.style.color = '#3a2c00';
+      sponsorBadge.style.backgroundColor = '#FFD700';
+      sponsorBadge.style.borderRadius = '999px';
+      sponsorBadge.style.padding = '1.5px 7px';
+      sponsorBadge.style.boxShadow = '0 1px 3px rgba(0,0,0,0.35)';
+      el.appendChild(sponsorBadge);
     }
 
     el.addEventListener('click', function (e) {
@@ -364,9 +484,24 @@ return maplibregl$1;
       return Array.isArray(loc.coords) && loc.coords.length >= 2;
     });
 
+    // Le lieu sponsorisé (Pro Boost) ne doit jamais être avalé par un cluster
+    // — il paye pour rester visible individuellement sur la carte, y compris
+    // dézoomé. Un seul lieu sponsorisé actif à la fois côté backend, donc
+    // aucun risque de se retrouver avec plusieurs pins "single" forcés qui
+    // se chevauchent visuellement.
+    var sponsored = [];
+    var toCluster = [];
+    valid.forEach(function (loc) {
+      if (loc.isSponsored) {
+        sponsored.push(loc);
+      } else {
+        toCluster.push(loc);
+      }
+    });
+
     var clusters = []; // { sumX, sumY, cx, cy, members: [{ loc, point }] }
 
-    valid.forEach(function (loc) {
+    toCluster.forEach(function (loc) {
       var point = map.project(loc.coords);
       var best = null;
       var bestDist = Infinity;
@@ -405,6 +540,9 @@ return maplibregl$1;
         memberCoords: c.members.map(function (m) { return m.loc.coords; }),
       });
     });
+    sponsored.forEach(function (loc) {
+      result.push({ type: 'single', location: loc });
+    });
     return result;
   }
 
@@ -414,8 +552,12 @@ return maplibregl$1;
   // qui se déclenche juste après qu'un nouveau payload RN ait déjà provoqué
   // le même regroupement) — c'est cette reconstruction redondante qui cause
   // le "flash" regroupement/dégroupement visible à l'utilisateur.
-  function itemsSignature(items) {
-    return items
+  function itemsSignature(items, palette) {
+    // Le discriminant de palette est inclus pour qu'un changement de thème
+    // (jour/nuit) force toujours un redessin des marqueurs, même quand le
+    // clustering géométrique (ids/positions/comptes) n'a pas changé entre-temps.
+    var paletteKey = palette ? (palette.accent + ':' + palette.accentAlt) : '';
+    return paletteKey + '|' + items
       .map(function (item) {
         if (item.type === 'cluster') {
           return 'c:' + item.count + ':' + item.coords[0].toFixed(4) + ':' + item.coords[1].toFixed(4) + ':' + item.ids.slice().sort().join(',');
@@ -430,7 +572,7 @@ return maplibregl$1;
 
   function renderMarkers(locations, palette) {
     var items = clusterLocations(locations);
-    var signature = itemsSignature(items);
+    var signature = itemsSignature(items, palette);
     if (signature === lastSignature && markers.length > 0) return;
     lastSignature = signature;
 
@@ -451,6 +593,19 @@ return maplibregl$1;
         .setLngLat(coords)
         .addTo(map);
       markers.push(marker);
+    });
+
+    // Forcer un repaint : les marqueurs sont des éléments DOM superposés au
+    // canvas WebGL de la carte, mutés hors d'un geste utilisateur (postMessage
+    // venu de RN). WKWebView (iOS) peut alors différer la synchronisation
+    // visuelle de ces mutations — le fond de carte (dessiné en continu par la
+    // boucle de rendu WebGL) reste à jour, mais les marqueurs restent figés à
+    // l'écran jusqu'à ce qu'un événement de layout externe (ex: revenir sur
+    // cet écran) force un repaint. On déclenche nous-mêmes ce repaint plutôt
+    // que de dépendre d'un tel événement.
+    requestAnimationFrame(function () {
+      void document.body.offsetHeight; // force un reflow synchrone
+      if (map) map.triggerRepaint();
     });
   }
 
@@ -524,12 +679,17 @@ return maplibregl$1;
 
     if (styleUrl !== currentStyleUrl) {
       currentStyleUrl = styleUrl;
-      ready = false;
       map.setStyle(styleUrl);
-      map.once('style.load', function () {
-        ready = true;
-        renderMarkers(locations, palette);
-      });
+      // Les marqueurs sont des DOM markers positionnés via map.project()
+      // (caméra déjà connue dès la création de la carte), pas des layers du
+      // style : ils n'ont pas besoin d'attendre que le nouveau style soit
+      // entièrement chargé pour être redessinés. On ne bascule donc plus
+      // `ready` à false ni n'attend l'événement `style.load` ici — ce
+      // dernier s'est avéré ne pas se déclencher de façon fiable dans ce
+      // contexte WebView, ce qui gelait les marqueurs indéfiniment après le
+      // premier changement de thème jour/nuit (plus aucun redessin possible
+      // ensuite, `ready` restant bloqué à false pour le reste de la session).
+      renderMarkers(locations, palette);
     } else if (ready) {
       renderMarkers(locations, palette);
     }

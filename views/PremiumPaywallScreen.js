@@ -11,7 +11,6 @@ import {
   Linking,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import * as Updates from 'expo-updates';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { UserContext } from '../components/contexts/UserContext';
 import { getMyUser } from '../components/ApiRequest';
@@ -20,25 +19,10 @@ import IAPStore from '../services/IAPStore';
 import PremiumService from '../services/PremiumService';
 import { DEBUG_CONFIG } from '../services/DebugConfig';
 import ScreenHeader from '../components/ScreenHeader';
+import PremiumWelcomeOnboarding from '../components/PremiumWelcomeOnboarding';
+import { PREMIUM_SLIDES as SLIDES } from '../constants/premiumFeatures';
 
 const { width } = Dimensions.get('window');
-
-const SLIDES = [
-  { emoji: '👀', title: 'Qui te visite ?', desc: 'Découvre en temps réel qui consulte ton profil.' },
-  {
-    emoji: '🔥',
-    title: 'Boosts de visibilité',
-    desc: 'Remonte en tête de liste pendant 30 min dans ton établissement.',
-  },
-  { emoji: '⭐', title: 'Superlikes', desc: "Montre un intérêt particulier à quelqu'un que tu remarques." },
-  {
-    emoji: '🫥',
-    title: 'Mode invisible',
-    desc: 'Disparais de la liste des utilisateurs proches quand tu le souhaites.',
-  },
-  { emoji: '🗺️', title: 'Rayon étendu', desc: "Explore jusqu'à 2 km autour de toi (500 m en version gratuite)." },
-  { emoji: '📊', title: 'Statistiques avancées', desc: 'Suis tes vues et clics sur tous tes réseaux sociaux.' },
-];
 
 const FEATURES = [
   'Voir qui consulte ton profil',
@@ -57,7 +41,19 @@ export default function PremiumPaywallScreen() {
   const route = useRoute();
   const routeParams = route.params ?? {};
   const onBack = () => navigation.goBack();
-  const onAlreadyPremium = () => navigation.navigate('Statistics');
+  // Vient d'un bouton "Stats" verrouillé -> on continue vers Statistics (en
+  // remplaçant ce paywall dans la pile, pas en l'empilant, pour qu'un retour
+  // arrière depuis Statistics ramène directement à l'écran d'origine au lieu
+  // de re-tomber sur le paywall déjà payé). Pour toute autre origine
+  // (carte Récompenses, Réglages...), on revient simplement à l'écran d'où
+  // l'utilisateur est venu.
+  const onAlreadyPremium = () => {
+    if (routeParams.source === 'stats_button') {
+      navigation.replace('Statistics');
+    } else {
+      onBack();
+    }
+  };
   const { colors, isDark } = useTheme();
   const { user, updateUser } = useContext(UserContext);
   const [period, setPeriod] = useState('annual');
@@ -65,16 +61,29 @@ export default function PremiumPaywallScreen() {
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [slideIdx, setSlideIdx] = useState(0);
+  const [onboardingVisible, setOnboardingVisible] = useState(false);
   const carouselRef = useRef(null);
   const autoRef = useRef(null);
 
   const userId = user?._id || user?.id;
 
+  const handleOnboardingClose = () => {
+    setOnboardingVisible(false);
+    onAlreadyPremium ? onAlreadyPremium() : onBack?.();
+  };
+
+  // Les trois effets ci-dessous redirigent automatiquement dès que le compte
+  // est détecté premium — utile si l'utilisateur ouvre le paywall alors qu'il
+  // l'est déjà. Ils doivent rester silencieux pendant que l'onboarding de
+  // bienvenue est affiché (déclenché juste après un achat/essai réussi dans
+  // handleTrial/handlePurchase/handleRestore), sinon ils navigueraient
+  // par-dessus l'onboarding avant que l'utilisateur ait pu le voir.
   useEffect(() => {
+    if (onboardingVisible) return;
     if (user?.isPremium) {
       onAlreadyPremium ? onAlreadyPremium() : onBack?.();
     }
-  }, [user?.isPremium]);
+  }, [user?.isPremium, onboardingVisible]);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,7 +93,7 @@ export default function PremiumPaywallScreen() {
         const me = res?.user;
         if (!me || cancelled) return;
         if (updateUser) updateUser({ ...user, isPremium: !!me.isPremium });
-        if (me.isPremium) onAlreadyPremium ? onAlreadyPremium() : onBack?.();
+        if (me.isPremium && !onboardingVisible) onAlreadyPremium ? onAlreadyPremium() : onBack?.();
       } catch (_) {}
     })();
     return () => {
@@ -96,7 +105,7 @@ export default function PremiumPaywallScreen() {
     const off = subscribe('ui:reload', async () => {
       try {
         const res = await getMyUser();
-        if (res?.user?.isPremium) onAlreadyPremium ? onAlreadyPremium() : onBack?.();
+        if (res?.user?.isPremium && !onboardingVisible) onAlreadyPremium ? onAlreadyPremium() : onBack?.();
       } catch (_) {}
     });
     return () => {
@@ -104,7 +113,7 @@ export default function PremiumPaywallScreen() {
         off?.();
       } catch (_) {}
     };
-  }, []);
+  }, [onboardingVisible]);
 
   useEffect(() => {
     IAPStore.getOfferings()
@@ -130,6 +139,28 @@ export default function PremiumPaywallScreen() {
   const monthlyPrice = monthlyPkg?.product?.priceString ?? FALLBACK.monthly;
   const annualPrice = annualPkg?.product?.priceString ?? FALLBACK.annual;
 
+  // Essai gratuit maison (7 jours, sans paiement, via /premium/trial/start) —
+  // distinct de l'essai éventuellement proposé par Apple/Google sur l'abonnement
+  // lui-même. Un utilisateur qui l'a déjà utilisé une fois (premiumTrialStart
+  // déjà défini) ne doit plus se voir proposer "essai gratuit" : il doit
+  // directement s'abonner.
+  const trialEligible = !user?.premiumTrialStart;
+
+  const handleTrial = async () => {
+    if (purchasing) return;
+    setPurchasing(true);
+    try {
+      await IAPStore.startTrial(userId);
+      const res = await getMyUser();
+      if (res?.user && updateUser) updateUser({ ...user, isPremium: !!res.user.isPremium, premiumTrialStart: res.user.premiumTrialStart, premiumTrialEnd: res.user.premiumTrialEnd });
+      setOnboardingVisible(true);
+    } catch (e) {
+      Alert.alert('Erreur', e.message || "Impossible de démarrer l'essai gratuit.");
+    } finally {
+      setPurchasing(false);
+    }
+  };
+
   const handlePurchase = async () => {
     if (purchasing) return;
     if (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) {
@@ -149,18 +180,11 @@ export default function PremiumPaywallScreen() {
           if (res?.user && updateUser) updateUser({ ...user, isPremium: !!res.user.isPremium });
         } catch (_) {}
 
-        if (result.isMock) {
-          Alert.alert('✅ Simulation réussie', 'Abonnement simulé (mode debug).', [
-            { text: 'Continuer', onPress: () => (onAlreadyPremium ? onAlreadyPremium() : onBack?.()) },
-          ]);
-        } else {
-          onAlreadyPremium ? onAlreadyPremium() : onBack?.();
-          try {
-            await Updates.reloadAsync();
-          } catch (_) {
-            // Reload non disponible (ex. Expo Go) : l'état premium reste à jour via updateUser ci-dessus.
-          }
-        }
+        // Dans les deux cas (simulation debug ou vrai achat), on célèbre le
+        // passage au Premium avec l'onboarding avant de rediriger — pas de
+        // reload forcé (Updates.reloadAsync) qui couperait court à
+        // l'onboarding ; l'état premium est déjà à jour via updateUser.
+        setOnboardingVisible(true);
       }
     } catch (e) {
       if (!e.userCancelled) Alert.alert('Erreur', e.message || "Impossible de finaliser l'achat.");
@@ -312,12 +336,12 @@ export default function PremiumPaywallScreen() {
 
         {/* CTA */}
         <TouchableOpacity
-          onPress={handlePurchase}
-          disabled={purchasing || (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED)}
+          onPress={trialEligible && !DEBUG_CONFIG.IAP_DISABLED ? handleTrial : handlePurchase}
+          disabled={purchasing || (!trialEligible && !selectedPkg && !DEBUG_CONFIG.IAP_DISABLED)}
           activeOpacity={0.85}
           style={[
             styles.cta,
-            { opacity: purchasing || (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) ? 0.5 : 1 },
+            { opacity: purchasing || (!trialEligible && !selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) ? 0.5 : 1 },
             DEBUG_CONFIG.IAP_DISABLED && { backgroundColor: '#f39c12' },
           ]}
         >
@@ -327,9 +351,11 @@ export default function PremiumPaywallScreen() {
             <Text style={styles.ctaText}>
               {DEBUG_CONFIG.IAP_DISABLED
                 ? 'Simuler un abonnement Premium'
-                : !selectedPkg
-                  ? 'Chargement des offres…'
-                  : 'Commencer mon essai gratuit 7 jours'}
+                : trialEligible
+                  ? 'Commencer mon essai gratuit 7 jours'
+                  : !selectedPkg
+                    ? 'Chargement des offres…'
+                    : "S'abonner"}
             </Text>
           )}
         </TouchableOpacity>
@@ -359,6 +385,7 @@ export default function PremiumPaywallScreen() {
           <Text
             style={{ textDecorationLine: 'underline' }}
             onPress={() => Linking.openURL('https://loocateme.com/privacy')}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
             Politique de confidentialité
           </Text>
@@ -366,11 +393,14 @@ export default function PremiumPaywallScreen() {
           <Text
             style={{ textDecorationLine: 'underline' }}
             onPress={() => Linking.openURL('https://loocateme.com/terms')}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
             CGU
           </Text>
         </Text>
       </ScrollView>
+
+      <PremiumWelcomeOnboarding visible={onboardingVisible} onClose={handleOnboardingClose} />
     </View>
   );
 }

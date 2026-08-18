@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEBUG_CONFIG } from './DebugConfig';
+import { DEBUG_CONFIG, IS_EXPO_GO } from './DebugConfig';
 import { getMyUser, get } from '../components/ApiRequest';
 
 const STORAGE_KEY = '@loocateme:premium_v2';
@@ -103,22 +103,32 @@ const PremiumService = {
 
       const wasFree = _state.subscriptionStatus === 'free';
       _state.subscriptionStatus = user.isPremium ? 'premium_monthly' : 'free';
-      _state.boostsRemaining = typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
 
-      if (typeof user.superlikeBalance === 'number') {
-        _state.superlikesRemaining = user.superlikeBalance;
-      } else if (wasFree && _state.subscriptionStatus !== 'free') {
-        _state.superlikesRemaining = SUPERLIKE_WEEKLY_ALLOWANCE;
-      }
+      // En Expo Go, les packs consommables (boost/superlike) sont simulés
+      // localement (cf. ConsumablesShopSheet.js) car le Test Store RevenueCat
+      // ne propose aucun package pour ces produits custom : aucune vraie
+      // transaction n'atteint donc jamais le backend. Écraser le solde local
+      // avec la valeur serveur (toujours 0) effacerait l'achat simulé à
+      // chaque actualisation. Les abonnements, eux, restent synchronisés
+      // normalement : le Test Store déclenche un vrai webhook RevenueCat.
+      if (!IS_EXPO_GO) {
+        _state.boostsRemaining = typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
 
-      // Déclenche le reset hebdomadaire des superlikes si le user est premium
-      if (_state.subscriptionStatus !== 'free') {
-        try {
-          const allowance = await get('/premium/allowance');
-          if (typeof allowance?.superlikeBalance === 'number') {
-            _state.superlikesRemaining = allowance.superlikeBalance;
-          }
-        } catch (_) {}
+        if (typeof user.superlikeBalance === 'number') {
+          _state.superlikesRemaining = user.superlikeBalance;
+        } else if (wasFree && _state.subscriptionStatus !== 'free') {
+          _state.superlikesRemaining = SUPERLIKE_WEEKLY_ALLOWANCE;
+        }
+
+        // Déclenche le reset hebdomadaire des superlikes si le user est premium
+        if (_state.subscriptionStatus !== 'free') {
+          try {
+            const allowance = await get('/premium/allowance');
+            if (typeof allowance?.superlikeBalance === 'number') {
+              _state.superlikesRemaining = allowance.superlikeBalance;
+            }
+          } catch (_) {}
+        }
       }
 
       _state.lastSyncAt = Date.now();

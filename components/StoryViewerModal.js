@@ -29,7 +29,14 @@ function StorySlide({ story, onDone, progressAnim }) {
     return () => {
       subEnd?.remove();
       subError?.remove();
-      player.pause();
+      // Le VideoView peut déjà avoir libéré le player natif au moment du
+      // démontage (changement rapide de story) : pause() lèverait alors une
+      // exception native (player released) qui faisait planter l'appli.
+      try {
+        player.pause();
+      } catch {
+        // player déjà libéré : rien à faire.
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVideo, player]);

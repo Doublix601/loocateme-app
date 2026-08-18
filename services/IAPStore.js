@@ -1,6 +1,7 @@
+import { Platform, Linking } from 'react-native';
 import Purchases from 'react-native-purchases';
 import { logger } from '../utils/logger';
-import { DEBUG_CONFIG } from './DebugConfig';
+import { DEBUG_CONFIG, IS_EXPO_GO } from './DebugConfig';
 import PremiumService from './PremiumService';
 import { post } from '../components/ApiRequest';
 import { logAnalyticsEvent } from './AnalyticsService';
@@ -18,6 +19,41 @@ function _log(eventName, event) {
     logger.log('[IAP Analytics]', eventName, JSON.stringify(event));
     logAnalyticsEvent(eventName, event);
   } catch (_) {}
+}
+
+// Garantit que RevenueCat connaît l'utilisateur backend avant un achat réel.
+// UserContext appelle déjà Purchases.logIn() à l'hydratation/login, mais ça
+// tourne en parallèle de Purchases.configure() au démarrage de l'app : si
+// configure() n'a pas encore fini à ce moment-là, logIn() échoue en silence
+// et n'est jamais retenté. Sans cet appel juste avant l'achat, RevenueCat
+// reste sur un $RCAnonymousID que le webhook /api/iap/webhook ne peut pas
+// rattacher à un compte (User.findById échoue) — le passage premium
+// n'arrive alors jamais côté serveur, même si l'achat a réussi.
+async function _ensureIdentity(userId) {
+  if (!userId) return;
+  try {
+    const { customerInfo } = await Purchases.logIn(String(userId));
+    return customerInfo;
+  } catch (e) {
+    logger.log('[IAPStore] logIn before purchase failed:', e.message);
+  }
+}
+
+const _wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Le webhook RevenueCat -> backend qui bascule isPremium arrive de façon
+// asynchrone (serveur à serveur), après que Purchases.purchasePackage() ait
+// déjà résolu côté client. Un unique refreshFromBackend() immédiatement
+// après l'achat lit donc souvent encore l'ancien statut. On retente
+// quelques fois à intervalle court avant d'abandonner (l'UI restera à jour
+// au prochain refresh/mount de toute façon).
+async function _refreshPremiumUntilActive(attempts = 4, delayMs = 1500) {
+  for (let i = 0; i < attempts; i++) {
+    await PremiumService.refreshFromBackend();
+    if (PremiumService.isPremium()) return true;
+    if (i < attempts - 1) await _wait(delayMs);
+  }
+  return PremiumService.isPremium();
 }
 
 const IAPStore = {
@@ -65,8 +101,9 @@ const IAPStore = {
       return { success: true, isMock: true };
     }
     try {
+      await _ensureIdentity(userId);
       const { customerInfo } = await Purchases.purchasePackage(pkg);
-      await PremiumService.refreshFromBackend();
+      await _refreshPremiumUntilActive();
       _log('iap_subscription_purchase', { product_id: pkg?.product?.identifier, timestamp: Date.now(), user_id: userId, success: true });
       return { success: true, customerInfo };
     } catch (e) {
@@ -97,6 +134,7 @@ const IAPStore = {
       return { success: true, isMock: true, grant };
     }
     try {
+      await _ensureIdentity(userId);
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       if (grant) {
         if (grant.boosts > 0) await PremiumService.addBoosts(grant.boosts);
@@ -119,12 +157,54 @@ const IAPStore = {
       return { success: true, isMock: true };
     }
     try {
+      await _ensureIdentity(userId);
       const { customerInfo } = await Purchases.restorePurchases();
-      await PremiumService.refreshFromBackend();
+      await _refreshPremiumUntilActive();
       _log('iap_restore', { product_id: 'restore', timestamp: Date.now(), user_id: userId, success: true });
       return { success: true, customerInfo };
     } catch (e) {
       _log('iap_restore', { product_id: 'restore', timestamp: Date.now(), user_id: userId, success: false, error: e.message });
+      throw e;
+    }
+  },
+
+  // Infos de l'abonnement actif (plan, date de renouvellement, auto-renew).
+  // Retourne null si IAP_DISABLED, en Expo Go sans achat simulé, ou en cas d'erreur.
+  async getCustomerInfo() {
+    if (DEBUG_CONFIG.IAP_DISABLED) return null;
+    try {
+      const info = await Purchases.getCustomerInfo();
+      console.log('[IAPStore][DEBUG] customerInfo.entitlements.active:', JSON.stringify(info?.entitlements?.active));
+      return info;
+    } catch (e) {
+      logger.log('[IAPStore] getCustomerInfo failed:', e.message);
+      return null;
+    }
+  },
+
+  // Ouvre l'interface native de gestion d'abonnement (changement de plan,
+  // résiliation) — sur iOS l'App Store gère nativement le report du
+  // changement de plan à la fin de la période en cours ; sur Android on
+  // ouvre directement la fiche d'abonnement Play Store (pas d'équivalent
+  // "showManageSubscriptions" natif côté RevenueCat pour Android).
+  // showManageSubscriptions() a besoin du module natif RevenueCat, absent en
+  // Expo Go (mode Browser/Test Store) — on retombe alors sur le lien Apple
+  // générique, qui fonctionne sans module natif.
+  async openManageSubscriptions(productId) {
+    try {
+      if (Platform.OS === 'ios' && !IS_EXPO_GO) {
+        await Purchases.showManageSubscriptions();
+      } else if (Platform.OS === 'ios') {
+        await Linking.openURL('https://apps.apple.com/account/subscriptions');
+      } else {
+        const pkg = 'me.loocate.app';
+        const url = productId
+          ? `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(productId)}&package=${pkg}`
+          : `https://play.google.com/store/account/subscriptions?package=${pkg}`;
+        await Linking.openURL(url);
+      }
+    } catch (e) {
+      logger.log('[IAPStore] openManageSubscriptions failed:', e.message);
       throw e;
     }
   },

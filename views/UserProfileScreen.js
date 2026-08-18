@@ -337,6 +337,11 @@ const UserProfileScreen = () => {
   // comptes récents/pas encore géocodés : on masque alors proprement ce segment.
   const cityLabel = user?.city || null;
 
+  // Lieu précis actuel : uniquement présent si le backend l'a renvoyé, ce qui
+  // n'est le cas que si l'utilisateur cible a activé
+  // privacyPreferences.shareCurrentLocation (défaut désactivé).
+  const currentPlaceLabel = user?.currentLocation?.name || null;
+
   // Compute distance on the fly if not provided (e.g., when coming from search)
   const [computedDistance, setComputedDistance] = React.useState(null);
   const distanceBetweenMeters = React.useCallback((lat1, lon1, lat2, lon2) => {
@@ -591,6 +596,11 @@ const UserProfileScreen = () => {
             </>
           )}
         </View>
+        {!!currentPlaceLabel && (
+          <Text style={styles.heroCurrentPlaceText} numberOfLines={1}>
+            Actuellement à {currentPlaceLabel}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -886,7 +896,7 @@ const styles = StyleSheet.create({
   },
   heroActionsColumn: {
     position: 'absolute',
-    top: 60,
+    top: 112,
     right: 16,
     alignItems: 'center',
   },
@@ -928,6 +938,15 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
     fontWeight: '500',
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  heroCurrentPlaceText: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
     textShadowColor: 'rgba(0,0,0,0.4)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

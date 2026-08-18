@@ -1,10 +1,7 @@
 import { useState, useContext, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
-  Modal,
-  TextInput,
   StyleSheet,
   Image,
   ScrollView,
@@ -12,46 +9,59 @@ import {
   Dimensions,
   Alert,
   Platform,
-  Pressable,
   Linking,
   Share,
-  KeyboardAvoidingView,
   Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
-import { BlurView } from 'expo-blur';
 import { UserContext } from '../components/contexts/UserContext';
 import {
-  updateProfile as apiUpdateProfile,
   upsertSocial as apiUpsertSocial,
   removeSocial as apiRemoveSocial,
+  reorderSocial as apiReorderSocial,
   getMyUser,
   updateUserStatus as apiUpdateUserStatus,
   claimSupervise as apiClaimSupervise,
   claimBoost as apiClaimBoost,
+  apiUpdateShareCurrentLocation,
 } from '../components/ApiRequest';
 import { proxifyImageUrl } from '../components/ServerUtils';
-import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import Toast from '../components/Toast';
 import { buildSocialProfileUrl } from '../services/socialUrls';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
-import socialMediaIcons from '../constants/socialMediaIcons';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 import SpotlightOverlay from '../components/SpotlightOverlay';
+import { TAB_BAR_HEIGHT } from '../components/MainTabBar';
 import { hasSeenProfileOnboarding, markProfileOnboardingDone } from '../utils/onboarding';
+import {
+  shouldShowShareLocationNudge,
+  recordShareLocationNudgeShown,
+  recordShareLocationNudgeDismissedForever,
+} from '../utils/shareLocationNudge';
 import SuperlikeHistoryModal from '../components/SuperlikeHistoryModal';
 import ConsumablesShopSheet from '../components/ConsumablesShopSheet';
 import PremiumService from '../services/PremiumService';
-import StreakCard from '../components/StreakCard';
 import { subscribe } from '../components/EventBus';
+
+import ProfileHero from './MyAccount/ProfileHero';
+import BioSection from './MyAccount/BioSection';
+import WarningsBanner from './MyAccount/WarningsBanner';
+import ShareLocationNudge from './MyAccount/ShareLocationNudge';
+import RewardsCard from './MyAccount/RewardsCard';
+import SocialGrid from './MyAccount/SocialGrid';
+import ReferralLink from './MyAccount/ReferralLink';
+import ActionsFooter from './MyAccount/ActionsFooter';
+import AddSocialModal from './MyAccount/AddSocialModal';
+import EditSocialModal from './MyAccount/EditSocialModal';
+import StatusPickerModal from './MyAccount/StatusPickerModal';
+import QrModal from './MyAccount/QrModal';
 
 const { width, height } = Dimensions.get('window');
 const H = height;
@@ -79,8 +89,6 @@ const MyAccountScreen = () => {
   };
   const { flags } = useFeatureFlags();
   const warningsCount = user?.moderation?.warningsCount || 0;
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editType, setEditType] = useState('');
   const [newValue, setNewValue] = useState('');
   // Partage / QR
   const [qrVisible, setQrVisible] = useState(false);
@@ -91,13 +99,10 @@ const MyAccountScreen = () => {
   const [toastVisible, setToastVisible] = useState(false);
   const [myUserId, setMyUserId] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  const [measuredNameWidth, setMeasuredNameWidth] = useState(0);
   const [statusPickerVisible, setStatusPickerVisible] = useState(false);
   const [streakClaiming, setStreakClaiming] = useState(false);
 
   // ── Pulse animations : icônes Superlike (étoile) et Boost (éclair) ────
-  // Même pattern que l'animation "press" de StreakCard (Animated de react-native,
-  // aucune lib d'animation dédiée type reanimated n'est utilisée ailleurs dans ce fichier).
   const superlikePulse = useRef(new Animated.Value(1)).current;
   const boostPulse = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -132,7 +137,7 @@ const MyAccountScreen = () => {
   const SPOT_STEPS = [
     {
       ref: photoRef,
-      borderRadius: 16,
+      borderRadius: 24,
       title: 'Ta photo de profil',
       description: 'Modifie ta photo de profil depuis les réglages (icône en haut à droite).',
     },
@@ -140,7 +145,7 @@ const MyAccountScreen = () => {
       ref: bioRef,
       borderRadius: 16,
       title: 'Ta bio',
-      description: "Reste appuyé sur la bio pour la personnaliser. C'est la première chose que les autres voient.",
+      description: "Ta bio se modifie depuis les réglages. C'est la première chose que les autres voient.",
     },
     {
       ref: socialRef,
@@ -162,13 +167,11 @@ const MyAccountScreen = () => {
     new Promise((resolve) => {
       const step = SPOT_STEPS[stepIdx];
       if (!step?.ref?.current) return resolve(null);
-      // 1. Mesure la position relative au ScrollView pour savoir où scroller
       step.ref.current.measureLayout(
         scrollViewRef.current,
         (_, yInScroll, _w, elH) => {
           const targetScroll = Math.max(0, yInScroll - H * 0.28);
           scrollViewRef.current?.scrollTo({ y: targetScroll, animated: true });
-          // 2. Après l'animation de scroll, mesure la position fenêtre réelle
           setTimeout(() => {
             step.ref.current?.measureInWindow((x, y, w, h) => {
               resolve({ x, y, width: w, height: h, borderRadius: step.borderRadius });
@@ -176,7 +179,6 @@ const MyAccountScreen = () => {
           }, 350);
         },
         () => {
-          // fallback si measureLayout échoue
           setTimeout(() => {
             step.ref.current?.measureInWindow((x, y, w, h) => {
               resolve({ x, y, width: w, height: h, borderRadius: step.borderRadius });
@@ -213,6 +215,54 @@ const MyAccountScreen = () => {
     })();
   }, [currentPage]);
 
+  // Suggestion d'activation du partage de position (carte inline, cf. utils/shareLocationNudge.js)
+  const [shareLocationNudgeVisible, setShareLocationNudgeVisible] = useState(false);
+  const [activatingShareLocation, setActivatingShareLocation] = useState(false);
+
+  useEffect(() => {
+    if (currentPage !== 2) return;
+    if (user?.privacyPreferences?.shareCurrentLocation) return;
+    let mounted = true;
+    (async () => {
+      const show = await shouldShowShareLocationNudge();
+      if (!mounted || !show) return;
+      setShareLocationNudgeVisible(true);
+      await recordShareLocationNudgeShown();
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [currentPage, user?.privacyPreferences?.shareCurrentLocation]);
+
+  const handleActivateShareLocation = async () => {
+    if (activatingShareLocation) return;
+    setActivatingShareLocation(true);
+    try {
+      const res = await apiUpdateShareCurrentLocation(true);
+      if (updateUser) {
+        updateUser({
+          ...user,
+          privacyPreferences: {
+            ...(user?.privacyPreferences || {}),
+            ...(res?.user?.privacyPreferences || {}),
+            shareCurrentLocation: true,
+          },
+        });
+      }
+      setShareLocationNudgeVisible(false);
+      await recordShareLocationNudgeDismissedForever();
+    } catch (e) {
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le partage du lieu actuel');
+    } finally {
+      setActivatingShareLocation(false);
+    }
+  };
+
+  const handleDismissShareLocationNudge = async () => {
+    setShareLocationNudgeVisible(false);
+    await recordShareLocationNudgeDismissedForever();
+  };
+
   const handleSpotNext = async () => {
     const next = spotStep + 1;
     if (next >= SPOT_STEPS.length) {
@@ -225,61 +275,13 @@ const MyAccountScreen = () => {
   const handleSpotSkip = () => endOnboarding();
   // ─────────────────────────────────────────────────────────────
 
-  // Dynamically scale UI based on number of social networks to best fill the page without scrolling
-  const socialCountForScale = Array.isArray(user?.socialMedia) ? user.socialMedia.length : 0;
-  const computeScale = (count) => {
-    if (count <= 0) return 1.1; // slightly larger to fill
-    if (count === 1) return 1.05;
-    if (count <= 3) return 1.0;
-    if (count <= 6) return 0.9;
-    if (count <= 9) return 0.85;
-    return 0.8; // many socials -> reduce to fit
-  };
-  const scale = computeScale(socialCountForScale);
-  // Grille des réseaux sociaux : même approche que UserProfileScreen — 4 tuiles
-  // par ligne (flexWrap sur des tuiles de taille fixe), au lieu de l'ancien
-  // découpage explicite en lignes de `socialGridColumns` tuiles. Cet ancien
-  // calcul visait un nombre MAXIMAL de lignes (4), pas un nombre de tuiles par
-  // ligne : pour 8 tuiles (7 réseaux + bouton "ajouter"), il donnait
-  // `socialGridColumns = ceil(8/4) = 2`, donc systématiquement 2 colonnes —
-  // c'était la cause du bug "toujours 2 colonnes" remonté par l'utilisateur.
-  // iconSize suit la même formule que UserProfileScreen.iconSize, chaque écran
-  // ayant son propre padding horizontal de conteneur (voir socialMediaTile).
-  const imgSize = Math.min(width * 0.4, 160) * scale;
-  const iconSize = Math.min(width * 0.19, 68) * scale;
-  const usernameFont = Math.min(width * 0.075, 30) * scale;
-  const baseBioFont = Math.min(width * 0.04, 18) * scale;
-  const bioFont = Math.max(14, Math.min(baseBioFont, 22));
-  const placeholderIconSize = Math.min(width * 0.18, 72) * scale;
-
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [selectedSocialPlatform, setSelectedSocialPlatform] = useState('');
   const [socialLinks, setSocialLinks] = useState(user.socialMedia || []);
   const [socialModalVisible, setSocialModalVisible] = useState(false);
 
-  // Mesure dynamique de la largeur du nom pour adapter la box image+nom
-  const valueStyle = { color: isDark ? '#fff' : '#3f4a4b' };
-  const labelStyle = { color: '#00c2cb' };
-  const textPrimaryStyle = { color: isDark ? '#fff' : colors.textPrimary };
-  const textSecondaryStyle = { color: isDark ? '#eee' : colors.textSecondary };
-  const subTextStyle = { color: isDark ? 'rgba(255,255,255,0.9)' : colors.textSecondary };
-  // Ville dérivée côté backend (reverse geocoding). Peut être vide pour les
-  // comptes récents/pas encore géocodés : on masque alors proprement ce segment.
   const cityLabel = user?.city || null;
-  const SAFE_LEFT_FOR_BACK = 56; // espace minimum à gauche pour le bouton retour (padding+icône)
-  const boxHorizontalPadding = Math.max(16, Math.round(width * 0.05));
-  const maxBoxWidth = Math.max(220, width - 2 * SAFE_LEFT_FOR_BACK);
-  // Légère marge supplémentaire pour éviter un rendu trop serré autour de l'image et du nom
-  const extraSlack = Math.max(10, Math.round(width * 0.025));
-  const minBoxWidth = Math.min(maxBoxWidth, Math.round(width * 0.92));
-  const desiredBoxWidth = Math.max(
-    minBoxWidth,
-    Math.min(maxBoxWidth, Math.max(imgSize, measuredNameWidth) + 2 * boxHorizontalPadding + extraSlack),
-  );
-
-  // Refs pour gérer le scroll et le focus dans le modal d'ajout de réseaux sociaux
-  const addSocialScrollRef = useRef(null);
-  const addSocialInputRef = useRef(null);
+  const currentPlaceLabel = user?.currentLocation?.name || null;
 
   // Keep local socialLinks in sync with context user updates
   useEffect(() => {
@@ -321,7 +323,6 @@ const MyAccountScreen = () => {
             firstName: typeof me.firstName === 'string' ? me.firstName : user?.firstName || '',
             lastName: typeof me.lastName === 'string' ? me.lastName : user?.lastName || '',
             customName: typeof me.customName === 'string' ? me.customName : user?.customName || '',
-            // Ne pas injecter de placeholder en state: conserver vide si pas de bio côté API
             bio: typeof me.bio === 'string' ? me.bio : user?.bio || '',
             photo: me.profileImageUrl || user?.photo || null,
             socialMedia: mappedSocial,
@@ -350,7 +351,6 @@ const MyAccountScreen = () => {
               },
           });
         }
-        // Capture id utilisateur pour le partage
         try {
           setMyUserId(String(me?._id || me?.id || ''));
         } catch (_) {}
@@ -379,11 +379,9 @@ const MyAccountScreen = () => {
     }
 
     try {
-      // One-shot re-sync from server to avoid stale context after plan change
       const res = await getMyUser();
       const me = res?.user;
       const nowPremium = !!me?.isPremium;
-      const nowRole = me?.role || user?.role || 'user';
       const nowHasPremiumRight = nowPremium;
       const freshHasStatsAccess =
         (flags.statisticsEnabled || premiumSystemEnabled) && (!premiumSystemEnabled || nowHasPremiumRight);
@@ -420,7 +418,6 @@ const MyAccountScreen = () => {
         navigation.navigate('PremiumPaywall', { source: 'stats_button' });
       }
     } catch (_) {
-      // Fallback to current hook state
       if (hasStatsAccess) navigation.navigate('Statistics');
       else navigation.navigate('PremiumPaywall', { source: 'stats_button' });
     }
@@ -443,22 +440,6 @@ const MyAccountScreen = () => {
   const IOS_STORE_URL = 'https://apps.apple.com/app/id0000000000'; // placeholder
   const getStoreUrlForPlatform = () => (Platform.OS === 'ios' ? IOS_STORE_URL : ANDROID_STORE_URL);
   const buildProfileDeepLink = (id) => `loocateme://profile/${encodeURIComponent(id || '')}`;
-
-  const openMyProfileDeepLink = async () => {
-    const deepLink = buildProfileDeepLink(myUserId);
-    try {
-      const can = await Linking.canOpenURL(deepLink);
-      if (can) {
-        await Linking.openURL(deepLink);
-        return;
-      }
-    } catch (_) {}
-    try {
-      await Linking.openURL(getStoreUrlForPlatform());
-    } catch (_) {
-      Alert.alert('Erreur', "Impossible d'ouvrir le store");
-    }
-  };
 
   const handleShareProfile = async () => {
     const deepLink = buildProfileDeepLink(myUserId);
@@ -490,27 +471,20 @@ const MyAccountScreen = () => {
   // Allowed social platforms (must match backend validation)
   const ALLOWED_PLATFORMS = ['instagram', 'facebook', 'x', 'snapchat', 'tiktok', 'linkedin', 'youtube'];
 
-  // Instagram username regex (provided)
   const INSTAGRAM_USERNAME_REGEX = /^(?!.*\.\.)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
-  // TikTok username regex (approximate: 2-24 chars, letters, numbers, dot, underscore)
   const TIKTOK_USERNAME_REGEX = /^[A-Za-z0-9._]{2,24}$/;
 
-  // Sanitize a possibly pasted Instagram URL to just the username
   const extractInstagramUsername = (input = '') => {
     let v = String(input).trim();
-    // If user pasted a full URL like https://www.instagram.com/username/
     try {
       if (/^https?:\/\//i.test(v)) {
         const u = new URL(v);
-        // path like "/username/" or "/username"
         const path = (u.pathname || '').replace(/^\/+|\/+$/g, '');
-        // username is first segment
         v = path.split('/')[0] || '';
       }
     } catch (_e) {
       // Not a valid URL, keep raw value
     }
-    // Remove leading @ if present
     if (v.startsWith('@')) v = v.slice(1);
     return v;
   };
@@ -520,7 +494,6 @@ const MyAccountScreen = () => {
     try {
       if (/^https?:\/\//i.test(v)) {
         const u = new URL(v);
-        // TikTok profile paths are like "/@username" or "/@username/video/..."
         const path = (u.pathname || '').replace(/^\/+|\/+$/g, '');
         const firstSeg = (path.split('/')[0] || '').trim();
         v = firstSeg.startsWith('@') ? firstSeg.slice(1) : firstSeg;
@@ -530,7 +503,6 @@ const MyAccountScreen = () => {
     return v;
   };
 
-  // Map backend socialNetworks -> frontend socialMedia shape (normalize and filter)
   const mapNetworksToSocialMedia = (networks = []) =>
     networks
       .map((n) => {
@@ -541,7 +513,6 @@ const MyAccountScreen = () => {
       })
       .filter(Boolean);
 
-  // After any profile update, reload my profile from backend to keep context fully in sync
   const refreshMyProfile = async () => {
     try {
       const res = await getMyUser();
@@ -652,53 +623,6 @@ const MyAccountScreen = () => {
     }
   };
 
-  const handleEdit = (type) => {
-    setEditType(type);
-    setNewValue(user[type]);
-    setModalVisible(true);
-  };
-
-  const handleSave = async () => {
-    try {
-      const raw = String(newValue ?? '');
-      if (editType === 'username') {
-        // Normaliser et valider selon la regex Instagram (vide interdit)
-        let normalized = raw.trim().toLowerCase();
-        const IG_RE = /^(?!.*\..)(?!.*\.$)[A-Za-z0-9](?:[A-Za-z0-9._]{0,28}[A-Za-z0-9])?$/;
-        if (!normalized || !IG_RE.test(normalized)) {
-          Alert.alert(
-            'Nom invalide',
-            "Nom d'utilisateur invalide. Utilise 1–30 caractères: lettres, chiffres, points et underscores. Pas de point au début/à la fin ni deux points consécutifs.",
-          );
-          return;
-        }
-        const res = await apiUpdateProfile({ username: normalized });
-        const updated = res?.user || {};
-        updateUser({
-          ...user,
-          username: updated.username ?? updated.name ?? normalized,
-          bio: updated.bio ?? user.bio,
-          photo: updated.profileImageUrl ?? user.photo,
-        });
-        await refreshMyProfile();
-      } else if (editType === 'bio') {
-        // La bio peut être une chaîne vide: on envoie tel quel
-        const res = await apiUpdateProfile({ bio: raw });
-        const updated = res?.user || {};
-        updateUser({
-          ...user,
-          username: updated.username ?? updated.name ?? user.username,
-          bio: updated.bio ?? raw,
-          photo: updated.profileImageUrl ?? user.photo,
-        });
-        await refreshMyProfile();
-      }
-    } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
-    }
-    setModalVisible(false);
-  };
-
   const handleAddSocial = async () => {
     try {
       const platform = String(selectedSocialPlatform || '').toLowerCase();
@@ -711,7 +635,6 @@ const MyAccountScreen = () => {
         Alert.alert('Erreur', 'Veuillez saisir un identifiant');
         return;
       }
-      // Specific validation for Instagram / TikTok
       if (platform === 'instagram') {
         handle = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(handle)) {
@@ -753,7 +676,6 @@ const MyAccountScreen = () => {
     setSocialModalVisible(true);
   };
 
-  // Open a social profile on simple tap (same behavior as in UserProfileScreen)
   const openSocial = async (platform, rawHandle) => {
     const handle = String(rawHandle || '').trim();
     if (!platform || !handle) return;
@@ -903,16 +825,26 @@ const MyAccountScreen = () => {
     }
   };
 
+  const handleReorderSocial = async (newOrder) => {
+    setSocialLinks(newOrder);
+    updateUser({ ...user, socialMedia: newOrder });
+    try {
+      await apiReorderSocial(newOrder.map((s) => s.platform));
+    } catch (e) {
+      console.error('[MyAccount] Reorder social error', e);
+      await refreshMyProfile();
+    }
+  };
+
   return (
     <>
       <View style={{ flex: 1 }}>
-        {/* Fond cohérent avec la vibe (jour/nuit) */}
         {isMoon ? <NightSkyBackground style={skyFillStyle} /> : <DaySkyBackground style={skyFillStyle} />}
         <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
           <TouchableOpacity
             style={[
               styles.backButton,
-              { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' },
+              { top: insets.top + 10, backgroundColor: isDark ? 'rgba(12,20,24,0.55)' : 'rgba(255,255,255,0.85)' },
             ]}
             onPress={() => goToPage(1)}
             hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
@@ -924,13 +856,13 @@ const MyAccountScreen = () => {
           <TouchableOpacity
             style={[
               styles.topSettingsButton,
-              { top: insets.top + 10, backgroundColor: isDark ? 'rgba(0,194,203,0.15)' : 'rgba(0,194,203,0.10)' },
+              { top: insets.top + 10, backgroundColor: isDark ? 'rgba(12,20,24,0.55)' : 'rgba(255,255,255,0.85)' },
             ]}
             onPress={() => navigation.navigate('Settings')}
             hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
             accessibilityLabel="Réglages"
           >
-            <Ionicons name="settings-outline" size={22} color="#00c2cb" />
+            <Ionicons name="settings-outline" size={22} color={colors.accent} />
           </TouchableOpacity>
 
           <ScrollView
@@ -940,607 +872,134 @@ const MyAccountScreen = () => {
             contentContainerStyle={{
               paddingHorizontal: width * 0.05,
               paddingTop: insets.top + 16,
-              paddingBottom: Math.max(24, height * 0.06) + insets.bottom,
+              paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 16,
               flexGrow: 1,
             }}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
           >
-            <View style={styles.userInfoContainer}>
-              <View style={styles.profileHeader}>
-                <View
-                  style={[
-                    styles.imgUsernameSplitBox,
-                    {
-                      backgroundColor: colors.surfaceAlt,
-                      width: desiredBoxWidth,
-                      paddingHorizontal: boxHorizontalPadding,
-                    },
-                  ]}
-                >
-                  <View style={styles.userProfilePictureContainer}>
-                    {/* Style photo aligné sur UserProfileScreen : coins arrondis + fondu noir bas
-                        (même langage visuel que le hero de UserProfileScreen, adapté à la taille
-                        plus petite/inline de MyAccountScreen). */}
-                    <View
-                      ref={photoRef}
-                      style={{
-                        width: imgSize,
-                        height: imgSize,
-                        borderRadius: 24,
-                        overflow: 'hidden',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.18,
-                        shadowRadius: 8,
-                        elevation: 4,
-                      }}
-                    >
-                      {user.photo ? (
-                        <>
-                          <ImageWithPlaceholder
-                            uri={user.photo}
-                            style={[styles.profileImage, { width: imgSize, height: imgSize, borderRadius: 0 }]}
-                          />
-                          <LinearGradient
-                            colors={['transparent', 'transparent', 'rgba(0,0,0,0.35)']}
-                            locations={[0, 0.6, 1]}
-                            style={StyleSheet.absoluteFill}
-                            pointerEvents="none"
-                          />
-                        </>
-                      ) : (
-                        <View style={[styles.placeholderImage, { width: imgSize, height: imgSize, borderRadius: 0 }]}>
-                          <Image
-                            source={require('../assets/appIcons/userProfile.png')}
-                            style={[
-                              styles.placeholderIcon,
-                              { width: placeholderIconSize, height: placeholderIconSize },
-                            ]}
-                          />
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                  <View style={{ alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                    <View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.usernameUnderPhoto, { fontSize: usernameFont, color: colors.accent }]}>
-                          {user?.customName ||
-                            (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
-                        </Text>
-                      </View>
-                      {!user?.customName ? (
-                        <Text style={[styles.usernameSubText, { fontSize: Math.max(11, usernameFont * 0.4) }]}>
-                          Nom personnalisé non renseigné
-                        </Text>
-                      ) : null}
-                      {/* Mesure invisible sur une ligne pour calculer la largeur exacte du nom */}
-                      <Text
-                        style={[
-                          styles.usernameUnderPhoto,
-                          { fontSize: usernameFont, position: 'absolute', opacity: 0 },
-                        ]}
-                        numberOfLines={1}
-                        onLayout={(e) => {
-                          const w = e?.nativeEvent?.layout?.width || 0;
-                          if (w && Math.abs(w - measuredNameWidth) > 0.5) setMeasuredNameWidth(w);
-                        }}
-                      >
-                        {user?.customName ||
-                          (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username)}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
+            {/* 1. Hero identité (photo, nom, statut, ville) */}
+            <ProfileHero
+              photoRef={photoRef}
+              statusRef={statusRef}
+              user={user}
+              colors={colors}
+              isDark={isDark}
+              cityLabel={cityLabel}
+              currentPlaceLabel={currentPlaceLabel}
+              onOpenStatusPicker={() => setStatusPickerVisible(true)}
+            />
 
-                {/* Sélecteur de statut (dropdown) */}
-                <View ref={statusRef} style={{ width: '100%', alignItems: 'center' }}>
-                  <TouchableOpacity
-                    style={[
-                      styles.statusPickerButton,
-                      { backgroundColor: colors.surfaceAlt, borderColor: colors.border },
-                    ]}
-                    onPress={() => setStatusPickerVisible(true)}
-                    accessibilityLabel="Choisir mon statut"
-                  >
-                    <View
-                      style={[
-                        styles.statusDot,
-                        {
-                          backgroundColor:
-                            user.status === 'red' ? '#F44336' : user.status === 'orange' ? '#FF9800' : '#4CAF50',
-                        },
-                      ]}
-                    />
-                    <Text style={[styles.statusPickerLabel, textPrimaryStyle]}>
-                      {user.status === 'red'
-                        ? 'Incognito'
-                        : user.status === 'orange'
-                          ? 'Profil privé'
-                          : 'Profil public'}
-                      {!!cityLabel && (
-                        <Text style={{ color: colors.textSecondary, fontWeight: '400' }}> · {cityLabel}</Text>
-                      )}
-                    </Text>
-                    <Ionicons name="chevron-down" size={16} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                </View>
+            {/* 2. Bio (lecture seule) */}
+            <BioSection bioRef={bioRef} bio={user?.bio} colors={colors} isDark={isDark} />
 
-                {/* Bandeau parrainage compact */}
-                <TouchableOpacity
-                  style={styles.referralBanner}
-                  activeOpacity={0.85}
-                  onPress={() => navigation.navigate('Referral')}
-                  accessibilityLabel="Parrainage : invite tes amis"
-                >
-                  <LinearGradient
-                    colors={['#00c2cb', '#7b5cff']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.referralBannerGradient}
-                  >
-                    <Ionicons name="gift-outline" size={22} color="#fff" />
-                    <Text style={styles.referralBannerText}>Invite tes amis</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#fff" />
-                  </LinearGradient>
-                </TouchableOpacity>
+            {/* 3. Suggestion partage position (conditionnel) */}
+            {shareLocationNudgeVisible && (
+              <ShareLocationNudge
+                colors={colors}
+                isDark={isDark}
+                activating={activatingShareLocation}
+                onActivate={handleActivateShareLocation}
+                onDismiss={handleDismissShareLocationNudge}
+              />
+            )}
 
-                <StreakCard
-                  count={user?.streak?.count ?? 0}
-                  supervisePendingClaim={!!user?.streak?.supervisePendingClaim}
-                  boostPendingClaim={!!user?.streak?.boostPendingClaim}
-                  claiming={streakClaiming}
-                  colors={colors}
-                  isDark={isDark}
-                  onClaim={handleClaimStreakReward}
-                  onPress={() =>
-                    Alert.alert(
-                      'Ta série 🔥',
-                      "Connecte-toi chaque jour pour faire grimper ta série. À J7, réclame un superlike. À J14, réclame un boost — ta série repart alors à 0.",
-                    )
-                  }
-                />
+            {/* 4. Parrainage (lien discret) */}
+            <ReferralLink colors={colors} isDark={isDark} onPress={() => navigation.navigate('Referral')} />
 
-                {/* Superlikes & Boosts (conteneur combiné) */}
-                <View style={[styles.consumablesCard, { backgroundColor: colors.surfaceAlt }]}>
-                  <TouchableOpacity
-                    style={styles.consumablesStat}
-                    onPress={() => setSuperlikeHistoryVisible(true)}
-                    accessibilityLabel={`Voir l'historique des superlikes, ${superlikeBalance} restant${superlikeBalance !== 1 ? 's' : ''}`}
-                  >
-                    <Animated.View style={{ transform: [{ scale: superlikePulse }] }}>
-                      <Ionicons name="star" size={18} color="#FFB800" />
-                    </Animated.View>
-                    <Text style={[styles.consumablesStatLabel, textPrimaryStyle]}>Superlikes</Text>
-                    <Text style={[styles.consumablesStatValue, textPrimaryStyle]}>{superlikeBalance}</Text>
-                  </TouchableOpacity>
-                  <View style={[styles.consumablesDivider, { backgroundColor: colors.border }]} />
-                  <View style={styles.consumablesStat}>
-                    <Animated.View style={{ transform: [{ scale: boostPulse }] }}>
-                      <Ionicons name="flash" size={18} color="#00c2cb" />
-                    </Animated.View>
-                    <Text style={[styles.consumablesStatLabel, textPrimaryStyle]}>Boosts</Text>
-                    <Text style={[styles.consumablesStatValue, textPrimaryStyle]}>{boostBalance}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.consumablesBuyButton}
-                    onPress={() => setConsumablesShopVisible(true)}
-                    accessibilityLabel="Acheter des superlikes ou boosters"
-                  >
-                    <Text style={styles.consumablesBuyButtonText}>Acheter</Text>
-                  </TouchableOpacity>
-                </View>
+            {/* 5. Avertissements (conditionnel) */}
+            <WarningsBanner
+              warningsCount={warningsCount}
+              colors={colors}
+              onPress={() => navigation.navigate('Warnings')}
+            />
 
-                <View ref={bioRef} style={[styles.bioContainer, { backgroundColor: colors.surfaceAlt }]}>
-                  <View style={styles.bioTitleContainer}>
-                    <Text style={[styles.label, labelStyle, { marginBottom: 0, fontWeight: '700' }]}>Bio</Text>
-                    <Text style={{ marginLeft: 6, fontSize: 14 }}>🖋️</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.bioTextContainer}
-                    onLongPress={() => handleEdit('bio')}
-                    delayLongPress={300}
-                    activeOpacity={1}
-                  >
-                    {(() => {
-                      const bioText = String(user?.bio || '').trim();
-                      const isEmpty = bioText.length === 0;
-                      return (
-                        <Text
-                          style={[
-                            styles.value,
-                            textPrimaryStyle,
-                            {
-                              fontSize: bioFont,
-                              textAlign: 'left',
-                              width: '100%',
-                              color: isEmpty ? colors.textMuted : isDark ? '#fff' : colors.textPrimary,
-                              fontStyle: isEmpty ? 'italic' : 'normal',
-                              lineHeight: bioFont * 1.4,
-                            },
-                          ]}
-                        >
-                          {isEmpty ? 'Ajoute une phrase pour te présenter.' : bioText}
-                        </Text>
-                      );
-                    })()}
-                  </TouchableOpacity>
-                </View>
+            {/* 6. Récompenses (streak + superlikes/boosts fusionnés) */}
+            <RewardsCard
+              colors={colors}
+              isDark={isDark}
+              accentGradient={colors.accentGradient}
+              streak={user?.streak}
+              streakClaiming={streakClaiming}
+              onClaimStreak={handleClaimStreakReward}
+              onStreakInfoPress={() =>
+                Alert.alert(
+                  'Ta série 🔥',
+                  "Connecte-toi chaque jour pour faire grimper ta série. À J7, réclame un superlike. À J14, réclame un boost — ta série repart alors à 0.",
+                )
+              }
+              superlikeBalance={superlikeBalance}
+              boostBalance={boostBalance}
+              superlikePulse={superlikePulse}
+              boostPulse={boostPulse}
+              onOpenSuperlikeHistory={() => setSuperlikeHistoryVisible(true)}
+              onOpenConsumablesShop={() => setConsumablesShopVisible(true)}
+              isPremium={!!user?.isPremium}
+              onOpenPaywall={() => navigation.navigate('PremiumPaywall', { source: 'rewards_card' })}
+            />
 
-                {warningsCount > 0 && (
-                  <TouchableOpacity
-                    style={[styles.warningCard, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}
-                    onPress={() => navigation.navigate('Warnings')}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.warningTitle, { color: colors.accent }]}>Avertissements</Text>
-                    <Text style={[styles.warningText, { color: colors.textPrimary }]}>
-                      Vous avez {warningsCount} avertissement{warningsCount > 1 ? 's' : ''}.
-                    </Text>
-                    <Text style={[styles.warningMeta, { color: colors.textSecondary }]}>
-                      Appuyez pour voir le détail
-                    </Text>
-                  </TouchableOpacity>
-                )}
+            {/* 7. Réseaux sociaux (grille agrandie) */}
+            <SocialGrid
+              socialRef={socialRef}
+              socialLinks={socialLinks}
+              colors={colors}
+              isDark={isDark}
+              onAddPress={() => setShowSocialModal(true)}
+              onOpenSocial={openSocial}
+              onLongPressSocial={handleSocialLongPress}
+              onReorderSocial={handleReorderSocial}
+              onDragStart={lockSwiper}
+              onDragEnd={unlockSwiper}
+            />
 
-              </View>
+            {/* 8. Footer d'actions : partager / QR / stats */}
+            <ActionsFooter
+              colors={colors}
+              isDark={isDark}
+              onShare={handleShareProfile}
+              onShowQr={() => setQrVisible(true)}
+              onOpenStats={handleOpenStats}
+            />
 
-              <View ref={socialRef} style={styles.socialMediaContainer}>
-                {(() => {
-                  const addTile = (
-                    <TouchableOpacity
-                      key="add-social"
-                      onPress={() => setShowSocialModal(true)}
-                      style={[
-                        styles.socialMediaTile,
-                        { backgroundColor: colors.surfaceAlt },
-                      ]}
-                    >
-                      <Image
-                        source={require('../assets/socialMediaIcons/addSocialNetwork_logo.png')}
-                        style={[
-                          styles.socialMediaIcon,
-                          { width: iconSize, height: iconSize, tintColor: isDark ? colors.textPrimary : undefined },
-                        ]}
-                      />
-                    </TouchableOpacity>
-                  );
-                  const linkTiles = socialLinks
-                    .map((social, index) => {
-                      const icon = social?.platform ? socialMediaIcons[social.platform] : undefined;
-                      if (!icon) return null;
-                      return (
-                        <TouchableOpacity
-                          key={index}
-                          style={[
-                            styles.socialMediaTile,
-                            { backgroundColor: colors.surfaceAlt },
-                          ]}
-                          onPress={() => openSocial(social.platform, social.username || social.handle)}
-                          onLongPress={() => handleSocialLongPress(social)}
-                        >
-                          <Image
-                            source={icon}
-                            style={[styles.socialMediaIcon, { width: iconSize, height: iconSize }]}
-                          />
-                        </TouchableOpacity>
-                      );
-                    })
-                    .filter(Boolean);
-                  // Tuiles de taille fixe + flexWrap sur le conteneur (voir
-                  // styles.socialMediaContainer) : le nombre de tuiles par ligne se
-                  // déduit naturellement de la largeur disponible, comme dans
-                  // UserProfileScreen, au lieu d'un découpage manuel en lignes.
-                  return [addTile, ...linkTiles];
-                })()}
-              </View>
+            <AddSocialModal
+              visible={showSocialModal}
+              onClose={() => setShowSocialModal(false)}
+              colors={colors}
+              isDark={isDark}
+              selectedPlatform={selectedSocialPlatform}
+              onSelectPlatform={(platform) => {
+                setSelectedSocialPlatform(platform);
+                const existing = socialLinks.find((s) => s.platform === platform);
+                setNewValue(existing?.username || '');
+              }}
+              value={newValue}
+              onChangeValue={setNewValue}
+              onSave={handleAddSocial}
+            />
 
-              {/* Boutons de partage : déplacés tout en bas de l'écran, sous les réseaux sociaux */}
-              <View
-                style={[
-                  styles.shareIconsRow,
-                  { backgroundColor: isDark ? 'rgba(0, 194, 203, 0.1)' : 'rgba(0, 194, 203, 0.05)' },
-                ]}
-              >
-                <TouchableOpacity
-                  style={styles.shareIconItem}
-                  onPress={handleShareProfile}
-                  accessibilityLabel="Partager mon profil"
-                >
-                  <View style={styles.shareIconBtn}>
-                    <Ionicons name="share-social-outline" size={20} color="#fff" />
-                  </View>
-                  <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Partager</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.shareIconItem}
-                  onPress={() => setQrVisible(true)}
-                  accessibilityLabel="Afficher mon QR code"
-                >
-                  <View style={styles.shareIconBtn}>
-                    <Ionicons name="qr-code-outline" size={20} color="#fff" />
-                  </View>
-                  <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>QR code</Text>
-                </TouchableOpacity>
-                {/* Bouton statistiques */}
-                <TouchableOpacity
-                  style={styles.shareIconItem}
-                  onPress={handleOpenStats}
-                  accessibilityLabel="Voir mes statistiques"
-                >
-                  <View style={styles.shareIconBtn}>
-                    <Ionicons name="stats-chart-outline" size={20} color="#fff" />
-                  </View>
-                  <Text style={[styles.shareIconLabel, { color: colors.textSecondary }]}>Stats</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Ancienne section Partage supprimée conformément aux specs (pas de titre, icônes seulement) */}
-
-            <Modal visible={modalVisible} transparent={true} animationType="fade">
-              <View
-                style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}
-              >
-                <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-                <Pressable style={StyleSheet.absoluteFill} onPress={() => setModalVisible(false)} />
-                <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-                  <Text style={[styles.modalTitle, textPrimaryStyle]}>
-                    Modifier{' '}
-                    {editType === 'username' ? "le Nom d'utilisateur" : editType === 'bio' ? 'la Bio' : editType}
-                  </Text>
-                  <TextInput
-                    value={newValue}
-                    onChangeText={setNewValue}
-                    placeholder={editType === 'username' ? "Nom d'utilisateur (ex: Arnaud)" : 'Votre texte'}
-                    placeholderTextColor={isDark ? '#999' : '#666'}
-                    style={[
-                      styles.modalInput,
-                      {
-                        borderColor: colors.border,
-                        color: colors.textPrimary,
-                        backgroundColor: isDark ? '#0f1115' : '#ffffff',
-                      },
-                      editType === 'bio'
-                        ? { height: Math.max(height * 0.18, 120), textAlignVertical: 'top', paddingTop: 10 }
-                        : null,
-                    ]}
-                    multiline={editType === 'bio'}
-                    numberOfLines={editType === 'bio' ? 6 : 1}
-                    blurOnSubmit={editType !== 'bio'}
-                    returnKeyType={editType === 'bio' ? 'default' : 'done'}
-                  />
-                  {editType === 'username' ? (
-                    <Text style={styles.modalHint}>Format requis: ^[A-Z][a-z]+$ (exemple: Arnaud)</Text>
-                  ) : null}
-                  <TouchableOpacity onPress={handleSave} style={styles.modalButton}>
-                    <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                      Enregistrer
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalButton}>
-                    <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                      Annuler
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-
-            <Modal visible={showSocialModal} transparent={true} animationType="fade">
-              <View
-                style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}
-              >
-                <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-                <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowSocialModal(false)} />
-                <KeyboardAvoidingView
-                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                  style={{ width: '100%' }}
-                  keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-                >
-                  <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-                    <TouchableOpacity
-                      style={styles.modalBackButton}
-                      onPress={() => setShowSocialModal(false)}
-                      hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-                    >
-                      <Image source={require('../assets/appIcons/backArrow.png')} style={styles.modalBackButtonImage} />
-                    </TouchableOpacity>
-                    <Text style={[styles.modalTitle, textPrimaryStyle]}>Ajouter un réseau</Text>
-                    <ScrollView
-                      ref={addSocialScrollRef}
-                      keyboardShouldPersistTaps="handled"
-                      contentContainerStyle={{ paddingBottom: Math.max(24, height * 0.05) }}
-                    >
-                      <View style={styles.iconContainer}>
-                        {Object.keys(socialMediaIcons).map((platform) => (
-                          <TouchableOpacity
-                            key={platform}
-                            onPress={() => {
-                              setSelectedSocialPlatform(platform);
-                              setNewValue('');
-                              // Focus champ et scroll pour le garder visible au-dessus du clavier
-                              setTimeout(() => {
-                                addSocialInputRef.current?.focus();
-                                addSocialScrollRef.current?.scrollToEnd({ animated: true });
-                              }, 50);
-                            }}
-                            style={[
-                              styles.modalSocialMediaTile,
-                              selectedSocialPlatform === platform && styles.selectedTile,
-                              selectedSocialPlatform === platform && { backgroundColor: colors.border + '40' },
-                            ]}
-                          >
-                            <Image
-                              source={socialMediaIcons[platform]}
-                              style={[
-                                styles.modalSocialMediaIcon,
-                                selectedSocialPlatform !== platform && { opacity: 0.6 },
-                              ]}
-                            />
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                      <View
-                        style={[
-                          styles.inputWrapper,
-                          {
-                            borderColor: selectedSocialPlatform ? '#00c2cb' : colors.border,
-                            backgroundColor: isDark ? '#0f1115' : '#ffffff',
-                          },
-                        ]}
-                      >
-                        {selectedSocialPlatform ? (
-                          <Image source={socialMediaIcons[selectedSocialPlatform]} style={styles.inputPrefixIcon} />
-                        ) : null}
-                        <TextInput
-                          ref={addSocialInputRef}
-                          value={newValue}
-                          onChangeText={setNewValue}
-                          placeholder={
-                            selectedSocialPlatform
-                              ? `@username ou ID ${selectedSocialPlatform}`
-                              : 'Sélectionnez un réseau'
-                          }
-                          placeholderTextColor={isDark ? '#666' : '#999'}
-                          style={[styles.wrappedInput, { color: colors.textPrimary }]}
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                          returnKeyType="done"
-                          onFocus={() => {
-                            setTimeout(() => addSocialScrollRef.current?.scrollToEnd({ animated: true }), 50);
-                          }}
-                        />
-                      </View>
-                      {selectedSocialPlatform === 'Snapchat' && (
-                        <Text style={styles.modalHint}>
-                          Note: Snapchat n'autorise pas les liens directs, entrez juste votre nom d'utilisateur.
-                        </Text>
-                      )}
-                    </ScrollView>
-                    <View style={styles.actionRow}>
-                      <TouchableOpacity
-                        onPress={handleAddSocial}
-                        style={[
-                          styles.iconRoundButton,
-                          styles.iconEdit,
-                          (!selectedSocialPlatform || !newValue) && { opacity: 0.5 },
-                        ]}
-                        disabled={!selectedSocialPlatform || !newValue}
-                        accessibilityLabel="Enregistrer"
-                      >
-                        <Text style={styles.iconEmoji}>💾</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </KeyboardAvoidingView>
-              </View>
-            </Modal>
-
-            <Modal visible={socialModalVisible} transparent={true} animationType="fade">
-              <View
-                style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}
-              >
-                <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-                <Pressable style={StyleSheet.absoluteFill} onPress={() => setSocialModalVisible(false)} />
-                <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-                  <TouchableOpacity
-                    style={styles.modalBackButton}
-                    onPress={() => setSocialModalVisible(false)}
-                    hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-                  >
-                    <Image source={require('../assets/appIcons/backArrow.png')} style={styles.modalBackButtonImage} />
-                  </TouchableOpacity>
-                  <Text style={styles.modalTitle}>Modifier {selectedSocialPlatform}</Text>
-                  <View
-                    style={[
-                      styles.inputWrapper,
-                      { borderColor: '#00c2cb', backgroundColor: isDark ? '#0f1115' : '#ffffff' },
-                    ]}
-                  >
-                    {selectedSocialPlatform && socialMediaIcons[selectedSocialPlatform] ? (
-                      <Image source={socialMediaIcons[selectedSocialPlatform]} style={styles.inputPrefixIcon} />
-                    ) : null}
-                    <TextInput
-                      value={newValue}
-                      onChangeText={setNewValue}
-                      placeholder="Nom d'utilisateur"
-                      placeholderTextColor={isDark ? '#666' : '#999'}
-                      style={[styles.wrappedInput, { color: colors.textPrimary }]}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </View>
-                  <View style={styles.actionRow}>
-                    <TouchableOpacity
-                      onPress={handleSocialDelete}
-                      style={[styles.iconRoundButton, styles.iconDelete]}
-                      accessibilityLabel="Supprimer"
-                    >
-                      <Text
-                        style={[styles.iconEmoji, { color: isDark ? colors.background : '#fff', textAlign: 'center' }]}
-                      >
-                        ✖
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={handleSocialEdit}
-                      style={[styles.iconRoundButton, styles.iconEdit]}
-                      accessibilityLabel="Enregistrer"
-                    >
-                      <Text style={styles.iconEmoji}>💾</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
-
+            <EditSocialModal
+              visible={socialModalVisible}
+              onClose={() => setSocialModalVisible(false)}
+              colors={colors}
+              isDark={isDark}
+              platform={selectedSocialPlatform}
+              value={newValue}
+              onChangeValue={setNewValue}
+              onSave={handleSocialEdit}
+              onDelete={handleSocialDelete}
+            />
           </ScrollView>
 
-          {/* Modal du sélecteur de statut */}
-          <Modal
+          <StatusPickerModal
             visible={statusPickerVisible}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setStatusPickerVisible(false)}
-          >
-            <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
-              <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-              <Pressable style={StyleSheet.absoluteFill} onPress={() => setStatusPickerVisible(false)} />
-              <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-                <Text style={[styles.modalTitle, textPrimaryStyle]}>Ton statut</Text>
-                {[
-                  { key: 'green', label: 'Profil public', color: '#4CAF50' },
-                  { key: 'orange', label: 'Profil privé', color: '#FF9800' },
-                  { key: 'red', label: 'Incognito', color: '#F44336' },
-                ].map((opt) => (
-                  <TouchableOpacity
-                    key={opt.key}
-                    style={[
-                      styles.statusOptionRow,
-                      { borderColor: colors.border },
-                      user.status === opt.key && { backgroundColor: colors.accentSoft },
-                    ]}
-                    onPress={() => {
-                      setStatusPickerVisible(false);
-                      handleUpdateStatus(opt.key);
-                    }}
-                  >
-                    <View style={[styles.statusDot, { backgroundColor: opt.color }]} />
-                    <Text style={[styles.statusOptionLabel, textPrimaryStyle]}>{opt.label}</Text>
-                    {user.status === opt.key ? (
-                      <Ionicons name="checkmark" size={18} color="#00c2cb" />
-                    ) : null}
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity onPress={() => setStatusPickerVisible(false)} style={styles.modalButton}>
-                  <Text style={[styles.modalButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                    Fermer
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+            onClose={() => setStatusPickerVisible(false)}
+            colors={colors}
+            isDark={isDark}
+            currentStatus={user?.status}
+            onSelect={(status) => {
+              setStatusPickerVisible(false);
+              handleUpdateStatus(status);
+            }}
+          />
 
           <SuperlikeHistoryModal
             visible={superlikeHistoryVisible}
@@ -1560,40 +1019,18 @@ const MyAccountScreen = () => {
             userId={myUserId}
           />
 
-          {/* QR Code Modal */}
-          <Modal visible={qrVisible} animationType="slide" transparent onRequestClose={() => setQrVisible(false)}>
-            <View style={[styles.qrBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.5)' }]}>
-              <View style={[styles.qrCard, { backgroundColor: colors.surface }]}>
-                <Text style={styles.modalTitle}>Scanne pour voir mon profil</Text>
-                {qrImageUri ? (
-                  <Image
-                    source={{ uri: qrImageUri }}
-                    style={{ width: QR_SIZE, height: QR_SIZE }}
-                    resizeMode="contain"
-                    onError={() => {
-                      if (qrImageUri !== qrUrl) {
-                        setQrImageUri(qrUrl);
-                      }
-                    }}
-                  />
-                ) : null}
-                <Text style={[styles.qrHint, { color: colors.textSecondary }]}>
-                  Si l'app n'est pas installée, tu seras redirigé(e) vers le store (
-                  {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}).
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setQrVisible(false)}
-                  style={[
-                    styles.modalButton,
-                    { marginTop: 12, alignSelf: 'center', justifyContent: 'center', alignItems: 'center' },
-                  ]}
-                  hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-                >
-                  <Text style={[styles.modalButtonText, { textAlign: 'center' }]}>✖</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
+          <QrModal
+            visible={qrVisible}
+            onClose={() => setQrVisible(false)}
+            colors={colors}
+            isDark={isDark}
+            qrImageUri={qrImageUri}
+            qrUrl={qrUrl}
+            qrSize={QR_SIZE}
+            onImageError={() => {
+              if (qrImageUri !== qrUrl) setQrImageUri(qrUrl);
+            }}
+          />
 
           <Toast message={toastMessage} visible={toastVisible} onHide={() => setToastVisible(false)} />
         </SafeAreaView>
@@ -1618,617 +1055,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: width * 0.08, // Responsive font size based on screen width
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: height * 0.03, // Responsive margin
-    color: '#00c2cb',
-  },
-  userInfoContainer: {
-    marginBottom: height * 0.04,
-  },
-  usernameTitleContainer: {
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  usernameTextContainer: {
-    alignItems: 'flex-start',
-    width: '100%',
-  },
-  bioContainer: {
-    width: '100%',
-    marginTop: height * 0.025,
-    padding: 16,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  bioTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    width: '100%',
-    marginBottom: 8,
-  },
-  bioTextContainer: {
-    alignItems: 'center',
-    width: '100%',
-  },
-  statusPickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginVertical: height * 0.02,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 8,
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  statusPickerLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statusOptionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 10,
-  },
-  statusOptionLabel: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  referralBanner: {
-    width: '100%',
-    marginTop: height * 0.015,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  referralBannerGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    height: 58,
-    paddingHorizontal: 16,
-  },
-  referralBannerText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 15,
-  },
-  consumablesCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 12,
-    padding: 14,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  consumablesStat: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  consumablesStatLabel: {
-    fontSize: 11,
-    opacity: 0.7,
-  },
-  consumablesStatValue: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  consumablesDivider: {
-    width: StyleSheet.hairlineWidth,
-    alignSelf: 'stretch',
-    marginHorizontal: 8,
-  },
-  consumablesBuyButton: {
-    backgroundColor: '#00c2cb',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-  },
-  consumablesBuyButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  warningCard: {
-    width: '100%',
-    borderRadius: 10,
-    borderWidth: 1,
-    padding: 12,
-    marginTop: height * 0.02,
-    alignItems: 'center',
-  },
-  warningTitle: {
-    fontSize: width * 0.05,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  warningText: {
-    fontSize: width * 0.042,
-    textAlign: 'center',
-  },
-  warningList: {
-    marginTop: 6,
-    width: '100%',
-  },
-  warningMeta: {
-    marginTop: 6,
-    fontSize: width * 0.038,
-    textAlign: 'center',
-  },
-  profileHeader: {
-    flexDirection: width > 600 ? 'row' : 'column',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: height * 0.03,
-  },
-  imgUsernameSplitBox: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '88%',
-    alignSelf: 'center',
-    paddingVertical: height * 0.02,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-
-  userProfilePictureContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingLeft: width > 600 ? width * 0.05 : width * 0.03,
-    marginBottom: width > 600 ? 0 : height * 0.02,
-    marginRight: width > 600 ? 20 : 15,
-  },
-
-  usernameContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: height * 0.01,
-  },
-  usernameUnderPhoto: {
-    marginTop: 8,
-    fontSize: Math.min(width * 0.075, 30),
-    color: '#00c2cb',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  usernameSubText: {
-    marginTop: 2,
-    color: '#8a8a8a',
-    fontWeight: '400',
-    textAlign: 'center',
-  },
-  profileImage: {
-    width: Math.min(width * 0.4, 160),
-    height: Math.min(width * 0.4, 160),
-    borderRadius: Math.min(width * 0.2, 80),
-  },
-  placeholderImage: {
-    width: Math.min(width * 0.4, 160),
-    height: Math.min(width * 0.4, 160),
-    backgroundColor: '#00c2cb',
-    borderRadius: Math.min(width * 0.2, 80),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderIcon: {
-    width: Math.min(width * 0.18, 72),
-    height: Math.min(width * 0.18, 72),
-    tintColor: '#fff',
-  },
-  userInfoText: {
-    marginLeft: width > 600 ? width * 0.05 : 0,
-    alignItems: width > 600 ? 'flex-start' : 'center',
-  },
-  label: {
-    fontSize: Math.min(width * 0.045, 18),
-    color: '#00c2cb',
-    marginBottom: 5,
-  },
-  value: {
-    fontSize: Math.min(width * 0.04, 16),
-  },
-  editButton: {
-    backgroundColor: '#00c2cb',
-    paddingVertical: height * 0.01,
-    paddingHorizontal: width * 0.05,
-    borderRadius: 10,
-    marginTop: height * 0.01,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontSize: Math.min(width * 0.04, 16),
-  },
-  socialMediaContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 14,
-  },
-  socialMediaTile: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: height * 0.02,
-    marginHorizontal: width * 0.01,
-    padding: Math.max(5, width * 0.01),
-    borderWidth: 0,
-    borderColor: 'transparent',
-    borderRadius: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
-    elevation: 2,
-  },
-  socialMediaIcon: {
-    width: Math.min(width * 0.19, 68),
-    height: Math.min(width * 0.19, 68),
-    resizeMode: 'contain',
-  },
-  modalSocialMediaIcon: {
-    width: Math.min(width * 0.12, 44),
-    height: Math.min(width * 0.12, 44),
-    resizeMode: 'contain',
-  },
-  socialMediaText: {
-    fontSize: width * 0.04,
-    marginTop: height * 0.01,
-  },
-  modalSocialMediaTile: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: height * 0.015,
-    marginHorizontal: width * 0.02,
-    padding: 8,
-    borderRadius: 12,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: width * 0.05,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 500,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: width * 0.05,
-  },
-  modalTitle: {
-    fontSize: width * 0.06,
-    fontWeight: 'bold',
-    marginTop: 10,
-    marginBottom: height * 0.02,
-    color: '#00c2cb',
-    textAlign: 'center',
-  },
-  modalInput: {
-    width: '100%',
-    height: height * 0.06, // Responsive height
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingLeft: width * 0.03,
-    marginBottom: height * 0.02,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    height: height * 0.06,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    marginBottom: height * 0.02,
-  },
-  inputPrefixIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
-    resizeMode: 'contain',
-  },
-  wrappedInput: {
-    flex: 1,
-    height: '100%',
-    fontSize: 16,
-  },
-  modalButton: {
-    backgroundColor: '#00c2cb',
-    padding: width * 0.03,
-    borderRadius: 10,
-    marginBottom: height * 0.01,
-    width: '80%',
-    alignItems: 'center',
-    alignSelf: 'center',
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontSize: width * 0.05,
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-  },
-  modalHint: {
-    fontSize: 12,
-    color: '#fff',
-    alignSelf: 'flex-start',
-    marginBottom: height * 0.01,
-    opacity: 0.7,
-  },
-  deleteButton: {
-    backgroundColor: '#f44336',
-  },
-  iconContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  selectedTile: {
-    borderWidth: 2,
-    borderColor: '#00c2cb',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    marginTop: height * 0.01,
-    marginBottom: height * 0.005,
-  },
-  iconRoundButton: {
-    width: Math.min(width * 0.16, 64),
-    height: Math.min(width * 0.16, 64),
-    borderRadius: Math.min(width * 0.08, 32),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  iconEdit: {
-    backgroundColor: '#00c2cb',
-  },
-  iconDelete: {
-    backgroundColor: '#f44336',
-  },
-  iconCancel: {
-    backgroundColor: '#9e9e9e',
-  },
-  iconEmoji: {
-    fontSize: Math.min(width * 0.08, 28),
-    color: '#fff',
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-  },
-  modalBackButton: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    zIndex: 1,
-    padding: 8,
-  },
-  modalBackButtonImage: {
-    width: 28,
-    height: 28,
-    tintColor: '#00c2cb',
-  },
-  photoModalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  photoModalSheet: {
-    width: '100%',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 10,
-    paddingHorizontal: width * 0.06,
-  },
-  photoModalHandle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    marginBottom: 14,
-  },
-  photoModalCloseButton: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    zIndex: 1,
-    padding: 6,
-  },
-  photoModalTitle: {
-    fontSize: width * 0.055,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: height * 0.02,
-  },
-  photoModalPreviewWrap: {
-    alignItems: 'center',
-    marginBottom: height * 0.025,
-  },
-  photoModalPreview: {
-    width: Math.min(width * 0.3, 112),
-    height: Math.min(width * 0.3, 112),
-    borderRadius: Math.min(width * 0.15, 56),
-    borderWidth: 2,
-  },
-  photoModalActions: {
-    marginBottom: 4,
-  },
-  photoModalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  photoModalRowIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  photoModalRowLabel: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  // --- Icônes de partage (entre bio et réseaux sociaux) ---
-  shareIconsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-evenly',
-    alignItems: 'flex-start',
-    rowGap: 12,
-    marginTop: height * 0.03,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 20,
-  },
-  shareIconItem: {
-    alignItems: 'center',
-    width: Math.min(width * 0.19, 72),
-  },
-  shareIconBtn: {
-    width: Math.min(width * 0.11, 44),
-    height: Math.min(width * 0.11, 44),
-    borderRadius: Math.min(width * 0.055, 22),
-    backgroundColor: '#00c2cb',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  shareIconLabel: {
-    fontSize: 11,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  countBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#FFB800',
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 3,
-  },
-  countBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  // --- Partage styles ---
-  shareTitle: {
-    fontSize: width * 0.06,
-    fontWeight: '600',
-    color: '#00c2cb',
-    marginBottom: 8,
-  },
-  shareRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  shareButton: {
-    backgroundColor: '#00c2cb',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexGrow: 1,
-    minWidth: '48%',
-    marginVertical: 6,
-  },
-  shareButtonText: {
-    color: '#fff',
-    fontSize: Math.min(width * 0.045, 16),
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  qrBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  qrCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    alignItems: 'center',
-    padding: 16,
-    width: '100%',
-    maxWidth: 420,
-  },
-  qrHint: {
-    marginTop: 10,
-    color: '#fff',
-    textAlign: 'center',
-    opacity: 0.8,
-  },
-  dataButton: {
-    backgroundColor: '#00c2cb',
-    height: Math.min(width * 0.14, 56),
-    borderRadius: Math.min(width * 0.07, 28),
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: Math.max(height * 0.02, 16),
-    left: Math.max(width * 0.05, 16),
-    paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  dataButtonText: {
-    color: '#fff',
-    fontWeight: '700',
   },
   backButton: {
     position: 'absolute',

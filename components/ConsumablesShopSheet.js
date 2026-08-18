@@ -16,7 +16,7 @@ import { useTheme } from './contexts/ThemeContext';
 import PremiumService from '../services/PremiumService';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import IAPStore from '../services/IAPStore';
-import { DEBUG_CONFIG } from '../services/DebugConfig';
+import { DEBUG_CONFIG, IS_EXPO_GO } from '../services/DebugConfig';
 import { publish } from './EventBus';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import CloseButton from './CloseButton';
@@ -158,8 +158,12 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
       let result;
       if (rcPkg) {
         result = await IAPStore.purchaseConsumable(rcPkg, userId);
-      } else if (DEBUG_CONFIG.IAP_DISABLED) {
-        // Mode debug : simuler l'achat directement
+      } else if (DEBUG_CONFIG.IAP_DISABLED || IS_EXPO_GO) {
+        // Mode debug ou Expo Go : simuler l'achat directement. En Expo Go, le
+        // Test Store RevenueCat ne génère jamais de package pour un produit
+        // consommable custom (contrairement aux abonnements, matchés par
+        // packageType) — rcPkg sera donc toujours null ici, sans rapport avec
+        // un vrai souci de catalogue.
         if (pack.type === 'boost') await PremiumService.addBoosts(pack.qty);
         else await PremiumService.addSuperlikes(pack.qty);
         result = { success: true, isMock: true };

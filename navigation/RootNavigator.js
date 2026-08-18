@@ -4,6 +4,7 @@ import LoginScreen from '../views/LoginScreen';
 import SignupScreen from '../views/SignupScreen';
 import ForgotPasswordScreen from '../views/ForgotPasswordScreen';
 import ConsentScreen from '../views/ConsentScreen';
+import AgeVerificationScreen from '../views/AgeVerificationScreen';
 import MainSwiper from './MainSwiper';
 import LocationScreen from '../views/LocationScreen';
 import UserProfileScreen from '../views/UserProfileScreen';
@@ -20,10 +21,10 @@ import OnboardingScreen from '../views/OnboardingScreen';
 
 const Stack = createNativeStackNavigator();
 
-export default function RootNavigator() {
+export default function RootNavigator({ initialRouteName = 'Login' }) {
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
         gestureEnabled: true,
@@ -36,6 +37,7 @@ export default function RootNavigator() {
       <Stack.Screen name="Signup" component={SignupScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="Consent" component={ConsentScreen} />
+      <Stack.Screen name="AgeVerification" component={AgeVerificationScreen} />
 
       {/* Onboarding */}
       <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ animation: 'fade' }} />
@@ -45,8 +47,8 @@ export default function RootNavigator() {
       <Stack.Screen name="Location" component={LocationScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="Debug" component={DebugScreen} />
-      <Stack.Screen name="Moderator" component={ModeratorScreen} />
+      <Stack.Screen name="Debug" component={DebugScreen} options={{ gestureEnabled: false }} />
+      <Stack.Screen name="Moderator" component={ModeratorScreen} options={{ gestureEnabled: false }} />
       <Stack.Screen name="Statistics" component={StatisticsScreen} />
       <Stack.Screen name="Warnings" component={WarningsScreen} />
       <Stack.Screen name="Referral" component={ReferralScreen} />

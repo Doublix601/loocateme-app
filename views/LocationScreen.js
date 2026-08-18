@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import ImageView from 'react-native-image-viewing';
+import EventVideoViewerModal from '../components/EventVideoViewerModal';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -26,7 +27,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useVibe } from '../components/contexts/VibeContext';
 import { UserContext } from '../components/contexts/UserContext';
-import { formatLocationType } from '../components/LocationUtils';
+import { formatLocationType, getLocationTypeEmoji } from '../components/LocationUtils';
 import { useFeatureGate } from '../hooks/useFeatureGate';
 import { useBoost } from '../hooks/useBoost';
 import { useLocationData } from '../hooks/useLocationData';
@@ -37,6 +38,8 @@ import StoryRingAvatar from '../components/StoryRingAvatar';
 import StoryUnseenBubble from '../components/StoryUnseenBubble';
 import StoryViewerModal from '../components/StoryViewerModal';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
+import DaySkyBackground from '../components/DaySkyBackground';
+import NightSkyBackground from '../components/NightSkyBackground';
 import ProfileCard from '../components/ProfileCard';
 import UltraBoostProgressBar from '../components/UltraBoostProgressBar';
 import CheckinVerifyModal from '../components/CheckinVerifyModal';
@@ -66,6 +69,49 @@ const pdfViewerUri = (url) =>
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = Math.round(SCREEN_HEIGHT * 0.34);
+
+// Couleur hero par type de lieu (fond + fondu bas), pour les lieux sans photo
+// de couverture (gratuits) — une couleur choisie pour évoquer le type plutôt
+// qu'un dégradé générique. Clé = emoji renvoyé par getLocationTypeEmoji, qui
+// normalise déjà les libellés backend (FR + emoji) et les clés OSM brutes.
+const HERO_TYPE_COLORS = {
+  '🍺': '#7B4B2A', // Bar — marron boisé (comptoir en bois)
+  '🪩': '#6C3FA0', // Boîte de nuit — violet
+  '🍴': '#D9552B', // Restaurant — rouge-orangé chaleureux
+  '☕': '#B87333', // Café — caramel torréfié
+  '🎬': '#C62828', // Cinéma — rouge
+  '🎯': '#3D7DFF', // Loisir — bleu
+  '🏋️': '#E8871E', // Salle de sport — orange
+  '🌳': '#3A8F4A', // Parc — vert
+  '🏖️': '#2FBFC4', // Plage — turquoise (mer)
+  '🎢': '#E23DA0', // Parc d'attractions — magenta fête foraine
+  '📚': '#34406B', // Bibliothèque — bleu nuit studieux
+  '🏟️': '#1D9E75', // Centre sportif — vert stade
+  '🎓': '#2C4A7C', // Éducation — bleu académique
+  '🧑‍💻': '#4A5C7A', // Coworking — gris-bleu pro
+  '🍦': '#F2789E', // Glacier — rose bonbon
+  '🛒': '#C98A2B', // Marché — ocre/moutarde
+  '🏛️': '#7A2E3A', // Musée — bordeaux
+  '🥞': '#E0A835', // Brunch — miel doré
+  '🌆': '#C15FA0', // Rooftop — rose/violet crépuscule
+  '🎤': '#FF3D8B', // Karaoké — magenta néon
+  '🎮': '#8A3FFF', // Club de jeux — violet arcade
+  '🤖': '#6B6B6B', // Test — gris neutre
+  '📍': '#5B6472', // Lieu / type inconnu — gris-bleu neutre
+};
+
+function getHeroTypeColor(type) {
+  const emoji = getLocationTypeEmoji(type);
+  return HERO_TYPE_COLORS[emoji] || HERO_TYPE_COLORS['📍'];
+}
+
+// Couleur du ciel à la hauteur où le hero se termine (~34% de l'écran),
+// approximée depuis les dégradés de Day/NightSkyBackground (cf. render
+// principal, qui affiche ces mêmes composants en fond de page) — le hero
+// dégrade vers cette couleur en bas plutôt que vers la couleur du type
+// jusqu'au bout, pour se fondre sans coupure nette dans le ciel visible
+// juste en dessous.
+const HERO_SKY_BOTTOM = { moon: '#10182B', sun: '#7DBBE8' };
 
 /**
  * LocationScreen — Refonte radicale "Full-Height".
@@ -352,6 +398,7 @@ const LocationScreen = () => {
   const coverUri =
     location?.bannerUrl || location?.coverUrl || location?.imageUrl || location?.photoUrl || location?.image || null;
 
+
   const activeStories = useMemo(() => {
     const now = Date.now();
     return (location?.stories || []).filter((s) => !s.expiresAt || new Date(s.expiresAt).getTime() > now);
@@ -420,7 +467,6 @@ const LocationScreen = () => {
   const renderHero = () => {
     const HeroContent = (
       <>
-        <LinearGradient colors={palette.heroGradient} style={StyleSheet.absoluteFill} pointerEvents="none" />
         {/* Back button flottant */}
         <SafeAreaView edges={['top']} style={styles.heroSafeTop}>
           <TouchableOpacity
@@ -450,21 +496,23 @@ const LocationScreen = () => {
         </View>
       );
     }
-    // Fallback : gradient signature + icône
+
+    // Fallback : dégradé teinté par type de lieu en haut, qui rejoint la
+    // couleur du ciel (page en fond) en bas — pas de coupure nette à la
+    // jonction hero/page — avec un badge emoji du type bien visible au
+    // centre (contrairement à un simple watermark low-opacity).
     return (
       <View style={styles.hero}>
         <LinearGradient
-          colors={palette.heroFallback}
+          colors={[getHeroTypeColor(location.type), isMoon ? HERO_SKY_BOTTOM.moon : HERO_SKY_BOTTOM.sun]}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.heroIconWrap}>
-          <Ionicons
-            name={isMoon ? 'moon' : 'sunny'}
-            size={96}
-            color={isMoon ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.45)'}
-          />
+          <View style={[styles.heroTypeBadge, { backgroundColor: 'rgba(255,255,255,0.18)', borderColor: 'rgba(255,255,255,0.4)' }]}>
+            <Text style={{ fontSize: 52 }}>{getLocationTypeEmoji(location.type)}</Text>
+          </View>
         </View>
         {HeroContent}
       </View>
@@ -554,6 +602,17 @@ const LocationScreen = () => {
           <Ionicons name="people" size={14} color={palette.textMuted} />
           <Text style={[typography.body, { marginLeft: 4 }]}>{users.length} sur place</Text>
         </View>
+        {users.length > 0 && (
+          <View style={[styles.presenceStack, { marginLeft: 8 }]}>
+            {users.slice(0, 3).map((u, i) => (
+              <ImageWithPlaceholder
+                key={u._id || i}
+                uri={u.profileImageUrl}
+                style={[styles.presenceBubble, { borderColor: palette.bgElevated, marginLeft: i === 0 ? 0 : -8 }]}
+              />
+            ))}
+          </View>
+        )}
         {monthlyUsers > 0 && (
           <>
             <View style={[styles.metaDot, { backgroundColor: palette.border }]} />
@@ -563,11 +622,6 @@ const LocationScreen = () => {
             </View>
           </>
         )}
-        <View style={[styles.metaDot, { backgroundColor: palette.border }]} />
-        <View style={styles.metaItem}>
-          <Ionicons name="pulse" size={14} color={palette.textMuted} />
-          <Text style={[typography.body, { marginLeft: 4 }]}>{popularity.label}</Text>
-        </View>
       </View>
 
       {showManualCheckinButton && (
@@ -853,7 +907,7 @@ const LocationScreen = () => {
   };
 
   const renderCrossedPathsSection = () => (
-    <View style={{ marginTop: spacing.xl, paddingHorizontal: spacing.lg }}>
+    <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
       <Text style={[typography.h2, { marginBottom: spacing.md }]}>Croisé récemment</Text>
 
       {crossedLoading ? (
@@ -971,7 +1025,13 @@ const LocationScreen = () => {
 
   // ─── Render ────────────────────────────────────────────────────
   return (
-    <View style={{ flex: 1, backgroundColor: palette.bg }}>
+    <View style={{ flex: 1 }}>
+      {/* Fond cohérent avec LocationListScreen (même palette que l'interstitiel) */}
+      {isMoon ? (
+        <NightSkyBackground style={StyleSheet.absoluteFill} />
+      ) : (
+        <DaySkyBackground style={StyleSheet.absoluteFill} />
+      )}
       <ScrollView
         ref={scrollViewRef}
         style={{ flex: 1 }}
@@ -1021,10 +1081,28 @@ const EventCard = ({ event, isFirst, onLayout }) => {
   const theme = useVibeTheme();
   const { palette, radius, spacing } = theme;
   const isVideo = event.mediaType === 'video';
+  // Aperçu muet en boucle par défaut ; le son est activé le temps du
+  // visionnage plein écran (voir EventVideoViewerModal) puis redésactivé
+  // à la fermeture, sur ce même player (pas de second player instancié).
   const player = useVideoPlayer(isVideo ? event.mediaUrl : null, (p) => {
-    p.loop = false;
+    p.loop = true;
+    p.muted = true;
   });
   const [isImageViewerVisible, setImageViewerVisible] = useState(false);
+  const [isVideoViewerVisible, setVideoViewerVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isVideo) return undefined;
+    player.play();
+    return () => {
+      try {
+        player.pause();
+      } catch {
+        // player déjà libéré (démontage) : rien à faire.
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVideo, player]);
 
   const eventDateObj = event.eventDate ? new Date(event.eventDate) : null;
   const eventDateLabel = eventDateObj
@@ -1084,7 +1162,16 @@ const EventCard = ({ event, isFirst, onLayout }) => {
           }}
         >
           {isVideo ? (
-            <VideoView player={player} style={{ width: '100%', height: '100%' }} contentFit="cover" nativeControls />
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => {
+                player.muted = false;
+                setVideoViewerVisible(true);
+              }}
+              style={{ width: '100%', height: '100%' }}
+            >
+              <VideoView player={player} style={{ width: '100%', height: '100%' }} contentFit="cover" nativeControls={false} />
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity
               activeOpacity={0.9}
@@ -1102,6 +1189,16 @@ const EventCard = ({ event, isFirst, onLayout }) => {
           imageIndex={0}
           visible={isImageViewerVisible}
           onRequestClose={() => setImageViewerVisible(false)}
+        />
+      )}
+      {isVideo && event.mediaUrl && (
+        <EventVideoViewerModal
+          visible={isVideoViewerVisible}
+          player={player}
+          onClose={() => {
+            player.muted = true;
+            setVideoViewerVisible(false);
+          }}
         />
       )}
     </View>
@@ -1129,6 +1226,14 @@ const styles = StyleSheet.create({
   },
   heroIconWrap: {
     ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroTypeBadge: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1169,9 +1274,11 @@ const styles = StyleSheet.create({
   },
   popularityWrap: { flexDirection: 'row', alignItems: 'center' },
 
-  metaRow: { flexDirection: 'row', alignItems: 'center' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
   metaItem: { flexDirection: 'row', alignItems: 'center' },
   metaDot: { width: 4, height: 4, borderRadius: 2, marginHorizontal: 10 },
+  presenceStack: { flexDirection: 'row', alignItems: 'center' },
+  presenceBubble: { width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, overflow: 'hidden' },
 
   boostCard: {
     flexDirection: 'row',

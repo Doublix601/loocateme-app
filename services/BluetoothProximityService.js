@@ -28,6 +28,22 @@ const TOKEN_ROTATION_MS = 9 * 60 * 1000; // avant l'expiration serveur (10 min)
 const SCAN_REPORT_INTERVAL_MS = 15 * 1000;
 const RSSI_MIN_THRESHOLD = -90;
 
+// UUID de service fixe utilisé pour l'advertising Android : react-native-ble-advertiser
+// exige un UUID valide comme identifiant d'advertiser (ParcelUuid.fromString côté natif) ;
+// ce n'est qu'un identifiant de "canal", la charge utile réelle (jeton + hash de lieu)
+// voyage dans le manufacturer data, associé au COMPANY_ID via setCompanyId().
+const ANDROID_SERVICE_UUID = 'a1e29a00-c3b1-4cae-8a49-6f4d5e2b7c10';
+
+// iOS (CBPeripheralManager, via react-native-ble-advertiser) n'expose que
+// CBAdvertisementDataServiceUUIDsKey en advertising : le manufacturer data est
+// ignoré par la lib côté natif. On encode donc le jeton directement dans un UUID
+// de service synthétique : 4 octets de préfixe "magique" (pour reconnaître nos
+// propres trames au scan) + les 12 octets du jeton = 16 octets = 1 UUID (128 bits).
+// Le hash de lieu (venue hash) ne tient pas dans les octets restants : sur iOS,
+// un pair n'est donc utilisable que pour le report serveur, pas pour la
+// résolution locale de lieu (resolveVenueLocally), qui reste Android-only.
+const IOS_MAGIC_PREFIX = [0x4c, 0x4d, 0x76, 0x31]; // 'L','M','v','1'
+
 const LIVE_PEER_TTL_MS = 30 * 1000;
 
 let bleManager = null;
@@ -133,6 +149,21 @@ function bytesToBase64(bytes) {
   return result;
 }
 
+function bytesToUuidString(bytes16) {
+  const hex = bytes16.map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+}
+
+function uuidStringToBytes(uuid) {
+  const hex = String(uuid).replace(/-/g, '');
+  if (hex.length !== 32) return null;
+  const bytes = [];
+  for (let i = 0; i < 32; i += 2) {
+    bytes.push(parseInt(hex.slice(i, i + 2), 16));
+  }
+  return bytes;
+}
+
 function tokenToManufacturerBytes(token) {
   // Encode le jeton (base64url, ~16 octets) en tableau d'octets pour la
   // charge utile "manufacturer data" de l'advertising.
@@ -153,8 +184,17 @@ function buildAdvertisedPayload() {
 async function restartAdvertising() {
   try {
     await BleAdvertiser.stopBroadcast().catch(() => {});
-    if (!currentToken) return;
-    await BleAdvertiser.broadcast(COMPANY_ID, buildAdvertisedPayload(), {
+    if (!currentToken || !currentTokenBytes) return;
+    // Requis par la lib native avant tout broadcast (sinon rejet "Invalid company id"
+    // côté Android) ; sans effet côté iOS mais inoffensif à appeler.
+    BleAdvertiser.setCompanyId(COMPANY_ID);
+    // `uid` doit être un UUID valide (natif : ParcelUuid.fromString / CBUUID) — ce n'est
+    // pas le champ qui transporte le jeton. Sur Android le jeton voyage dans le
+    // manufacturer data (buildAdvertisedPayload) ; sur iOS, seul le service UUID est
+    // réellement diffusé, donc le jeton y est encodé directement (cf. IOS_MAGIC_PREFIX).
+    const uid =
+      Platform.OS === 'ios' ? bytesToUuidString([...IOS_MAGIC_PREFIX, ...currentTokenBytes]) : ANDROID_SERVICE_UUID;
+    await BleAdvertiser.broadcast(uid, buildAdvertisedPayload(), {
       advertiseMode: BleAdvertiser.ADVERTISE_MODE_BALANCED,
       txPowerLevel: BleAdvertiser.ADVERTISE_TX_POWER_MEDIUM,
       connectable: false,
@@ -173,9 +213,15 @@ function bytesToToken(bytes) {
 // crypto.randomBytes(12) côté serveur (voir ble.service.js issueBleToken) -> 12 octets bruts une fois décodés.
 const TOKEN_BYTE_LEN = 12;
 
-function handleScanResult(device) {
-  if (!device?.manufacturerData || typeof device.rssi !== 'number') return;
-  if (device.rssi < RSSI_MIN_THRESHOLD) return;
+function recordPeerSighting(rssi, tokenBytes, venueHashBytes) {
+  const token = bytesToToken(tokenBytes);
+  const seenAt = new Date().toISOString();
+  pendingBatch.set(token, { rssi, seenAt });
+  livePeers.set(token, { rssi, tokenBytes, venueHashBytes, seenAt: Date.now() });
+}
+
+// Pairs Android : jeton + hash de lieu portés par le manufacturer data.
+function handleManufacturerDataFrame(device) {
   try {
     // device.manufacturerData (react-native-ble-plx) est déjà du base64.
     const allBytes = base64ToBytes(device.manufacturerData);
@@ -186,14 +232,29 @@ function handleScanResult(device) {
     const tokenBytes = payload.slice(0, TOKEN_BYTE_LEN);
     const hasVenueFlag = payload[TOKEN_BYTE_LEN];
     const venueHashBytes = hasVenueFlag === 1 ? payload.slice(TOKEN_BYTE_LEN + 1, TOKEN_BYTE_LEN + 5) : null;
-    const token = bytesToToken(tokenBytes);
-    const seenAt = new Date().toISOString();
-
-    pendingBatch.set(token, { rssi: device.rssi, seenAt });
-    livePeers.set(token, { rssi: device.rssi, tokenBytes, venueHashBytes, seenAt: Date.now() });
+    recordPeerSighting(device.rssi, tokenBytes, venueHashBytes);
   } catch (_) {
     // Trame illisible ou provenant d'un autre appareil/app : ignorée
   }
+}
+
+// Pairs iOS : seul le service UUID est réellement diffusé côté advertiser (cf.
+// restartAdvertising) ; le jeton y est encodé directement, sans hash de lieu
+// (pas assez de place dans les 16 octets d'un UUID).
+function handleServiceUuidFrames(device) {
+  for (const uuid of device.serviceUUIDs) {
+    const bytes = uuidStringToBytes(uuid);
+    if (!bytes || bytes.length !== IOS_MAGIC_PREFIX.length + TOKEN_BYTE_LEN) continue;
+    if (!bytesEqual(bytes.slice(0, IOS_MAGIC_PREFIX.length), IOS_MAGIC_PREFIX)) continue;
+    const tokenBytes = bytes.slice(IOS_MAGIC_PREFIX.length);
+    recordPeerSighting(device.rssi, tokenBytes, null);
+  }
+}
+
+function handleScanResult(device) {
+  if (typeof device?.rssi !== 'number' || device.rssi < RSSI_MIN_THRESHOLD) return;
+  if (device.manufacturerData) handleManufacturerDataFrame(device);
+  if (device.serviceUUIDs?.length) handleServiceUuidFrames(device);
 }
 
 function pruneLivePeers() {

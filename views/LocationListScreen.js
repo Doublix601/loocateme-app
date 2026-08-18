@@ -7,13 +7,10 @@ import {
   View,
   ActivityIndicator,
   RefreshControl,
-  ScrollView,
-  Dimensions,
   Platform,
   InteractionManager,
   Alert,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
@@ -27,6 +24,7 @@ import {
   seedOsmLocation,
   getUsersAroundMe,
   forceCheckIn,
+  forceCheckOut,
   getMyReferralInfo,
   apiUpdateCheckInMode,
   apiUpdateInvisibleMode,
@@ -34,6 +32,7 @@ import {
 import { LocationService } from '../services/LocationService';
 import Toast from '../components/Toast';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
+import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
 import NearbyLocationPicker from '../components/NearbyLocationPicker';
 import { markCheckinVerified } from '../components/CheckinVerificationScheduler';
 import { subscribe, publish } from '../components/EventBus';
@@ -41,19 +40,26 @@ import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { useBoost } from '../hooks/useBoost';
 import { formatLocationType } from '../components/LocationUtils';
-import { calculateDistance, formatDistance } from '../components/ServerUtils';
+import { calculateDistance } from '../components/ServerUtils';
 import { UserContext } from '../components/contexts/UserContext';
 import { mapBackendUser } from '../utils/mappers';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
-import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
-import AnimatedGradientBorder from '../components/AnimatedGradientBorder';
 import { OverpassService, isTypeAllowedForVibe } from '../services/OverpassService';
 import VibeFAB from '../components/VibeFAB';
+import OsmHelpBubble from '../components/OsmHelpBubble';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LocationMapView from '../components/LocationMapView';
 import ClusterPickerModal from '../components/ClusterPickerModal';
+
+import LocationCard from './LocationList/LocationCard';
+import SponsoredCarousel from './LocationList/SponsoredCarousel';
+import TypeFilterBar, { ALL_KEY } from './LocationList/TypeFilterBar';
+import TrendingSection from './LocationList/TrendingSection';
+import MoreLocationsSection from './LocationList/MoreLocationsSection';
+import { InvisibleModeState, LocationErrorState, EmptyListState, ListFooter } from './LocationList/EmptyStates';
+import LeaveLocationModal from './LocationList/LeaveLocationModal';
 
 // Mémorise le dernier mode consulté (liste/carte) entre les sessions, même
 // pattern que loocateme_theme_mode dans ThemeContext.
@@ -119,7 +125,7 @@ const LocationListScreen = () => {
   const navigation = useNavigation();
   const { colors, isDark } = useTheme();
   const { isMoon, vibe, transitioningTo } = useVibe();
-  const { lockSwiper, unlockSwiper } = useMainSwiper();
+  const { lockSwiper, unlockSwiper, currentPage, insideSwiper } = useMainSwiper();
   // Réf toujours à jour sur la vibe courante, à utiliser dans les callbacks/
   // effets à dépendances figées (ex: l'abonnement 'api:mutation' ci-dessous,
   // monté une seule fois au mount) qui ne peuvent pas dépendre de `vibe` sans
@@ -128,6 +134,32 @@ const LocationListScreen = () => {
   useEffect(() => {
     vibeRef.current = vibe;
   }, [vibe]);
+  // MainSwiper garde ses 3 pages (Search/LocationList/MyAccount) montées en
+  // permanence — cet écran continue donc de tourner (et de refetch sur
+  // chaque heartbeat, cf. l'abonnement 'api:mutation' plus bas) même quand
+  // l'utilisateur regarde un autre onglet. `1` = index de LocationListScreen
+  // dans MainSwiper.js (0 = Search, 2 = MyAccount).
+  const LOCATIONS_PAGE_INDEX = 1;
+  const isLocationsPageActiveRef = useRef(!insideSwiper || currentPage === LOCATIONS_PAGE_INDEX);
+  // Un refresh déclenché par une mutation reçue pendant que cet onglet n'est
+  // pas visible est différé plutôt que perdu : rattrapé dès le retour sur
+  // cette page (cf. effet ci-dessous), pour ne jamais laisser la liste
+  // visiblement périmée au retour de l'utilisateur.
+  const pendingBackgroundRefreshRef = useRef(false);
+  useEffect(() => {
+    const active = !insideSwiper || currentPage === LOCATIONS_PAGE_INDEX;
+    isLocationsPageActiveRef.current = active;
+    if (active && pendingBackgroundRefreshRef.current) {
+      pendingBackgroundRefreshRef.current = false;
+      fetchNearbyLocations({
+        skipUpdateMyLocation: true,
+        silent: true,
+        vibe: vibeRef.current,
+        reuseCoords: userCoordsRef.current,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, insideSwiper]);
   const insets = useSafeAreaInsets();
   const skyFillStyle = {
     position: 'absolute',
@@ -157,6 +189,10 @@ const LocationListScreen = () => {
   // Cela évite l'affichage prématuré du message « Vous avez exploré tous les
   // lieux actifs à proximité » lorsque la DB locale est peu peuplée.
   const [hasMore, setHasMore] = useState(true);
+  // Filtre par type de lieu (barre de chips, cf. TypeFilterBar) : "Tous" par
+  // défaut, un seul type actif à la fois. Ne s'applique JAMAIS à la section
+  // "Mis en avant" (sponsorisés), qui reste toujours affichée intégralement.
+  const [selectedType, setSelectedType] = useState(ALL_KEY);
   const { user: currentUser, updateUser } = useContext(UserContext);
   // Réf toujours à jour sur le lieu checké courant, pour connaître l'ANCIEN
   // lieu au moment où l'abonnement 'api:mutation' ci-dessous (monté une
@@ -284,6 +320,51 @@ const LocationListScreen = () => {
     // secondes alors que rien n'avait réellement changé.
     [checkingInLocationId, showToast, vibe, updateUser, currentUser?.currentPoiId],
   );
+
+  // Appui long sur la carte du lieu où je suis actuellement checké : ouvre
+  // une modale de confirmation avec un bouton "Je ne suis plus ici". La route
+  // backend /users/location/force-checkout existe déjà et fonctionne en
+  // production (le gating "dev only" mentionné historiquement était côté
+  // client uniquement) ; elle refuse simplement le check-out tant qu'un
+  // boost est actif (409 BOOST_ACTIVE), géré ci-dessous.
+  const [leaveLocationItem, setLeaveLocationItem] = useState(null);
+  const [leavingLocation, setLeavingLocation] = useState(false);
+
+  const handleLongPressLocation = useCallback((item) => {
+    if (item?._id !== currentUser?.currentPoiId) return;
+    setLeaveLocationItem(item);
+  }, [currentUser?.currentPoiId]);
+
+  const handleConfirmLeaveLocation = useCallback(async () => {
+    if (leavingLocation) return;
+    setLeavingLocation(true);
+    try {
+      const res = await forceCheckOut();
+      if (res?.user) updateUser(mapBackendUser(res.user));
+      const leftId = leaveLocationItem?._id ? String(leaveLocationItem._id) : null;
+      if (leftId) {
+        setLocations((prev) =>
+          prev.map((l) =>
+            String(l._id) === leftId
+              ? { ...l, userCount: Math.max(0, (l.userCount || 1) - 1), activeUsers: (l.activeUsers || []).filter((u) => String(u._id) !== String(currentUser?._id)) }
+              : l,
+          ),
+        );
+      }
+      setLeaveLocationItem(null);
+      showToast('Tu as quitté ce lieu.');
+    } catch (e) {
+      console.warn('[LocationListScreen] forceCheckOut failed', e?.message || e);
+      if (e?.code === 'BOOST_ACTIVE' || e?.status === 409) {
+        Alert.alert('Boost actif', 'Impossible de quitter ce lieu tant que ton boost est en cours.');
+      } else {
+        Alert.alert('Erreur', e?.message || 'Impossible de te faire quitter ce lieu pour le moment.');
+      }
+    } finally {
+      setLeavingLocation(false);
+    }
+  }, [leavingLocation, leaveLocationItem, updateUser, currentUser?._id, showToast]);
+
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const { isBoosted } = useBoost();
   const flatListRef = useRef(null);
@@ -720,8 +801,22 @@ const LocationListScreen = () => {
     const sorted = [...locationsWithDistance].sort((a, b) => {
       if (a.isSponsored && !b.isSponsored) return -1;
       if (b.isSponsored && !a.isSponsored) return 1;
-      const aIsBackend = backendOrder.has(a._id ?? a.osmId) && a.stars !== undefined;
-      const bIsBackend = backendOrder.has(b._id ?? b.osmId) && b.stars !== undefined;
+      // NB: on ne peut pas utiliser `stars !== undefined` pour distinguer un
+      // vrai lieu backend d'un POI OSM brut : OverpassService.normalize()
+      // initialise `stars: 0` sur CHAQUE POI OSM (jamais undefined), donc ce
+      // check était toujours vrai et forçait les POI OSM à toujours trier
+      // après tous les lieux backend (par position dans le tableau fusionné),
+      // sans jamais utiliser scoreForClientRanking comme prévu. Conséquence
+      // concrète : un lieu OSM (ex: Quennezil) juste au-dessus de la limite
+      // d'affichage pouvait disparaître de la liste dès qu'il était seedé en
+      // base (cf. handleSelectLocation → seedOsmLocation) au retour sur cet
+      // écran, car il entrait alors en concurrence pour une des places du
+      // classement backend tout en restant, via sa copie OSM encore présente
+      // dans filteredOsmPois, systématiquement relégué en fin de liste. Le
+      // marqueur `source: 'osm'` (posé par OverpassService.normalize) est le
+      // bon distinguo.
+      const aIsBackend = backendOrder.has(a._id ?? a.osmId) && a.source !== 'osm';
+      const bIsBackend = backendOrder.has(b._id ?? b.osmId) && b.source !== 'osm';
       if (aIsBackend && bIsBackend) {
         return (backendOrder.get(a._id ?? a.osmId) ?? 0) - (backendOrder.get(b._id ?? b.osmId) ?? 0);
       }
@@ -741,82 +836,94 @@ const LocationListScreen = () => {
   }, [locationsWithDistance]);
 
   // Liste effectivement affichée : on borne au `displayLimit` courant pour
-  // respecter l'infinite scroll (20 → 30 → 40 → 50 max).
+  // respecter l'infinite scroll (20 → 30 → 40 → 50 max). Indépendant du
+  // filtre de type (cf. otherItems) : la pagination porte sur le volume total
+  // de lieux chargés, pas sur le sous-ensemble filtré affiché à l'écran.
   const visibleItems = useMemo(() => {
     return pulseItems.slice(0, Math.min(displayLimit, MAX_LOCATIONS));
   }, [pulseItems, displayLimit]);
 
-  // Restructuration en 3 sections (mode liste uniquement, cf. plan §2.3) :
-  // - "Mis en avant" : lieux isSponsored (peut aussi apparaître ailleurs).
-  // - "Ça bouge maintenant" : top N par nombre de visiteurs actuels.
+  // Restructuration en 3 sections (cf. plan) :
+  // - "Mis en avant" : lieux isSponsored, jamais filtrés par type.
+  // - "Ça bouge maintenant" : top N par nombre de visiteurs actuels, filtré par type.
   // - "D'autres lieux pour toi" : reste, via le même score composite client
-  //   déjà utilisé (pulseItems), en excluant seulement les lieux déjà montrés
-  //   dans "Ça bouge maintenant" (dédupliqué par id).
+  //   déjà utilisé (pulseItems), filtré par type, en excluant les lieux déjà
+  //   montrés dans "Ça bouge maintenant" (dédupliqué par id).
   const NOW_TRENDING_COUNT = 10;
   const sponsoredItems = useMemo(() => pulseItems.filter((it) => it.isSponsored), [pulseItems]);
-  // Auto-défilement du carousel "Mis en avant" toutes les 7s quand il y a
-  // plusieurs lieux sponsorisés (sinon un seul est affiché en carte pleine
-  // largeur, pas de FlatList - cf. renderListSectionsHeader). En pause tant
-  // que l'utilisateur interagit avec le carousel (cf. onTouchStart/onTouchEnd).
-  const sponsoredListRef = useRef(null);
-  const sponsoredScrollIndexRef = useRef(0);
-  const sponsoredTouchActiveRef = useRef(false);
-  const sponsoredAutoScrollIntervalRef = useRef(null);
-  const stopSponsoredAutoScroll = useCallback(() => {
-    if (sponsoredAutoScrollIntervalRef.current) {
-      clearInterval(sponsoredAutoScrollIntervalRef.current);
-      sponsoredAutoScrollIntervalRef.current = null;
-    }
-  }, []);
-  const startSponsoredAutoScroll = useCallback(() => {
-    stopSponsoredAutoScroll();
-    if (sponsoredItems.length <= 1) return;
-    sponsoredAutoScrollIntervalRef.current = setInterval(() => {
-      if (sponsoredTouchActiveRef.current) return;
-      const nextIndex = (sponsoredScrollIndexRef.current + 1) % sponsoredItems.length;
-      sponsoredScrollIndexRef.current = nextIndex;
-      sponsoredListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
-    }, 7000);
-  }, [sponsoredItems.length, stopSponsoredAutoScroll]);
-  useEffect(() => {
-    sponsoredScrollIndexRef.current = 0;
-    startSponsoredAutoScroll();
-    return stopSponsoredAutoScroll;
-  }, [sponsoredItems.length, startSponsoredAutoScroll, stopSponsoredAutoScroll]);
-  // BUG: une transition jour/nuit (overlay plein écran + LocationItem redéfini
-  // via useMemo([...,  isMoon]), donc remonté) peut interrompre en plein vol
-  // une séquence tactile en cours sur le carousel, sans jamais délivrer le
-  // onTouchEnd/onTouchCancel correspondant. `sponsoredTouchActiveRef` reste
-  // alors bloqué à `true`, et la garde en tête de onTouchStart empêche tout
-  // futur lockSwiper() de s'exécuter : le carousel ne verrouille plus jamais
-  // le swipe de navigation entre onglets après un changement de vibe. On
-  // force donc un reset propre à chaque transition.
-  useEffect(() => {
-    sponsoredTouchActiveRef.current = false;
-    unlockSwiper();
-  }, [transitioningTo, isMoon, unlockSwiper]);
-  const handleSponsoredScrollToIndexFailed = useCallback((info) => {
-    sponsoredListRef.current?.scrollToOffset({
-      offset: info.averageItemLength * info.index,
-      animated: true,
+
+  // Liste des types de lieu réellement présents (hors sponsorisés, qui ne
+  // sont de toute façon jamais filtrés) parmi les lieux actuellement chargés,
+  // normalisés via `formatLocationType` (source de vérité des libellés,
+  // cf. components/LocationUtils.js) pour alimenter TypeFilterBar.
+  const availableTypes = useMemo(() => {
+    const set = new Set();
+    pulseItems.forEach((it) => {
+      if (it.isSponsored || !it.type) return;
+      set.add(formatLocationType(it.type));
     });
-  }, []);
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'fr'));
+  }, [pulseItems]);
+
+  // Si le type sélectionné disparaît des lieux chargés (changement de vibe,
+  // déplacement...), on retombe silencieusement sur "Tous" plutôt que
+  // d'afficher des sections vides sans explication.
+  useEffect(() => {
+    if (selectedType !== ALL_KEY && !availableTypes.includes(selectedType)) {
+      setSelectedType(ALL_KEY);
+    }
+  }, [availableTypes, selectedType]);
+
+  const typeFilteredIds = useMemo(() => {
+    if (selectedType === ALL_KEY) return null; // null = pas de filtre actif
+    const ids = new Set();
+    pulseItems.forEach((it) => {
+      if (!it.isSponsored && formatLocationType(it.type) === selectedType) {
+        ids.add(it._id ?? it.osmId);
+      }
+    });
+    return ids;
+  }, [pulseItems, selectedType]);
+
+  // Auto-défilement du carousel "Mis en avant" toutes les 7s : géré désormais
+  // dans SponsoredCarousel (cf. views/LocationList/SponsoredCarousel.js).
   const trendingItems = useMemo(() => {
     return [...pulseItems]
       // Un lieu sponsorisé a déjà sa propre section "Mis en avant" : on évite
       // qu'il apparaisse une seconde fois ici.
       .filter((it) => !it.isSponsored)
+      .filter((it) => !typeFilteredIds || typeFilteredIds.has(it._id ?? it.osmId))
       .sort((a, b) => (b.userCount || 0) - (a.userCount || 0))
       .filter((it) => (it.userCount || 0) > 0)
       .slice(0, NOW_TRENDING_COUNT);
-  }, [pulseItems]);
+  }, [pulseItems, typeFilteredIds]);
   const trendingIds = useMemo(
     () => new Set(trendingItems.map((it) => it._id ?? it.osmId)),
     [trendingItems],
   );
+  // Bug: filtrer depuis `visibleItems` (déjà tronqué au top `displayLimit`
+  // TOUS TYPES CONFONDUS) coupe silencieusement les lieux d'un type minoritaire
+  // qui n'ont pas un score composite suffisant pour entrer dans ce top-N global
+  // (ex: score dominé par la distance, cf. scoreForClientRanking) — même s'ils
+  // correspondent au filtre actif et qu'il y en a très peu au total. Repro
+  // concrète : "Le Quennezil" (boîte de nuit à ~10km, 0 étoile/0 visiteur)
+  // disparaissait de la liste filtrée sur "Boîte de nuit" dès qu'il devenait un
+  // vrai lieu backend (cf. seedOsmLocation), car son score le classe ~46e sur
+  // 525 candidats de la zone, largement hors du top 40 mélangeant tous les
+  // types (dominé par les bars, plus proches). `trendingItems` ci-dessus évite
+  // déjà ce piège en filtrant depuis `pulseItems` (non tronqué) : on aligne
+  // `otherItems` sur le même principe quand un filtre de type est actif — le
+  // plafond `displayLimit` ne doit borner que le volume total CHARGÉ (pagination
+  // infinite-scroll), pas ce qui reste visible une fois filtré par type.
   const otherItems = useMemo(
-    () => visibleItems.filter((it) => !trendingIds.has(it._id ?? it.osmId) && !it.isSponsored),
-    [visibleItems, trendingIds],
+    () =>
+      (selectedType === ALL_KEY ? visibleItems : pulseItems).filter(
+        (it) =>
+          !it.isSponsored &&
+          !trendingIds.has(it._id ?? it.osmId) &&
+          (!typeFilteredIds || typeFilteredIds.has(it._id ?? it.osmId)),
+      ),
+    [visibleItems, pulseItems, selectedType, trendingIds, typeFilteredIds],
   );
 
   // Vue carte : n'afficher que les lieux réellement enregistrés dans notre
@@ -877,224 +984,56 @@ const LocationListScreen = () => {
 
   // Suivi de visibilité pour stopper les animations hors‑écran
   const visibleSetRef = useRef(new Set());
-  const [visibleTick, setVisibleTick] = useState(0);
   const onViewableItemsChanged = useRef(({ viewableItems }) => {
-    const set = visibleSetRef.current;
     const next = new Set();
     (viewableItems || []).forEach((v) => {
       if (typeof v?.index === 'number') next.add(v.index);
     });
     // remplacer le set
     visibleSetRef.current = next;
-    setVisibleTick((t) => t + 1);
   }).current;
   const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
-  const MANUAL_CHECKIN_DISTANCE_M = 50;
+  // Props communes passées à chaque LocationCard (mémoïsées pour ne pas
+  // invalider React.memo à chaque render du parent).
+  const cardProps = useMemo(
+    () => ({
+      currentUserPoiId: currentUser?.currentPoiId,
+      checkInMode,
+      checkingInLocationId,
+      isBoosted,
+      visibleSetRef,
+      onSelect: handleSelectLocation,
+      onCorrectCheckin: handleCorrectCheckinPress,
+      onManualCheckIn: handleManualCheckIn,
+      onLongPressHere: handleLongPressLocation,
+    }),
+    [
+      currentUser?.currentPoiId,
+      checkInMode,
+      checkingInLocationId,
+      isBoosted,
+      handleSelectLocation,
+      handleCorrectCheckinPress,
+      handleManualCheckIn,
+      handleLongPressLocation,
+    ],
+  );
 
-  const LocationItem = useMemo(() => {
-    return React.memo(({ item, index }) => {
-      const isUserHere = item._id === currentUser?.currentPoiId;
-      const canManualCheckIn =
-        checkInMode === 'manual' &&
-        !isUserHere &&
-        typeof item.distance === 'number' &&
-        item.distance <= MANUAL_CHECKIN_DISTANCE_M;
-      const isCheckingInHere = checkingInLocationId === item._id;
-      // Désactive TOUS les boutons "je suis là" (pas seulement celui tapé) tant
-      // qu'un check-in est en vol, pour empêcher un 2e tap sur un autre lieu
-      // pendant que le 1er est encore en cours (source de la course décrite
-      // plus haut sur checkInRequestIdRef).
-      const isAnyCheckInInFlight = !!checkingInLocationId;
+  // useCallback : sans lui, renderItem/onScroll étaient recréées à chaque
+  // render de l'écran et passées telles quelles à FlatList — identité
+  // instable inutile (cardProps, la vraie dépendance des cartes, est déjà
+  // mémoïsé ci-dessus).
+  const renderLocation = useCallback(
+    ({ item, index }) => (
+      <LocationCard item={item} index={index} colors={colors} isDark={isDark} isMoon={isMoon} {...cardProps} />
+    ),
+    [colors, isDark, isMoon, cardProps],
+  );
 
-      const card = (
-        <TouchableOpacity
-          style={[
-            styles.locationCard,
-            {
-              backgroundColor: colors.surface,
-              marginBottom: isUserHere ? 0 : 16,
-              borderWidth: isMoon ? 1.5 : 0,
-              borderColor: isMoon ? 'rgba(255,45,168,0.35)' : 'transparent',
-              shadowColor: isMoon ? '#2dbdff' : '#000',
-              shadowOpacity: isMoon ? 0.45 : isDark ? 0.2 : 0.08,
-            },
-          ]}
-          onPress={() => handleSelectLocation(item)}
-        >
-          <View style={styles.locationInfo}>
-            {item.isPro && (item.bannerUrl || item.logoUrl) && (
-              <View style={item.bannerUrl ? styles.proBannerContainer : null}>
-                {item.bannerUrl && (
-                  <ImageWithPlaceholder uri={item.bannerThumbUrl || item.bannerUrl} style={styles.proBanner} />
-                )}
-                {item.logoUrl && (
-                  <ImageWithPlaceholder
-                    uri={item.logoThumbUrl || item.logoUrl}
-                    style={[
-                      item.bannerUrl ? styles.proLogoOverlap : styles.proLogoInline,
-                      { borderColor: colors.surface },
-                    ]}
-                  />
-                )}
-              </View>
-            )}
-            <View style={styles.locationHeaderRow}>
-              <Text
-                style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.textPrimary }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {item.name}
-              </Text>
-              {isUserHere ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={[styles.distanceText, { color: '#00c2cb', fontWeight: '600' }]}>Actuellement ici</Text>
-                  <TouchableOpacity
-                    onPress={(e) => {
-                      e.stopPropagation?.();
-                      handleCorrectCheckinPress();
-                    }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    style={{ marginLeft: 6, opacity: isBoosted ? 0.4 : 1 }}
-                  >
-                    <Ionicons name="pencil" size={14} color="#00c2cb" />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                item.distance !== undefined && (
-                  <Text style={[styles.distanceText, { color: colors.textSecondary }]}>
-                    {formatDistance(item.distance)}
-                  </Text>
-                )
-              )}
-            </View>
-            {(item.isPro || item.isSponsored) && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                {item.isPro && (
-                  <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedText}>✓</Text>
-                  </View>
-                )}
-                {item.isSponsored && (
-                  <View style={styles.sponsoredBadge}>
-                    <Text style={styles.sponsoredText}>SPONSORISÉ</Text>
-                  </View>
-                )}
-              </View>
-            )}
-            <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
-              <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
-            </View>
-            <View style={styles.activeUsersContainer}>
-              <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
-                {item.userCount || 0} visiteur{(item.userCount || 0) > 1 ? 's' : ''}
-              </Text>
-              <View style={styles.avatarStack}>
-                {(item.activeUsers || []).map((u, index) => {
-                  const isUserBoosted = u.boostUntil && new Date(u.boostUntil) > new Date();
-                  const isGhost =
-                    u.location &&
-                    u.location.updatedAt &&
-                    new Date(u.location.updatedAt) < new Date(Date.now() - 5 * 60 * 1000) &&
-                    isUserBoosted;
-
-                  return (
-                    <View
-                      key={u._id}
-                      style={[
-                        styles.avatarWrapper,
-                        {
-                          marginLeft: index === 0 ? 0 : -12,
-                          borderColor: isUserBoosted ? '#FFD700' : colors.surface,
-                          backgroundColor: isDark ? '#333' : '#eee',
-                          opacity: isGhost ? 0.6 : 1,
-                          borderWidth: isUserBoosted ? 1.5 : 1,
-                        },
-                      ]}
-                    >
-                      <ImageWithPlaceholder uri={u.profileImageUrl} style={styles.smallAvatar} />
-                      <View
-                        style={[
-                          styles.statusDotSmall,
-                          {
-                            backgroundColor: u.status === 'green' ? '#4CAF50' : '#FF9800',
-                            borderColor: colors.surface,
-                          },
-                        ]}
-                      />
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-            {canManualCheckIn && (
-              <TouchableOpacity
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  handleManualCheckIn(item);
-                }}
-                disabled={isAnyCheckInInFlight}
-                style={[styles.manualCheckinButton, { opacity: isAnyCheckInInFlight ? 0.6 : 1 }]}
-              >
-                {isCheckingInHere ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-circle-outline" size={16} color="#fff" />
-                    <Text style={styles.manualCheckinButtonText}>Je suis là</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-          <View style={styles.popularityContainer}>
-            <Text style={styles.popularityStars}>{getStars(item, isDark)}</Text>
-          </View>
-        </TouchableOpacity>
-      );
-
-      const isActive = visibleSetRef.current.has(index);
-
-      if (isUserHere) {
-        return (
-          <AnimatedGradientBorder borderRadius={20} index={index} active={isActive} marginBottom={16}>
-            {card}
-          </AnimatedGradientBorder>
-        );
-      }
-
-      // Neon vibe: apply animated gradient border to all cards in Night mode
-      if (isMoon) {
-        return (
-          <AnimatedGradientBorder
-            borderRadius={20}
-            index={index}
-            active={isActive}
-            marginBottom={16}
-            colors={['#ff2da8', '#2dbdff', '#ff2da8', '#2dbdff', '#ff2da8']}
-          >
-            {card}
-          </AnimatedGradientBorder>
-        );
-      }
-
-      return card;
-    });
-  }, [
-    colors,
-    isDark,
-    isMoon,
-    currentUser?.currentPoiId,
-    handleCorrectCheckinPress,
-    handleSelectLocation,
-    isBoosted,
-    checkInMode,
-    checkingInLocationId,
-    handleManualCheckIn,
-  ]);
-
-  const renderLocation = ({ item, index }) => <LocationItem item={item} index={index} />;
+  const handleListScroll = useCallback((event) => {
+    currentScrollOffset.current = event.nativeEvent.contentOffset.y;
+  }, []);
 
   // Fetch Overpass on significant coordinate changes only (~110m, 3 decimals).
   // The service itself enforces a time-based throttle + failure backoff.
@@ -1191,12 +1130,22 @@ const LocationListScreen = () => {
         // fraîche il y a quelques ms, inutile de ré-acquérir le GPS (cf. commentaire
         // détaillé dans fetchNearbyLocations) — sans ça, ce refresh peut être retardé
         // de dizaines de secondes en intérieur/signal faible.
-        fetchNearbyLocations({
-          skipUpdateMyLocation: true,
-          silent: true,
-          vibe: vibeRef.current,
-          reuseCoords: userCoordsRef.current,
-        });
+        //
+        // Ce refetch réseau ne tourne que si cet onglet est réellement visible
+        // (MainSwiper garde les 3 pages montées en permanence — sans cette
+        // garde, chaque heartbeat déclenchait un GET /locations même en
+        // regardant un autre onglet). Sinon, différé et rattrapé au retour sur
+        // cette page (cf. effet sur `currentPage` plus haut).
+        if (isLocationsPageActiveRef.current) {
+          fetchNearbyLocations({
+            skipUpdateMyLocation: true,
+            silent: true,
+            vibe: vibeRef.current,
+            reuseCoords: userCoordsRef.current,
+          });
+        } else {
+          pendingBackgroundRefreshRef.current = true;
+        }
       }
     });
 
@@ -1204,28 +1153,6 @@ const LocationListScreen = () => {
   }, []);
 
   // Scroll position is preserved automatically by React Navigation's native stack.
-
-  const getStars = (item, starIsDark) => {
-    const starsCount = item?.stars || 0;
-    const userCount = item?.userCount || 0;
-
-    // Determine the number of stars based on backend stars field
-    if (starsCount === 3) {
-      return <Text style={{ fontSize: 18 }}>⭐⭐⭐</Text>;
-    }
-    if (starsCount === 2) {
-      return <Text style={{ fontSize: 18 }}>⭐⭐</Text>;
-    }
-    // Si starsCount est 1 OU s'il y a des utilisateurs présents, on affiche 1 étoile jaune
-    if (starsCount === 1 || userCount > 0) {
-      return <Text style={{ fontSize: 18 }}>⭐</Text>;
-    }
-
-    // Default to 1 grey star for 0 stars
-    return (
-      <Text style={{ color: starIsDark ? '#FFFFFF' : '#ccc', opacity: starIsDark ? 0.3 : 1, fontSize: 18 }}>★</Text>
-    );
-  };
 
   const fetchNearbyLocations = async (options = {}) => {
     const { skipUpdateMyLocation = false, silent = false, skipLastKnown = false, vibe: overrideVibe, reuseCoords = null, forceFresh = false } = options;
@@ -1341,23 +1268,51 @@ const LocationListScreen = () => {
       }
 
       // 3. Lancer les requêtes API en parallèle
-      const reqLimit = options.limit || displayLimit;
+      // Avec un filtre de type actif, on charge toujours la profondeur max
+      // (MAX_LOCATIONS) plutôt que `displayLimit` : ce dernier reflète la
+      // pagination "tous types confondus" (scroll infini) et peut retomber à
+      // MIN_LOCATIONS (40) pour des raisons sans rapport avec le filtre actif
+      // (ex: bascule jour/nuit, cf. l'effet [vibe] qui reset displayLimit).
+      // Un lieu minoritaire pour ce type (score composite faible → classé
+      // au-delà du top 40 tous types, ex: distant/sans étoiles) sortait alors
+      // du top-N renvoyé par le backend selon la profondeur du moment, alors
+      // que RIEN n'avait changé sur le lieu lui-même — repro concrète :
+      // "Le Quennezil" (boîte de nuit à ~7,5km, 0 étoile) classé 42e sur la
+      // position réelle de l'utilisateur, visible avec limit=60/80 mais coupé
+      // dès que displayLimit retombait à 40. Le filtre par type doit rester
+      // stable indépendamment de cette profondeur de pagination générale.
+      const reqLimit = options.limit || (selectedType !== ALL_KEY ? MAX_LOCATIONS : displayLimit);
       const tasks = [];
 
-      if (!skipUpdateMyLocation && !isLocationHeartbeatSuppressed()) {
+      // Cet appel n'était auparavant pas soumis à locationSendGuard (contrairement
+      // à usePresence/LocationService), donc pouvait dupliquer un heartbeat/check-in
+      // tout juste envoyé pour une position quasi identique (ex: écran qui monte
+      // juste après un heartbeat de retour en foreground). `forceFresh` (pull-to-
+      // refresh manuel, cf. onRefresh) force quand même l'envoi : une action
+      // explicite de l'utilisateur doit toujours aboutir, comme MANUAL_BYPASS
+      // côté LocationService.
+      const willUpdateMyLocation =
+        !skipUpdateMyLocation &&
+        !isLocationHeartbeatSuppressed() &&
+        shouldSend(latitude, longitude, { force: forceFresh });
+      if (willUpdateMyLocation) {
         tasks.push(
-          updateMyLocation({ lat: latitude, lon: longitude }).catch((err) =>
-            console.error('Error updating my location:', err),
-          ),
+          updateMyLocation({ lat: latitude, lon: longitude })
+            .then((res) => {
+              markSent(roundCoord(latitude), roundCoord(longitude));
+              return res;
+            })
+            .catch((err) => console.error('Error updating my location:', err)),
         );
       }
 
       tasks.push(getLocations({ lat: latitude, lon: longitude, limit: reqLimit, vibe: currentVibe, forceFresh }));
 
       const results = await Promise.all(tasks);
-      // Si on n'a PAS skippé updateMyLocation, alors getLocations est le 2ème élément (index 1)
-      // Sinon, c'est le 1er élément (index 0).
-      const res = skipUpdateMyLocation ? results[0] : results[1];
+      // getLocations est toujours le dernier élément poussé dans `tasks` :
+      // en 2ème position (index 1) si updateMyLocation a aussi été lancé,
+      // sinon en 1ère position (index 0).
+      const res = willUpdateMyLocation ? results[1] : results[0];
 
       // Une requête plus récente (autre vibe, autre déclencheur) a déjà résolu :
       // on ignore cette réponse périmée pour ne jamais écraser l'état courant.
@@ -1483,53 +1438,13 @@ const LocationListScreen = () => {
     }, 0);
   };
 
-  // Footer dynamique : spinner pendant le chargement, message de fin lorsque le
-  // plafond est atteint, ou bouton "Réessayer" en cas d'erreur réseau.
-  const renderListFooter = () => {
-    if (loadingMore) {
-      return (
-        <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-          <ActivityIndicator size="small" color="#00c2cb" />
-          <Text style={{ marginTop: 6, fontSize: 12, color: colors.textSecondary }}>
-            Chargement de lieux supplémentaires…
-          </Text>
-        </View>
-      );
-    }
-    if (loadMoreError) {
-      return (
-        <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-          <Text style={{ marginBottom: 8, fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}>
-            Impossible de charger plus de lieux. Vérifie ta connexion.
-          </Text>
-          <TouchableOpacity
-            onPress={handleRetryLoadMore}
-            style={{ backgroundColor: '#00c2cb', paddingHorizontal: 18, paddingVertical: 8, borderRadius: 8 }}
-          >
-            <Text style={{ color: '#fff', fontWeight: '700' }}>Réessayer</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    // Message de fin : seulement si on a vraiment atteint le plafond (50) OU
-    // si le backend a confirmé qu'il n'y a plus rien à servir (`!hasMore`) ET
-    // que la fenêtre courante couvre déjà tout le buffer local.
-    const reachedCap = displayLimit >= MAX_LOCATIONS && visibleItems.length >= MAX_LOCATIONS;
-    const exhausted = !hasMore && visibleItems.length >= pulseItems.length && pulseItems.length > 0;
-    if (reachedCap || exhausted) {
-      return (
-        <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-          <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', fontStyle: 'italic' }}>
-            Vous avez exploré tous les lieux actifs à proximité. Déplacez-vous ou faites une recherche pour en voir
-            plus.
-          </Text>
-        </View>
-      );
-    }
-    return null;
-  };
+  // Message de fin : seulement si on a vraiment atteint le plafond (50) OU
+  // si le backend a confirmé qu'il n'y a plus rien à servir (`!hasMore`) ET
+  // que la fenêtre courante couvre déjà tout le buffer local.
+  const reachedCap = displayLimit >= MAX_LOCATIONS && visibleItems.length >= MAX_LOCATIONS;
+  const exhausted = !hasMore && visibleItems.length >= pulseItems.length && pulseItems.length > 0;
 
-  // "Mis en avant" (sponsorisés, scroll horizontal) + "Ça bouge maintenant"
+  // "Mis en avant" (sponsorisés) + barre de filtres + "Ça bouge maintenant"
   // (top visiteurs) : rendus en ListHeaderComponent de la FlatList principale
   // ("D'autres lieux pour toi"), pour conserver la virtualisation/pagination
   // existante sur la plus grosse liste tout en gardant un seul scroll global.
@@ -1543,75 +1458,43 @@ const LocationListScreen = () => {
     if (sponsoredItems.length === 0 && trendingItems.length === 0 && otherItems.length === 0) return null;
     return (
       <View>
-        {sponsoredItems.length > 0 && (
-          <View style={[styles.sectionContainer, styles.sponsoredSectionContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.28)' : 'rgba(0,0,0,0.16)' }]}>
-            <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>Mis en avant</Text>
-            {sponsoredItems.length === 1 ? (
-              // Un seul item dans un FlatList horizontal de 280px laisse un grand vide
-              // à droite (l'écran ne fait presque jamais 280px de large) : on l'affiche
-              // en carte pleine largeur, comme le reste de la liste, plutôt qu'en scroll
-              // horizontal qui n'a de sens qu'avec plusieurs items à faire défiler.
-              <LocationItem item={sponsoredItems[0]} index={0} />
-            ) : (
-              <FlatList
-                ref={sponsoredListRef}
-                data={sponsoredItems}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => `sponsored-${item._id || item.osmId || item.name}`}
-                renderItem={({ item, index }) => (
-                  <View style={styles.horizontalCardWrapper}>
-                    <LocationItem item={item} index={index} />
-                  </View>
-                )}
-                contentContainerStyle={{ paddingRight: 20 }}
-                onScrollToIndexFailed={handleSponsoredScrollToIndexFailed}
-                onMomentumScrollEnd={(e) => {
-                  // Resynchronise l'index de l'auto-scroll sur la position réelle
-                  // après un scroll manuel, pour que le prochain saut auto-scroll
-                  // reparte de là où l'utilisateur a laissé le carousel plutôt que
-                  // de sauter en arrière à l'ancien index.
-                  const itemWidth = styles.horizontalCardWrapper.width + styles.horizontalCardWrapper.marginRight;
-                  const index = Math.round(e.nativeEvent.contentOffset.x / itemWidth);
-                  sponsoredScrollIndexRef.current = Math.max(0, Math.min(index, sponsoredItems.length - 1));
-                }}
-                onTouchStart={() => {
-                  // onTouchStart précède tout mouvement, donc précède
-                  // l'évaluation de onMoveShouldSetPanResponderCapture du
-                  // swiper de navigation (cf. MainSwiper.js) : lockSwiper()
-                  // doit être posé ici et non sur onScrollBeginDrag, qui ne se
-                  // déclenche qu'après que le geste a déjà pu être capturé par
-                  // le parent (pattern repris de LocationMapView.js).
-                  if (sponsoredTouchActiveRef.current) return;
-                  sponsoredTouchActiveRef.current = true;
-                  stopSponsoredAutoScroll();
-                  lockSwiper();
-                }}
-                onTouchEnd={() => {
-                  sponsoredTouchActiveRef.current = false;
-                  unlockSwiper();
-                  startSponsoredAutoScroll();
-                }}
-                onTouchCancel={() => {
-                  sponsoredTouchActiveRef.current = false;
-                  unlockSwiper();
-                  startSponsoredAutoScroll();
-                }}
-              />
-            )}
-          </View>
+        <SponsoredCarousel
+          items={sponsoredItems}
+          colors={colors}
+          isDark={isDark}
+          isMoon={isMoon}
+          sectionTitleColor={sectionTitleColor}
+          lockSwiper={lockSwiper}
+          unlockSwiper={unlockSwiper}
+          cardProps={cardProps}
+        />
+        <TypeFilterBar
+          types={availableTypes}
+          selectedType={selectedType}
+          onSelect={setSelectedType}
+          colors={colors}
+          isDark={isDark}
+          isMoon={isMoon}
+          lockSwiper={lockSwiper}
+          unlockSwiper={unlockSwiper}
+        />
+        {!isPremium && (
+          <Text style={[styles.radiusBadge, { color: colors.textSecondary }]}>
+            Rayon de recherche : 2 km · Premium pour un rayon élargi
+          </Text>
         )}
-        {trendingItems.length > 0 && (
-          <View style={styles.sectionContainer}>
-            <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>Ça bouge maintenant</Text>
-            {trendingItems.map((item, index) => (
-              <LocationItem key={item._id || item.osmId || item.name} item={item} index={index} />
-            ))}
-          </View>
-        )}
-        {otherItems.length > 0 && trendingItems.length > 0 && (
-          <Text style={[styles.sectionTitle, { color: sectionTitleColor }]}>D'autres lieux pour toi</Text>
-        )}
+        <TrendingSection
+          items={trendingItems}
+          sectionTitleColor={sectionTitleColor}
+          colors={colors}
+          isDark={isDark}
+          isMoon={isMoon}
+          cardProps={cardProps}
+        />
+        <MoreLocationsSection
+          visible={otherItems.length > 0 && trendingItems.length > 0}
+          sectionTitleColor={sectionTitleColor}
+        />
       </View>
     );
   };
@@ -1622,7 +1505,7 @@ const LocationListScreen = () => {
         styles.header,
         {
           backgroundColor: colors.surface,
-          paddingTop: insets.top + 10,
+          paddingTop: insets.top + 6,
           borderBottomLeftRadius: 30,
           borderBottomRightRadius: 30,
           elevation: isDark ? 0 : 5,
@@ -1635,10 +1518,10 @@ const LocationListScreen = () => {
         },
       ]}
     >
-      <Text style={[styles.headerTitle, { color: '#00c2cb', flex: 1 }]} numberOfLines={1}>
-        Lieux à proximité
-      </Text>
-      <View style={styles.headerIcons}>
+      <View
+        style={[styles.headerCenterGroup, { top: insets.top + 6, bottom: 12 }]}
+        pointerEvents="box-none"
+      >
         <TouchableOpacity
           onPress={handleToggleCheckInMode}
           disabled={togglingCheckInMode}
@@ -1651,19 +1534,25 @@ const LocationListScreen = () => {
           <Ionicons
             name={checkInMode === 'auto' ? 'radio-button-on-outline' : 'hand-left-outline'}
             size={16}
-            color="#00c2cb"
+            color={colors.accent}
           />
-          <Text style={styles.checkInModeToggleText}>{checkInMode === 'auto' ? 'Auto' : 'Manuel'}</Text>
+          <Text style={[styles.checkInModeToggleText, { color: colors.accent }]}>
+            {checkInMode === 'auto' ? 'Entrée auto.' : 'Entrée manuelle'}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={toggleViewMode}
-          style={styles.headerIconButton}
+          style={styles.checkInModeToggle}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
           accessibilityLabel={viewMode === 'list' ? 'Voir la carte' : 'Voir la liste'}
         >
-          <Ionicons name={viewMode === 'list' ? 'map-outline' : 'list-outline'} size={22} color="#00c2cb" />
+          <Ionicons name={viewMode === 'list' ? 'map-outline' : 'list-outline'} size={16} color={colors.accent} />
+          <Text style={[styles.checkInModeToggleText, { color: colors.accent }]}>
+            {viewMode === 'list' ? 'Carte' : 'Liste'}
+          </Text>
         </TouchableOpacity>
       </View>
+      <OsmHelpBubble style={styles.headerIconButton} />
     </View>
   );
 
@@ -1674,174 +1563,54 @@ const LocationListScreen = () => {
       <SafeAreaView edges={['left', 'right']} style={[styles.container, { backgroundColor: 'transparent' }]}>
         {renderHeader()}
         {invisibleModeBlocking ? (
-          <View style={styles.invisibleModeContainer}>
-            <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🕶️</Text>
-            <Text
-              style={[
-                styles.emptyText,
-                { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' },
-              ]}
-            >
-              Mode invisible actif
-            </Text>
-            <Text style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: 20, lineHeight: 20 }}>
-              Tu ne peux pas voir les lieux autour de toi tant que le mode invisible est activé. Désactive-le pour
-              parcourir les lieux.
-            </Text>
-            <TouchableOpacity
-              disabled={disablingInvisibleMode}
-              onPress={async () => {
-                if (disablingInvisibleMode) return;
-                setDisablingInvisibleMode(true);
-                try {
-                  await apiUpdateInvisibleMode(false);
-                  updateUser?.({ ...currentUser, invisibleMode: false });
-                  setInvisibleModeBlocking(false);
-                  fetchNearbyLocations({ vibe });
-                } catch (e) {
-                  console.warn('[LocationListScreen] apiUpdateInvisibleMode failed', e?.message || e);
-                  Alert.alert('Erreur', 'Impossible de désactiver le mode invisible pour l’instant.');
-                } finally {
-                  setDisablingInvisibleMode(false);
-                }
-              }}
-              style={{
-                backgroundColor: '#00c2cb',
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: 10,
-                opacity: disablingInvisibleMode ? 0.6 : 1,
-              }}
-            >
-              {disablingInvisibleMode ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Désactiver le mode invisible</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+          <InvisibleModeState
+            colors={colors}
+            disabling={disablingInvisibleMode}
+            onDisable={async () => {
+              if (disablingInvisibleMode) return;
+              setDisablingInvisibleMode(true);
+              try {
+                await apiUpdateInvisibleMode(false);
+                updateUser?.({ ...currentUser, invisibleMode: false });
+                setInvisibleModeBlocking(false);
+                fetchNearbyLocations({ vibe });
+              } catch (e) {
+                console.warn('[LocationListScreen] apiUpdateInvisibleMode failed', e?.message || e);
+                Alert.alert('Erreur', 'Impossible de désactiver le mode invisible pour l’instant.');
+              } finally {
+                setDisablingInvisibleMode(false);
+              }
+            }}
+          />
         ) : loading && !refreshing ? (
-          <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
+          <ActivityIndicator size="large" color={colors.accent} style={{ marginTop: 50 }} />
         ) : locationError ? (
-          <ScrollView
-            contentContainerStyle={[
-              styles.listContent,
-              { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
-            ]}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={['#00c2cb']}
-                progressViewOffset={10}
-              />
-            }
-            alwaysBounceVertical
-            bounces
-            overScrollMode="always"
-          >
-            <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>📍</Text>
-            <Text
-              style={[
-                styles.emptyText,
-                { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' },
-              ]}
-            >
-              Localisation indisponible
-            </Text>
-            <Text
-              style={{
-                color: colors.textSecondary,
-                textAlign: 'center',
-                marginBottom: 20,
-                paddingHorizontal: 32,
-                lineHeight: 20,
-              }}
-            >
-              Active les services de localisation dans les réglages de ton appareil pour voir les lieux autour de toi.
-            </Text>
-            <TouchableOpacity
-              onPress={() => fetchNearbyLocations({ vibe })}
-              style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}
-            >
-              <Text style={{ color: '#fff', fontWeight: '600' }}>Réessayer</Text>
-            </TouchableOpacity>
-          </ScrollView>
+          <LocationErrorState
+            colors={colors}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            onRetry={() => fetchNearbyLocations({ vibe })}
+          />
         ) : viewMode === 'map' ? null : visibleItems.length === 0 ? (
-          // Etat vide: permettre le pull-to-refresh même sans éléments
-          <ScrollView
-            contentContainerStyle={[
-              styles.listContent,
-              { flexGrow: 1, justifyContent: 'center', alignItems: 'center' },
-            ]}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={['#00c2cb']}
-                progressViewOffset={10}
-              />
-            }
-            alwaysBounceVertical
-            bounces
-            overScrollMode="always"
-          >
-            <Text style={{ fontSize: 56, marginBottom: 12, opacity: 0.85 }}>🌙</Text>
-            <Text
-              style={[
-                styles.emptyText,
-                { color: colors.textPrimary, textAlign: 'center', marginBottom: 6, fontSize: 18, fontWeight: '700' },
-              ]}
-            >
-              Zone calme pour l'instant
-            </Text>
-            <Text
-              style={{
-                color: colors.textSecondary,
-                textAlign: 'center',
-                marginBottom: 20,
-                paddingHorizontal: 32,
-                lineHeight: 20,
-              }}
-            >
-              Aucun lieu actif n'a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <TouchableOpacity
-                onPress={() => {
-                  if (userCoords) {
-                    OverpassService.fetchAround({
-                      lat: userCoords.latitude,
-                      lon: userCoords.longitude,
-                      radius: 3000,
-                      force: true,
-                      vibe,
-                    })
-                      .then(setOsmPois)
-                      .catch(() => {});
-                  }
-                }}
-                style={{ backgroundColor: '#00c2cb', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 }}
-              >
-                <Text style={{ color: '#fff', fontWeight: '600' }}>Élargir le périmètre</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  /* future: suggestion flow */
-                }}
-                style={{
-                  backgroundColor: colors.surface,
-                  paddingHorizontal: 16,
-                  paddingVertical: 10,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: isDark ? 'rgba(255,255,255,0.08)' : '#eaeaea',
-                }}
-              >
-                <Text style={{ color: colors.textPrimary }}>Suggérer ce lieu</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
+          <EmptyListState
+            colors={colors}
+            isDark={isDark}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            onExpandRadius={() => {
+              if (userCoords) {
+                OverpassService.fetchAround({
+                  lat: userCoords.latitude,
+                  lon: userCoords.longitude,
+                  radius: 3000,
+                  force: true,
+                  vibe,
+                })
+                  .then(setOsmPois)
+                  .catch(() => {});
+              }
+            }}
+          />
         ) : (
           <FlatList
             ref={flatListRef}
@@ -1850,15 +1619,19 @@ const LocationListScreen = () => {
             renderItem={renderLocation}
             onViewableItemsChanged={onViewableItemsChanged}
             viewabilityConfig={viewabilityConfig}
-            onScroll={(event) => {
-              currentScrollOffset.current = event.nativeEvent.contentOffset.y;
-            }}
+            onScroll={handleListScroll}
             scrollEventThrottle={16}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={['#00c2cb']}
+                colors={[colors.accent]}
+                // tintColor pilote la couleur du spinner sur iOS (colors/
+                // progressBackgroundColor ne s'appliquent qu'à Android) : sans
+                // lui, iOS retombe sur le spinner système gris/noir par défaut,
+                // invisible sur le fond sombre du mode nuit.
+                tintColor={colors.accent}
+                progressBackgroundColor={colors.bgElevated || colors.surface}
                 // Décale le spinner sous l'en‑tête sur Android si besoin
                 progressViewOffset={10}
               />
@@ -1871,7 +1644,15 @@ const LocationListScreen = () => {
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.4}
             ListHeaderComponent={renderListSectionsHeader}
-            ListFooterComponent={renderListFooter}
+            ListFooterComponent={
+              <ListFooter
+                colors={colors}
+                loadingMore={loadingMore}
+                loadMoreError={loadMoreError}
+                onRetry={handleRetryLoadMore}
+                reachedEnd={reachedCap || exhausted}
+              />
+            }
             // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
             contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
             // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
@@ -1911,193 +1692,72 @@ const LocationListScreen = () => {
         onSelect={handleClusterPickerSelect}
         onClose={() => setClusterPickerItems(null)}
       />
+      <LeaveLocationModal
+        visible={!!leaveLocationItem}
+        item={leaveLocationItem}
+        colors={colors}
+        isDark={isDark}
+        loading={leavingLocation}
+        onConfirm={handleConfirmLeaveLocation}
+        onClose={() => setLeaveLocationItem(null)}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  radiusBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    paddingHorizontal: 20,
+    marginTop: -6,
+    marginBottom: 12,
+  },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'android' ? 40 : 10,
-    paddingBottom: 20,
+    paddingTop: Platform.OS === 'android' ? 34 : 6,
+    paddingBottom: 12,
     zIndex: 10,
   },
-  headerTitle: { fontSize: 24, fontWeight: '800', letterSpacing: -0.5 },
-  headerSubtitle: { fontSize: 12, fontWeight: '500', marginTop: 2, opacity: 0.85 },
-  headerIcons: { flexDirection: 'row', alignItems: 'center' },
+  // Groupe "Entrée auto./manuelle" + "Carte/Liste" centré sur toute la largeur
+  // du header, indépendamment du bouton d'aide "?" qui reste ancré à droite
+  // (seul élément du flux normal, cf. `header` en justifyContent:'flex-end').
+  headerCenterGroup: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
   headerIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(0, 194, 203, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   listContent: { padding: 20 },
-  locationCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    marginBottom: 16,
-    borderRadius: 20,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-  },
-  locationInfo: { flex: 1 },
-  locationHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  locationName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3, flex: 1, marginRight: 8 },
-  distanceText: { fontSize: 13, fontWeight: '600' },
-  typeBadge: {
-    backgroundColor: 'rgba(0, 194, 203, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    alignSelf: 'flex-start',
-    marginBottom: 10,
-  },
-  typeBadgeDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  typeText: { color: '#00c2cb', fontWeight: '700', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
-  typeTextDark: { color: '#fff' },
-  activeUsersContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  usersCountText: { fontSize: 13, marginRight: 10, fontWeight: '500' },
-  avatarStack: { flexDirection: 'row', alignItems: 'center' },
-  avatarWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    overflow: 'hidden',
-  },
-  smallAvatar: { width: '100%', height: '100%' },
-  statusDotSmall: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    borderWidth: 1.5,
-  },
-  popularityContainer: { alignItems: 'flex-end', marginLeft: 12 },
-  popularityStars: { fontSize: 18 },
-  emptyText: { textAlign: 'center', fontSize: 16, fontWeight: '500' },
-  proBannerContainer: {
-    marginBottom: 48,
-  },
-  proBanner: {
-    width: '100%',
-    height: 100,
-    borderRadius: 12,
-  },
-  proLogoOverlap: {
-    position: 'absolute',
-    bottom: -36,
-    left: 12,
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 3,
-  },
-  proLogoInline: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 3,
-    marginBottom: 12,
-  },
-  verifiedBadge: {
-    backgroundColor: '#00c2cb',
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 6,
-  },
-  verifiedText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  sponsoredBadge: {
-    backgroundColor: '#FF3DAD',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-    marginLeft: 8,
-  },
-  sponsoredText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-  },
-  manualCheckinButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: '#00c2cb',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 16,
-    marginTop: 10,
-    gap: 6,
-  },
-  manualCheckinButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 12,
-    marginTop: 4,
-    letterSpacing: -0.2,
-  },
-  sectionContainer: {
-    marginBottom: 8,
-  },
-  sponsoredSectionContainer: {
-    marginBottom: 20,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  horizontalCardWrapper: {
-    width: 280,
-    marginRight: 14,
-  },
   checkInModeToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    height: 44,
-    borderRadius: 22,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(0, 194, 203, 0.1)',
-    marginRight: 8,
     gap: 4,
   },
   checkInModeToggleText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#00c2cb',
-  },
-  invisibleModeContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
   },
 });
 

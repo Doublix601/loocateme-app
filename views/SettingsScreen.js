@@ -14,8 +14,10 @@ import {
   TextInput,
   Platform,
   Pressable,
+  Linking,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -23,7 +25,6 @@ import * as ImagePicker from 'expo-image-picker';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
-import socialMediaIcons from '../constants/socialMediaIcons';
 
 import { UserContext } from '../components/contexts/UserContext';
 import {
@@ -38,18 +39,18 @@ import {
   getMyUser,
   updateBluetoothConsent,
   apiUpdateInvisibleMode,
+  apiUpdateShareCurrentLocation,
   apiUpdateNotificationPreferences,
   updateProfile as apiUpdateProfile,
   uploadProfilePhoto as apiUploadProfilePhoto,
   deleteProfilePhoto as apiDeleteProfilePhoto,
-  upsertSocial as apiUpsertSocial,
-  removeSocial as apiRemoveSocial,
   unblockUser as apiUnblockUser,
   getBlockedUsers,
   apiChangePassword,
   apiRequestEmailChange,
 } from '../components/ApiRequest';
 import { BluetoothProximityService } from '../services/BluetoothProximityService';
+import IAPStore from '../services/IAPStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
@@ -80,19 +81,35 @@ const NOTIFICATION_KINDS = [
   { kind: 'weekly_digest', label: 'Résumé hebdomadaire' },
 ];
 
-const SOCIAL_PLATFORMS = Object.keys(socialMediaIcons || {});
+// Regroupement des types de notifications par catégorie, affichées en
+// sections déroulantes dans l'onglet Paramètres.
+const NOTIFICATION_CATEGORIES = [
+  { key: 'social', label: 'Activité sociale', kinds: ['superlike', 'superlike_accepted', 'profile_view', 'social_click'] },
+  {
+    key: 'rewards',
+    label: 'Séries & récompenses',
+    kinds: ['event_boost', 'streak_expiring', 'referral_validated', 'referral_reward_granted'],
+  },
+  {
+    key: 'system',
+    label: 'Système & résumés',
+    kinds: ['inactive_profile_views', 'night_mode_activated', 'at_risk_reactivation', 'weekly_digest'],
+  },
+];
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useContext(UserContext);
-  const { mode: themeMode, setMode: setThemeMode, colors } = useTheme();
+  const { mode: themeMode, colors } = useTheme();
   const { isMoon } = useVibe();
   const isDark = themeMode === 'dark';
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const [referralSubmitting, setReferralSubmitting] = useState(false);
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [manageSubLoading, setManageSubLoading] = useState(false);
 
   // Onglets Profil / Paramètres
   const [activeTab, setActiveTab] = useState('settings');
@@ -105,15 +122,13 @@ const SettingsScreen = () => {
   const [profileSaving, setProfileSaving] = useState(false);
   const [photoOptionsVisible, setPhotoOptionsVisible] = useState(false);
   const [photoActionLoading, setPhotoActionLoading] = useState(null);
-  const [socialModalVisible, setSocialModalVisible] = useState(false);
-  const [selectedSocialPlatform, setSelectedSocialPlatform] = useState(null);
-  const [socialHandleInput, setSocialHandleInput] = useState('');
-  const [socialSaving, setSocialSaving] = useState(false);
 
   // Notifications tab state
   const [notifPrefs, setNotifPrefs] = useState(user?.notificationPreferences || {});
   const [notifSavingKind, setNotifSavingKind] = useState(null);
-  const [notifMasterSaving, setNotifMasterSaving] = useState(false);
+  const [expandedNotifCategories, setExpandedNotifCategories] = useState({});
+  const toggleNotifCategory = (key) =>
+    setExpandedNotifCategories((prev) => ({ ...prev, [key]: !prev[key] }));
 
   // Mode invisible
   const [invisibleMode, setInvisibleMode] = useState(!!user?.invisibleMode);
@@ -127,9 +142,11 @@ const SettingsScreen = () => {
   const [consentVersion, setConsentVersion] = useState(user?.consent?.version || 'v1');
   const [analytics, setAnalytics] = useState(!!user?.privacyPreferences?.analytics);
   const [marketing, setMarketing] = useState(!!user?.privacyPreferences?.marketing);
-  const [doNotSell, setDoNotSell] = useState(!!user?.privacyPreferences?.doNotSell);
+  const [doNotSell, setDoNotSell] = useState(user?.privacyPreferences?.doNotSell ?? true);
   const [bluetoothProximity, setBluetoothProximity] = useState(!!user?.privacyPreferences?.bluetoothProximity);
   const [bluetoothSaving, setBluetoothSaving] = useState(false);
+  const [shareCurrentLocation, setShareCurrentLocation] = useState(!!user?.privacyPreferences?.shareCurrentLocation);
+  const [shareCurrentLocationSaving, setShareCurrentLocationSaving] = useState(false);
 
   // Comptes bloqués (pas d'écran dédié existant : liste minimale réutilisant
   // getBlockedUsers/unblockUser directement dans Paramètres)
@@ -164,8 +181,9 @@ const SettingsScreen = () => {
       setConsentVersion(user?.consent?.version || 'v1');
       setAnalytics(!!user?.privacyPreferences?.analytics);
       setMarketing(!!user?.privacyPreferences?.marketing);
-      setDoNotSell(!!user?.privacyPreferences?.doNotSell);
+      setDoNotSell(user?.privacyPreferences?.doNotSell ?? true);
       setBluetoothProximity(!!user?.privacyPreferences?.bluetoothProximity);
+      setShareCurrentLocation(!!user?.privacyPreferences?.shareCurrentLocation);
       setInvisibleMode(!!user?.invisibleMode);
       setNotifPrefs(user?.notificationPreferences || {});
       setProfileFirstName(user?.firstName || '');
@@ -174,6 +192,53 @@ const SettingsScreen = () => {
       setProfileBio(user?.bio || '');
     } catch (_) {}
   }, [user]);
+
+  // Statut d'abonnement (plan, renouvellement) pour la section ABONNEMENT —
+  // lu directement depuis RevenueCat (source de vérité du store), pas depuis
+  // notre backend qui ne connaît que le booléen isPremium.
+  useEffect(() => {
+    if (!user?.isPremium) {
+      setSubscriptionInfo(null);
+      return;
+    }
+    // 'idle' tant que le fetch n'a pas résolu (affiche "chargement…"), puis
+    // soit un objet plan/renouvellement (abonnement RevenueCat réel), soit
+    // 'none' — cas d'un Premium accordé sans abonnement store (essai
+    // gratuit maison, ou bascule manuelle depuis DebugScreen) : il n'y a
+    // alors tout simplement aucun abonnement à afficher/gérer, et ce n'est
+    // pas une erreur ni un chargement qui traîne.
+    setSubscriptionInfo('idle');
+    let cancelled = false;
+    IAPStore.getCustomerInfo().then((info) => {
+      if (cancelled) return;
+      const entitlement = info?.entitlements?.active?.['LoocateMe Premium'];
+      if (entitlement) {
+        setSubscriptionInfo({
+          productIdentifier: entitlement.productIdentifier,
+          isMonthly: /month/i.test(entitlement.productIdentifier || ''),
+          willRenew: entitlement.willRenew,
+          expirationDate: entitlement.expirationDate,
+        });
+      } else {
+        setSubscriptionInfo('none');
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.isPremium]);
+
+  const handleManageSubscription = async () => {
+    if (manageSubLoading) return;
+    setManageSubLoading(true);
+    try {
+      await IAPStore.openManageSubscriptions(subscriptionInfo?.productIdentifier);
+    } catch (e) {
+      Alert.alert('Erreur', "Impossible d'ouvrir la gestion de l'abonnement.");
+    } finally {
+      setManageSubLoading(false);
+    }
+  };
 
   // Charger préférence d'affichage du nom
   useEffect(() => {
@@ -220,6 +285,10 @@ const SettingsScreen = () => {
 
   const saveAndReturn = () => {
     navigation.goBack();
+  };
+
+  const openTerms = () => {
+    Linking.openURL('https://loocateme.com/terms');
   };
 
   const openPolicy = async () => {
@@ -308,11 +377,6 @@ const SettingsScreen = () => {
     await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing: v, doNotSell });
   };
 
-  const handleToggleDoNotSell = async (v) => {
-    setDoNotSell(v);
-    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing, doNotSell: v });
-  };
-
   // Consentement distinct de celui de la localisation GPS (finalité RGPD
   // séparée) : géré par son propre endpoint, indépendamment de saveConsent/
   // persistConsentQuietly ci-dessus qui portent sur la politique globale.
@@ -332,7 +396,16 @@ const SettingsScreen = () => {
         });
       }
       if (v) {
-        await BluetoothProximityService.start();
+        const started = await BluetoothProximityService.start();
+        if (!started) {
+          // Permissions Bluetooth refusées côté OS : le réglage est accepté côté
+          // compte mais la détection ne tourne pas réellement tant qu'elles ne
+          // sont pas accordées (Réglages système de l'appareil).
+          Alert.alert(
+            'Bluetooth indisponible',
+            "L'autorisation Bluetooth n'a pas été accordée. Active-la dans les réglages de ton téléphone pour que la détection de proximité fonctionne.",
+          );
+        }
       } else {
         await BluetoothProximityService.stop();
       }
@@ -341,6 +414,31 @@ const SettingsScreen = () => {
       Alert.alert('Erreur', e?.message || "Impossible de mettre à jour la proximité Bluetooth");
     } finally {
       setBluetoothSaving(false);
+    }
+  };
+
+  // Partage du lieu précis actuel (au-delà de la ville) sur le profil public.
+  // Défaut désactivé (RGPD, risque de stalking) : opt-in explicite requis.
+  const handleToggleShareCurrentLocation = async (v) => {
+    setShareCurrentLocation(v);
+    setShareCurrentLocationSaving(true);
+    try {
+      const res = await apiUpdateShareCurrentLocation(v);
+      if (updateUser) {
+        updateUser({
+          ...user,
+          privacyPreferences: {
+            ...(user?.privacyPreferences || {}),
+            ...(res?.user?.privacyPreferences || {}),
+            shareCurrentLocation: v,
+          },
+        });
+      }
+    } catch (e) {
+      setShareCurrentLocation(!v);
+      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le partage du lieu actuel');
+    } finally {
+      setShareCurrentLocationSaving(false);
     }
   };
 
@@ -382,28 +480,6 @@ const SettingsScreen = () => {
       Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour cette préférence de notification');
     } finally {
       setNotifSavingKind(null);
-    }
-  };
-
-  // Toggle maître : active/désactive tous les kinds en une action, en gardant
-  // l'état individuel de chaque toggle en dessous (préférences par kind
-  // toujours conservées côté backend, juste écrites en lot).
-  const handleToggleAllNotifKinds = async (v) => {
-    const prevPrefs = notifPrefs;
-    const nextPrefs = { ...notifPrefs };
-    NOTIFICATION_KINDS.forEach((item) => { nextPrefs[item.kind] = v; });
-    setNotifPrefs(nextPrefs);
-    setNotifMasterSaving(true);
-    try {
-      await Promise.all(NOTIFICATION_KINDS.map((item) => apiUpdateNotificationPreferences(item.kind, v)));
-      if (updateUser) {
-        updateUser({ ...user, notificationPreferences: nextPrefs });
-      }
-    } catch (e) {
-      setNotifPrefs(prevPrefs);
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour les préférences de notification');
-    } finally {
-      setNotifMasterSaving(false);
     }
   };
 
@@ -747,56 +823,6 @@ const SettingsScreen = () => {
     }
   };
 
-  // --- Réseaux sociaux ---
-  const openAddSocial = () => {
-    setSelectedSocialPlatform(SOCIAL_PLATFORMS[0] || null);
-    setSocialHandleInput('');
-    setSocialModalVisible(true);
-  };
-
-  const openEditSocial = (social) => {
-    setSelectedSocialPlatform(social.platform);
-    setSocialHandleInput(social.username || '');
-    setSocialModalVisible(true);
-  };
-
-  const handleSaveSocial = async () => {
-    if (!selectedSocialPlatform || !socialHandleInput.trim()) {
-      Alert.alert('Réseau social', 'Merci de choisir un réseau et de saisir un identifiant.');
-      return;
-    }
-    setSocialSaving(true);
-    try {
-      await apiUpsertSocial({ type: selectedSocialPlatform, handle: socialHandleInput.trim() });
-      await refreshMyProfile();
-      setSocialModalVisible(false);
-    } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible d'enregistrer ce réseau social");
-    } finally {
-      setSocialSaving(false);
-    }
-  };
-
-  const handleRemoveSocial = (platform) => {
-    Alert.alert('Supprimer ce réseau ?', 'Ce lien sera retiré de votre profil.', [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await apiRemoveSocial(platform);
-            await refreshMyProfile();
-          } catch (e) {
-            Alert.alert('Erreur', e?.message || 'Impossible de supprimer ce réseau social');
-          }
-        },
-      },
-    ]);
-  };
-
-  const socialList = Array.isArray(user?.socialMedia) ? user.socialMedia : [];
-
   // --- Comptes bloqués ---
   const openBlockedUsers = async () => {
     setBlockedModalVisible(true);
@@ -860,7 +886,10 @@ const SettingsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, activeTab === 'profile' && { paddingBottom: 100 }]}
+        showsVerticalScrollIndicator={false}
+      >
         {activeTab === 'profile' ? (
           <>
             <TouchableOpacity
@@ -870,7 +899,7 @@ const SettingsScreen = () => {
               disabled={!!photoActionLoading}
             >
               {user?.photo ? (
-                <ImageWithPlaceholder source={{ uri: user.photo }} style={styles.avatarImage} />
+                <ImageWithPlaceholder uri={user.photo} style={styles.avatarImage} />
               ) : (
                 <View style={[styles.avatarImage, styles.avatarPlaceholder, { backgroundColor: colors.surface }]}>
                   <Text style={styles.avatarPlaceholderText}>📷</Text>
@@ -933,57 +962,52 @@ const SettingsScreen = () => {
               />
             </View>
 
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
-                <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>RÉSEAUX SOCIAUX</Text>
-                <TouchableOpacity onPress={openAddSocial} style={[styles.smallPill, { backgroundColor: '#00c2cb' }]}>
-                  <Text style={[styles.smallPillText, { color: '#fff' }]}>+ Ajouter</Text>
-                </TouchableOpacity>
-              </View>
-              {socialList.length === 0 ? (
-                <Text style={{ fontSize: 13, color: colors.textSecondary, paddingVertical: 6 }}>
-                  Aucun réseau social ajouté pour le moment.
-                </Text>
-              ) : (
-                socialList.map((social, idx) => (
-                  <View
-                    key={social.platform}
-                    style={[
-                      styles.optionContainer,
-                      { borderBottomColor: colors.border, borderBottomWidth: idx < socialList.length - 1 ? 1 : 0 },
-                    ]}
-                  >
-                    <TouchableOpacity style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }} onPress={() => openEditSocial(social)}>
-                      {!!socialMediaIcons[social.platform] && (
-                        <Image source={socialMediaIcons[social.platform]} style={styles.socialIcon} />
-                      )}
-                      <View>
-                        <Text style={[styles.optionText, { color: colors.textPrimary }]}>{social.platform}</Text>
-                        <Text style={{ fontSize: 12, color: colors.textSecondary }}>{social.username}</Text>
-                      </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleRemoveSocial(social.platform)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Text style={{ color: '#ff4d4d', fontSize: 13, fontWeight: '700' }}>Retirer</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
-              )}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.saveButton, { backgroundColor: '#00c2cb', opacity: profileSaving ? 0.7 : 1 }]}
-              onPress={handleSaveProfile}
-              disabled={profileSaving}
-            >
-              {profileSaving ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>Enregistrer</Text>
-              )}
-            </TouchableOpacity>
           </>
         ) : (
           <>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <Text style={styles.sectionTitle}>ABONNEMENT</Text>
+              {user?.isPremium ? (
+                <>
+                  <View style={[styles.optionContainer, { borderBottomColor: colors.border, borderBottomWidth: subscriptionInfo && typeof subscriptionInfo === 'object' ? 1 : 0 }]}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.optionText, { color: colors.textPrimary }]}>
+                        👑 Premium{' '}
+                        {subscriptionInfo && typeof subscriptionInfo === 'object' ? (subscriptionInfo.isMonthly ? '· Mensuel' : '· Annuel') : ''}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+                        {subscriptionInfo === 'idle'
+                          ? 'Statut en cours de chargement…'
+                          : subscriptionInfo === 'none'
+                            ? 'Accordé hors abonnement App Store/Play Store (essai gratuit ou offre spéciale)'
+                            : subscriptionInfo?.expirationDate
+                              ? `${subscriptionInfo.willRenew ? 'Renouvellement' : 'Expire'} le ${new Date(subscriptionInfo.expirationDate).toLocaleDateString('fr-FR')}`
+                              : ''}
+                      </Text>
+                    </View>
+                  </View>
+                  {subscriptionInfo && typeof subscriptionInfo === 'object' && (
+                    <TouchableOpacity
+                      style={[styles.linkRow, { borderBottomWidth: 0 }]}
+                      onPress={handleManageSubscription}
+                      disabled={manageSubLoading}
+                    >
+                      <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>
+                        {manageSubLoading ? 'Ouverture…' : 'Gérer mon abonnement'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.linkRow, { borderBottomWidth: 0 }]}
+                  onPress={() => navigation.navigate('PremiumPaywall', { source: 'settings' })}
+                >
+                  <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>👑 Passer au Premium</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={styles.sectionTitle}>GÉNÉRAL</Text>
 
@@ -1051,78 +1075,63 @@ const SettingsScreen = () => {
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>APPARENCE</Text>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 }}>
-                <TouchableOpacity
-                  onPress={() => setThemeMode('light')}
-                  style={[styles.themePill, themeMode === 'light' && { backgroundColor: '#00c2cb' }]}
-                >
-                  <Text style={[styles.themePillText, { color: themeMode === 'light' ? '#fff' : colors.textSecondary }]}>
-                    Clair
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setThemeMode('dark')}
-                  style={[styles.themePill, themeMode === 'dark' && { backgroundColor: '#00c2cb' }]}
-                >
-                  <Text style={[styles.themePillText, { color: themeMode === 'dark' ? '#fff' : colors.textSecondary }]}>
-                    Sombre
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setThemeMode('system')}
-                  style={[styles.themePill, themeMode === 'system' && { backgroundColor: '#00c2cb' }]}
-                >
-                  <Text style={[styles.themePillText, { color: themeMode === 'system' ? '#fff' : colors.textSecondary }]}>
-                    Auto
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
-              <View
-                style={[
-                  styles.optionContainer,
-                  { borderBottomColor: colors.border, borderBottomWidth: 1 },
-                ]}
-              >
-                <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1, fontWeight: '600' }]}>
-                  Toutes les notifications
-                </Text>
-                {notifMasterSaving ? (
-                  <ActivityIndicator size="small" color="#00c2cb" />
-                ) : (
-                  <Switch
-                    value={NOTIFICATION_KINDS.every((item) => notifPrefs?.[item.kind] !== false)}
-                    onValueChange={handleToggleAllNotifKinds}
-                    trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-                    thumbColor="#fff"
-                  />
-                )}
-              </View>
-              {NOTIFICATION_KINDS.map((item, idx) => {
-                const enabled = notifPrefs?.[item.kind] !== false; // opt-out : activé par défaut
+              {NOTIFICATION_CATEGORIES.map((category, catIdx) => {
+                const items = NOTIFICATION_KINDS.filter((item) => category.kinds.includes(item.kind));
+                const expanded = !!expandedNotifCategories[category.key];
                 return (
-                  <View
-                    key={item.kind}
-                    style={[
-                      styles.optionContainer,
-                      { borderBottomColor: colors.border, borderBottomWidth: idx < NOTIFICATION_KINDS.length - 1 ? 1 : 0 },
-                    ]}
-                  >
-                    <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1 }]}>{item.label}</Text>
-                    {notifSavingKind === item.kind ? (
-                      <ActivityIndicator size="small" color="#00c2cb" />
-                    ) : (
-                      <Switch
-                        value={enabled}
-                        onValueChange={(v) => handleToggleNotifKind(item.kind, v)}
-                        trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-                        thumbColor={enabled ? '#fff' : '#f4f3f4'}
+                  <View key={category.key}>
+                    <TouchableOpacity
+                      style={[
+                        styles.optionContainer,
+                        {
+                          borderBottomColor: colors.border,
+                          borderBottomWidth: expanded || catIdx < NOTIFICATION_CATEGORIES.length - 1 ? 1 : 0,
+                        },
+                      ]}
+                      onPress={() => toggleNotifCategory(category.key)}
+                    >
+                      <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1, fontWeight: '600' }]}>
+                        {category.label}
+                      </Text>
+                      <Ionicons
+                        name={expanded ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color={colors.textSecondary}
                       />
-                    )}
+                    </TouchableOpacity>
+                    {expanded &&
+                      items.map((item, idx) => {
+                        const enabled = notifPrefs?.[item.kind] !== false; // opt-out : activé par défaut
+                        return (
+                          <View
+                            key={item.kind}
+                            style={[
+                              styles.optionContainer,
+                              styles.optionContainerNested,
+                              {
+                                borderBottomColor: colors.border,
+                                borderBottomWidth:
+                                  idx < items.length - 1 || catIdx < NOTIFICATION_CATEGORIES.length - 1 ? 1 : 0,
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.optionText, { color: colors.textPrimary, flex: 1, fontSize: 14 }]}>
+                              {item.label}
+                            </Text>
+                            {notifSavingKind === item.kind ? (
+                              <ActivityIndicator size="small" color="#00c2cb" />
+                            ) : (
+                              <Switch
+                                value={enabled}
+                                onValueChange={(v) => handleToggleNotifKind(item.kind, v)}
+                                trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                                thumbColor={enabled ? '#fff' : '#f4f3f4'}
+                              />
+                            )}
+                          </View>
+                        );
+                      })}
                   </View>
                 );
               })}
@@ -1165,18 +1174,13 @@ const SettingsScreen = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.optionText, { color: colors.textPrimary }]}>Vente de données (CCPA)</Text>
                   <Text style={{ fontSize: 11, color: colors.textSecondary }}>
-                    Ne pas vendre mes informations personnelles
+                    Nous ne vendons ni ne partageons vos données personnelles avec des tiers à des fins
+                    publicitaires.
                   </Text>
                 </View>
-                <Switch
-                  value={doNotSell}
-                  onValueChange={handleToggleDoNotSell}
-                  trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-                  thumbColor={doNotSell ? '#fff' : '#f4f3f4'}
-                />
               </View>
 
-              <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+              <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
                 <View style={{ flex: 1, paddingRight: 12 }}>
                   <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode invisible</Text>
                   <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
@@ -1192,6 +1196,27 @@ const SettingsScreen = () => {
                     onValueChange={handleToggleInvisible}
                     trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
                     thumbColor={invisibleMode ? '#fff' : '#f4f3f4'}
+                  />
+                )}
+              </View>
+
+              <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
+                <View style={{ flex: 1, paddingRight: 12 }}>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Partager mon lieu actuel</Text>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
+                    Affiche aux autres utilisateurs l'endroit précis où vous vous trouvez actuellement (ex :
+                    "Actuellement à ..."), en plus de votre ville. Désactivé par défaut pour protéger votre vie
+                    privée et éviter tout risque de traque.
+                  </Text>
+                </View>
+                {shareCurrentLocationSaving ? (
+                  <ActivityIndicator size="small" color="#00c2cb" />
+                ) : (
+                  <Switch
+                    value={shareCurrentLocation}
+                    onValueChange={handleToggleShareCurrentLocation}
+                    trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
+                    thumbColor={shareCurrentLocation ? '#fff' : '#f4f3f4'}
                   />
                 )}
               </View>
@@ -1249,8 +1274,8 @@ const SettingsScreen = () => {
               <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={openPolicy}>
                 <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Aide et confidentialité</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={handleLogout}>
-                <Text style={[styles.linkRowText, { color: '#ff8a00' }]}>Se déconnecter</Text>
+              <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={openTerms}>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Conditions générales d'utilisation</Text>
               </TouchableOpacity>
             </View>
 
@@ -1299,6 +1324,22 @@ const SettingsScreen = () => {
           </>
         )}
       </ScrollView>
+
+      {activeTab === 'profile' && (
+        <View style={[styles.stickySaveBar, { backgroundColor: colors.background, paddingBottom: insets.bottom + 12 }]}>
+          <TouchableOpacity
+            style={[styles.saveButton, { backgroundColor: '#00c2cb', opacity: profileSaving ? 0.7 : 1, marginBottom: 0 }]}
+            onPress={handleSaveProfile}
+            disabled={profileSaving}
+          >
+            {profileSaving ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Enregistrer</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Modal visible={policyModalVisible} animationType="slide" onRequestClose={() => setPolicyModalVisible(false)}>
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
@@ -1568,78 +1609,6 @@ const SettingsScreen = () => {
         </View>
       </Modal>
 
-      {/* Social network add/edit modal */}
-      <Modal visible={socialModalVisible} transparent animationType="fade">
-        <View style={styles.blurModalContainer}>
-          <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => !socialSaving && setSocialModalVisible(false)} />
-          <View style={styles.blurModalCenter} pointerEvents="box-none">
-            <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 16 }]}>Réseau social</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14, maxHeight: 50 }}>
-                {SOCIAL_PLATFORMS.map((platform) => (
-                  <TouchableOpacity
-                    key={platform}
-                    onPress={() => setSelectedSocialPlatform(platform)}
-                    style={[
-                      styles.platformPill,
-                      {
-                        backgroundColor: selectedSocialPlatform === platform ? '#00c2cb' : colors.background,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    {!!socialMediaIcons[platform] && (
-                      <Image source={socialMediaIcons[platform]} style={styles.platformPillIcon} />
-                    )}
-                    <Text
-                      style={{
-                        color: selectedSocialPlatform === platform ? '#fff' : colors.textPrimary,
-                        fontSize: 12,
-                        fontWeight: '700',
-                      }}
-                    >
-                      {platform}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              <TextInput
-                style={[
-                  styles.textField,
-                  { borderColor: colors.border, color: colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#f7f9fa' },
-                ]}
-                value={socialHandleInput}
-                onChangeText={setSocialHandleInput}
-                placeholder="Identifiant / nom d'utilisateur"
-                placeholderTextColor={isDark ? '#999' : '#666'}
-                autoCapitalize="none"
-              />
-              <View style={styles.revokeButtons}>
-                <TouchableOpacity
-                  style={[styles.primaryButton, styles.secondaryButton]}
-                  onPress={() => setSocialModalVisible(false)}
-                  disabled={socialSaving}
-                >
-                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.primaryButton, { backgroundColor: '#00c2cb' }]}
-                  onPress={handleSaveSocial}
-                  disabled={socialSaving}
-                >
-                  {socialSaving ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.dangerButtonText}>Enregistrer</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       {/* Comptes bloqués */}
       <Modal
         visible={blockedModalVisible}
@@ -1776,6 +1745,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  optionContainerNested: {
+    paddingLeft: 12,
+  },
   smallPill: {
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -1783,18 +1755,6 @@ const styles = StyleSheet.create({
   },
   smallPillText: {
     fontSize: 13,
-    fontWeight: '700',
-  },
-  themePill: {
-    flex: 1,
-    marginHorizontal: 4,
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,194,203,0.05)',
-  },
-  themePillText: {
-    fontSize: 14,
     fontWeight: '700',
   },
   linkRow: {
@@ -1995,6 +1955,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
     marginBottom: 20,
+  },
+  stickySaveBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 20,
+    paddingTop: 12,
   },
   saveButtonText: {
     color: '#fff',

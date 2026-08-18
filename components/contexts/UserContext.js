@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Purchases from 'react-native-purchases';
 import { getAccessToken, getMyUser } from '../ApiRequest';
 import { registerCurrentDevicePushToken } from '../PushService';
 import { subscribe } from '../EventBus';
@@ -7,6 +8,21 @@ import { mapBackendUser } from '../../utils/mappers';
 import { incrementCheckinCount } from '../../utils/checkinCounter';
 
 export const UserContext = createContext();
+
+// Aligne l'identité RevenueCat sur l'utilisateur backend : sans cet appel,
+// RevenueCat génère un $RCAnonymousID pour chaque installation et le webhook
+// /api/iap/webhook (qui fait User.findById(app_user_id)) ne peut jamais
+// retrouver l'utilisateur, donc isPremium/boostBalance/superlikeBalance ne
+// sont jamais mis à jour côté serveur malgré un achat réel.
+async function _syncRevenueCatIdentity(userId) {
+  if (!userId) return;
+  try {
+    await Purchases.logIn(String(userId));
+  } catch (_) {
+    // Purchases pas encore configuré (race au démarrage) ou natif indisponible
+    // (Expo Go) — sans conséquence, un prochain appel resynchronisera.
+  }
+}
 
 export const UserProvider = ({ children }) => {
   // Start with an empty user so hydration always fetches fresh data
@@ -78,6 +94,7 @@ export const UserProvider = ({ children }) => {
         const me = res?.user;
         if (!cancelled && me) {
           setUser(mapBackendUser(me));
+          await _syncRevenueCatIdentity(me._id || me.id);
           try {
             await registerCurrentDevicePushToken();
           } catch (_) {}
@@ -97,6 +114,7 @@ export const UserProvider = ({ children }) => {
   // Reset user state on global auth logout and re-hydrate on login
   useEffect(() => {
     const offLogout = subscribe('auth:logout', () => {
+      Purchases.logOut().catch(() => {});
       setUser({
         username: '',
         firstName: '',
@@ -134,7 +152,10 @@ export const UserProvider = ({ children }) => {
       try {
         const res = await getMyUser();
         const me = res?.user;
-        if (me) setUser(mapBackendUser(me));
+        if (me) {
+          setUser(mapBackendUser(me));
+          await _syncRevenueCatIdentity(me._id || me.id);
+        }
         try {
           await registerCurrentDevicePushToken();
         } catch (_) {}

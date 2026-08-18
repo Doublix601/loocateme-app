@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from '../utils/logger';
 import { post } from '../components/ApiRequest';
+import { haversineMeters } from '../utils/geo';
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 // v2: élargissement des catégories OSM (restaurant, cafe, gym, school, fast_food, pub,
@@ -32,17 +33,6 @@ const OVERPASS_RADIUS_M = 50000;
 // Distance (en mètres) au-delà de laquelle on considère que l'utilisateur a
 // changé de zone et qu'il faut re-peupler la DB locale en amont du TTL 24h.
 const SIGNIFICANT_MOVE_M = 3000;
-
-// Distance Haversine simplifiée (mètres) entre deux points lat/lon.
-function haversineMeters(lat1, lon1, lat2, lon2) {
-  const toRad = (d) => (d * Math.PI) / 180;
-  const R = 6371000;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 export const LocationSyncService = {
   syncNearbyLocations: async (lat, lon) => {
