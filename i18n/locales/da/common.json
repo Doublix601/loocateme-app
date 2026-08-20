@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Fejl",
     "acceptErrorMessage": "Dit samtykke kunne ikke gemmes. Prøv igen."
   },
-  "ageVerification": {
-    "title": "Aldersverifikation",
-    "urlMissing": "Verifikations-URL mangler",
-    "startError": "Aldersverifikationen kunne ikke startes. Prøv igen.",
-    "retry": "Prøv igen",
-    "declinedTitle": "Verifikation afvist",
-    "declinedMessage": "Vi kunne ikke bekræfte, at du er over 18 år. Du kan prøve igen."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Sprog",

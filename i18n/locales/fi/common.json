@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Virhe",
     "acceptErrorMessage": "Suostumustasi ei voitu tallentaa. Yritä uudelleen."
   },
-  "ageVerification": {
-    "title": "Iän vahvistus",
-    "urlMissing": "Vahvistus-URL puuttuu",
-    "startError": "Iän vahvistusta ei voitu aloittaa. Yritä uudelleen.",
-    "retry": "Yritä uudelleen",
-    "declinedTitle": "Vahvistus hylätty",
-    "declinedMessage": "Emme voineet vahvistaa, että olet yli 18-vuotias. Voit yrittää uudelleen."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Kieli",

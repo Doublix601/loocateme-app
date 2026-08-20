@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Greška",
     "acceptErrorMessage": "Vašu saglasnost nije bilo moguće sačuvati. Pokušajte ponovo."
   },
-  "ageVerification": {
-    "title": "Provera starosti",
-    "urlMissing": "Nedostaje URL za proveru",
-    "startError": "Proveru starosti nije bilo moguće pokrenuti. Pokušajte ponovo.",
-    "retry": "Pokušaj ponovo",
-    "declinedTitle": "Provera odbijena",
-    "declinedMessage": "Nismo mogli da potvrdimo da imate više od 18 godina. Možete pokušati ponovo."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Jezik",

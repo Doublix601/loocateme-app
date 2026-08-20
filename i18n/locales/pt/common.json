@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Erro",
     "acceptErrorMessage": "Não foi possível guardar o seu consentimento. Tente novamente."
   },
-  "ageVerification": {
-    "title": "Verificação de idade",
-    "urlMissing": "URL de verificação em falta",
-    "startError": "Não foi possível iniciar a verificação de idade. Tente novamente.",
-    "retry": "Tentar novamente",
-    "declinedTitle": "Verificação recusada",
-    "declinedMessage": "Não foi possível confirmar que tem mais de 18 anos. Pode tentar novamente."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Idioma",

@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Erreur",
     "acceptErrorMessage": "Impossible d'enregistrer votre consentement. Réessayez."
   },
-  "ageVerification": {
-    "title": "Vérification d'âge",
-    "urlMissing": "URL de vérification manquante",
-    "startError": "Impossible de démarrer la vérification d'âge. Réessayez.",
-    "retry": "Réessayer",
-    "declinedTitle": "Vérification refusée",
-    "declinedMessage": "Nous n'avons pas pu confirmer que vous avez plus de 18 ans. Vous pouvez réessayer."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Langue",

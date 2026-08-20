@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Fout",
     "acceptErrorMessage": "Je toestemming kon niet worden opgeslagen. Probeer het opnieuw."
   },
-  "ageVerification": {
-    "title": "Leeftijdsverificatie",
-    "urlMissing": "Verificatie-URL ontbreekt",
-    "startError": "De leeftijdsverificatie kon niet worden gestart. Probeer het opnieuw.",
-    "retry": "Opnieuw proberen",
-    "declinedTitle": "Verificatie geweigerd",
-    "declinedMessage": "We konden niet bevestigen dat je ouder dan 18 bent. Je kunt het opnieuw proberen."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Taal",

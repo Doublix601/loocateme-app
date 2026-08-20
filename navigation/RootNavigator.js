@@ -4,7 +4,6 @@ import LoginScreen from '../views/LoginScreen';
 import SignupScreen from '../views/SignupScreen';
 import ForgotPasswordScreen from '../views/ForgotPasswordScreen';
 import ConsentScreen from '../views/ConsentScreen';
-import AgeVerificationScreen from '../views/AgeVerificationScreen';
 import MainSwiper from './MainSwiper';
 import LocationScreen from '../views/LocationScreen';
 import UserProfileScreen from '../views/UserProfileScreen';
@@ -37,7 +36,6 @@ export default function RootNavigator({ initialRouteName = 'Login' }) {
       <Stack.Screen name="Signup" component={SignupScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="Consent" component={ConsentScreen} />
-      <Stack.Screen name="AgeVerification" component={AgeVerificationScreen} />
 
       {/* Onboarding */}
       <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ animation: 'fade' }} />

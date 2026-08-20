@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Eroare",
     "acceptErrorMessage": "Consimțământul tău nu a putut fi salvat. Încearcă din nou."
   },
-  "ageVerification": {
-    "title": "Verificarea vârstei",
-    "urlMissing": "URL de verificare lipsă",
-    "startError": "Verificarea vârstei nu a putut fi începută. Încearcă din nou.",
-    "retry": "Încearcă din nou",
-    "declinedTitle": "Verificare refuzată",
-    "declinedMessage": "Nu am putut confirma că ai peste 18 ani. Poți încerca din nou."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Limbă",

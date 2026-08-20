@@ -18,7 +18,6 @@ import { getPrivacyPolicy, acceptPolicyVersion, logout } from '../components/Api
 import { navigateAfterAuth } from '../utils/onboarding';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
-import { useAgeVerificationEnabled } from '../components/contexts/FeatureFlagsContext';
 import { publish } from '../components/EventBus';
 
 export default function ConsentScreen() {
@@ -31,7 +30,6 @@ export default function ConsentScreen() {
   const [accepting, setAccepting] = useState(false);
   const { user, updateUser } = useContext(UserContext);
   const { colors, isDark } = useTheme();
-  const ageVerificationEnabled = useAgeVerificationEnabled();
 
   useEffect(() => {
     let mounted = true;
@@ -69,15 +67,7 @@ export default function ConsentScreen() {
           /* ignore mapping issues */
         }
       }
-      // La vérification d'âge tierce (Didit) n'est requise que si activée
-      // globalement côté API (feature flag piloté par variable d'environnement,
-      // désactivée tant que la loi "majorité numérique" n'est pas promulguée),
-      // et sauf si déjà approuvée lors d'une session précédente.
-      if (!ageVerificationEnabled || user?.ageVerification?.status === 'approved') {
-        await navigateAfterAuth(navigation);
-      } else {
-        navigation.reset({ index: 0, routes: [{ name: 'AgeVerification' }] });
-      }
+      await navigateAfterAuth(navigation);
       setTimeout(() => publish('userlist:refresh'), 1000);
     } catch (e) {
       Alert.alert(t('consent.acceptErrorTitle'), t('consent.acceptErrorMessage'));

@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Hiba",
     "acceptErrorMessage": "A hozzájárulásodat nem sikerült menteni. Próbáld újra."
   },
-  "ageVerification": {
-    "title": "Életkor-ellenőrzés",
-    "urlMissing": "Hiányzik az ellenőrzési URL",
-    "startError": "Az életkor-ellenőrzést nem sikerült elindítani. Próbáld újra.",
-    "retry": "Újra",
-    "declinedTitle": "Ellenőrzés elutasítva",
-    "declinedMessage": "Nem sikerült megerősítenünk, hogy elmúltál 18 éves. Próbáld újra."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Nyelv",

@@ -498,15 +498,6 @@ export async function signup({
   return data;
 }
 
-// AGE VERIFICATION (Didit)
-export async function startAgeVerificationSession() {
-  return post('/age-verification/session', {});
-}
-
-export async function getAgeVerificationStatus() {
-  return get('/age-verification/status');
-}
-
 export async function login({ email, password }) {
   const data = await request('/auth/login', {
     method: 'POST',

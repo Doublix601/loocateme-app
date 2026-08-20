@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Błąd",
     "acceptErrorMessage": "Nie udało się zapisać Twojej zgody. Spróbuj ponownie."
   },
-  "ageVerification": {
-    "title": "Weryfikacja wieku",
-    "urlMissing": "Brak adresu URL weryfikacji",
-    "startError": "Nie udało się rozpocząć weryfikacji wieku. Spróbuj ponownie.",
-    "retry": "Spróbuj ponownie",
-    "declinedTitle": "Weryfikacja odrzucona",
-    "declinedMessage": "Nie mogliśmy potwierdzić, że masz ukończone 18 lat. Możesz spróbować ponownie."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Język",

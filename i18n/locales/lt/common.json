@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Klaida",
     "acceptErrorMessage": "Nepavyko išsaugoti jūsų sutikimo. Bandykite dar kartą."
   },
-  "ageVerification": {
-    "title": "Amžiaus patikra",
-    "urlMissing": "Trūksta patikros nuorodos",
-    "startError": "Nepavyko pradėti amžiaus patikros. Bandykite dar kartą.",
-    "retry": "Bandyti dar kartą",
-    "declinedTitle": "Patikra atmesta",
-    "declinedMessage": "Nepavyko patvirtinti, kad esate vyresnis nei 18 metų. Galite bandyti dar kartą."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Kalba",

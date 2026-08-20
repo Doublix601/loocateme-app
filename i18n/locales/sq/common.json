@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Gabim",
     "acceptErrorMessage": "Pëlqimi juaj nuk mund të ruhej. Provoni përsëri."
   },
-  "ageVerification": {
-    "title": "Verifikimi i moshës",
-    "urlMissing": "Mungon URL-ja e verifikimit",
-    "startError": "Verifikimi i moshës nuk mund të fillonte. Provoni përsëri.",
-    "retry": "Provo përsëri",
-    "declinedTitle": "Verifikimi u refuzua",
-    "declinedMessage": "Nuk mundëm të konfirmojmë që jeni mbi 18 vjeç. Mund të provoni përsëri."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Gjuha",

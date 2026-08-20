@@ -65,8 +65,3 @@ export function useBoostEnabled() {
   const { flags } = useFeatureFlags();
   return flags.boostEnabled ?? true; // Par défaut actif si pas spécifié
 }
-
-export function useAgeVerificationEnabled() {
-  const { flags } = useFeatureFlags();
-  return flags.ageVerificationEnabled ?? false; // Désactivé tant que non explicitement activé côté API
-}

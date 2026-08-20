@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Pogreška",
     "acceptErrorMessage": "Vaš pristanak nije bilo moguće spremiti. Pokušajte ponovno."
   },
-  "ageVerification": {
-    "title": "Provjera dobi",
-    "urlMissing": "Nedostaje URL za provjeru",
-    "startError": "Provjeru dobi nije bilo moguće pokrenuti. Pokušajte ponovno.",
-    "retry": "Pokušaj ponovno",
-    "declinedTitle": "Provjera odbijena",
-    "declinedMessage": "Nismo mogli potvrditi da imate više od 18 godina. Možete pokušati ponovno."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Jezik",

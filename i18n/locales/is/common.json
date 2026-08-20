@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Villa",
     "acceptErrorMessage": "Ekki tókst að vista samþykki þitt. Reyndu aftur."
   },
-  "ageVerification": {
-    "title": "Aldursstaðfesting",
-    "urlMissing": "Vantar staðfestingarhlekk",
-    "startError": "Ekki tókst að hefja aldursstaðfestingu. Reyndu aftur.",
-    "retry": "Reyna aftur",
-    "declinedTitle": "Staðfestingu hafnað",
-    "declinedMessage": "Við gátum ekki staðfest að þú sért eldri en 18 ára. Þú getur reynt aftur."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Tungumál",

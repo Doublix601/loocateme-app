@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Napaka",
     "acceptErrorMessage": "Vaše soglasje ni bilo mogoče shraniti. Poskusite znova."
   },
-  "ageVerification": {
-    "title": "Preverjanje starosti",
-    "urlMissing": "Manjka URL za preverjanje",
-    "startError": "Preverjanja starosti ni bilo mogoče začeti. Poskusite znova.",
-    "retry": "Poskusi znova",
-    "declinedTitle": "Preverjanje zavrnjeno",
-    "declinedMessage": "Nismo mogli potrditi, da ste starejši od 18 let. Lahko poskusite znova."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Jezik",

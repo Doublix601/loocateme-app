@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Fel",
     "acceptErrorMessage": "Ditt samtycke kunde inte sparas. Försök igen."
   },
-  "ageVerification": {
-    "title": "Åldersverifiering",
-    "urlMissing": "Verifierings-URL saknas",
-    "startError": "Åldersverifieringen kunde inte startas. Försök igen.",
-    "retry": "Försök igen",
-    "declinedTitle": "Verifiering avvisad",
-    "declinedMessage": "Vi kunde inte bekräfta att du är över 18 år. Du kan försöka igen."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Språk",

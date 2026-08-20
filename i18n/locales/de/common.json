@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Fehler",
     "acceptErrorMessage": "Deine Zustimmung konnte nicht gespeichert werden. Bitte versuche es erneut."
   },
-  "ageVerification": {
-    "title": "Altersverifizierung",
-    "urlMissing": "Verifizierungs-URL fehlt",
-    "startError": "Die Altersverifizierung konnte nicht gestartet werden. Bitte versuche es erneut.",
-    "retry": "Erneut versuchen",
-    "declinedTitle": "Verifizierung abgelehnt",
-    "declinedMessage": "Wir konnten nicht bestätigen, dass du über 18 Jahre alt bist. Du kannst es erneut versuchen."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Sprache",

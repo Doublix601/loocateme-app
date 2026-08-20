@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Chyba",
     "acceptErrorMessage": "Váš souhlas se nepodařilo uložit. Zkuste to znovu."
   },
-  "ageVerification": {
-    "title": "Ověření věku",
-    "urlMissing": "Chybí URL pro ověření",
-    "startError": "Ověření věku se nepodařilo spustit. Zkuste to znovu.",
-    "retry": "Zkusit znovu",
-    "declinedTitle": "Ověření zamítnuto",
-    "declinedMessage": "Nepodařilo se nám potvrdit, že je vám více než 18 let. Můžete to zkusit znovu."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Jazyk",

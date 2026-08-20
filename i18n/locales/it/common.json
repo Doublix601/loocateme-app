@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Errore",
     "acceptErrorMessage": "Impossibile salvare il tuo consenso. Riprova."
   },
-  "ageVerification": {
-    "title": "Verifica dell'età",
-    "urlMissing": "URL di verifica mancante",
-    "startError": "Impossibile avviare la verifica dell'età. Riprova.",
-    "retry": "Riprova",
-    "declinedTitle": "Verifica rifiutata",
-    "declinedMessage": "Non siamo riusciti a confermare che hai più di 18 anni. Puoi riprovare."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Lingua",

@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Żball",
     "acceptErrorMessage": "Il-kunsens tiegħek ma setax jiġi ssejvjat. Erġa' pprova."
   },
-  "ageVerification": {
-    "title": "Verifika tal-età",
-    "urlMissing": "Nieqes l-URL tal-verifika",
-    "startError": "Il-verifika tal-età ma setgħetx tinbeda. Erġa' pprova.",
-    "retry": "Erġa' pprova",
-    "declinedTitle": "Verifika miċħuda",
-    "declinedMessage": "Ma stajniex nikkonfermaw li għandek aktar minn 18-il sena. Tista' terġa' tipprova."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Lingwa",

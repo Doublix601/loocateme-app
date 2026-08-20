@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Kļūda",
     "acceptErrorMessage": "Jūsu piekrišanu neizdevās saglabāt. Mēģiniet vēlreiz."
   },
-  "ageVerification": {
-    "title": "Vecuma pārbaude",
-    "urlMissing": "Trūkst pārbaudes URL",
-    "startError": "Neizdevās sākt vecuma pārbaudi. Mēģiniet vēlreiz.",
-    "retry": "Mēģināt vēlreiz",
-    "declinedTitle": "Pārbaude noraidīta",
-    "declinedMessage": "Mums neizdevās apstiprināt, ka esat vecāks par 18 gadiem. Varat mēģināt vēlreiz."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Valoda",

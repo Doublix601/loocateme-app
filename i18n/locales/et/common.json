@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Viga",
     "acceptErrorMessage": "Sinu nõusolekut ei õnnestunud salvestada. Proovi uuesti."
   },
-  "ageVerification": {
-    "title": "Vanuse kontroll",
-    "urlMissing": "Kontrolli URL puudub",
-    "startError": "Vanuse kontrolli ei õnnestunud alustada. Proovi uuesti.",
-    "retry": "Proovi uuesti",
-    "declinedTitle": "Kontroll tagasi lükatud",
-    "declinedMessage": "Meil ei õnnestunud kinnitada, et oled üle 18-aastane. Võid uuesti proovida."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Keel",

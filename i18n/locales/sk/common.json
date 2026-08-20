@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Chyba",
     "acceptErrorMessage": "Váš súhlas sa nepodarilo uložiť. Skúste to znova."
   },
-  "ageVerification": {
-    "title": "Overenie veku",
-    "urlMissing": "Chýba URL na overenie",
-    "startError": "Overenie veku sa nepodarilo spustiť. Skúste to znova.",
-    "retry": "Skúsiť znova",
-    "declinedTitle": "Overenie zamietnuté",
-    "declinedMessage": "Nepodarilo sa nám potvrdiť, že máte viac ako 18 rokov. Môžete to skúsiť znova."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Jazyk",

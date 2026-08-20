@@ -34,14 +34,6 @@
     "acceptErrorTitle": "Error",
     "acceptErrorMessage": "We couldn't save your consent. Please try again."
   },
-  "ageVerification": {
-    "title": "Age verification",
-    "urlMissing": "Verification URL missing",
-    "startError": "We couldn't start age verification. Please try again.",
-    "retry": "Retry",
-    "declinedTitle": "Verification declined",
-    "declinedMessage": "We couldn't confirm that you are over 18. You can try again."
-  },
   "settings": {
     "language": {
       "sectionTitle": "Language",
