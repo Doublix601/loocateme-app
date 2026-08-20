@@ -18,7 +18,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "me.loocate.app",
       "scheme": "loocateme",
       "googleServicesFile": "./GoogleService-Info.plist",
