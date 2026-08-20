@@ -5,10 +5,12 @@ import { useNavigation } from '@react-navigation/native';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
+import { useTranslation } from 'react-i18next';
 
 const { width, height } = Dimensions.get('window');
 
 const WarningsScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { user } = useContext(UserContext);
   const { colors, isDark } = useTheme();
@@ -39,7 +41,7 @@ const WarningsScreen = () => {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Avertissements</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('warningsScreen.title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -54,13 +56,13 @@ const WarningsScreen = () => {
           ]}
         >
           <Text style={[styles.infoText, { color: colors.textPrimary }]}>
-            Ce comportement peut entraîner un bannissement temporaire ou définitif de l'application.
+            {t('warningsScreen.banAlert')}
           </Text>
         </View>
 
         {warnings.length === 0 ? (
           <View style={{ marginTop: 40, alignItems: 'center' }}>
-            <Text style={[styles.emptyText, { color: colors.textPrimary, opacity: 0.5 }]}>Aucun avertissement.</Text>
+            <Text style={[styles.emptyText, { color: colors.textPrimary, opacity: 0.5 }]}>{t('warningsScreen.empty')}</Text>
           </View>
         ) : (
           warnings.map((entry, index) => (
@@ -70,15 +72,15 @@ const WarningsScreen = () => {
             >
               <View style={{ marginBottom: 15 }}>
                 <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>
-                  Type d'avertissement
+                  {t('warningsScreen.typeLabel')}
                 </Text>
-                <Text style={[styles.warningValue, { color: colors.textPrimary }]}>{entry.type || 'Non précisé'}</Text>
+                <Text style={[styles.warningValue, { color: colors.textPrimary }]}>{entry.type || t('warningsScreen.notSpecified')}</Text>
               </View>
 
               <View style={{ marginBottom: 15 }}>
-                <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>Raison</Text>
+                <Text style={[styles.warningLabel, { color: colors.textPrimary, opacity: 0.5 }]}>{t('warningsScreen.reasonLabel')}</Text>
                 <Text style={[styles.warningValue, { color: colors.textPrimary, fontWeight: '500' }]}>
-                  {entry.reason || 'Non précisée'}
+                  {entry.reason || t('warningsScreen.notSpecifiedFem')}
                 </Text>
               </View>
 

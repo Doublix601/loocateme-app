@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -122,6 +123,7 @@ function applyOptimisticLocationPatch(locations, { myRawId, previousPoiId, nextP
 }
 
 const LocationListScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { colors, isDark } = useTheme();
   const { isMoon, vibe, transitioningTo } = useVibe();
@@ -234,10 +236,10 @@ const LocationListScreen = () => {
       await apiUpdateCheckInMode(nextMode);
       LocationService.setCheckInMode(nextMode);
       updateUser?.({ ...currentUser, checkInMode: nextMode });
-      showToast(nextMode === 'manual' ? 'Check-in manuel activé' : 'Check-in automatique activé');
+      showToast(nextMode === 'manual' ? t('locationListScreen.checkinModeManualOn') : t('locationListScreen.checkinModeAutoOn'));
     } catch (e) {
       console.warn('[LocationListScreen] apiUpdateCheckInMode failed', e?.message || e);
-      Alert.alert('Erreur', "Impossible de changer le mode de check-in pour l'instant.");
+      Alert.alert(t('locationListScreen.checkinModeErrorTitle'), t('locationListScreen.checkinModeErrorMessage'));
     } finally {
       setTogglingCheckInMode(false);
     }
@@ -291,7 +293,7 @@ const LocationListScreen = () => {
           );
         }
 
-        showToast(`Tu es maintenant à ${item.name} !`);
+        showToast(t('locationListScreen.checkedInToast', { name: item.name }));
         // reuseCoords: `c` (la position qui vient de servir au check-in) pour éviter
         // qu'un nouveau fix GPS ne retarde l'affichage du userCount à jour (cf.
         // commentaire détaillé dans fetchNearbyLocations).
@@ -302,7 +304,7 @@ const LocationListScreen = () => {
         // événement 'location_rate_limited' publié depuis ApiRequest.js) : ne
         // pas doubler avec cette Alert générique.
         if (e?.code !== 'RATE_LIMITED') {
-          Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
+          Alert.alert(t('locationListScreen.checkinModeErrorTitle'), e?.message || t('locationListScreen.checkinErrorMessage'));
         }
       } finally {
         // Ne réinitialise l'indicateur "en vol" que si aucune requête plus
@@ -352,13 +354,13 @@ const LocationListScreen = () => {
         );
       }
       setLeaveLocationItem(null);
-      showToast('Tu as quitté ce lieu.');
+      showToast(t('locationListScreen.leftLocationToast'));
     } catch (e) {
       console.warn('[LocationListScreen] forceCheckOut failed', e?.message || e);
       if (e?.code === 'BOOST_ACTIVE' || e?.status === 409) {
-        Alert.alert('Boost actif', 'Impossible de quitter ce lieu tant que ton boost est en cours.');
+        Alert.alert(t('locationListScreen.boostActiveTitle'), t('locationListScreen.boostActiveLeaveMessage'));
       } else {
-        Alert.alert('Erreur', e?.message || 'Impossible de te faire quitter ce lieu pour le moment.');
+        Alert.alert(t('locationListScreen.checkinModeErrorTitle'), e?.message || t('locationListScreen.leaveErrorMessage'));
       }
     } finally {
       setLeavingLocation(false);
@@ -627,7 +629,7 @@ const LocationListScreen = () => {
 
   const handleCorrectCheckinPress = useCallback(() => {
     if (isBoosted) {
-      Alert.alert('Boost en cours', "Ton boost est actif : attends qu'il se termine pour changer de lieu.");
+      Alert.alert(t('locationListScreen.boostInProgressTitle'), t('locationListScreen.boostInProgressMessage'));
       return;
     }
     const c = userCoordsRef.current;
@@ -648,7 +650,7 @@ const LocationListScreen = () => {
     } catch (e) {
       if (e?.code === 'BOOST_ACTIVE') {
         setPlacePicker(null);
-        Alert.alert('Boost en cours', e?.message || "Ton boost est actif : attends qu'il se termine pour changer de lieu.");
+        Alert.alert(t('locationListScreen.boostInProgressTitle'), e?.message || t('locationListScreen.boostInProgressMessage'));
       } else {
         console.warn('[LocationListScreen] forceCheckIn failed', e?.message || e);
       }
@@ -1355,7 +1357,7 @@ const LocationListScreen = () => {
         // Sans ça, un refresh manuel qui échoue (réseau, 429...) est
         // indiscernable d'un refresh qui a réussi mais n'a rien trouvé de
         // nouveau : le spinner s'arrête silencieusement dans les deux cas.
-        if (!silent) showToast("Impossible d'actualiser pour l'instant.");
+        if (!silent) showToast(t('locationListScreen.refreshErrorToast'));
       }
     } finally {
       // NB: `setLoading` n'est PAS gardé par `myRequestId` contrairement à
@@ -1528,7 +1530,7 @@ const LocationListScreen = () => {
           style={[styles.checkInModeToggle, { opacity: togglingCheckInMode ? 0.6 : 1 }]}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
           accessibilityLabel={
-            checkInMode === 'auto' ? 'Passer en check-in manuel' : 'Passer en check-in automatique'
+            checkInMode === 'auto' ? t('locationListScreen.switchToManualLabel') : t('locationListScreen.switchToAutoLabel')
           }
         >
           <Ionicons
@@ -1537,18 +1539,18 @@ const LocationListScreen = () => {
             color={colors.accent}
           />
           <Text style={[styles.checkInModeToggleText, { color: colors.accent }]}>
-            {checkInMode === 'auto' ? 'Entrée auto.' : 'Entrée manuelle'}
+            {checkInMode === 'auto' ? t('locationListScreen.entryAuto') : t('locationListScreen.entryManual')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={toggleViewMode}
           style={styles.checkInModeToggle}
           hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-          accessibilityLabel={viewMode === 'list' ? 'Voir la carte' : 'Voir la liste'}
+          accessibilityLabel={viewMode === 'list' ? t('locationListScreen.showMapLabel') : t('locationListScreen.showListLabel')}
         >
           <Ionicons name={viewMode === 'list' ? 'map-outline' : 'list-outline'} size={16} color={colors.accent} />
           <Text style={[styles.checkInModeToggleText, { color: colors.accent }]}>
-            {viewMode === 'list' ? 'Carte' : 'Liste'}
+            {viewMode === 'list' ? t('locationListScreen.mapButton') : t('locationListScreen.listButton')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -1576,7 +1578,7 @@ const LocationListScreen = () => {
                 fetchNearbyLocations({ vibe });
               } catch (e) {
                 console.warn('[LocationListScreen] apiUpdateInvisibleMode failed', e?.message || e);
-                Alert.alert('Erreur', 'Impossible de désactiver le mode invisible pour l’instant.');
+                Alert.alert(t('locationListScreen.checkinModeErrorTitle'), t('locationListScreen.disableInvisibleErrorMessage'));
               } finally {
                 setDisablingInvisibleMode(false);
               }

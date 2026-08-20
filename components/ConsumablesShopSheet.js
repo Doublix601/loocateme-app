@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from './contexts/ThemeContext';
 import PremiumService from '../services/PremiumService';
 import PremiumNudgeService from '../services/PremiumNudgeService';
@@ -24,13 +25,13 @@ import CloseButton from './CloseButton';
 const HISTORY_KEY = '@loocateme:iap_history_v1';
 
 // Définition des packs consommables (prix affichés en fallback si offerings RevenueCat absents)
-const PACKS = [
+const PACKS_BASE = [
   {
     id: 'loocateme_boost_pack_1',
     label: '1 Boost',
     emoji: '🔥',
     price: '1,99 €',
-    description: 'Remonte en tête pendant 30 min',
+    descKey: 'consumablesShop.boostPack1Desc',
     type: 'boost',
     qty: 1,
   },
@@ -39,17 +40,17 @@ const PACKS = [
     label: '5 Boosts',
     emoji: '🔥',
     price: '7,99 €',
-    description: 'Le meilleur rapport qualité/prix',
+    descKey: 'consumablesShop.boostPack5Desc',
     type: 'boost',
     qty: 5,
-    badge: 'Populaire',
+    badgeKey: 'consumablesShop.badgePopular',
   },
   {
     id: 'loocateme_superlike_pack_3',
     label: '3 Superlikes',
     emoji: '⭐',
     price: '2,99 €',
-    description: 'Montre ton intérêt de façon unique',
+    descKey: 'consumablesShop.superlikePack3Desc',
     type: 'superlike',
     qty: 3,
   },
@@ -58,10 +59,10 @@ const PACKS = [
     label: '10 Superlikes',
     emoji: '⭐',
     price: '7,99 €',
-    description: 'Pour les vrais connecteurs',
+    descKey: 'consumablesShop.superlikePack10Desc',
     type: 'superlike',
     qty: 10,
-    badge: 'Meilleure offre',
+    badgeKey: 'consumablesShop.badgeBestOffer',
   },
 ];
 
@@ -86,7 +87,13 @@ async function addToHistory(entry) {
 // onClose  : fn      — fermeture
 // userId   : string  — pour analytics IAPStore
 const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
+  const { t } = useTranslation();
   const { colors, isDark } = useTheme();
+  const PACKS = PACKS_BASE.map((p) => ({
+    ...p,
+    description: t(p.descKey),
+    badge: p.badgeKey ? t(p.badgeKey) : undefined,
+  }));
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
   const slideAnim = useRef(new Animated.Value(400)).current;
   const [boosts, setBoosts] = useState(0);
@@ -168,7 +175,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
         else await PremiumService.addSuperlikes(pack.qty);
         result = { success: true, isMock: true };
       } else {
-        Alert.alert('Non disponible', "Ce pack n'est pas encore disponible dans le store.");
+        Alert.alert(t('consumablesShop.notAvailableTitle'), t('consumablesShop.notAvailableMessage'));
         return;
       }
 
@@ -187,7 +194,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
       }
     } catch (e) {
       if (!e.userCancelled) {
-        Alert.alert('Erreur', e.message || "Impossible de finaliser l'achat.");
+        Alert.alert(t('common.errorTitle'), e.message || t('consumablesShop.purchaseErrorMessage'));
       }
     } finally {
       setPurchasing(null);
@@ -277,7 +284,7 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
                   {isBuying ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.packBtnText}>{DEBUG_CONFIG.IAP_DISABLED ? 'Simuler' : pack.price}</Text>
+                    <Text style={styles.packBtnText}>{DEBUG_CONFIG.IAP_DISABLED ? t('consumablesShop.simulate') : pack.price}</Text>
                   )}
                 </TouchableOpacity>
               </View>

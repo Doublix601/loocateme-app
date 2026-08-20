@@ -43,7 +43,7 @@ export const UserProvider = ({ children }) => {
     role: 'user',
     status: 'green',
     consent: { accepted: false, version: '', consentAt: null },
-    privacyPreferences: { analytics: false, marketing: false },
+    privacyPreferences: { analytics: false },
     invisibleMode: false,
     notificationPreferences: {},
     moderation: {
@@ -132,7 +132,7 @@ export const UserProvider = ({ children }) => {
         role: 'user',
         status: 'green',
         consent: { accepted: false, version: '', consentAt: null },
-        privacyPreferences: { analytics: false, marketing: false },
+        privacyPreferences: { analytics: false },
         invisibleMode: false,
         notificationPreferences: {},
         moderation: {
@@ -197,8 +197,27 @@ export const UserProvider = ({ children }) => {
     // valeur de retour).
     const offMutationSync = subscribe('api:mutation', ({ user: backendUser } = {}) => {
       if (!backendUser) return;
-      const next = mapBackendUser(backendUser);
+      const mapped = mapBackendUser(backendUser);
       setUser((prev) => {
+        // Beaucoup d'endpoints sous /users//profile//social ne renvoient
+        // qu'un `user` partiel (ex: la réponse de l'endpoint invisible-mode
+        // ne re-sérialise pas forcément shareCurrentLocation). Un remplacement
+        // intégral de ces objets imbriqués effacerait donc silencieusement des
+        // préférences pourtant toujours actives côté serveur : on fusionne au
+        // lieu d'écraser, en ne prenant que ce que CETTE réponse a réellement
+        // renvoyé.
+        const next = {
+          ...prev,
+          ...mapped,
+          privacyPreferences: { ...(prev.privacyPreferences || {}), ...(backendUser.privacyPreferences || {}) },
+          notificationPreferences: {
+            ...(prev.notificationPreferences || {}),
+            ...(backendUser.notificationPreferences || {}),
+          },
+          consent: backendUser.consent ? { ...(prev.consent || {}), ...backendUser.consent } : prev.consent,
+          moderation: backendUser.moderation ? { ...(prev.moderation || {}), ...backendUser.moderation } : prev.moderation,
+          streak: backendUser.streak ? { ...(prev.streak || {}), ...backendUser.streak } : prev.streak,
+        };
         // Détecte une transition "pas checké" -> "checké" (n'importe quel
         // flow : manuel, auto GPS, QR, heartbeat) pour piloter le
         // déblocage progressif depuis un seul endroit plutôt que dupliquer

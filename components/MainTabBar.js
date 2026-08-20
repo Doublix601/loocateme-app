@@ -4,18 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from './contexts/ThemeContext';
 import { useMainSwiper } from './contexts/MainSwiperContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-const TABS = [
-  { page: 0, label: 'Recherche', icon: 'search-outline', iconActive: 'search' },
-  { page: 1, label: 'Lieux à proximité', icon: 'location-outline', iconActive: 'location' },
-  { page: 2, label: 'Compte', icon: 'person-outline', iconActive: 'person' },
-];
 
 const BAR_MARGIN = 16;
 const BAR_PADDING = 6;
@@ -131,9 +126,16 @@ function TabItem({ tab, active, colors, onPress, onLayout, magnet }) {
 }
 
 export default function MainTabBar() {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { goToPage, currentPage } = useMainSwiper();
+
+  const TABS = [
+    { page: 0, label: t('mainTabBar.tabSearch'), icon: 'search-outline', iconActive: 'search' },
+    { page: 1, label: t('mainTabBar.tabNearby'), icon: 'location-outline', iconActive: 'location' },
+    { page: 2, label: t('mainTabBar.tabAccount'), icon: 'person-outline', iconActive: 'person' },
+  ];
 
   useEffect(() => {
     LayoutAnimation.configureNext(EXPAND_ANIM);

@@ -28,10 +28,12 @@ import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { mapBackendUser } from '../utils/mappers';
+import { useTranslation } from 'react-i18next';
 
 const { width, height } = Dimensions.get('window');
 
 export default function StatisticsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const navigateToUser = useNavigateToUser();
@@ -82,7 +84,7 @@ export default function StatisticsScreen() {
       const res = await getStatsOverview('30d');
       setData(res || null);
     } catch (e) {
-      setError('Impossible de récupérer les statistiques');
+      setError(t('statisticsScreen.loadError'));
     } finally {
       setLoading(false);
     }
@@ -173,7 +175,7 @@ export default function StatisticsScreen() {
       setDetailed(Array.isArray(res?.items) ? res.items : []);
     } catch (e) {
       // Logic for 403 handling is now handled by looking at item.actor.isBlurred
-      setDetailedError('Impossible de récupérer la liste des visiteurs');
+      setDetailedError(t('statisticsScreen.loadVisitorsError'));
       setDetailed([]);
     } finally {
       setDetailedLoading(false);
@@ -184,12 +186,12 @@ export default function StatisticsScreen() {
     try {
       const diffMs = Math.max(0, Date.now() - new Date(ts).getTime());
       const min = Math.floor(diffMs / 60000);
-      if (min < 2) return "À l'instant";
-      if (min < 60) return `il y a ${min} min`;
+      if (min < 2) return t('statisticsScreen.justNow');
+      if (min < 60) return t('statisticsScreen.minutesAgo', { count: min });
       const hours = Math.floor(min / 60);
-      if (hours < 24) return `il y a ${hours}h`;
-      if (hours < 48) return 'Hier';
-      return `il y a ${Math.floor(hours / 24)} j`;
+      if (hours < 24) return t('statisticsScreen.hoursAgo', { count: hours });
+      if (hours < 48) return t('statisticsScreen.yesterday');
+      return t('statisticsScreen.daysAgo', { count: Math.floor(hours / 24) });
     } catch (_) {
       return '';
     }
@@ -244,7 +246,7 @@ export default function StatisticsScreen() {
           />
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Statistiques</Text>
+          <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('statisticsScreen.title')}</Text>
           {unreadCount > 0 && (
             <View style={styles.unreadBadge}>
               <Text style={styles.unreadBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
@@ -272,7 +274,7 @@ export default function StatisticsScreen() {
             {!effectiveStatisticsEnabled ? (
               <>
                 <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                  Bientôt disponible 🚀
+                  {t('statisticsScreen.comingSoonTitle')}
                 </Text>
                 <Text
                   style={[
@@ -280,13 +282,13 @@ export default function StatisticsScreen() {
                     { color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.7 },
                   ]}
                 >
-                  Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux.
+                  {t('statisticsScreen.comingSoonDesc')}
                 </Text>
               </>
             ) : (
               <>
                 <Text style={[styles.paywallTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                  Qui te stalke ? 👀
+                  {t('statisticsScreen.whoStalksTitle')}
                 </Text>
                 <Text
                   style={[
@@ -294,18 +296,18 @@ export default function StatisticsScreen() {
                     { color: isDark ? '#fff' : colors.textPrimary, opacity: isDark ? 0.9 : 0.7 },
                   ]}
                 >
-                  Passe en Premium pour découvrir qui visite ton profil et tes réseaux sociaux !
+                  {t('statisticsScreen.whoStalksDesc')}
                 </Text>
                 <TouchableOpacity
                   onPress={() => publish('ui:open_premium')}
                   style={[styles.paywallBtn, { backgroundColor: '#00c2cb' }]}
                 >
-                  <Text style={styles.paywallBtnText}>Découvrir mes visiteurs</Text>
+                  <Text style={styles.paywallBtnText}>{t('statisticsScreen.discoverVisitors')}</Text>
                 </TouchableOpacity>
               </>
             )}
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
-              <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.5 }}>Plus tard</Text>
+              <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.5 }}>{t('statisticsScreen.later')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -321,16 +323,16 @@ export default function StatisticsScreen() {
             <>
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
                 <Text style={[styles.cardTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1 }]}>
-                  Vues de profil
+                  {t('statisticsScreen.profileViews')}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
                   <Text style={[styles.metric, { color: '#00c2cb' }]}>{data?.views ?? 0}</Text>
                   <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.7, marginLeft: 10 }}>
-                    vues
+                    {t('statisticsScreen.views')}
                   </Text>
                 </View>
                 <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.5, marginTop: 5, fontSize: 12 }}>
-                  sur les 30 derniers jours
+                  {t('statisticsScreen.last30Days')}
                 </Text>
               </View>
 
@@ -341,7 +343,7 @@ export default function StatisticsScreen() {
                     { color: isDark ? '#fff' : colors.textPrimary, opacity: 1, marginBottom: 15 },
                   ]}
                 >
-                  Clics par réseau
+                  {t('statisticsScreen.clicksByNetwork')}
                 </Text>
                 {supportedNetworks.map(({ key, label }, index) => (
                   <View
@@ -394,7 +396,7 @@ export default function StatisticsScreen() {
                     { color: isDark ? '#fff' : colors.textPrimary, opacity: 1, marginBottom: 15 },
                   ]}
                 >
-                  Dernières visites
+                  {t('statisticsScreen.lastVisits')}
                 </Text>
                 {detailedLoading ? (
                   <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 20 }} />
@@ -406,10 +408,10 @@ export default function StatisticsScreen() {
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyEmoji}>👻</Text>
                     <Text style={[styles.emptyTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                      Personne n'a encore visité ton profil
+                      {t('statisticsScreen.noVisitorsTitle')}
                     </Text>
                     <Text style={[styles.emptyDesc, { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' }]}>
-                      Continue à explorer des lieux pour être découvert !
+                      {t('statisticsScreen.noVisitorsDesc')}
                     </Text>
                   </View>
                 ) : (
@@ -423,7 +425,7 @@ export default function StatisticsScreen() {
                             const isBlurred = it.actor?.isBlurred;
                             const displayName = isBlurred
                               ? '···'
-                              : it.actor?.name || it.actor?.username || 'Utilisateur';
+                              : it.actor?.name || it.actor?.username || t('referralScreen.defaultUser');
                             const locationName = it.actor?.currentPoiName || it.actor?.locationName || null;
                             return (
                               <TouchableOpacity
@@ -450,7 +452,7 @@ export default function StatisticsScreen() {
                                   navigateToUser({
                                     _id: it.actor.id || it.actor._id,
                                     id: it.actor.id || it.actor._id,
-                                    username: it.actor.username || it.actor.name || 'Utilisateur',
+                                    username: it.actor.username || it.actor.name || t('referralScreen.defaultUser'),
                                     firstName: '',
                                     lastName: '',
                                     customName: it.actor.name || '',
@@ -554,7 +556,7 @@ export default function StatisticsScreen() {
                                   { color: isDark ? '#fff' : colors.textPrimary },
                                 ]}
                               >
-                                {blurredCount} visite{blurredCount > 1 ? 's' : ''} masquée{blurredCount > 1 ? 's' : ''}
+                                {t('statisticsScreen.hiddenVisits', { count: blurredCount })}
                               </Text>
                               <Text
                                 style={[
@@ -562,11 +564,11 @@ export default function StatisticsScreen() {
                                   { color: isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)' },
                                 ]}
                               >
-                                Passe en Premium pour tout voir
+                                {t('statisticsScreen.goPremiumToSeeAll')}
                               </Text>
                               <TouchableOpacity onPress={() => publish('ui:open_premium')} style={styles.paywallCTA}>
                                 <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>
-                                  Découvrir mes visiteurs
+                                  {t('statisticsScreen.discoverVisitors')}
                                 </Text>
                               </TouchableOpacity>
                             </View>
@@ -580,7 +582,7 @@ export default function StatisticsScreen() {
                         onPress={() => setVisibleCount((c) => Math.min(c + 10, detailed.length))}
                         style={styles.moreBtn}
                       >
-                        <Text style={[styles.moreTxt, { color: '#00c2cb' }]}>Afficher plus</Text>
+                        <Text style={[styles.moreTxt, { color: '#00c2cb' }]}>{t('statisticsScreen.showMore')}</Text>
                       </TouchableOpacity>
                     )}
                   </>

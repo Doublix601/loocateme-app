@@ -3,7 +3,8 @@
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { updateMyLocation, setVisibility } from './ApiRequest';
+import i18n from '../i18n';
+import { updateMyLocation, forceCheckOut } from './ApiRequest';
 import { reportPermissionStatus } from '../services/EngagementTrackingService';
 import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import { shouldSendPersisted, markSent, roundCoord } from '../utils/locationSendGuard';
@@ -24,7 +25,15 @@ async function autoStopAndMakeInvisible() {
     await AsyncStorage.removeItem(STORAGE_START_KEY);
   } catch {}
   try {
-    await setVisibility(false);
+    // `setVisibility` n'a jamais existé dans ApiRequest.js (import mort depuis
+    // l'introduction de ce fichier) : cet appel levait silencieusement une
+    // TypeError, avalée par ce catch, donc l'utilisateur n'était jamais
+    // réellement check-out côté serveur une fois les 6h de tracking arrière-plan
+    // écoulées — il restait visible dans son lieu jusqu'au filet de sécurité
+    // du cron expireStalePresence (jusqu'à 20 min de plus). forceCheckOut()
+    // est la route déjà utilisée par le bouton "Je ne suis plus ici" et
+    // fonctionne bien en production (cf. LocationListScreen.js).
+    await forceCheckOut();
     await AsyncStorage.setItem(STORAGE_AUTO_INVISIBLE_KEY, '1');
   } catch (e) {
     // ignore network errors; the server may not be reachable in background
@@ -129,7 +138,7 @@ export async function startBackgroundLocationForSixHours() {
         // Android foreground service notification while in background
         foregroundService: {
           notificationTitle: 'LoocateMe',
-          notificationBody: 'Partage de position actif',
+          notificationBody: i18n.t('backgroundLocation.notificationBody'),
           notificationColor: '#00c2cb',
         },
         pausesUpdatesAutomatically: true,

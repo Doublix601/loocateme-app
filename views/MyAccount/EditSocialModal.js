@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, Modal, TextInput, TouchableOpacity, Image, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 import socialMediaIcons from '../../constants/socialMediaIcons';
 
 const { width, height } = Dimensions.get('window');
 
 const EditSocialModal = ({ visible, onClose, colors, isDark, platform, value, onChangeValue, onSave, onDelete }) => {
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
@@ -22,7 +24,7 @@ const EditSocialModal = ({ visible, onClose, colors, isDark, platform, value, on
               style={[styles.modalBackButtonImage, { tintColor: colors.accent }]}
             />
           </TouchableOpacity>
-          <Text style={[styles.modalTitle, { color: colors.accent }]}>Modifier {platform}</Text>
+          <Text style={[styles.modalTitle, { color: colors.accent }]}>{t('myAccount.social.editTitle', { platform })}</Text>
           <View style={[styles.inputWrapper, { borderColor: colors.accent, backgroundColor: isDark ? '#0f1115' : '#ffffff' }]}>
             {platform && socialMediaIcons[platform] ? (
               <Image source={socialMediaIcons[platform]} style={styles.inputPrefixIcon} />
@@ -30,7 +32,7 @@ const EditSocialModal = ({ visible, onClose, colors, isDark, platform, value, on
             <TextInput
               value={value}
               onChangeText={onChangeValue}
-              placeholder="Nom d'utilisateur"
+              placeholder={t('myAccount.social.usernamePlaceholderSimple')}
               placeholderTextColor={isDark ? '#666' : '#999'}
               style={[styles.wrappedInput, { color: colors.textPrimary }]}
               autoCapitalize="none"
@@ -38,10 +40,10 @@ const EditSocialModal = ({ visible, onClose, colors, isDark, platform, value, on
             />
           </View>
           <View style={styles.actionRow}>
-            <TouchableOpacity onPress={onDelete} style={[styles.iconRoundButton, { backgroundColor: colors.danger }]} accessibilityLabel="Supprimer">
+            <TouchableOpacity onPress={onDelete} style={[styles.iconRoundButton, { backgroundColor: colors.danger }]} accessibilityLabel={t('myAccount.social.delete')}>
               <Text style={[styles.iconEmoji, { color: isDark ? colors.background : '#fff', textAlign: 'center' }]}>✖</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={onSave} style={[styles.iconRoundButton, { backgroundColor: colors.accent }]} accessibilityLabel="Enregistrer">
+            <TouchableOpacity onPress={onSave} style={[styles.iconRoundButton, { backgroundColor: colors.accent }]} accessibilityLabel={t('myAccount.social.saveLabel')}>
               <Text style={styles.iconEmoji}>💾</Text>
             </TouchableOpacity>
           </View>

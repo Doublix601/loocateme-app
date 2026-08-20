@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
@@ -58,23 +59,10 @@ const HERO_PHOTO_GRADIENT_LOCATIONS = [0, 0.55, 0.8, 1];
 
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
-const REPORT_CATEGORIES = [
-  { value: 'harassment', label: 'Harcèlement' },
-  { value: 'spam', label: 'Spam' },
-  { value: 'inappropriate', label: 'Contenu inapproprié' },
-  { value: 'impersonation', label: "Usurpation d'identité" },
-  { value: 'scam', label: 'Arnaque' },
-  { value: 'other', label: 'Autre' },
-];
+// REPORT_CATEGORIES et STATUS_LABELS sont désormais calculés dans le composant
+// via t() (voir plus bas), à l'instar de NOTIFICATION_KINDS dans SettingsScreen.js
+// et GENDER_OPTIONS dans EditProfileScreen.js.
 
-// TODO: pas de copy officielle "Dispo ce soir" trouvée ailleurs dans l'app
-// (MyAccountScreen n'a que des phrases longues de confirmation de statut).
-// Libellés courts provisoires en attendant une validation produit/UX.
-const STATUS_LABELS = {
-  green: 'Disponible',
-  orange: 'Visibilité restreinte',
-  red: 'Invisible',
-};
 const STATUS_COLORS = {
   red: '#F44336',
   orange: '#FF9800',
@@ -101,6 +89,7 @@ const computeAge = (birthdate) => {
 const UserProfileScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const { t } = useTranslation();
   const user = route.params?.user;
   const { user: currentUser } = React.useContext(UserContext);
   const { isPremium: premiumAccessActive, premiumSystemEnabled } = usePremiumAccess();
@@ -118,6 +107,28 @@ const UserProfileScreen = () => {
   const { isMoon } = useVibe();
   const { palette, radius, spacing, shadows, typography } = useVibeTheme();
   const insets = useSafeAreaInsets();
+
+  const REPORT_CATEGORIES = React.useMemo(
+    () => [
+      { value: 'harassment', label: t('userProfileScreen.reportCategories.harassment') },
+      { value: 'spam', label: t('userProfileScreen.reportCategories.spam') },
+      { value: 'inappropriate', label: t('userProfileScreen.reportCategories.inappropriate') },
+      { value: 'impersonation', label: t('userProfileScreen.reportCategories.impersonation') },
+      { value: 'scam', label: t('userProfileScreen.reportCategories.scam') },
+      { value: 'other', label: t('userProfileScreen.reportCategories.other') },
+    ],
+    [t],
+  );
+
+  const STATUS_LABELS = React.useMemo(
+    () => ({
+      green: t('userProfileScreen.statusAvailable'),
+      orange: t('userProfileScreen.statusRestricted'),
+      red: t('userProfileScreen.statusInvisible'),
+    }),
+    [t],
+  );
+
   const skyFillStyle = {
     position: 'absolute',
     left: 0,
@@ -235,7 +246,7 @@ const UserProfileScreen = () => {
       if (platform === 'instagram') {
         const username = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(username)) {
-          Alert.alert('Lien invalide', "Nom d'utilisateur Instagram invalide");
+          Alert.alert(t('myAccountScreen.invalidLinkTitle'), t('myAccountScreen.invalidInstagramHandleShort'));
           return;
         }
         const appUrl = `instagram://user?username=${encodeURIComponent(username)}`;
@@ -249,14 +260,14 @@ const UserProfileScreen = () => {
             await Linking.openURL(webUrl);
             return;
           } catch (e2) {
-            Alert.alert("Impossible d'ouvrir Instagram", 'Veuillez réessayer plus tard.');
+            Alert.alert(t('myAccountScreen.cannotOpenInstagramTitle'), t('myAccountScreen.tryAgainLater'));
             return;
           }
         }
       } else if (platform === 'tiktok') {
         const username = extractTikTokUsername(handle);
         if (!TIKTOK_USERNAME_REGEX.test(username)) {
-          Alert.alert('Lien invalide', "Nom d'utilisateur TikTok invalide");
+          Alert.alert(t('myAccountScreen.invalidLinkTitle'), t('myAccountScreen.invalidTiktokHandleShort'));
           return;
         }
         const webUrl = `https://www.tiktok.com/@${encodeURIComponent(username)}`;
@@ -288,7 +299,7 @@ const UserProfileScreen = () => {
           await Linking.openURL(webUrl);
           return;
         } catch (_e2) {
-          Alert.alert("Impossible d'ouvrir TikTok", 'Veuillez réessayer plus tard.');
+          Alert.alert(t('myAccountScreen.cannotOpenTiktokTitle'), t('myAccountScreen.tryAgainLater'));
           return;
         }
       }
@@ -327,9 +338,9 @@ const UserProfileScreen = () => {
       (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username) ||
       user?.name ||
       (user?.email ? String(user.email).split('@')[0] : '') ||
-      'Utilisateur'
+      t('referralScreen.defaultUser')
     );
-  }, [user]);
+  }, [user, t]);
 
   const age = React.useMemo(() => computeAge(user?.birthdate), [user?.birthdate]);
 
@@ -375,15 +386,15 @@ const UserProfileScreen = () => {
       const diffHr = Math.floor(diffMin / 60);
       const diffDay = Math.floor(diffHr / 24);
 
-      if (diffSec < 60) return "À l'instant";
-      if (diffMin < 60) return `Il y a ${diffMin} min`;
-      if (diffHr < 24) return `Il y a ${diffHr} h`;
-      if (diffDay === 1) return 'Hier';
-      return `Il y a ${diffDay} j`;
+      if (diffSec < 60) return t('userProfileScreen.justNow');
+      if (diffMin < 60) return t('userProfileScreen.minutesAgo', { count: diffMin });
+      if (diffHr < 24) return t('userProfileScreen.hoursAgo', { count: diffHr });
+      if (diffDay === 1) return t('userProfileScreen.yesterday');
+      return t('userProfileScreen.daysAgo', { count: diffDay });
     } catch (_) {
       return null;
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     (async () => {
@@ -408,20 +419,20 @@ const UserProfileScreen = () => {
   const handleBlockUser = async () => {
     if (!user?._id) return;
     Alert.alert(
-      'Bloquer cet utilisateur ?',
-      'Vous ne verrez plus cet utilisateur et il ne pourra plus vous contacter.',
+      t('userProfileScreen.blockConfirmTitle'),
+      t('userProfileScreen.blockConfirmMessage'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('userProfileScreen.cancel'), style: 'cancel' },
         {
-          text: 'Bloquer',
+          text: t('userProfileScreen.block'),
           style: 'destructive',
           onPress: async () => {
             try {
               await blockUser(user._id);
               setActionMenuVisible(false);
-              Alert.alert('Utilisateur bloqué', 'Cet utilisateur a été bloqué.');
+              Alert.alert(t('userProfileScreen.userBlockedTitle'), t('userProfileScreen.userBlockedMessage'));
             } catch (e) {
-              Alert.alert('Erreur', e?.message || 'Impossible de bloquer cet utilisateur.');
+              Alert.alert(t('userProfileScreen.errorTitle'), e?.message || t('userProfileScreen.blockError'));
             }
           },
         },
@@ -432,7 +443,7 @@ const UserProfileScreen = () => {
   const handleSubmitReport = async () => {
     if (!user?._id) return;
     if (!reportReason.trim()) {
-      Alert.alert('Motif requis', "Merci d'indiquer un motif.");
+      Alert.alert(t('userProfileScreen.reasonRequiredTitle'), t('userProfileScreen.reasonRequiredMessage'));
       return;
     }
     try {
@@ -447,9 +458,9 @@ const UserProfileScreen = () => {
       setActionMenuVisible(false);
       setReportReason('');
       setReportDescription('');
-      Alert.alert('Signalement envoyé', 'Merci pour votre signalement.');
+      Alert.alert(t('userProfileScreen.reportSentTitle'), t('userProfileScreen.reportSentMessage'));
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible d'envoyer le signalement.");
+      Alert.alert(t('userProfileScreen.errorTitle'), e?.message || t('userProfileScreen.reportSendError'));
     } finally {
       setReportSubmitting(false);
     }
@@ -458,9 +469,9 @@ const UserProfileScreen = () => {
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={styles.error}>Aucun utilisateur sélectionné.</Text>
+        <Text style={styles.error}>{t('userProfileScreen.noUserSelected')}</Text>
         <TouchableOpacity style={styles.modalButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.modalButtonText}>Retour à la liste</Text>
+          <Text style={styles.modalButtonText}>{t('userProfileScreen.backToList')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -469,7 +480,7 @@ const UserProfileScreen = () => {
   const handleSuperlike = async () => {
     if (superlikeSent || superlikeLoading) return;
     if (!superlikeUnlocked) {
-      Alert.alert('Bientôt débloqué', 'Les superlikes se débloquent après ton premier check-in.');
+      Alert.alert(t('userProfileScreen.superlikeLockedTitle'), t('userProfileScreen.superlikeLockedMessage'));
       return;
     }
     if (superlikeBalance <= 0) {
@@ -486,14 +497,17 @@ const UserProfileScreen = () => {
         try {
           await incrementSuperlikeSentCount();
         } catch (_) {}
-        Alert.alert('⭐ Superlike envoyé !', `${displayName} a été notifié(e) que tu le/la remarques.`);
+        Alert.alert(
+          t('userProfileScreen.superlikeSentTitle'),
+          t('userProfileScreen.superlikeSentMessage', { name: displayName }),
+        );
       } else if (result.reason === 'no_superlikes') {
         publish('ui:open_consumables', { type: 'superlike' });
       } else {
-        Alert.alert('Erreur', "Impossible d'envoyer le superlike.");
+        Alert.alert(t('userProfileScreen.errorTitle'), t('userProfileScreen.superlikeSendError'));
       }
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible d'envoyer le superlike.");
+      Alert.alert(t('userProfileScreen.errorTitle'), e?.message || t('userProfileScreen.superlikeSendError'));
     } finally {
       setSuperlikeLoading(false);
     }
@@ -538,7 +552,7 @@ const UserProfileScreen = () => {
             style={[styles.heroRoundBtn, { backgroundColor: palette.overlay }]}
             onPress={() => navigation.goBack()}
             hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-            accessibilityLabel="Retour"
+            accessibilityLabel={t('userProfileScreen.backA11y')}
           >
             <Feather name="chevron-left" size={22} color="#fff" />
           </TouchableOpacity>
@@ -546,7 +560,7 @@ const UserProfileScreen = () => {
             style={[styles.heroRoundBtn, { backgroundColor: palette.overlay }]}
             onPress={() => setActionMenuVisible(true)}
             hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-            accessibilityLabel="Plus d'options"
+            accessibilityLabel={t('userProfileScreen.moreOptionsA11y')}
           >
             <Text style={styles.menuButtonText}>⋯</Text>
           </TouchableOpacity>
@@ -564,7 +578,11 @@ const UserProfileScreen = () => {
             onPress={handleSuperlike}
             disabled={superlikeLoading || superlikeSent}
             hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-            accessibilityLabel={superlikeUnlocked ? 'Envoyer un superlike' : 'Superlike verrouillé, débloqué après ton premier check-in'}
+            accessibilityLabel={
+              superlikeUnlocked
+                ? t('userProfileScreen.sendSuperlikeA11y')
+                : t('userProfileScreen.superlikeLockedA11y')
+            }
           >
             {superlikeLoading ? (
               <ActivityIndicator size="small" color="#FFD700" />
@@ -598,7 +616,7 @@ const UserProfileScreen = () => {
         </View>
         {!!currentPlaceLabel && (
           <Text style={styles.heroCurrentPlaceText} numberOfLines={1}>
-            Actuellement à {currentPlaceLabel}
+            {t('userProfileScreen.currentlyAt', { place: currentPlaceLabel })}
           </Text>
         )}
       </View>
@@ -634,7 +652,7 @@ const UserProfileScreen = () => {
               >
                 <Feather name="heart" size={16} color={palette.accent} />
                 <Text style={{ marginLeft: 8, color: palette.accent, fontWeight: '700', flex: 1 }}>
-                  Cette personne veut entrer en contact
+                  {t('userProfileScreen.mutualConnectionBanner')}
                 </Text>
               </View>
             )}
@@ -680,7 +698,7 @@ const UserProfileScreen = () => {
                         },
                       ]}
                     >
-                      {isEmpty ? 'Aucune bio renseignée.' : bioText}
+                      {isEmpty ? t('userProfileScreen.noBio') : bioText}
                     </Text>
                   );
                 })()}
@@ -694,7 +712,7 @@ const UserProfileScreen = () => {
                 if (!isMe && (user.status === 'orange' || user.status === 'red') && !user.mutualConnection) {
                   return (
                     <Text style={[styles.orangeStatusText, { color: colors.textSecondary }]}>
-                      L'utilisateur ne partage pas ses réseaux sociaux
+                      {t('userProfileScreen.socialsHidden')}
                     </Text>
                   );
                 }
@@ -736,7 +754,7 @@ const UserProfileScreen = () => {
                     );
                   })
                 ) : (
-                  <Text style={[styles.value, { color: palette.textMuted }]}>Aucun réseau social</Text>
+                  <Text style={[styles.value, { color: palette.textMuted }]}>{t('userProfileScreen.noSocials')}</Text>
                 );
               })()}
             </View>
@@ -753,9 +771,9 @@ const UserProfileScreen = () => {
             <View style={styles.modalBackdrop}>
               <TouchableWithoutFeedback>
                 <View style={[styles.menuCard, { backgroundColor: colors.surface }]}>
-                  <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>Actions</Text>
+                  <Text style={[styles.menuTitle, { color: colors.textPrimary }]}>{t('userProfileScreen.actionsTitle')}</Text>
                   <TouchableOpacity style={styles.menuAction} onPress={handleBlockUser}>
-                    <Text style={styles.menuActionText}>Bloquer</Text>
+                    <Text style={styles.menuActionText}>{t('userProfileScreen.block')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.menuAction}
@@ -764,13 +782,13 @@ const UserProfileScreen = () => {
                       setReportVisible(true);
                     }}
                   >
-                    <Text style={styles.menuActionText}>Signaler</Text>
+                    <Text style={styles.menuActionText}>{t('userProfileScreen.report')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.menuAction, styles.menuCancel]}
                     onPress={() => setActionMenuVisible(false)}
                   >
-                    <Text style={styles.menuCancelText}>Annuler</Text>
+                    <Text style={styles.menuCancelText}>{t('userProfileScreen.cancel')}</Text>
                   </TouchableOpacity>
                 </View>
               </TouchableWithoutFeedback>
@@ -792,12 +810,12 @@ const UserProfileScreen = () => {
                     contentContainerStyle={[styles.reportCard, { backgroundColor: colors.surface }]}
                     keyboardShouldPersistTaps="handled"
                   >
-                    <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Signaler un utilisateur</Text>
+                    <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{t('userProfileScreen.reportUserTitle')}</Text>
                     <Text style={[styles.reportWarning, { color: colors.textSecondary }]}>
-                      Les signalements abusifs peuvent entraîner des sanctions. Merci d'être honnête.
+                      {t('userProfileScreen.reportWarning')}
                     </Text>
 
-                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Catégorie</Text>
+                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>{t('userProfileScreen.categoryLabel')}</Text>
                     <View style={styles.categoryGrid}>
                       {REPORT_CATEGORIES.map((cat) => {
                         const selected = reportCategory === cat.value;
@@ -815,26 +833,26 @@ const UserProfileScreen = () => {
                       })}
                     </View>
 
-                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Motif</Text>
+                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>{t('userProfileScreen.reasonLabel')}</Text>
                     <TextInput
                       style={[
                         styles.modalInput,
                         { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg },
                       ]}
-                      placeholder="Expliquez brièvement le motif"
+                      placeholder={t('userProfileScreen.reasonPlaceholder')}
                       placeholderTextColor={colors.textSecondary}
                       value={reportReason}
                       onChangeText={setReportReason}
                     />
 
-                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Description (optionnelle)</Text>
+                    <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>{t('userProfileScreen.descriptionLabel')}</Text>
                     <TextInput
                       style={[
                         styles.modalInput,
                         styles.modalTextarea,
                         { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.bg },
                       ]}
-                      placeholder="Détails supplémentaires"
+                      placeholder={t('userProfileScreen.descriptionPlaceholder')}
                       placeholderTextColor={colors.textSecondary}
                       value={reportDescription}
                       onChangeText={setReportDescription}
@@ -847,7 +865,7 @@ const UserProfileScreen = () => {
                       disabled={reportSubmitting}
                     >
                       <Text style={styles.modalButtonText}>
-                        {reportSubmitting ? 'Envoi...' : 'Envoyer le signalement'}
+                        {reportSubmitting ? t('userProfileScreen.sending') : t('userProfileScreen.sendReport')}
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -855,7 +873,7 @@ const UserProfileScreen = () => {
                       onPress={() => setReportVisible(false)}
                       disabled={reportSubmitting}
                     >
-                      <Text style={styles.modalButtonText}>Annuler</Text>
+                      <Text style={styles.modalButtonText}>{t('userProfileScreen.cancel')}</Text>
                     </TouchableOpacity>
                   </ScrollView>
                 </KeyboardAvoidingView>

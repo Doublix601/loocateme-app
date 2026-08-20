@@ -2,23 +2,24 @@ import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 const { width, height } = Dimensions.get('window');
 
-const STATUS_OPTIONS = [
-  { key: 'green', label: 'Profil public', color: '#4CAF50' },
-  { key: 'orange', label: 'Profil privé', color: '#FF9800' },
-  { key: 'red', label: 'Incognito', color: '#F44336' },
-];
-
 const StatusPickerModal = ({ visible, onClose, colors, isDark, currentStatus, onSelect }) => {
+  const { t } = useTranslation();
+  const STATUS_OPTIONS = [
+    { key: 'green', label: t('myAccount.status.public'), color: '#4CAF50' },
+    { key: 'orange', label: t('myAccount.status.private'), color: '#FF9800' },
+    { key: 'red', label: t('myAccount.status.incognito'), color: '#F44336' },
+  ];
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
         <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.modalTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Ton statut</Text>
+          <Text style={[styles.modalTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.status.title')}</Text>
           {STATUS_OPTIONS.map((opt) => (
             <TouchableOpacity
               key={opt.key}
@@ -35,7 +36,7 @@ const StatusPickerModal = ({ visible, onClose, colors, isDark, currentStatus, on
             </TouchableOpacity>
           ))}
           <TouchableOpacity onPress={onClose} style={[styles.closeButton, { backgroundColor: colors.accent }]}>
-            <Text style={[styles.closeButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>Fermer</Text>
+            <Text style={[styles.closeButtonText, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.status.close')}</Text>
           </TouchableOpacity>
         </View>
       </View>

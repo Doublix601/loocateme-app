@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Log ind",
+      "welcomeBack": "Velkommen tilbage!",
+      "subtitle": "Log ind for at fortsætte",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Adgangskode",
+      "submit": "Log ind",
+      "forgotPassword": "Glemt adgangskode?",
+      "noAccount": "Har du ikke en konto endnu?",
+      "createAccount": "Opret en konto",
+      "emailNotVerifiedTitle": "E-mail ikke bekræftet",
+      "emailNotVerifiedMessage": "Din e-mailadresse er ikke blevet bekræftet endnu. Vi har lige sendt dig en ny bekræftelsesmail. Klik på linket for at aktivere din konto, og prøv igen.",
+      "authFailedTitle": "Login mislykkedes",
+      "authFailedMessage": "Vi kunne ikke logge dig ind. Tjek dine oplysninger, og prøv igen."
+    },
+    "signup": {
+      "passwordMismatch": "Adgangskoderne stemmer ikke overens.",
+      "requiredFields": "Alle felter skal udfyldes.",
+      "birthdateRequired": "Fødselsdato er påkrævet.",
+      "under18": "Du skal være mindst 18 år for at tilmelde dig.",
+      "policyLoadError": "Privatlivspolitikken kunne ikke indlæses. Du kan prøve igen."
+    }
+  },
+  "consent": {
+    "title": "Privatliv",
+    "changelogTitle": "Hvad der er ændret",
+    "decline": "Afvis",
+    "accept": "Accepter",
+    "accepting": "Gemmer...",
+    "declineInfoTitle": "Information",
+    "declineInfoMessage": "Du skal acceptere privatlivspolitikken for at bruge appen.",
+    "acceptErrorTitle": "Fejl",
+    "acceptErrorMessage": "Dit samtykke kunne ikke gemmes. Prøv igen."
+  },
+  "ageVerification": {
+    "title": "Aldersverifikation",
+    "urlMissing": "Verifikations-URL mangler",
+    "startError": "Aldersverifikationen kunne ikke startes. Prøv igen.",
+    "retry": "Prøv igen",
+    "declinedTitle": "Verifikation afvist",
+    "declinedMessage": "Vi kunne ikke bekræfte, at du er over 18 år. Du kan prøve igen."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Sprog",
+      "systemDefault": "Telefonens sprog"
+    }
+  },
+  "forgotPassword": {
+    "title": "Glemt adgangskode",
+    "resetTitle": "Nulstil",
+    "instructions": "Indtast din e-mailadresse for at modtage et nulstillingslink.",
+    "emailPlaceholder": "E-mail",
+    "submit": "Send link",
+    "successTitle": "E-mail sendt",
+    "successMessage": "Hvis en konto findes, er der sendt en e-mail.",
+    "errorTitle": "Fejl",
+    "errorFallback": "Prøv igen"
+  },
+  "dataManagement": {
+    "title": "Privatliv",
+    "export": {
+      "title": "Eksportér mine data",
+      "desc": "Download en kopi af dine oplysninger (profil, sociale netværk, indstillinger).",
+      "button": "Eksportér",
+      "buttonWorking": "Vent venligst...",
+      "successTitle": "Dataeksport",
+      "successMessage": "Din eksport er genereret og vist i konsollen.",
+      "errorTitle": "Fejl",
+      "errorMessage": "Dine data kunne ikke eksporteres nu. Prøv igen."
+    },
+    "delete": {
+      "title": "Slet min konto",
+      "desc": "Sletter permanent din konto og alle tilhørende data.",
+      "passwordPlaceholder": "Bekræft med din adgangskode",
+      "button": "Slet permanent",
+      "passwordRequiredTitle": "Adgangskode påkrævet",
+      "passwordRequiredMessage": "Indtast venligst din adgangskode.",
+      "confirmTitle": "Bekræftelse",
+      "confirmMessage": "Denne handling kan ikke fortrydes. Vil du virkelig slette din konto?",
+      "cancel": "Annuller",
+      "confirm": "Slet",
+      "successTitle": "Konto slettet",
+      "successMessage": "Din konto og data er blevet slettet.",
+      "errorTitle": "Fejl",
+      "errorMessage": "Sletning mislykkedes. Ugyldig adgangskode eller serverproblem."
+    }
+  },
+  "editProfile": {
+    "title": "Rediger min profil",
+    "subtitle": "Tryk på et felt for at redigere det",
+    "notSet": "Ikke angivet",
+    "backLabel": "Tilbage",
+    "fields": {
+      "firstName": "Fornavn",
+      "lastName": "Efternavn",
+      "customName": "Tilpasset navn",
+      "bio": "Bio",
+      "birthdate": "Fødselsdato",
+      "gender": "Køn"
+    },
+    "gender": {
+      "male": "Dreng",
+      "female": "Pige",
+      "preferNotToSay": "Foretrækker ikke at sige"
+    },
+    "photo": {
+      "notSupportedTitle": "Ikke understøttet",
+      "notSupportedMessage": "Kameraet er ikke tilgængeligt på nettet.",
+      "cameraPermissionTitle": "Tilladelse påkrævet",
+      "cameraPermissionMessage": "Appen skal bruge kameraadgang for at tage et billede.",
+      "galleryPermissionMessage": "Appen skal bruge adgang til dine billeder for at vælge et billede.",
+      "errorTitle": "Fejl",
+      "uploadErrorMessage": "Billedet kunne ikke uploades",
+      "cameraOpenError": "Kameraet kunne ikke åbnes.",
+      "galleryOpenError": "Galleriet kunne ikke åbnes.",
+      "deleteErrorMessage": "Profilbilledet kunne ikke slettes",
+      "deleteConfirmTitle": "Slet profilbillede?",
+      "deleteConfirmMessage": "Denne handling er endelig.",
+      "cancel": "Annuller",
+      "delete": "Slet",
+      "modalTitle": "Profilbillede",
+      "takePhoto": "📸 Tag et billede",
+      "sending": "Uploader...",
+      "chooseGallery": "🖼️ Vælg fra galleri",
+      "deletePhoto": "🗑️ Slet billede",
+      "deleting": "Sletter..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Ugyldigt fornavn",
+      "firstNameInvalidMessage": "Fornavnet skal starte med stort bogstav og må indeholde bogstaver (accenter tilladt), mellemrum, apostroffer eller bindestreger.",
+      "lastNameInvalidTitle": "Ugyldigt efternavn",
+      "lastNameInvalidMessage": "Efternavnet skal starte med stort bogstav og må indeholde bogstaver (accenter tilladt), mellemrum, apostroffer eller bindestreger.",
+      "incompleteIdentityTitle": "Ufuldstændig identitet",
+      "incompleteIdentityMessage": "Angiv et Tilpasset navn ELLER et Fornavn OG et Efternavn.",
+      "customNameRequiredTitle": "Tilpasset navn påkrævet",
+      "customNameRequiredMessage": "Du kan ikke fjerne det tilpassede navn, mens for- eller efternavn er tomt.",
+      "invalidDateTitle": "Ugyldig dato",
+      "invalidDateMessage": "Vælg venligst en gyldig fødselsdato.",
+      "minAgeTitle": "Minimumsalder påkrævet",
+      "minAgeMessage": "Du skal være mindst 18 år.",
+      "updateErrorMessage": "Din profil kunne ikke opdateres"
+    },
+    "modal": {
+      "editPrefix": "Rediger",
+      "editGeneric": "Rediger",
+      "selectDate": "Vælg en dato",
+      "cancel": "Annuller",
+      "save": "Gem",
+      "placeholders": {
+        "firstName": "Dit fornavn",
+        "lastName": "Dit efternavn",
+        "customName": "Dit tilpassede navn",
+        "bio": "Fortæl lidt om dig selv...",
+        "default": "Din tekst"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Usynlig tilstand aktiv",
+      "subtitle": "Du kan ikke se steder omkring dig, mens usynlig tilstand er aktiveret. Slå den fra for at gennemse steder.",
+      "disableButton": "Slå usynlig tilstand fra"
+    },
+    "error": {
+      "title": "Placering ikke tilgængelig",
+      "subtitle": "Aktivér placeringstjenester i din enheds indstillinger for at se steder omkring dig.",
+      "retry": "Prøv igen"
+    },
+    "empty": {
+      "title": "Rolig zone for nu",
+      "subtitle": "Der blev ikke fundet noget aktivt sted omkring dig. Udvid radius eller foreslå et nyt sted.",
+      "expandRadius": "Udvid radius",
+      "suggestLocation": "Foreslå dette sted"
+    },
+    "footer": {
+      "loadingMore": "Indlæser flere steder…",
+      "loadMoreError": "Kunne ikke indlæse flere steder. Tjek din forbindelse.",
+      "retry": "Prøv igen",
+      "reachedEnd": "Du har udforsket alle aktive steder i nærheden. Flyt dig eller søg for at se flere."
+    },
+    "leaveModal": {
+      "defaultName": "Dette sted",
+      "subtitle": "Du er i øjeblikket tjekket ind her. Vil du forlade dette sted?",
+      "confirm": "Jeg er ikke her længere",
+      "cancel": "Annuller"
+    },
+    "sections": {
+      "moreLocations": "Flere steder til dig",
+      "sponsored": "I fokus",
+      "trending": "Sker nu"
+    },
+    "filters": {
+      "all": "Alle"
+    },
+    "card": {
+      "visitors_one": "{{count}} besøgende",
+      "visitors_other": "{{count}} besøgende",
+      "sponsored": "SPONSORERET",
+      "imHere": "Jeg er her",
+      "editLocation": "Rediger min placering"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Manuel indtjekning aktiveret",
+    "checkinModeAutoOn": "Automatisk indtjekning aktiveret",
+    "checkinModeErrorTitle": "Fejl",
+    "checkinModeErrorMessage": "Kunne ikke ændre indtjekningstilstand lige nu.",
+    "checkedInToast": "Du er nu på {{name}}!",
+    "checkinErrorMessage": "Kunne ikke bekræfte din tilstedeværelse lige nu.",
+    "leftLocationToast": "Du har forladt dette sted.",
+    "boostActiveTitle": "Boost aktiv",
+    "boostActiveLeaveMessage": "Du kan ikke forlade dette sted, mens din boost kører.",
+    "leaveErrorMessage": "Kunne ikke tjekke dig ud af dette sted lige nu.",
+    "boostInProgressTitle": "Boost i gang",
+    "boostInProgressMessage": "Din boost er aktiv: vent til den slutter, før du skifter sted.",
+    "refreshErrorToast": "Kunne ikke opdatere lige nu.",
+    "disableInvisibleErrorMessage": "Kunne ikke deaktivere usynlig tilstand lige nu.",
+    "switchToManualLabel": "Skift til manuel indtjekning",
+    "switchToAutoLabel": "Skift til automatisk indtjekning",
+    "entryAuto": "Auto. indgang",
+    "entryManual": "Manuel indgang",
+    "showMapLabel": "Vis kort",
+    "showListLabel": "Vis liste",
+    "mapButton": "Kort",
+    "listButton": "Liste"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Fejl",
+    "checkinErrorMessage": "Kunne ikke bekræfte din tilstedeværelse lige nu.",
+    "boostActiveHereTitle": "Boost i gang",
+    "boostActiveHereMessage": "Din boost er aktiv her: vent til den slutter, før du forlader dette sted.",
+    "boostActiveMessage": "Din boost er aktiv: vent til den slutter.",
+    "notFound": "Sted ikke fundet",
+    "back": "Tilbage",
+    "popularityVeryPopular": "Meget populær",
+    "popularityPopular": "Populær",
+    "popularityActive": "Aktiv",
+    "popularityCalm": "Rolig",
+    "checkinConfirmed": "Bekræftet!",
+    "imHere": "Jeg er her",
+    "viewPdf": "Se PDF",
+    "pdfLoadError": "Denne PDF kan ikke vises.",
+    "openInBrowser": "Åbn i browser",
+    "profilesHere": "Profiler her",
+    "recentlyCrossed": "Krydset for nylig",
+    "seeMore": "Se mere",
+    "boosted": "Boostet",
+    "boostProfileHere": "Boost min profil her",
+    "boostLockedAfterCheckins": "Boost 🔓 efter 2 indtjekninger"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Del",
+      "shareLabel": "Del min profil",
+      "qrCode": "QR-kode",
+      "qrLabel": "Vis min QR-kode",
+      "stats": "Statistik",
+      "statsLabel": "Se min statistik"
+    },
+    "qr": {
+      "title": "Scan for at se min profil",
+      "hint": "Hvis appen ikke er installeret, bliver du omdirigeret til butikken ({{store}})."
+    },
+    "status": {
+      "title": "Din status",
+      "close": "Luk",
+      "public": "Offentlig profil",
+      "private": "Privat profil",
+      "incognito": "Inkognito",
+      "pickLabel": "Vælg min status"
+    },
+    "warnings": {
+      "title": "Advarsler",
+      "message_one": "Du har {{count}} advarsel.",
+      "message_other": "Du har {{count}} advarsler.",
+      "tapForDetails": "Tryk for detaljer"
+    },
+    "referral": {
+      "invite": "Inviter dine venner",
+      "label": "Henvisning: inviter dine venner"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Del din placering",
+      "message": "Aktivér deling af dit nuværende sted, så andre brugere i nærheden lettere kan finde dig.",
+      "activate": "Aktivér",
+      "noThanks": "Nej tak"
+    },
+    "social": {
+      "addTitle": "Tilføj et netværk",
+      "usernamePlaceholder": "@brugernavn eller {{platform}}-ID",
+      "selectPlaceholder": "Vælg et netværk",
+      "snapchatHint": "Bemærk: Snapchat tillader ikke direkte links, indtast blot dit brugernavn.",
+      "save": "Gem",
+      "saveLabel": "Gem",
+      "editTitle": "Rediger {{platform}}",
+      "usernamePlaceholderSimple": "Brugernavn",
+      "delete": "Slet",
+      "heading": "Sociale netværk",
+      "addLabel": "Tilføj et socialt netværk"
+    },
+    "rewards": {
+      "heading": "Belønninger",
+      "superlikes": "Superlikes",
+      "boosts": "Boosts",
+      "buy": "Køb",
+      "buyLabel": "Køb superlikes eller boosts",
+      "premiumCta": "👑 Bliv Premium",
+      "premiumLabel": "Bliv Premium",
+      "superlikeHistoryLabel_one": "Se superlike-historik, {{count}} tilbage",
+      "superlikeHistoryLabel_other": "Se superlike-historik, {{count}} tilbage"
+    },
+    "currentlyAt": "Aktuelt på {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Tilføj en sætning for at præsentere dig selv."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Dit profilbillede",
+      "photoDesc": "Skift dit profilbillede fra indstillingerne (ikon øverst til højre).",
+      "bioTitle": "Din bio",
+      "bioDesc": "Din bio redigeres fra indstillingerne. Det er det første, andre ser.",
+      "socialTitle": "Dine sociale netværk",
+      "socialDesc": "Tryk på ➕ for at tilføje et netværk. Hold en ikon nede for at redigere eller slette den.",
+      "statusTitle": "Din status",
+      "statusDesc": "Offentlig profil = synlig for alle · Privat profil = netværk skjult · Inkognito = usynlig. Tryk for at ændre."
+    },
+    "errorTitle": "Fejl",
+    "shareLocationUpdateError": "Kunne ikke opdatere delingen af din nuværende placering",
+    "comingSoonTitle": "Kommer snart 🚀",
+    "comingSoonStats": "Statistik kommer meget snart! Du vil kunne se, hvem der besøger din profil og dine sociale netværk.",
+    "shareTitle": "Del",
+    "shareError": "Kunne ikke dele.",
+    "boostClaimedToast": "Boost hentet 🚀",
+    "superlikeClaimedToast": "Superlike hentet ⭐️",
+    "claimRewardError": "Kunne ikke hente belønningen",
+    "statusVisible": "Du er i synlig tilstand. Alle kan se dine sociale netværk. Du drager fuld fordel af appen.",
+    "statusRestricted": "Du er i begrænset synlig tilstand. Ingen kan se dine sociale netværk.",
+    "statusInvisible": "Du er i usynlig tilstand. Ingen vil se dig fra nu af.",
+    "statusUpdateError": "Kunne ikke opdatere status",
+    "unsupportedPlatform": "Platform understøttes ikke",
+    "handleRequired": "Indtast et brugernavn",
+    "invalidInstagramHandle": "Ugyldigt Instagram-brugernavn. Eksempel: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Ugyldigt TikTok-brugernavn. Eksempel: https://www.tiktok.com/@username",
+    "addSocialError": "Kunne ikke tilføje det sociale netværk",
+    "invalidLinkTitle": "Ugyldigt link",
+    "invalidInstagramHandleShort": "Ugyldigt Instagram-brugernavn",
+    "invalidTiktokHandleShort": "Ugyldigt TikTok-brugernavn",
+    "cannotOpenInstagramTitle": "Kunne ikke åbne Instagram",
+    "cannotOpenTiktokTitle": "Kunne ikke åbne TikTok",
+    "tryAgainLater": "Prøv igen senere.",
+    "editSocialError": "Kunne ikke redigere det sociale netværk",
+    "deleteSocialError": "Kunne ikke slette det sociale netværk",
+    "backLabel": "Tilbage",
+    "settingsLabel": "Indstillinger",
+    "streakTitle": "Din stribe 🔥",
+    "streakMessage": "Log ind hver dag for at øge din stribe. På dag 7 kan du hente en superlike. På dag 14 kan du hente en boost — din stribe starter derefter forfra fra 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Opdag hvem der er ude i nærheden af dig",
+        "desc": "Se levende steder omkring dig og de mennesker, der er der, i realtid — lige nu."
+      },
+      "checkin": {
+        "title": "Automatisk indtjekning, dag eller nat",
+        "desc": "Så snart du går ind på et sted, dukker du automatisk op der — og du ser, hvem der er der. Appen skifter mellem Dag-tilstand (caféer, parker, sport…) og Nat-tilstand (barer, restauranter, klubber…) efter dit humør."
+      },
+      "profile": {
+        "title": "Din profil, de steder der summer",
+        "desc": "Tilføj dine sociale netværk, så folk kan finde dig, se profiler omkring dig. Hvert sted viser også 1 til 3 stjerner baseret på det reelle fremmøde — jo mere liv, jo mere skinner det."
+      },
+      "referral": {
+        "title": "Har en ven inviteret dig?",
+        "desc": "Indtast deres henvisningskode (valgfrit) — det hjælper dem med at låse en gratis Premium-måned op."
+      }
+    },
+    "referralPlaceholder": "Henvisningskode",
+    "next": "Næste",
+    "start": "Kom så 🚀",
+    "skip": "Spring over"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Se hvem der ser din profil",
+      "Synlighedsboosts (1 gratis pakke)",
+      "Superlikes (3/uge gratis)",
+      "Usynlig tilstand",
+      "Søgeradius op til 2 km",
+      "Avanceret statistik",
+      "Forbedrede notifikationer"
+    ],
+    "slides": {
+      "views": {
+        "title": "Hvem besøger dig?",
+        "desc": "Find ud af i realtid, hvem der kigger på din profil."
+      },
+      "boosts": {
+        "title": "Synlighedsboosts",
+        "desc": "Kom øverst på listen i 30 min på dit sted."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Vis en særlig interesse for nogen, du bemærker."
+      },
+      "invisible": {
+        "title": "Usynlig tilstand",
+        "desc": "Forsvind fra listen over nærliggende brugere, når du vil."
+      },
+      "radius": {
+        "title": "Udvidet radius",
+        "desc": "Udforsk op til 2 km omkring dig (500 m i gratisversionen)."
+      },
+      "stats": {
+        "title": "Avanceret statistik",
+        "desc": "Følg visninger og klik på tværs af alle dine sociale netværk."
+      }
+    },
+    "trialError": "Den gratis prøveperiode kunne ikke startes.",
+    "errorTitle": "Fejl",
+    "offersUnavailableTitle": "Tilbud ikke tilgængelige",
+    "offersUnavailableMessage": "Abonnementstilbud er ikke indlæst endnu. Prøv igen om et øjeblik.",
+    "purchaseError": "Købet kunne ikke gennemføres.",
+    "restoredTitle": "✅ Køb gendannet",
+    "restoredMessage": "Dit Premium-abonnement er aktivt.",
+    "noRestoreTitle": "Intet køb fundet",
+    "noRestoreMessage": "Intet aktivt abonnement kunne gendannes.",
+    "restoreError": "Købene kunne ikke gendannes.",
+    "closeLabel": "Luk",
+    "title": "👑 Premium",
+    "subtitle": "Lås alle funktioner op",
+    "debugBanner": "⚠️ Betalinger deaktiveret (debugtilstand)",
+    "monthly": "Månedligt",
+    "perMonth": "/måned",
+    "annual": "Årligt",
+    "perYear": "/år",
+    "mostChosen": "MEST VALGTE",
+    "allIncluded": "ALT INKLUDERET",
+    "ctaSimulate": "Simuler et Premium-abonnement",
+    "ctaTrial": "Start min 7-dages gratis prøveperiode",
+    "ctaLoading": "Indlæser tilbud…",
+    "ctaSubscribe": "Abonner",
+    "thenAnnual": "Derefter {{price}}/år · Kan opsiges når som helst",
+    "thenMonthly": "Derefter {{price}}/måned · Kan opsiges når som helst",
+    "restorePurchases": "Gendan mine køb",
+    "legalText": "Abonnementet fornyes automatisk, medmindre det opsiges inden udgangen af den aktuelle periode. Administrer dine abonnementer i indstillingerne for App Store / Google Play. ",
+    "privacyPolicy": "Privatlivspolitik",
+    "terms": "Vilkår"
+  },
+  "premiumWelcome": {
+    "header": "👑 Velkommen til Premium",
+    "finalTitle": "Kom så!",
+    "finalDesc": "Nyd alle dine nye Premium-fordele lige nu.",
+    "discover": "Opdag",
+    "next": "Næste",
+    "skip": "Spring over"
+  },
+  "referralScreen": {
+    "loadError": "Dine henvisningsoplysninger kunne ikke indlæses.",
+    "errorTitle": "Fejl",
+    "shareMessage": "Slut dig til mig på LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Inviter en ven til LoocateMe",
+    "shareErrorTitle": "Del",
+    "shareError": "Kunne ikke dele.",
+    "codeSavedTitle": "Henvisning",
+    "codeSaved": "Henvisningskode gemt!",
+    "selfReferralError": "Du kan ikke bruge din egen kode.",
+    "alreadyReferredError": "Du har allerede brugt en henvisningskode.",
+    "invalidCodeError": "Denne henvisningskode er ugyldig.",
+    "genericCodeError": "Denne kode kunne ikke valideres.",
+    "title": "Henvisning",
+    "infoText": "Inviter 5 venner denne måned (hver skal ud og lave deres 1. bekræftede indtjekning) og vind 1 gratis Premium-måned 🎉",
+    "confirmCode": "Bekræft henvisningskoden \"{{code}}\"?",
+    "validate": "Bekræft",
+    "rewardActive": "💎 Din gratis Premium-måned er aktiv",
+    "rewardActiveUntil": " indtil {{date}}",
+    "yourCode": "Din henvisningskode",
+    "shareButton": "📤 Del min kode",
+    "shareLabel": "Del min kode",
+    "progressLabel": "{{count}} / {{target}} henvisninger denne måned",
+    "invitedFriends": "Inviterede venner",
+    "noInvites": "Ingen venner inviteret endnu.",
+    "defaultUser": "Bruger",
+    "statusValidated": "Bekræftet",
+    "statusVoid": "Annulleret",
+    "statusPending": "Afventer"
+  },
+  "searchView": {
+    "closeLabel": "Luk søgning",
+    "title": "Søgning",
+    "placeholder": "Brugernavn, sted...",
+    "clearLabel": "Ryd søgning",
+    "filterUsers": "Brugere",
+    "filterLocations": "Steder",
+    "searching": "Søger…",
+    "typeToSearch": "Skriv mindst 2 bogstaver for at starte søgningen",
+    "noResults": "Ingen resultater fundet for denne søgning.",
+    "checkFilters": "Tjek filtrene eller prøv et andet søgeord.",
+    "resultsCount_one": "{{count}} resultat",
+    "resultsCount_other": "{{count}} resultater",
+    "noLongerHere": "Ikke længere her"
+  },
+  "settingsScreen": {
+    "title": "Indstillinger",
+    "tabProfile": "Profil",
+    "tabSettings": "Indstillinger",
+    "sectionIdentity": "IDENTITET",
+    "firstName": "Fornavn",
+    "lastName": "Efternavn",
+    "customNameLabel": "Tilpasset navn",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ABONNEMENT",
+    "premiumMonthly": "· Månedligt",
+    "premiumAnnual": "· Årligt",
+    "statusLoading": "Indlæser status…",
+    "grantedOutsideStore": "Tildelt uden for App Store/Play Store-abonnement (gratis prøveperiode eller specialtilbud)",
+    "renewsOn": "Fornyes den {{date}}",
+    "expiresOn": "Udløber den {{date}}",
+    "opening": "Åbner…",
+    "manageSubscription": "Administrer mit abonnement",
+    "goPremium": "👑 Bliv Premium",
+    "manageSubError": "Kunne ikke åbne abonnementsadministration.",
+    "sectionGeneral": "GENERELT",
+    "displayMode": "Visningstilstand",
+    "fullNameMode": "Fornavn Efternavn",
+    "classicMode": "Klassisk",
+    "customMode": "Tilpasset",
+    "sectionReferral": "HENVISNING",
+    "alreadyReferred": "Du er allerede blevet henvist.",
+    "referralHint": "Har en ven delt en kode med dig? Indtast den her.",
+    "referralPlaceholder": "Henvisningskode",
+    "validate": "Bekræft",
+    "sectionNotifications": "NOTIFIKATIONER",
+    "notifKinds": {
+      "superlike": "Modtagne superlikes",
+      "superlikeAccepted": "Accepterede superlikes",
+      "eventBoost": "Event-boosts",
+      "streakExpiring": "Stribepåmindelser",
+      "profileView": "Profilvisninger",
+      "socialClick": "Visninger af dine sociale netværk",
+      "inactiveProfileViews": "Visninger modtaget under din fravær",
+      "referralValidated": "Henvisning valideret",
+      "referralRewardGranted": "Henvisningsbelønning",
+      "nightModeActivated": "Nattetilstand aktiveret",
+      "atRiskReactivation": "Genaktiveringspåmindelser",
+      "weeklyDigest": "Ugentligt resumé"
+    },
+    "notifCategories": {
+      "social": "Social aktivitet",
+      "rewards": "Striber & belønninger",
+      "system": "System & resuméer"
+    },
+    "sectionPrivacy": "PRIVATLIV & GDPR",
+    "privacyPolicyLink": "Privatlivspolitik",
+    "consent": "Samtykke",
+    "analyticsLabel": "Analyse",
+    "dataSaleTitle": "Salg af data (CCPA)",
+    "dataSaleDesc": "Vi sælger eller deler ikke dine personoplysninger med tredjeparter til reklameformål.",
+    "invisibleModeTitle": "Usynlig tilstand",
+    "invisibleModeDesc": "Du vil være usynlig for andre brugere på steder, men du kan ikke længere se kortet eller stedlisten, mens denne tilstand er aktiv.",
+    "shareLocationTitle": "Del min nuværende placering",
+    "shareLocationDesc": "Viser andre brugere det præcise sted, hvor du befinder dig lige nu, ud over din by. Deaktiveret som standard for at beskytte dit privatliv og undgå risiko for stalking.",
+    "policyLoadError": "Privatlivspolitikken kunne ikke indlæses.",
+    "savePrivacyPrefsError": "Dine privatlivsindstillinger kunne ikke gemmes",
+    "shareLocationUpdateError": "Delingen af din nuværende placering kunne ikke opdateres",
+    "invisibleModeUpdateError": "Den usynlige tilstand kunne ikke opdateres",
+    "notifPrefUpdateError": "Denne notifikationsindstilling kunne ikke opdateres",
+    "consentSavedTitle": "Succes",
+    "consentSaved": "Samtykke gemt.",
+    "consentRevoked": "Samtykke tilbagekaldt.",
+    "consentSaveError": "Dit samtykke kunne ikke gemmes",
+    "revokeConsentTitle": "Tilbagekaldelse af samtykke",
+    "revokeConsentMessage": "Tilbagekaldelse af dit samtykke vil medføre permanent sletning af din konto og alle dine data. Vil du fortsætte?",
+    "cancel": "Annuller",
+    "continueLabel": "Fortsæt",
+    "currentPasswordRequired": "Indtast venligst din nuværende adgangskode.",
+    "passwordTooShort": "Den nye adgangskode skal indeholde mindst 6 tegn.",
+    "passwordConfirmMismatch": "Bekræftelsen matcher ikke den nye adgangskode.",
+    "passwordChangedTitle": "Adgangskode ændret",
+    "passwordChangedMessage": "Din adgangskode er blevet opdateret.",
+    "currentPasswordInvalid": "Ugyldig nuværende adgangskode eller serverfejl.",
+    "invalidEmail": "Indtast venligst en gyldig e-mailadresse.",
+    "passwordRequiredConfirm": "Indtast din adgangskode for at bekræfte.",
+    "checkInboxTitle": "Tjek din indbakke",
+    "checkInboxMessage": "En bekræftelsesmail er sendt til {{email}}. Klik på linket for at bekræfte ændringen.",
+    "emailChangeError": "Kunne ikke starte ændringen. Ugyldig adgangskode eller serverfejl.",
+    "exportReadyTitle": "Eksport klar",
+    "exportReadyMessage": "Dine data er blevet eksporteret ({{size}} tegn).",
+    "exportError": "Dine data kunne ikke eksporteres",
+    "deleteAccountConfirmTitle": "Slet konto",
+    "deleteAccountConfirmMessage": "Sletningen er permanent. Bekræfter du sletningen af din konto?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Din profil er blevet opdateret.",
+    "loadBlockedError": "Blokerede konti kunne ikke indlæses",
+    "unblockError": "Kunne ikke fjerne blokering af denne bruger",
+    "sectionAccount": "KONTO",
+    "emailLabel": "E-mail",
+    "notProvided": "Ikke angivet",
+    "change": "Skift",
+    "passwordLabel": "Adgangskode",
+    "blockedAccounts": "Blokerede konti",
+    "helpAndPrivacy": "Hjælp & privatliv",
+    "terms": "Betingelser for brug",
+    "sectionModeration": "MODERERING",
+    "moderatorSpace": "Moderatorområde",
+    "debugConsole": "Fejlfindingskonsol",
+    "exportData": "Eksportér mine data",
+    "deleteAccount": "Slet min konto",
+    "logout": "Log ud",
+    "save": "Gem",
+    "close": "Luk",
+    "privacyModalTitle": "Privatliv",
+    "deleteAccountTitle": "Sletning af konto",
+    "deleteAccountDesc": "For at bekræfte, indtast din adgangskode. Denne handling kan ikke fortrydes.",
+    "deleting": "Sletter...",
+    "changePasswordTitle": "Skift adgangskode",
+    "currentPasswordPlaceholder": "Nuværende adgangskode",
+    "newPasswordPlaceholder": "Ny adgangskode (min. 6 tegn)",
+    "confirmPasswordPlaceholder": "Bekræft ny adgangskode",
+    "changeEmailTitle": "Skift e-mail",
+    "currentEmailLabel": "Nuværende e-mail: {{email}}",
+    "newEmailPlaceholder": "Ny e-mail",
+    "noBlockedAccounts": "Ingen blokerede konti.",
+    "unblock": "Fjern blokering"
+  },
+  "statisticsScreen": {
+    "loadError": "Statistikken kunne ikke hentes",
+    "loadVisitorsError": "Listen over besøgende kunne ikke hentes",
+    "justNow": "Lige nu",
+    "minutesAgo": "for {{count}} min. siden",
+    "hoursAgo": "for {{count}}t siden",
+    "yesterday": "I går",
+    "daysAgo": "for {{count}} d siden",
+    "title": "Statistik",
+    "comingSoonTitle": "Kommer snart 🚀",
+    "comingSoonDesc": "Statistik kommer meget snart! Du vil kunne se, hvem der besøger din profil og dine sociale netværk.",
+    "whoStalksTitle": "Hvem stalker dig? 👀",
+    "whoStalksDesc": "Bliv Premium for at opdage, hvem der besøger din profil og dine sociale netværk!",
+    "discoverVisitors": "Opdag mine besøgende",
+    "later": "Senere",
+    "profileViews": "Profilvisninger",
+    "views": "visninger",
+    "last30Days": "i de sidste 30 dage",
+    "clicksByNetwork": "Klik pr. netværk",
+    "lastVisits": "Seneste besøg",
+    "noVisitorsTitle": "Ingen har besøgt din profil endnu",
+    "noVisitorsDesc": "Fortsæt med at udforske steder for at blive opdaget!",
+    "defaultUser": "Bruger",
+    "hiddenVisits_one": "{{count}} skjult besøg",
+    "hiddenVisits_other": "{{count}} skjulte besøg",
+    "goPremiumToSeeAll": "Bliv Premium for at se det hele",
+    "showMore": "Vis mere"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Chikane",
+      "spam": "Spam",
+      "inappropriate": "Upassende indhold",
+      "impersonation": "Identitetstyveri",
+      "scam": "Svindel",
+      "other": "Andet"
+    },
+    "statusAvailable": "Tilgængelig",
+    "statusRestricted": "Begrænset synlighed",
+    "statusInvisible": "Usynlig",
+    "noUserSelected": "Ingen bruger valgt.",
+    "backToList": "Tilbage til listen",
+    "superlikeLockedTitle": "Kommer snart",
+    "superlikeLockedMessage": "Superlikes låses op efter dit første check-in.",
+    "superlikeSentTitle": "⭐ Superlike sendt!",
+    "superlikeSentMessage": "{{name}} er blevet underrettet om, at du har lagt mærke til vedkommende.",
+    "errorTitle": "Fejl",
+    "superlikeSendError": "Superlike kunne ikke sendes.",
+    "blockConfirmTitle": "Bloker denne bruger?",
+    "blockConfirmMessage": "Du vil ikke længere se denne bruger, og vedkommende kan ikke længere kontakte dig.",
+    "cancel": "Annuller",
+    "block": "Bloker",
+    "userBlockedTitle": "Bruger blokeret",
+    "userBlockedMessage": "Denne bruger er blevet blokeret.",
+    "blockError": "Kunne ikke blokere denne bruger.",
+    "reasonRequiredTitle": "Årsag påkrævet",
+    "reasonRequiredMessage": "Angiv venligst en årsag.",
+    "reportSentTitle": "Anmeldelse sendt",
+    "reportSentMessage": "Tak for din anmeldelse.",
+    "reportSendError": "Anmeldelsen kunne ikke sendes.",
+    "backA11y": "Tilbage",
+    "moreOptionsA11y": "Flere muligheder",
+    "sendSuperlikeA11y": "Send en superlike",
+    "superlikeLockedA11y": "Superlike låst, låses op efter dit første check-in",
+    "currentlyAt": "Aktuelt hos {{place}}",
+    "mutualConnectionBanner": "Denne person vil gerne komme i kontakt",
+    "socialsHidden": "Denne bruger deler ikke sine sociale medier",
+    "noBio": "Ingen bio tilføjet endnu.",
+    "noSocials": "Ingen sociale medier",
+    "actionsTitle": "Handlinger",
+    "report": "Anmeld",
+    "reportUserTitle": "Anmeld en bruger",
+    "reportWarning": "Misbrug af anmeldelser kan medføre sanktioner. Vær venligst ærlig.",
+    "categoryLabel": "Kategori",
+    "reasonLabel": "Årsag",
+    "reasonPlaceholder": "Forklar kort årsagen",
+    "descriptionLabel": "Beskrivelse (valgfri)",
+    "descriptionPlaceholder": "Yderligere detaljer",
+    "sending": "Sender...",
+    "sendReport": "Send anmeldelse",
+    "justNow": "Lige nu",
+    "minutesAgo_one": "{{count}} min siden",
+    "minutesAgo_other": "{{count}} min siden",
+    "hoursAgo_one": "{{count}} time siden",
+    "hoursAgo_other": "{{count}} timer siden",
+    "yesterday": "I går",
+    "daysAgo_one": "{{count}} dag siden",
+    "daysAgo_other": "{{count}} dage siden"
+  },
+  "warningsScreen": {
+    "title": "Advarsler",
+    "banAlert": "Denne adfærd kan medføre en midlertidig eller permanent udelukkelse fra appen.",
+    "empty": "Ingen advarsler.",
+    "typeLabel": "Advarselstype",
+    "notSpecified": "Ikke angivet",
+    "notSpecifiedFem": "Ikke angivet",
+    "reasonLabel": "Årsag"
+  },
+  "common": {
+    "close": "Luk",
+    "errorTitle": "Fejl"
+  },
+  "streakCard": {
+    "hintReady": "Din belønning er klar!",
+    "hintGrow": "Log ind hver dag for at få den til at stige.",
+    "claimBoost": "Hent din boost",
+    "claimSuperlike": "Hent dit superlike"
+  },
+  "coteCard": {
+    "messageTop": "Helt i top! Log ind i morgen for at beholde den.",
+    "messageZero": "Log ind i dag for at genstarte den."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Kom øverst i 30 min",
+    "boostPack5Desc": "Bedste værdi for pengene",
+    "superlikePack3Desc": "Vis din interesse på en unik måde",
+    "superlikePack10Desc": "For rigtige forbindere",
+    "badgePopular": "Populær",
+    "badgeBestOffer": "Bedste tilbud",
+    "notAvailableTitle": "Ikke tilgængelig",
+    "notAvailableMessage": "Denne pakke er endnu ikke tilgængelig i butikken.",
+    "purchaseErrorMessage": "Kunne ikke gennemføre købet.",
+    "simulate": "Simuler"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Søg på disse steder",
+    "categoryBars": "Barer",
+    "categoryClubs": "Klubber",
+    "categoryRestos": "Restauranter",
+    "categoryPubs": "Pubber",
+    "categoryGyms": "Fitnesscentre",
+    "categoryCafes": "Caféer",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Biblioteker"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonym"
+  },
+  "locationMapView": {
+    "loadError": "Kunne ikke indlæse kortet",
+    "renderError": "Fejl ved indlæsning af kortet"
+  },
+  "churnSurveyModal": {
+    "title": "Et minut, før du går?",
+    "subtitle": "Hjælp os med at forstå hvorfor.",
+    "reasonTooManyNotifications": "For mange notifikationer",
+    "reasonPrivacyConcern": "Jeg er ikke tryg ved delingen",
+    "reasonNotUseful": "Det er ikke nyttigt for mig længere",
+    "reasonOther": "Anden grund",
+    "dismiss": "Spring over",
+    "thanks": "Tak for din feedback 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Søg",
+    "tabNearby": "Steder i nærheden",
+    "tabAccount": "Konto"
+  },
+  "documentViewer": {
+    "openError": "Dette dokument kunne ikke åbnes.",
+    "defaultLabel": "Se dokument"
+  },
+  "vibeFab": {
+    "toDay": "Skift til dagtilstand",
+    "toNight": "Skift til nattilstand"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Placeringsdeling aktiv"
+  }
+}

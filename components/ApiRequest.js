@@ -1012,8 +1012,8 @@ export async function markPolicyVersionSeen() {
   return request('/gdpr/policy/seen', { method: 'PUT' });
 }
 
-export async function updateConsent({ accepted, version = 'v1', analytics = false, marketing = false }) {
-  return request('/gdpr/consent', { method: 'PUT', body: { accepted, version, analytics, marketing } });
+export async function updateConsent({ accepted, version = 'v1', analytics = false }) {
+  return request('/gdpr/consent', { method: 'PUT', body: { accepted, version, analytics } });
 }
 
 export async function exportMyData() {

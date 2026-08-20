@@ -48,7 +48,6 @@ import {
   apiRequestEmailChange,
 } from '../components/ApiRequest';
 import IAPStore from '../services/IAPStore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { useTranslation } from 'react-i18next';
@@ -65,8 +64,6 @@ const LANGUAGE_NAMES = {
 };
 
 const { width, height } = Dimensions.get('window');
-
-const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 
 // Types de notifications push exposés côté backend (voir push.service.js,
 // littéraux `kind: '...'`). Libellés FR pensés pour un usage utilisateur ; les
@@ -115,7 +112,6 @@ const SettingsScreen = () => {
   const [languageSaving, setLanguageSaving] = useState(false);
   const isDark = themeMode === 'dark';
   const [saving, setSaving] = useState(false);
-  const [displayNameMode, setDisplayNameMode] = useState('full');
   const [referralCodeInput, setReferralCodeInput] = useState('');
   const [referralSubmitting, setReferralSubmitting] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
@@ -151,7 +147,6 @@ const SettingsScreen = () => {
   const [consentAccepted, setConsentAccepted] = useState(!!user?.consent?.accepted);
   const [consentVersion, setConsentVersion] = useState(user?.consent?.version || 'v1');
   const [analytics, setAnalytics] = useState(!!user?.privacyPreferences?.analytics);
-  const [marketing, setMarketing] = useState(!!user?.privacyPreferences?.marketing);
   const [doNotSell, setDoNotSell] = useState(user?.privacyPreferences?.doNotSell ?? true);
   const [shareCurrentLocation, setShareCurrentLocation] = useState(!!user?.privacyPreferences?.shareCurrentLocation);
   const [shareCurrentLocationSaving, setShareCurrentLocationSaving] = useState(false);
@@ -188,7 +183,6 @@ const SettingsScreen = () => {
       setConsentAccepted(!!user?.consent?.accepted);
       setConsentVersion(user?.consent?.version || 'v1');
       setAnalytics(!!user?.privacyPreferences?.analytics);
-      setMarketing(!!user?.privacyPreferences?.marketing);
       setDoNotSell(user?.privacyPreferences?.doNotSell ?? true);
       setShareCurrentLocation(!!user?.privacyPreferences?.shareCurrentLocation);
       setInvisibleMode(!!user?.invisibleMode);
@@ -245,24 +239,6 @@ const SettingsScreen = () => {
     } finally {
       setManageSubLoading(false);
     }
-  };
-
-  // Charger préférence d'affichage du nom
-  useEffect(() => {
-    (async () => {
-      try {
-        const v = await AsyncStorage.getItem(DISPLAY_NAME_PREF_KEY);
-        if (v === 'custom' || v === 'full') setDisplayNameMode(v);
-      } catch (_) {}
-    })();
-  }, []);
-
-  const toggleDisplayNameMode = async () => {
-    try {
-      const next = displayNameMode === 'full' ? 'custom' : 'full';
-      setDisplayNameMode(next);
-      await AsyncStorage.setItem(DISPLAY_NAME_PREF_KEY, next);
-    } catch (_) {}
   };
 
   const handleRedeemReferralCode = async () => {
@@ -325,7 +301,6 @@ const SettingsScreen = () => {
   const persistConsentQuietly = async ({
     accepted,
     analytics: analyticsValue,
-    marketing: marketingValue,
     doNotSell: doNotSellValue,
   }) => {
     try {
@@ -333,7 +308,6 @@ const SettingsScreen = () => {
         accepted,
         version: consentVersion,
         analytics: analyticsValue,
-        marketing: marketingValue,
         doNotSell: doNotSellValue,
       });
       const updatedUser = res?.user
@@ -345,7 +319,7 @@ const SettingsScreen = () => {
               version: consentVersion,
               consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null,
             },
-            privacyPreferences: { analytics: analyticsValue, marketing: marketingValue, doNotSell: doNotSellValue },
+            privacyPreferences: { analytics: analyticsValue, doNotSell: doNotSellValue },
           };
       if (updateUser) {
         updateUser({
@@ -359,10 +333,16 @@ const SettingsScreen = () => {
               ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
               : []),
           consent: updatedUser.consent || { accepted, version: consentVersion },
-          privacyPreferences: updatedUser.privacyPreferences || {
-            analytics: analyticsValue,
-            marketing: marketingValue,
-            doNotSell: doNotSellValue,
+          // L'endpoint /consent ne renvoie que accepted/analytics/doNotSell :
+          // on fusionne sur les préférences existantes plutôt que de les
+          // remplacer intégralement, sinon des champs qu'il ne connaît pas
+          // (ex: shareCurrentLocation) seraient effacés côté client.
+          privacyPreferences: {
+            ...(user?.privacyPreferences || {}),
+            ...(updatedUser.privacyPreferences || {
+              analytics: analyticsValue,
+              doNotSell: doNotSellValue,
+            }),
           },
         });
       }
@@ -381,19 +361,13 @@ const SettingsScreen = () => {
     }
     // If checking consent on, just persist quietly
     setConsentAccepted(true);
-    await persistConsentQuietly({ accepted: true, analytics, marketing, doNotSell });
+    await persistConsentQuietly({ accepted: true, analytics, doNotSell });
   };
 
   const handleToggleAnalytics = async (v) => {
     setAnalytics(v);
-    await persistConsentQuietly({ accepted: consentAccepted, analytics: v, marketing, doNotSell });
+    await persistConsentQuietly({ accepted: consentAccepted, analytics: v, doNotSell });
   };
-
-  const handleToggleMarketing = async (v) => {
-    setMarketing(v);
-    await persistConsentQuietly({ accepted: consentAccepted, analytics, marketing: v, doNotSell });
-  };
-
 
   // Partage du lieu précis actuel (au-delà de la ville) sur le profil public.
   // Défaut désactivé (RGPD, risque de stalking) : opt-in explicite requis.
@@ -463,7 +437,7 @@ const SettingsScreen = () => {
 
   const saveConsent = async (accepted) => {
     try {
-      const res = await updateConsent({ accepted, version: consentVersion, analytics, marketing, doNotSell });
+      const res = await updateConsent({ accepted, version: consentVersion, analytics, doNotSell });
       const updatedUser = res?.user
         ? res.user
         : {
@@ -473,7 +447,7 @@ const SettingsScreen = () => {
               version: consentVersion,
               consentAt: accepted ? new Date().toISOString() : user?.consent?.consentAt || null,
             },
-            privacyPreferences: { analytics, marketing, doNotSell },
+            privacyPreferences: { analytics, doNotSell },
           };
       if (updateUser) {
         updateUser({
@@ -487,7 +461,7 @@ const SettingsScreen = () => {
               ? updatedUser.socialNetworks.map((s) => ({ platform: s.type, username: s.handle }))
               : []),
           consent: updatedUser.consent || { accepted, version: consentVersion },
-          privacyPreferences: updatedUser.privacyPreferences || { analytics, marketing, doNotSell },
+          privacyPreferences: updatedUser.privacyPreferences || { analytics, doNotSell },
         });
       }
       setConsentAccepted(accepted);
@@ -987,27 +961,6 @@ const SettingsScreen = () => {
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionGeneral')}</Text>
-
-              <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.displayMode')}</Text>
-                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
-                    {displayNameMode === 'full' ? t('settingsScreen.fullNameMode') : t('settingsScreen.customNameLabel')}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={toggleDisplayNameMode}
-                  style={[styles.smallPill, { backgroundColor: colors.background }]}
-                >
-                  <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>
-                    {displayNameMode === 'full' ? t('settingsScreen.classicMode') : t('settingsScreen.customMode')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={styles.sectionTitle}>{t('settingsScreen.sectionReferral')}</Text>
               {user?.referredBy ? (
                 <Text style={{ fontSize: 14, color: colors.textSecondary, paddingVertical: 10 }}>
@@ -1137,15 +1090,6 @@ const SettingsScreen = () => {
                   onValueChange={handleToggleAnalytics}
                   trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
                   thumbColor={analytics ? '#fff' : '#f4f3f4'}
-                />
-              </View>
-              <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.marketingLabel')}</Text>
-                <Switch
-                  value={marketing}
-                  onValueChange={handleToggleMarketing}
-                  trackColor={{ false: isDark ? '#333' : '#ccc', true: '#00c2cb' }}
-                  thumbColor={marketing ? '#fff' : '#f4f3f4'}
                 />
               </View>
               <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>

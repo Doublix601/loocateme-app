@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -21,6 +22,7 @@ import { useAgeVerificationEnabled } from '../components/contexts/FeatureFlagsCo
 import { publish } from '../components/EventBus';
 
 export default function ConsentScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [policy, setPolicy] = useState('');
@@ -78,7 +80,7 @@ export default function ConsentScreen() {
       }
       setTimeout(() => publish('userlist:refresh'), 1000);
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'enregistrer votre consentement. Réessayez.");
+      Alert.alert(t('consent.acceptErrorTitle'), t('consent.acceptErrorMessage'));
     } finally {
       setAccepting(false);
     }
@@ -86,7 +88,7 @@ export default function ConsentScreen() {
 
   const handleDecline = async () => {
     try {
-      Alert.alert('Information', "Vous devez accepter la politique de confidentialité pour utiliser l'application.");
+      Alert.alert(t('consent.declineInfoTitle'), t('consent.declineInfoMessage'));
       await logout();
       navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch {
@@ -97,7 +99,7 @@ export default function ConsentScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('consent.title')}</Text>
       </View>
 
       {loading ? (
@@ -111,7 +113,7 @@ export default function ConsentScreen() {
               style={[styles.card, { backgroundColor: colors.surface, borderLeftWidth: 3, borderLeftColor: '#00c2cb' }]}
             >
               <Text style={[styles.changelogTitle, { color: colors.textPrimary }]}>
-                Ce qui a changé{version ? ` (v${version})` : ''}
+                {t('consent.changelogTitle')}{version ? ` (v${version})` : ''}
               </Text>
               <Markdown style={markdownStyles(colors)}>{changelog}</Markdown>
             </View>
@@ -132,10 +134,10 @@ export default function ConsentScreen() {
           onPress={handleDecline}
           disabled={accepting}
         >
-          <Text style={[styles.buttonText, { color: colors.textPrimary, opacity: 0.6 }]}>Refuser</Text>
+          <Text style={[styles.buttonText, { color: colors.textPrimary, opacity: 0.6 }]}>{t('consent.decline')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.accept]} onPress={handleAccept} disabled={accepting}>
-          <Text style={styles.buttonText}>{accepting ? 'Enregistrement...' : 'Accepter'}</Text>
+          <Text style={styles.buttonText}>{accepting ? t('consent.accepting') : t('consent.accept')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

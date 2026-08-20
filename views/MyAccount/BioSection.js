@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
@@ -9,6 +10,7 @@ const { width } = Dimensions.get('window');
  * long ici). Le placeholder italique reste affiché si la bio est vide.
  */
 const BioSection = ({ bioRef, bio, colors, isDark }) => {
+  const { t } = useTranslation();
   const bioText = String(bio || '').trim();
   const isEmpty = bioText.length === 0;
   const baseBioFont = Math.min(width * 0.04, 18);
@@ -17,7 +19,7 @@ const BioSection = ({ bioRef, bio, colors, isDark }) => {
   return (
     <View ref={bioRef} style={[styles.container, { backgroundColor: colors.surfaceAlt }]}>
       <View style={styles.titleRow}>
-        <Text style={[styles.label, { color: colors.accent }]}>Bio</Text>
+        <Text style={[styles.label, { color: colors.accent }]}>{t('myAccount.bio.label')}</Text>
       </View>
       <Text
         style={[
@@ -30,7 +32,7 @@ const BioSection = ({ bioRef, bio, colors, isDark }) => {
           },
         ]}
       >
-        {isEmpty ? 'Ajoute une phrase pour te présenter.' : bioText}
+        {isEmpty ? t('myAccount.bio.placeholder') : bioText}
       </Text>
     </View>
   );

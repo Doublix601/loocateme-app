@@ -21,6 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -123,6 +124,7 @@ const HERO_SKY_BOTTOM = { moon: '#10182B', sun: '#7DBBE8' };
  *  - Tout pilote par `useVibeTheme` (zéro `if (isMoon)` cosmétique éparpillé).
  */
 const LocationScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const route = useRoute();
   const { locationId, tertiles, scrollToEventId, openVerifyModal, initialLocation } = route.params ?? {};
@@ -260,7 +262,7 @@ const LocationScreen = () => {
       // événement 'location_rate_limited' publié depuis ApiRequest.js) : ne
       // pas doubler avec cette Alert générique.
       if (e?.code !== 'RATE_LIMITED') {
-        Alert.alert('Erreur', e?.message || "Impossible de confirmer ta présence pour l'instant.");
+        Alert.alert(t('locationScreen.checkinErrorTitle'), e?.message || t('locationScreen.checkinErrorMessage'));
       }
     } finally {
       setManualCheckinLoading(false);
@@ -372,7 +374,7 @@ const LocationScreen = () => {
     setVerifyModalVisible(false);
     if (correcting) return;
     if (isBoosted) {
-      Alert.alert('Boost en cours', 'Ton boost est actif ici : attends qu\'il se termine pour te retirer de ce lieu.');
+      Alert.alert(t('locationScreen.boostActiveHereTitle'), t('locationScreen.boostActiveHereMessage'));
       return;
     }
     setCorrecting(true);
@@ -384,7 +386,7 @@ const LocationScreen = () => {
       refresh();
     } catch (e) {
       if (e?.code === 'BOOST_ACTIVE') {
-        Alert.alert('Boost en cours', e?.message || 'Ton boost est actif : attends qu\'il se termine.');
+        Alert.alert(t('locationScreen.boostActiveHereTitle'), e?.message || t('locationScreen.boostActiveMessage'));
       } else {
         console.warn('[LocationScreen] handleNotHereFromVerify failed', e?.message || e);
       }
@@ -434,10 +436,10 @@ const LocationScreen = () => {
 
   const popularity = useMemo(() => {
     const s = location?.stars || 0;
-    if (s >= 3) return { label: 'Très populaire', stars: 3 };
-    if (s === 2) return { label: 'Populaire', stars: 2 };
-    if (s === 1) return { label: 'Actif', stars: 1 };
-    return { label: 'Calme', stars: 0 };
+    if (s >= 3) return { label: t('locationScreen.popularityVeryPopular'), stars: 3 };
+    if (s === 2) return { label: t('locationScreen.popularityPopular'), stars: 2 };
+    if (s === 1) return { label: t('locationScreen.popularityActive'), stars: 1 };
+    return { label: t('locationScreen.popularityCalm'), stars: 0 };
   }, [location]);
 
   // ─── Loading / Error ───────────────────────────────────────────
@@ -452,12 +454,12 @@ const LocationScreen = () => {
   if (!location) {
     return (
       <View style={[styles.center, { backgroundColor: palette.bg }]}>
-        <Text style={[typography.h2, { marginBottom: spacing.lg }]}>Lieu introuvable</Text>
+        <Text style={[typography.h2, { marginBottom: spacing.lg }]}>{t('locationScreen.notFound')}</Text>
         <TouchableOpacity
           style={[styles.errorBtn, { backgroundColor: palette.accentSoft }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={{ color: palette.accent, fontWeight: '800' }}>Retour</Text>
+          <Text style={{ color: palette.accent, fontWeight: '800' }}>{t('locationScreen.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -650,7 +652,7 @@ const LocationScreen = () => {
                 color="#fff"
               />
               <Text style={styles.primaryButtonText}>
-                {manualCheckinSuccess ? "C'est confirmé !" : 'Je suis là'}
+                {manualCheckinSuccess ? t('locationScreen.checkinConfirmed') : t('locationScreen.imHere')}
               </Text>
             </>
           )}
@@ -784,7 +786,7 @@ const LocationScreen = () => {
               <Text style={[typography.body, { color: palette.text, fontWeight: '700' }]} numberOfLines={1}>
                 {m.title}
               </Text>
-              <Text style={[typography.caption, { color: palette.textMuted, marginTop: 2 }]}>Voir le PDF</Text>
+              <Text style={[typography.caption, { color: palette.textMuted, marginTop: 2 }]}>{t('locationScreen.viewPdf')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={palette.textFaint} />
           </TouchableOpacity>
@@ -814,13 +816,13 @@ const LocationScreen = () => {
             <View style={[styles.center, { flex: 1 }]}>
               <Ionicons name="alert-circle-outline" size={36} color={palette.textFaint} />
               <Text style={[typography.body, { color: palette.textMuted, marginTop: spacing.sm, textAlign: 'center' }]}>
-                Impossible d'afficher ce PDF.
+                {t('locationScreen.pdfLoadError')}
               </Text>
               <TouchableOpacity
                 onPress={() => Linking.openURL(pdfViewer.url)}
                 style={[styles.errorBtn, { backgroundColor: palette.accentSoft, marginTop: spacing.md }]}
               >
-                <Text style={{ color: palette.accent, fontWeight: '800' }}>Ouvrir dans le navigateur</Text>
+                <Text style={{ color: palette.accent, fontWeight: '800' }}>{t('locationScreen.openInBrowser')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -858,7 +860,7 @@ const LocationScreen = () => {
   // ─── Liste des ProfileCards ────────────────────────────────────
   const renderProfileList = () => (
     <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
-      <Text style={[typography.h2, { marginBottom: spacing.md }]}>Les profils ici</Text>
+      <Text style={[typography.h2, { marginBottom: spacing.md }]}>{t('locationScreen.profilesHere')}</Text>
       {users.length === 0 ? (
         <View
           style={[
@@ -908,7 +910,7 @@ const LocationScreen = () => {
 
   const renderCrossedPathsSection = () => (
     <View style={{ marginTop: spacing.lg, paddingHorizontal: spacing.lg }}>
-      <Text style={[typography.h2, { marginBottom: spacing.md }]}>Croisé récemment</Text>
+      <Text style={[typography.h2, { marginBottom: spacing.md }]}>{t('locationScreen.recentlyCrossed')}</Text>
 
       {crossedLoading ? (
         <ActivityIndicator color={palette.textFaint} />
@@ -942,7 +944,7 @@ const LocationScreen = () => {
               {crossedLoadingMore ? (
                 <ActivityIndicator color={palette.textFaint} />
               ) : (
-                <Text style={[typography.body, { color: palette.text, fontWeight: '700' }]}>Voir plus</Text>
+                <Text style={[typography.body, { color: palette.text, fontWeight: '700' }]}>{t('locationScreen.seeMore')}</Text>
               )}
             </TouchableOpacity>
           )}
@@ -992,7 +994,7 @@ const LocationScreen = () => {
             />
             <Ionicons name="flash" size={18} color="#fff" />
             <Text style={styles.primaryButtonText}>
-              {isBoosted ? 'Boosté' : boostUnlocked ? 'Booster mon profil ici' : 'Boost 🔓 après 2 check-ins'}
+              {isBoosted ? t('locationScreen.boosted') : boostUnlocked ? t('locationScreen.boostProfileHere') : t('locationScreen.boostLockedAfterCheckins')}
             </Text>
           </TouchableOpacity>
           {isUserHere && (

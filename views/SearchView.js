@@ -19,6 +19,7 @@ import { searchUsers, trackUserSearch } from '../components/ApiRequest';
 import { proxifyImageUrl, formatDistance as sharedFormatDistance } from '../components/ServerUtils';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
+import { useTranslation } from 'react-i18next';
 import { UserContext } from '../components/contexts/UserContext';
 import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -31,6 +32,7 @@ const { width, height } = Dimensions.get('window');
 const DISPLAY_NAME_PREF_KEY = 'display_name_mode';
 
 export default function SearchView() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { goToPage, currentPage } = useMainSwiper();
@@ -231,7 +233,7 @@ export default function SearchView() {
                 fontStyle: 'italic',
               }}
             >
-              N'est plus sur place
+              {t('searchView.noLongerHere')}
             </Text>
           )}
         </View>
@@ -277,11 +279,11 @@ export default function SearchView() {
           style={[styles.backButtonCircular, { backgroundColor: 'rgba(0,194,203,0.12)' }]}
           onPress={() => goToPage(1)}
           hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-          accessibilityLabel="Fermer la recherche"
+          accessibilityLabel={t('searchView.closeLabel')}
         >
           <Text style={{ fontSize: 18, color: '#00c2cb', fontWeight: 'bold' }}>✖</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>Recherche</Text>
+        <Text style={[styles.headerTitle, { color: '#00c2cb' }]}>{t('searchView.title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -297,7 +299,7 @@ export default function SearchView() {
             ref={inputRef}
             value={query}
             onChangeText={setQuery}
-            placeholder="Nom d'utilisateur, lieu..."
+            placeholder={t('searchView.placeholder')}
             placeholderTextColor={isDark ? '#aaa' : '#999'}
             style={[styles.input, { color: isDark ? '#fff' : colors.textPrimary }]}
             returnKeyType="search"
@@ -310,7 +312,7 @@ export default function SearchView() {
             <TouchableOpacity
               onPress={() => setQuery('')}
               hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
-              accessibilityLabel="Effacer la recherche"
+              accessibilityLabel={t('searchView.clearLabel')}
             >
               <Text style={{ color: isDark ? '#fff' : colors.textPrimary, opacity: 0.4, fontSize: 20 }}>ⓧ</Text>
             </TouchableOpacity>
@@ -328,7 +330,7 @@ export default function SearchView() {
             ]}
             onPress={() => toggleFilter('users')}
           >
-            <Text style={[styles.filterText, { color: includeUsers ? '#fff' : colors.textPrimary }]}>Utilisateurs</Text>
+            <Text style={[styles.filterText, { color: includeUsers ? '#fff' : colors.textPrimary }]}>{t('searchView.filterUsers')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -340,7 +342,7 @@ export default function SearchView() {
             ]}
             onPress={() => toggleFilter('locations')}
           >
-            <Text style={[styles.filterText, { color: includeLocations ? '#fff' : colors.textPrimary }]}>Lieux</Text>
+            <Text style={[styles.filterText, { color: includeLocations ? '#fff' : colors.textPrimary }]}>{t('searchView.filterLocations')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -349,7 +351,7 @@ export default function SearchView() {
         <View style={{ marginTop: 40, alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#00c2cb" />
           <Text style={{ marginTop: 12, color: isDark ? '#fff' : colors.textPrimary, opacity: 0.5, fontSize: 13 }}>
-            Recherche en cours…
+            {t('searchView.searching')}
           </Text>
         </View>
       ) : (
@@ -374,18 +376,18 @@ export default function SearchView() {
                   }}
                 >
                   {qTrim.length < minChars
-                    ? 'Tape au moins 2 lettres pour lancer la recherche'
-                    : 'Aucun résultat trouvé pour cette recherche.'}
+                    ? t('searchView.typeToSearch')
+                    : t('searchView.noResults')}
                 </Text>
                 {qTrim.length >= minChars && (
                   <Text style={{ textAlign: 'center', color: isDark ? '#aaa' : '#999', marginTop: 8, fontSize: 12 }}>
-                    Vérifie les filtres ou essaie un autre mot-clé.
+                    {t('searchView.checkFilters')}
                   </Text>
                 )}
               </View>
             ) : (
               <Text style={{ color: isDark ? '#aaa' : '#777', fontSize: 12, marginBottom: 8, marginLeft: 4 }}>
-                {results.length} résultat{results.length > 1 ? 's' : ''}
+                {t('searchView.resultsCount', { count: results.length })}
               </Text>
             )
           }

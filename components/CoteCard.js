@@ -1,5 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const LEVELS = [0, 25, 50, 75, 100];
 
@@ -11,21 +12,22 @@ function levelColor(percent) {
   return '#8A8F98';
 }
 
-function levelMessage(percent) {
-  if (percent >= 100) return 'Au top ! Connecte-toi demain pour la garder.';
-  if (percent === 0) return 'Connecte-toi aujourd’hui pour la relancer.';
-  return 'Connecte-toi chaque jour pour la faire grimper.';
-}
-
 /**
  * CoteCard — affiche le score de présence ("Cote") de l'utilisateur, sur le
  * modèle des flammes Snapchat : une flamme + un pourcentage + une jauge en
  * 5 paliers (0/25/50/75/100). Tap = petite explication de la règle.
  */
 const CoteCard = ({ percent = 100, colors, isDark, onPress }) => {
+  const { t } = useTranslation();
   const safePercent = LEVELS.includes(percent) ? percent : 100;
   const color = levelColor(safePercent);
   const scale = useRef(new Animated.Value(1)).current;
+
+  const levelMessage = (p) => {
+    if (p >= 100) return t('coteCard.messageTop');
+    if (p === 0) return t('coteCard.messageZero');
+    return t('streakCard.hintGrow');
+  };
 
   const handlePressIn = () => {
     Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 30 }).start();
@@ -34,7 +36,7 @@ const CoteCard = ({ percent = 100, colors, isDark, onPress }) => {
     Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30 }).start();
   };
 
-  const message = useMemo(() => levelMessage(safePercent), [safePercent]);
+  const message = useMemo(() => levelMessage(safePercent), [safePercent, t]);
 
   return (
     <Animated.View style={{ transform: [{ scale }] }}>

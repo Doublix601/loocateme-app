@@ -6,52 +6,54 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { markOnboardingDone } from '../utils/onboarding';
 import { redeemReferralCode } from '../components/ApiRequest';
+import { useTranslation } from 'react-i18next';
 
 const PENDING_REFERRAL_CODE_KEY = '@loocateme:pending_referral_code';
 
 const { width: W, height: H } = Dimensions.get('window');
 
-const SLIDES = [
-  {
-    key: 'welcome',
-    emoji: '🌍',
-    title: 'Découvre qui sort près de toi',
-    desc: "En temps réel, vois les lieux animés autour de toi et les personnes qui s'y trouvent — maintenant.",
-    gradient: ['#0A0617', '#1B1030'],
-    accent: '#FF3DAD',
-    accentAlt: '#8A4BFF',
-  },
-  {
-    key: 'checkin',
-    emoji: '📍',
-    title: 'Check-in automatique, jour ou nuit',
-    desc: "Dès que tu entres dans un lieu, tu y apparais automatiquement — et tu vois qui est là. L'app bascule entre mode Jour (cafés, parcs, sport…) et mode Nuit (bars, restos, boîtes…) selon ton envie.",
-    gradient: ['#160A26', '#200E38'],
-    accent: '#8A4BFF',
-    accentAlt: '#FF3DAD',
-  },
-  {
-    key: 'profile',
-    emoji: '👤',
-    title: 'Ton profil, les lieux qui bougent',
-    desc: "Ajoute tes réseaux sociaux pour que les gens te retrouvent, consulte les profils autour de toi. Chaque lieu affiche aussi 1 à 3 étoiles selon sa fréquentation réelle — plus c'est animé, plus ça brille.",
-    gradient: ['#0A1810', '#0D2618'],
-    accent: '#2ECC71',
-    accentAlt: '#00C2CB',
-  },
-  {
-    key: 'referral',
-    emoji: '👥',
-    title: 'Un ami t\'a invité ?',
-    desc: "Entre son code de parrainage (facultatif) — ça l'aide à débloquer un mois Premium offert.",
-    gradient: ['#0A1020', '#101830'],
-    accent: '#00C2CB',
-    accentAlt: '#2ECC71',
-  },
-];
-
 export default function OnboardingScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
+
+  const SLIDES = [
+    {
+      key: 'welcome',
+      emoji: '🌍',
+      title: t('onboarding.slides.welcome.title'),
+      desc: t('onboarding.slides.welcome.desc'),
+      gradient: ['#0A0617', '#1B1030'],
+      accent: '#FF3DAD',
+      accentAlt: '#8A4BFF',
+    },
+    {
+      key: 'checkin',
+      emoji: '📍',
+      title: t('onboarding.slides.checkin.title'),
+      desc: t('onboarding.slides.checkin.desc'),
+      gradient: ['#160A26', '#200E38'],
+      accent: '#8A4BFF',
+      accentAlt: '#FF3DAD',
+    },
+    {
+      key: 'profile',
+      emoji: '👤',
+      title: t('onboarding.slides.profile.title'),
+      desc: t('onboarding.slides.profile.desc'),
+      gradient: ['#0A1810', '#0D2618'],
+      accent: '#2ECC71',
+      accentAlt: '#00C2CB',
+    },
+    {
+      key: 'referral',
+      emoji: '👥',
+      title: t('onboarding.slides.referral.title'),
+      desc: t('onboarding.slides.referral.desc'),
+      gradient: ['#0A1020', '#101830'],
+      accent: '#00C2CB',
+      accentAlt: '#2ECC71',
+    },
+  ];
   const insets = useSafeAreaInsets();
   const [index, setIndex] = useState(0);
   const [referralCode, setReferralCode] = useState('');
@@ -126,7 +128,7 @@ export default function OnboardingScreen() {
             <Slide item={item}>
               <TextInput
                 style={styles.referralInput}
-                placeholder="Code de parrainage"
+                placeholder={t('onboarding.referralPlaceholder')}
                 placeholderTextColor="rgba(255,255,255,0.4)"
                 autoCapitalize="characters"
                 value={referralCode}
@@ -164,14 +166,14 @@ export default function OnboardingScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.cta}
           >
-            <Text style={styles.ctaTxt}>{isLast ? "C'est parti 🚀" : 'Suivant'}</Text>
+            <Text style={styles.ctaTxt}>{isLast ? t('onboarding.start') : t('onboarding.next')}</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         {/* Skip */}
         {!isLast && (
           <TouchableOpacity onPress={skip} style={styles.skipBtn}>
-            <Text style={styles.skipTxt}>Passer</Text>
+            <Text style={styles.skipTxt}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         )}
       </View>

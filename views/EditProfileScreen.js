@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -37,35 +38,36 @@ import { useVibe } from '../components/contexts/VibeContext';
 
 const { width, height } = Dimensions.get('window');
 
-const GENDER_OPTIONS = [
-  { key: 'male', label: 'Garçon' },
-  { key: 'female', label: 'Fille' },
-  { key: 'prefer_not_to_say', label: 'Ne souhaite pas répondre' },
-];
-
-const formatBirthdate = (value) => {
+const formatBirthdate = (value, locale) => {
   if (!value) return null;
   const d = new Date(value);
   if (isNaN(d.getTime())) return null;
-  return d.toLocaleDateString('fr-FR');
+  return d.toLocaleDateString(locale || 'fr-FR');
 };
 
-const FIELDS = [
-  { type: 'firstName', icon: '🙋', label: 'Prénom' },
-  { type: 'lastName', icon: '👤', label: 'Nom' },
-  { type: 'customName', icon: '✨', label: 'Nom personnalisé' },
-  { type: 'bio', icon: '📝', label: 'Bio' },
-  { type: 'birthdate', icon: '🎂', label: 'Date de naissance' },
-  { type: 'gender', icon: '🚻', label: 'Sexe' },
-];
-
 const EditProfileScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { colors, isDark } = useTheme();
   const { isMoon } = useVibe();
   const { locale } = useLocale();
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useContext(UserContext);
+
+  const GENDER_OPTIONS = [
+    { key: 'male', label: t('editProfile.gender.male') },
+    { key: 'female', label: t('editProfile.gender.female') },
+    { key: 'prefer_not_to_say', label: t('editProfile.gender.preferNotToSay') },
+  ];
+
+  const FIELDS = [
+    { type: 'firstName', icon: '🙋', label: t('editProfile.fields.firstName') },
+    { type: 'lastName', icon: '👤', label: t('editProfile.fields.lastName') },
+    { type: 'customName', icon: '✨', label: t('editProfile.fields.customName') },
+    { type: 'bio', icon: '📝', label: t('editProfile.fields.bio') },
+    { type: 'birthdate', icon: '🎂', label: t('editProfile.fields.birthdate') },
+    { type: 'gender', icon: '🚻', label: t('editProfile.fields.gender') },
+  ];
 
   const skyFillStyle = {
     position: 'absolute',
@@ -98,7 +100,7 @@ const EditProfileScreen = () => {
   const textSecondaryStyle = { color: isDark ? 'rgba(255,255,255,0.55)' : colors.textSecondary };
 
   const displayValue = (type) => {
-    if (type === 'birthdate') return formatBirthdate(user?.birthdate);
+    if (type === 'birthdate') return formatBirthdate(user?.birthdate, locale);
     if (type === 'gender') return GENDER_OPTIONS.find((o) => o.key === user?.gender)?.label;
     return user?.[type];
   };
@@ -115,7 +117,7 @@ const EditProfileScreen = () => {
         customName: typeof me.customName === 'string' ? me.customName : user?.customName || '',
         birthdate: me.birthdate || user?.birthdate || null,
         gender: me.gender || user?.gender || '',
-        privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false, marketing: false },
+        privacyPreferences: me.privacyPreferences || user?.privacyPreferences || { analytics: false },
       });
     } catch (_) {}
   };
@@ -123,13 +125,13 @@ const EditProfileScreen = () => {
   const handleCamera = async () => {
     if (photoActionLoading) return;
     if (Platform.OS === 'web') {
-      Alert.alert('Non supporté', "La caméra n'est pas disponible sur le web.");
+      Alert.alert(t('editProfile.photo.notSupportedTitle'), t('editProfile.photo.notSupportedMessage'));
       return;
     }
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Autorisation requise', "L'application a besoin de l'accès à la caméra pour prendre une photo.");
+        Alert.alert(t('editProfile.photo.cameraPermissionTitle'), t('editProfile.photo.cameraPermissionMessage'));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 });
@@ -147,12 +149,12 @@ const EditProfileScreen = () => {
         await refreshMyProfile();
         setPhotoOptionsModalVisible(false);
       } catch (e2) {
-        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+        Alert.alert(t('editProfile.photo.errorTitle'), e2?.message || t('editProfile.photo.uploadErrorMessage'));
       } finally {
         setPhotoActionLoading(null);
       }
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir la caméra.");
+      Alert.alert(t('editProfile.photo.errorTitle'), t('editProfile.photo.cameraOpenError'));
     }
   };
 
@@ -162,10 +164,7 @@ const EditProfileScreen = () => {
       if (Platform.OS !== 'web') {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert(
-            'Autorisation requise',
-            "L'application a besoin de l'accès à vos photos pour sélectionner une image.",
-          );
+          Alert.alert(t('editProfile.photo.cameraPermissionTitle'), t('editProfile.photo.galleryPermissionMessage'));
           return;
         }
       }
@@ -184,12 +183,12 @@ const EditProfileScreen = () => {
         await refreshMyProfile();
         setPhotoOptionsModalVisible(false);
       } catch (e2) {
-        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+        Alert.alert(t('editProfile.photo.errorTitle'), e2?.message || t('editProfile.photo.uploadErrorMessage'));
       } finally {
         setPhotoActionLoading(null);
       }
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir la galerie.");
+      Alert.alert(t('editProfile.photo.errorTitle'), t('editProfile.photo.galleryOpenError'));
     }
   };
 
@@ -203,7 +202,7 @@ const EditProfileScreen = () => {
       await refreshMyProfile();
       setPhotoOptionsModalVisible(false);
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de supprimer la photo de profil');
+      Alert.alert(t('editProfile.photo.errorTitle'), e?.message || t('editProfile.photo.deleteErrorMessage'));
     } finally {
       setPhotoActionLoading(null);
     }
@@ -211,9 +210,9 @@ const EditProfileScreen = () => {
 
   const confirmDeletePhoto = () => {
     if (photoActionLoading) return;
-    Alert.alert('Supprimer la photo de profil ?', 'Cette action est définitive.', [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: handleDeletePhoto },
+    Alert.alert(t('editProfile.photo.deleteConfirmTitle'), t('editProfile.photo.deleteConfirmMessage'), [
+      { text: t('editProfile.photo.cancel'), style: 'cancel' },
+      { text: t('editProfile.photo.delete'), style: 'destructive', onPress: handleDeletePhoto },
     ]);
   };
 
@@ -244,10 +243,7 @@ const EditProfileScreen = () => {
         }
         const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
         if (normalized && !NAME_RE.test(normalized)) {
-          Alert.alert(
-            'Prénom invalide',
-            'Le prénom doit commencer par une majuscule et peut contenir des lettres (accents autorisés), espaces, apostrophes ou tirets.',
-          );
+          Alert.alert(t('editProfile.validation.firstNameInvalidTitle'), t('editProfile.validation.firstNameInvalidMessage'));
           return;
         }
         const candidateFirst = normalized;
@@ -257,7 +253,7 @@ const EditProfileScreen = () => {
         const hasFirst = candidateFirst.length > 0;
         const hasLast = candidateLast.length > 0;
         if (!hasCustom && !(hasFirst && hasLast)) {
-          Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
+          Alert.alert(t('editProfile.validation.incompleteIdentityTitle'), t('editProfile.validation.incompleteIdentityMessage'));
           return;
         }
         const res = await apiUpdateProfile({ firstName: candidateFirst });
@@ -280,10 +276,7 @@ const EditProfileScreen = () => {
         }
         const NAME_RE = /^(\p{Lu}[\p{L}\p{M}' -]*)$/u;
         if (normalized && !NAME_RE.test(normalized)) {
-          Alert.alert(
-            'Nom invalide',
-            'Le nom doit commencer par une majuscule et peut contenir des lettres (accents autorisés), espaces, apostrophes ou tirets.',
-          );
+          Alert.alert(t('editProfile.validation.lastNameInvalidTitle'), t('editProfile.validation.lastNameInvalidMessage'));
           return;
         }
         const candidateFirst = (user.firstName || '').trim();
@@ -293,7 +286,7 @@ const EditProfileScreen = () => {
         const hasFirst = candidateFirst.length > 0;
         const hasLast = candidateLast.length > 0;
         if (!hasCustom && !(hasFirst && hasLast)) {
-          Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
+          Alert.alert(t('editProfile.validation.incompleteIdentityTitle'), t('editProfile.validation.incompleteIdentityMessage'));
           return;
         }
         const res = await apiUpdateProfile({ lastName: candidateLast });
@@ -313,10 +306,7 @@ const EditProfileScreen = () => {
         const hasFirst = (user.firstName || '').trim().length > 0;
         const hasLast = (user.lastName || '').trim().length > 0;
         if (!normalized && (!hasFirst || !hasLast)) {
-          Alert.alert(
-            'Nom personnalisé requis',
-            'Impossible de supprimer le nom personnalisé tant que le prénom ou le nom est vide.',
-          );
+          Alert.alert(t('editProfile.validation.customNameRequiredTitle'), t('editProfile.validation.customNameRequiredMessage'));
           return;
         }
         const res = await apiUpdateProfile({ customName: normalized });
@@ -332,11 +322,11 @@ const EditProfileScreen = () => {
       } else if (editType === 'birthdate') {
         const selectedDate = newValue instanceof Date ? newValue : new Date(newValue);
         if (isNaN(selectedDate.getTime())) {
-          Alert.alert('Date invalide', 'Merci de sélectionner une date de naissance valide.');
+          Alert.alert(t('editProfile.validation.invalidDateTitle'), t('editProfile.validation.invalidDateMessage'));
           return;
         }
         if (!isAtLeast18(selectedDate)) {
-          Alert.alert('Âge minimum requis', 'Vous devez avoir au moins 18 ans.');
+          Alert.alert(t('editProfile.validation.minAgeTitle'), t('editProfile.validation.minAgeMessage'));
           return;
         }
         const isoDate = selectedDate.toISOString().slice(0, 10);
@@ -366,7 +356,7 @@ const EditProfileScreen = () => {
         updateUser({ ...user, bio: updated.bio ?? raw });
       }
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
+      Alert.alert(t('editProfile.photo.errorTitle'), e?.message || t('editProfile.validation.updateErrorMessage'));
       return;
     }
     closeModal();
@@ -384,7 +374,7 @@ const EditProfileScreen = () => {
             style={[styles.backButton, { backgroundColor: isDark ? 'rgba(0,194,203,0.18)' : 'rgba(0,194,203,0.12)' }]}
             onPress={() => navigation.goBack()}
             hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-            accessibilityLabel="Retour"
+            accessibilityLabel={t('editProfile.backLabel')}
           >
             <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backIcon} />
           </TouchableOpacity>
@@ -392,8 +382,8 @@ const EditProfileScreen = () => {
         </View>
 
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.title}>Modifier mon profil</Text>
-          <Text style={[styles.subtitle, textSecondaryStyle]}>Appuie longuement sur un champ pour le modifier</Text>
+          <Text style={styles.title}>{t('editProfile.title')}</Text>
+          <Text style={[styles.subtitle, textSecondaryStyle]}>{t('editProfile.subtitle')}</Text>
 
           <TouchableOpacity
             style={styles.avatarWrapper}
@@ -448,7 +438,7 @@ const EditProfileScreen = () => {
                       ]}
                       numberOfLines={1}
                     >
-                      {value || 'Non renseigné'}
+                      {value || t('editProfile.notSet')}
                     </Text>
                   </View>
                   <Text style={styles.rowChevron}>✏️</Text>
@@ -471,7 +461,7 @@ const EditProfileScreen = () => {
                 <Text style={styles.modalIconText}>{activeField?.icon}</Text>
               </View>
               <Text style={[styles.modalTitle, textPrimaryStyle]}>
-                {activeField ? `Modifier ${activeField.label.toLowerCase()}` : 'Modifier'}
+                {activeField ? `${t('editProfile.modal.editPrefix')} ${activeField.label.toLowerCase()}` : t('editProfile.modal.editGeneric')}
               </Text>
               {editType === 'birthdate' ? (
                 Platform.OS === 'ios' ? (
@@ -498,7 +488,7 @@ const EditProfileScreen = () => {
                       ]}
                     >
                       <Text style={{ color: colors.textPrimary }}>
-                        {newValue instanceof Date ? newValue.toLocaleDateString('fr-FR') : 'Sélectionner une date'}
+                        {newValue instanceof Date ? newValue.toLocaleDateString(locale) : t('editProfile.modal.selectDate')}
                       </Text>
                     </TouchableOpacity>
                     {showDatePicker && (
@@ -552,14 +542,14 @@ const EditProfileScreen = () => {
                   textAlignVertical={editType === 'bio' ? 'top' : 'center'}
                   placeholder={
                     editType === 'firstName'
-                      ? 'Votre prénom'
+                      ? t('editProfile.modal.placeholders.firstName')
                       : editType === 'lastName'
-                        ? 'Votre nom'
+                        ? t('editProfile.modal.placeholders.lastName')
                         : editType === 'customName'
-                          ? 'Votre nom personnalisé'
+                          ? t('editProfile.modal.placeholders.customName')
                           : editType === 'bio'
-                            ? 'Parle un peu de toi...'
-                            : 'Votre texte'
+                            ? t('editProfile.modal.placeholders.bio')
+                            : t('editProfile.modal.placeholders.default')
                   }
                   placeholderTextColor={isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'}
                   style={[
@@ -582,10 +572,10 @@ const EditProfileScreen = () => {
                     { borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' },
                   ]}
                 >
-                  <Text style={[styles.modalButtonGhostText, textSecondaryStyle]}>Annuler</Text>
+                  <Text style={[styles.modalButtonGhostText, textSecondaryStyle]}>{t('editProfile.modal.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleSave} style={[styles.modalButton, styles.modalButtonPrimary]}>
-                  <Text style={styles.modalButtonPrimaryText}>Enregistrer</Text>
+                  <Text style={styles.modalButtonPrimaryText}>{t('editProfile.modal.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -602,14 +592,14 @@ const EditProfileScreen = () => {
           />
           <View style={styles.modalKeyboardView} pointerEvents="box-none">
             <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.modalTitle, textPrimaryStyle]}>Photo de profil</Text>
+              <Text style={[styles.modalTitle, textPrimaryStyle]}>{t('editProfile.photo.modalTitle')}</Text>
               <TouchableOpacity
                 style={[styles.photoOptionButton, { borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}
                 onPress={handleCamera}
                 disabled={!!photoActionLoading}
               >
                 <Text style={[styles.photoOptionText, textPrimaryStyle]}>
-                  {photoActionLoading === 'camera' ? 'Envoi...' : '📸 Prendre une photo'}
+                  {photoActionLoading === 'camera' ? t('editProfile.photo.sending') : t('editProfile.photo.takePhoto')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -618,7 +608,7 @@ const EditProfileScreen = () => {
                 disabled={!!photoActionLoading}
               >
                 <Text style={[styles.photoOptionText, textPrimaryStyle]}>
-                  {photoActionLoading === 'gallery' ? 'Envoi...' : '🖼️ Choisir dans la galerie'}
+                  {photoActionLoading === 'gallery' ? t('editProfile.photo.sending') : t('editProfile.photo.chooseGallery')}
                 </Text>
               </TouchableOpacity>
               {!!user?.photo && (
@@ -628,7 +618,7 @@ const EditProfileScreen = () => {
                   disabled={!!photoActionLoading}
                 >
                   <Text style={styles.photoOptionDeleteText}>
-                    {photoActionLoading === 'delete' ? 'Suppression...' : '🗑️ Supprimer la photo'}
+                    {photoActionLoading === 'delete' ? t('editProfile.photo.deleting') : t('editProfile.photo.deletePhoto')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -641,7 +631,7 @@ const EditProfileScreen = () => {
                 ]}
                 disabled={!!photoActionLoading}
               >
-                <Text style={[styles.modalButtonGhostText, textSecondaryStyle]}>Annuler</Text>
+                <Text style={[styles.modalButtonGhostText, textSecondaryStyle]}>{t('editProfile.photo.cancel')}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Inloggen",
+      "welcomeBack": "Welkom terug!",
+      "subtitle": "Log in om verder te gaan",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Wachtwoord",
+      "submit": "Inloggen",
+      "forgotPassword": "Wachtwoord vergeten?",
+      "noAccount": "Nog geen account?",
+      "createAccount": "Account aanmaken",
+      "emailNotVerifiedTitle": "E-mail niet geverifieerd",
+      "emailNotVerifiedMessage": "Je e-mailadres is nog niet geverifieerd. We hebben je zojuist een nieuwe bevestigingsmail gestuurd. Klik op de link om je account te activeren en probeer het opnieuw.",
+      "authFailedTitle": "Aanmelden mislukt",
+      "authFailedMessage": "We konden je niet aanmelden. Controleer je gegevens en probeer het opnieuw."
+    },
+    "signup": {
+      "passwordMismatch": "De wachtwoorden komen niet overeen.",
+      "requiredFields": "Alle velden moeten worden ingevuld.",
+      "birthdateRequired": "Geboortedatum is verplicht.",
+      "under18": "Je moet minstens 18 jaar oud zijn om je te registreren.",
+      "policyLoadError": "Het privacybeleid kon niet worden geladen. Je kunt het opnieuw proberen."
+    }
+  },
+  "consent": {
+    "title": "Privacy",
+    "changelogTitle": "Wat is er veranderd",
+    "decline": "Weigeren",
+    "accept": "Accepteren",
+    "accepting": "Opslaan...",
+    "declineInfoTitle": "Informatie",
+    "declineInfoMessage": "Je moet het privacybeleid accepteren om de app te gebruiken.",
+    "acceptErrorTitle": "Fout",
+    "acceptErrorMessage": "Je toestemming kon niet worden opgeslagen. Probeer het opnieuw."
+  },
+  "ageVerification": {
+    "title": "Leeftijdsverificatie",
+    "urlMissing": "Verificatie-URL ontbreekt",
+    "startError": "De leeftijdsverificatie kon niet worden gestart. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "declinedTitle": "Verificatie geweigerd",
+    "declinedMessage": "We konden niet bevestigen dat je ouder dan 18 bent. Je kunt het opnieuw proberen."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Taal",
+      "systemDefault": "Taal van de telefoon"
+    }
+  },
+  "forgotPassword": {
+    "title": "Wachtwoord vergeten",
+    "resetTitle": "Opnieuw instellen",
+    "instructions": "Voer je e-mailadres in om een resetlink te ontvangen.",
+    "emailPlaceholder": "E-mail",
+    "submit": "Link versturen",
+    "successTitle": "E-mail verzonden",
+    "successMessage": "Als er een account bestaat, is er een e-mail verzonden.",
+    "errorTitle": "Fout",
+    "errorFallback": "Probeer het opnieuw"
+  },
+  "dataManagement": {
+    "title": "Privacy",
+    "export": {
+      "title": "Mijn gegevens exporteren",
+      "desc": "Download een kopie van je informatie (profiel, sociale netwerken, instellingen).",
+      "button": "Exporteren",
+      "buttonWorking": "Even geduld...",
+      "successTitle": "Gegevensexport",
+      "successMessage": "Je export is gegenereerd en weergegeven in de console.",
+      "errorTitle": "Fout",
+      "errorMessage": "Je gegevens konden nu niet worden geëxporteerd. Probeer het opnieuw."
+    },
+    "delete": {
+      "title": "Mijn account verwijderen",
+      "desc": "Verwijdert je account en alle bijbehorende gegevens permanent.",
+      "passwordPlaceholder": "Bevestig met je wachtwoord",
+      "button": "Definitief verwijderen",
+      "passwordRequiredTitle": "Wachtwoord vereist",
+      "passwordRequiredMessage": "Voer je wachtwoord in.",
+      "confirmTitle": "Bevestiging",
+      "confirmMessage": "Deze actie is onomkeerbaar. Wil je je account echt verwijderen?",
+      "cancel": "Annuleren",
+      "confirm": "Verwijderen",
+      "successTitle": "Account verwijderd",
+      "successMessage": "Je account en gegevens zijn verwijderd.",
+      "errorTitle": "Fout",
+      "errorMessage": "Verwijderen mislukt. Ongeldig wachtwoord of serverprobleem."
+    }
+  },
+  "editProfile": {
+    "title": "Mijn profiel bewerken",
+    "subtitle": "Tik op een veld om het te bewerken",
+    "notSet": "Niet ingesteld",
+    "backLabel": "Terug",
+    "fields": {
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "customName": "Aangepaste naam",
+      "bio": "Bio",
+      "birthdate": "Geboortedatum",
+      "gender": "Geslacht"
+    },
+    "gender": {
+      "male": "Jongen",
+      "female": "Meisje",
+      "preferNotToSay": "Zeg ik liever niet"
+    },
+    "photo": {
+      "notSupportedTitle": "Niet ondersteund",
+      "notSupportedMessage": "De camera is niet beschikbaar op het web.",
+      "cameraPermissionTitle": "Toestemming vereist",
+      "cameraPermissionMessage": "De app heeft cameratoegang nodig om een foto te maken.",
+      "galleryPermissionMessage": "De app heeft toegang tot je foto's nodig om een afbeelding te selecteren.",
+      "errorTitle": "Fout",
+      "uploadErrorMessage": "De afbeelding kon niet worden geüpload",
+      "cameraOpenError": "De camera kon niet worden geopend.",
+      "galleryOpenError": "De galerij kon niet worden geopend.",
+      "deleteErrorMessage": "De profielfoto kon niet worden verwijderd",
+      "deleteConfirmTitle": "Profielfoto verwijderen?",
+      "deleteConfirmMessage": "Deze actie is definitief.",
+      "cancel": "Annuleren",
+      "delete": "Verwijderen",
+      "modalTitle": "Profielfoto",
+      "takePhoto": "📸 Foto maken",
+      "sending": "Uploaden...",
+      "chooseGallery": "🖼️ Kiezen uit galerij",
+      "deletePhoto": "🗑️ Foto verwijderen",
+      "deleting": "Verwijderen..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Ongeldige voornaam",
+      "firstNameInvalidMessage": "De voornaam moet met een hoofdletter beginnen en mag letters (accenten toegestaan), spaties, apostroffen of streepjes bevatten.",
+      "lastNameInvalidTitle": "Ongeldige achternaam",
+      "lastNameInvalidMessage": "De achternaam moet met een hoofdletter beginnen en mag letters (accenten toegestaan), spaties, apostroffen of streepjes bevatten.",
+      "incompleteIdentityTitle": "Onvolledige identiteit",
+      "incompleteIdentityMessage": "Vul een Aangepaste naam OF een Voornaam EN Achternaam in.",
+      "customNameRequiredTitle": "Aangepaste naam vereist",
+      "customNameRequiredMessage": "Je kunt de aangepaste naam niet verwijderen zolang voor- of achternaam leeg is.",
+      "invalidDateTitle": "Ongeldige datum",
+      "invalidDateMessage": "Selecteer een geldige geboortedatum.",
+      "minAgeTitle": "Minimumleeftijd vereist",
+      "minAgeMessage": "Je moet minstens 18 jaar oud zijn.",
+      "updateErrorMessage": "Je profiel kon niet worden bijgewerkt"
+    },
+    "modal": {
+      "editPrefix": "Bewerk",
+      "editGeneric": "Bewerken",
+      "selectDate": "Selecteer een datum",
+      "cancel": "Annuleren",
+      "save": "Opslaan",
+      "placeholders": {
+        "firstName": "Je voornaam",
+        "lastName": "Je achternaam",
+        "customName": "Je aangepaste naam",
+        "bio": "Vertel ons iets over jezelf...",
+        "default": "Je tekst"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Onzichtbare modus actief",
+      "subtitle": "Je kunt geen plekken om je heen zien zolang de onzichtbare modus is ingeschakeld. Schakel deze uit om plekken te bekijken.",
+      "disableButton": "Onzichtbare modus uitschakelen"
+    },
+    "error": {
+      "title": "Locatie niet beschikbaar",
+      "subtitle": "Schakel locatiediensten in de instellingen van je apparaat in om plekken om je heen te zien.",
+      "retry": "Opnieuw proberen"
+    },
+    "empty": {
+      "title": "Voorlopig rustige zone",
+      "subtitle": "Er is geen actieve plek in de buurt gevonden. Vergroot de straal of stel een nieuwe plek voor.",
+      "expandRadius": "Straal vergroten",
+      "suggestLocation": "Deze plek voorstellen"
+    },
+    "footer": {
+      "loadingMore": "Meer plekken laden…",
+      "loadMoreError": "Kon geen extra plekken laden. Controleer je verbinding.",
+      "retry": "Opnieuw proberen",
+      "reachedEnd": "Je hebt alle actieve plekken in de buurt verkend. Beweeg je of zoek om er meer te zien."
+    },
+    "leaveModal": {
+      "defaultName": "Deze plek",
+      "subtitle": "Je bent hier momenteel ingecheckt. Wil je deze plek verlaten?",
+      "confirm": "Ik ben hier niet meer",
+      "cancel": "Annuleren"
+    },
+    "sections": {
+      "moreLocations": "Meer plekken voor jou",
+      "sponsored": "Uitgelicht",
+      "trending": "Nu druk"
+    },
+    "filters": {
+      "all": "Alle"
+    },
+    "card": {
+      "visitors_one": "{{count}} bezoeker",
+      "visitors_other": "{{count}} bezoekers",
+      "sponsored": "GESPONSORD",
+      "imHere": "Ik ben hier",
+      "editLocation": "Mijn locatie bewerken"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Handmatige check-in ingeschakeld",
+    "checkinModeAutoOn": "Automatische check-in ingeschakeld",
+    "checkinModeErrorTitle": "Fout",
+    "checkinModeErrorMessage": "De check-in modus kon nu niet worden gewijzigd.",
+    "checkedInToast": "Je bent nu bij {{name}}!",
+    "checkinErrorMessage": "Je aanwezigheid kon nu niet worden bevestigd.",
+    "leftLocationToast": "Je hebt deze plek verlaten.",
+    "boostActiveTitle": "Boost actief",
+    "boostActiveLeaveMessage": "Je kunt deze plek niet verlaten zolang je boost actief is.",
+    "leaveErrorMessage": "Je kon nu niet worden uitgecheckt van deze plek.",
+    "boostInProgressTitle": "Boost bezig",
+    "boostInProgressMessage": "Je boost is actief: wacht tot deze eindigt voordat je van plek wisselt.",
+    "refreshErrorToast": "Kon nu niet vernieuwen.",
+    "disableInvisibleErrorMessage": "Onzichtbare modus kon nu niet worden uitgeschakeld.",
+    "switchToManualLabel": "Overschakelen naar handmatige check-in",
+    "switchToAutoLabel": "Overschakelen naar automatische check-in",
+    "entryAuto": "Auto. binnenkomst",
+    "entryManual": "Handmatige binnenkomst",
+    "showMapLabel": "Kaart tonen",
+    "showListLabel": "Lijst tonen",
+    "mapButton": "Kaart",
+    "listButton": "Lijst"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Fout",
+    "checkinErrorMessage": "Je aanwezigheid kon nu niet worden bevestigd.",
+    "boostActiveHereTitle": "Boost bezig",
+    "boostActiveHereMessage": "Je boost is hier actief: wacht tot deze eindigt voordat je deze plek verlaat.",
+    "boostActiveMessage": "Je boost is actief: wacht tot deze eindigt.",
+    "notFound": "Plek niet gevonden",
+    "back": "Terug",
+    "popularityVeryPopular": "Erg populair",
+    "popularityPopular": "Populair",
+    "popularityActive": "Actief",
+    "popularityCalm": "Rustig",
+    "checkinConfirmed": "Bevestigd!",
+    "imHere": "Ik ben hier",
+    "viewPdf": "PDF bekijken",
+    "pdfLoadError": "Deze PDF kan niet worden weergegeven.",
+    "openInBrowser": "Openen in browser",
+    "profilesHere": "Profielen hier",
+    "recentlyCrossed": "Recent gekruist",
+    "seeMore": "Meer zien",
+    "boosted": "Geboost",
+    "boostProfileHere": "Boost mijn profiel hier",
+    "boostLockedAfterCheckins": "Boost 🔓 na 2 check-ins"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Delen",
+      "shareLabel": "Mijn profiel delen",
+      "qrCode": "QR-code",
+      "qrLabel": "Mijn QR-code tonen",
+      "stats": "Statistieken",
+      "statsLabel": "Mijn statistieken bekijken"
+    },
+    "qr": {
+      "title": "Scan om mijn profiel te zien",
+      "hint": "Als de app niet geïnstalleerd is, word je doorgestuurd naar de store ({{store}})."
+    },
+    "status": {
+      "title": "Jouw status",
+      "close": "Sluiten",
+      "public": "Openbaar profiel",
+      "private": "Privéprofiel",
+      "incognito": "Incognito",
+      "pickLabel": "Mijn status kiezen"
+    },
+    "warnings": {
+      "title": "Waarschuwingen",
+      "message_one": "Je hebt {{count}} waarschuwing.",
+      "message_other": "Je hebt {{count}} waarschuwingen.",
+      "tapForDetails": "Tik voor details"
+    },
+    "referral": {
+      "invite": "Nodig je vrienden uit",
+      "label": "Doorverwijzing: nodig je vrienden uit"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Deel je locatie",
+      "message": "Schakel het delen van je huidige plek in om makkelijker gevonden te worden door andere gebruikers in de buurt.",
+      "activate": "Activeren",
+      "noThanks": "Nee bedankt"
+    },
+    "social": {
+      "addTitle": "Netwerk toevoegen",
+      "usernamePlaceholder": "@gebruikersnaam of {{platform}}-ID",
+      "selectPlaceholder": "Selecteer een netwerk",
+      "snapchatHint": "Let op: Snapchat staat geen directe links toe, voer gewoon je gebruikersnaam in.",
+      "save": "Opslaan",
+      "saveLabel": "Opslaan",
+      "editTitle": "{{platform}} bewerken",
+      "usernamePlaceholderSimple": "Gebruikersnaam",
+      "delete": "Verwijderen",
+      "heading": "Sociale netwerken",
+      "addLabel": "Sociaal netwerk toevoegen"
+    },
+    "rewards": {
+      "heading": "Beloningen",
+      "superlikes": "Superlikes",
+      "boosts": "Boosts",
+      "buy": "Kopen",
+      "buyLabel": "Superlikes of boosts kopen",
+      "premiumCta": "👑 Word Premium",
+      "premiumLabel": "Word Premium",
+      "superlikeHistoryLabel_one": "Bekijk superlike-geschiedenis, {{count}} over",
+      "superlikeHistoryLabel_other": "Bekijk superlike-geschiedenis, {{count}} over"
+    },
+    "currentlyAt": "Momenteel bij {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Voeg een zin toe om jezelf voor te stellen."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Je profielfoto",
+      "photoDesc": "Wijzig je profielfoto vanuit de instellingen (icoon rechtsboven).",
+      "bioTitle": "Je bio",
+      "bioDesc": "Je bio wordt bewerkt vanuit de instellingen. Het is het eerste dat anderen zien.",
+      "socialTitle": "Je sociale netwerken",
+      "socialDesc": "Tik op ➕ om een netwerk toe te voegen. Houd een icoon ingedrukt om het te bewerken of te verwijderen.",
+      "statusTitle": "Jouw status",
+      "statusDesc": "Openbaar profiel = zichtbaar voor iedereen · Privéprofiel = netwerken verborgen · Incognito = onzichtbaar. Tik om te wijzigen."
+    },
+    "errorTitle": "Fout",
+    "shareLocationUpdateError": "Het delen van je huidige locatie kon niet worden bijgewerkt",
+    "comingSoonTitle": "Binnenkort beschikbaar 🚀",
+    "comingSoonStats": "Statistieken komen binnenkort! Je ziet dan wie je profiel en sociale netwerken bezoekt.",
+    "shareTitle": "Delen",
+    "shareError": "Delen niet mogelijk.",
+    "boostClaimedToast": "Boost ontvangen 🚀",
+    "superlikeClaimedToast": "Superlike ontvangen ⭐️",
+    "claimRewardError": "De beloning kon niet worden geclaimd",
+    "statusVisible": "Je bent in zichtbare modus. Iedereen kan je sociale netwerken zien. Je profiteert volledig van de app.",
+    "statusRestricted": "Je bent in beperkt zichtbare modus. Niemand kan je sociale netwerken zien.",
+    "statusInvisible": "Je bent in onzichtbare modus. Vanaf nu ziet niemand je meer.",
+    "statusUpdateError": "De status kon niet worden bijgewerkt",
+    "unsupportedPlatform": "Niet-ondersteund platform",
+    "handleRequired": "Voer een gebruikersnaam in",
+    "invalidInstagramHandle": "Ongeldige Instagram-gebruikersnaam. Voorbeeld: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Ongeldige TikTok-gebruikersnaam. Voorbeeld: https://www.tiktok.com/@username",
+    "addSocialError": "Het sociale netwerk kon niet worden toegevoegd",
+    "invalidLinkTitle": "Ongeldige link",
+    "invalidInstagramHandleShort": "Ongeldige Instagram-gebruikersnaam",
+    "invalidTiktokHandleShort": "Ongeldige TikTok-gebruikersnaam",
+    "cannotOpenInstagramTitle": "Instagram kon niet worden geopend",
+    "cannotOpenTiktokTitle": "TikTok kon niet worden geopend",
+    "tryAgainLater": "Probeer het later opnieuw.",
+    "editSocialError": "Het sociale netwerk kon niet worden bewerkt",
+    "deleteSocialError": "Het sociale netwerk kon niet worden verwijderd",
+    "backLabel": "Terug",
+    "settingsLabel": "Instellingen",
+    "streakTitle": "Jouw reeks 🔥",
+    "streakMessage": "Log elke dag in om je reeks te laten groeien. Op dag 7 claim je een superlike. Op dag 14 claim je een boost — je reeks begint dan weer bij 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Ontdek wie er in de buurt is",
+        "desc": "Zie in real-time levendige plekken om je heen en de mensen die daar zijn — nu meteen."
+      },
+      "checkin": {
+        "title": "Automatische check-in, dag of nacht",
+        "desc": "Zodra je een plek binnenkomt, verschijn je daar automatisch — en zie je wie er is. De app wisselt tussen Dagmodus (cafés, parken, sport…) en Nachtmodus (bars, restaurants, clubs…) zoals jij wilt."
+      },
+      "profile": {
+        "title": "Jouw profiel, de plekken die leven",
+        "desc": "Voeg je sociale netwerken toe zodat mensen je kunnen vinden, bekijk profielen om je heen. Elke plek toont ook 1 tot 3 sterren op basis van de echte drukte — hoe drukker, hoe meer het schittert."
+      },
+      "referral": {
+        "title": "Ben je uitgenodigd door een vriend?",
+        "desc": "Voer diens verwijzingscode in (optioneel) — dit helpt hem/haar een gratis Premium-maand vrij te spelen."
+      }
+    },
+    "referralPlaceholder": "Verwijzingscode",
+    "next": "Volgende",
+    "start": "Laten we gaan 🚀",
+    "skip": "Overslaan"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Zie wie je profiel bekijkt",
+      "Zichtbaarheidsboosts (1 gratis pakket)",
+      "Superlikes (3/week gratis)",
+      "Onzichtbare modus",
+      "Zoekradius tot 2 km",
+      "Geavanceerde statistieken",
+      "Uitgebreide meldingen"
+    ],
+    "slides": {
+      "views": {
+        "title": "Wie bezoekt jou?",
+        "desc": "Ontdek in real-time wie je profiel bekijkt."
+      },
+      "boosts": {
+        "title": "Zichtbaarheidsboosts",
+        "desc": "Kom 30 min bovenaan de lijst in jouw locatie."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Toon speciale interesse in iemand die je opvalt."
+      },
+      "invisible": {
+        "title": "Onzichtbare modus",
+        "desc": "Verdwijn wanneer je wilt uit de lijst met nabije gebruikers."
+      },
+      "radius": {
+        "title": "Uitgebreide straal",
+        "desc": "Verken tot 2 km om je heen (500 m in de gratis versie)."
+      },
+      "stats": {
+        "title": "Geavanceerde statistieken",
+        "desc": "Volg je weergaven en klikken op al je sociale netwerken."
+      }
+    },
+    "trialError": "De gratis proefperiode kon niet worden gestart.",
+    "errorTitle": "Fout",
+    "offersUnavailableTitle": "Aanbiedingen niet beschikbaar",
+    "offersUnavailableMessage": "Abonnementsaanbiedingen zijn nog niet geladen. Probeer het over een moment opnieuw.",
+    "purchaseError": "De aankoop kon niet worden voltooid.",
+    "restoredTitle": "✅ Aankopen hersteld",
+    "restoredMessage": "Je Premium-abonnement is actief.",
+    "noRestoreTitle": "Geen aankoop gevonden",
+    "noRestoreMessage": "Er kon geen actief abonnement worden hersteld.",
+    "restoreError": "De aankopen konden niet worden hersteld.",
+    "closeLabel": "Sluiten",
+    "title": "👑 Premium",
+    "subtitle": "Ontgrendel alle functies",
+    "debugBanner": "⚠️ Betalingen uitgeschakeld (debugmodus)",
+    "monthly": "Maandelijks",
+    "perMonth": "/maand",
+    "annual": "Jaarlijks",
+    "perYear": "/jaar",
+    "mostChosen": "MEEST GEKOZEN",
+    "allIncluded": "ALLES INBEGREPEN",
+    "ctaSimulate": "Premium-abonnement simuleren",
+    "ctaTrial": "Start mijn gratis proefperiode van 7 dagen",
+    "ctaLoading": "Aanbiedingen laden…",
+    "ctaSubscribe": "Abonneren",
+    "thenAnnual": "Daarna {{price}}/jaar · Altijd opzegbaar",
+    "thenMonthly": "Daarna {{price}}/maand · Altijd opzegbaar",
+    "restorePurchases": "Mijn aankopen herstellen",
+    "legalText": "Het abonnement wordt automatisch verlengd, tenzij opgezegd vóór het einde van de huidige periode. Beheer je abonnementen in de instellingen van App Store / Google Play. ",
+    "privacyPolicy": "Privacybeleid",
+    "terms": "Voorwaarden"
+  },
+  "premiumWelcome": {
+    "header": "👑 Welkom bij Premium",
+    "finalTitle": "Laten we gaan!",
+    "finalDesc": "Geniet nu van al je nieuwe Premium-voordelen.",
+    "discover": "Ontdekken",
+    "next": "Volgende",
+    "skip": "Overslaan"
+  },
+  "referralScreen": {
+    "loadError": "Je verwijzingsgegevens konden niet worden geladen.",
+    "errorTitle": "Fout",
+    "shareMessage": "Doe met me mee op LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Nodig een vriend uit voor LoocateMe",
+    "shareErrorTitle": "Delen",
+    "shareError": "Delen niet mogelijk.",
+    "codeSavedTitle": "Verwijzing",
+    "codeSaved": "Verwijzingscode opgeslagen!",
+    "selfReferralError": "Je kunt je eigen code niet gebruiken.",
+    "alreadyReferredError": "Je hebt al een verwijzingscode gebruikt.",
+    "invalidCodeError": "Deze verwijzingscode is ongeldig.",
+    "genericCodeError": "Deze code kon niet worden gevalideerd.",
+    "title": "Verwijzing",
+    "infoText": "Nodig deze maand 5 vrienden uit (elk moet uitgaan en hun 1e geverifieerde check-in doen) en verdien 1 gratis Premium-maand 🎉",
+    "confirmCode": "Verwijzingscode \"{{code}}\" bevestigen?",
+    "validate": "Bevestigen",
+    "rewardActive": "💎 Je gratis Premium-maand is actief",
+    "rewardActiveUntil": " tot {{date}}",
+    "yourCode": "Jouw verwijzingscode",
+    "shareButton": "📤 Deel mijn code",
+    "shareLabel": "Deel mijn code",
+    "progressLabel": "{{count}} / {{target}} verwijzingen deze maand",
+    "invitedFriends": "Uitgenodigde vrienden",
+    "noInvites": "Nog geen vrienden uitgenodigd.",
+    "defaultUser": "Gebruiker",
+    "statusValidated": "Gevalideerd",
+    "statusVoid": "Geannuleerd",
+    "statusPending": "In behandeling"
+  },
+  "searchView": {
+    "closeLabel": "Zoeken sluiten",
+    "title": "Zoeken",
+    "placeholder": "Gebruikersnaam, plek...",
+    "clearLabel": "Zoekopdracht wissen",
+    "filterUsers": "Gebruikers",
+    "filterLocations": "Plekken",
+    "searching": "Aan het zoeken…",
+    "typeToSearch": "Typ minstens 2 letters om te zoeken",
+    "noResults": "Geen resultaten gevonden voor deze zoekopdracht.",
+    "checkFilters": "Controleer de filters of probeer een ander trefwoord.",
+    "resultsCount_one": "{{count}} resultaat",
+    "resultsCount_other": "{{count}} resultaten",
+    "noLongerHere": "Niet meer aanwezig"
+  },
+  "settingsScreen": {
+    "title": "Instellingen",
+    "tabProfile": "Profiel",
+    "tabSettings": "Instellingen",
+    "sectionIdentity": "IDENTITEIT",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "customNameLabel": "Aangepaste naam",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ABONNEMENT",
+    "premiumMonthly": "· Maandelijks",
+    "premiumAnnual": "· Jaarlijks",
+    "statusLoading": "Status wordt geladen…",
+    "grantedOutsideStore": "Toegekend buiten App Store/Play Store-abonnement (gratis proefperiode of speciale aanbieding)",
+    "renewsOn": "Wordt verlengd op {{date}}",
+    "expiresOn": "Verloopt op {{date}}",
+    "opening": "Openen…",
+    "manageSubscription": "Mijn abonnement beheren",
+    "goPremium": "👑 Word Premium",
+    "manageSubError": "Kon abonnementsbeheer niet openen.",
+    "sectionGeneral": "ALGEMEEN",
+    "displayMode": "Weergavemodus",
+    "fullNameMode": "Voornaam Achternaam",
+    "classicMode": "Klassiek",
+    "customMode": "Aangepast",
+    "sectionReferral": "VERWIJZING",
+    "alreadyReferred": "Je bent al doorverwezen.",
+    "referralHint": "Heeft een vriend een code met je gedeeld? Vul deze hier in.",
+    "referralPlaceholder": "Verwijzingscode",
+    "validate": "Bevestigen",
+    "sectionNotifications": "MELDINGEN",
+    "notifKinds": {
+      "superlike": "Ontvangen superlikes",
+      "superlikeAccepted": "Geaccepteerde superlikes",
+      "eventBoost": "Evenementboosts",
+      "streakExpiring": "Reeksherinneringen",
+      "profileView": "Profielweergaven",
+      "socialClick": "Bezoeken aan je sociale netwerken",
+      "inactiveProfileViews": "Weergaven ontvangen tijdens je afwezigheid",
+      "referralValidated": "Verwijzing gevalideerd",
+      "referralRewardGranted": "Verwijzingsbeloning",
+      "nightModeActivated": "Nachtmodus geactiveerd",
+      "atRiskReactivation": "Reactiveringsherinneringen",
+      "weeklyDigest": "Wekelijkse samenvatting"
+    },
+    "notifCategories": {
+      "social": "Sociale activiteit",
+      "rewards": "Reeksen & beloningen",
+      "system": "Systeem & samenvattingen"
+    },
+    "sectionPrivacy": "PRIVACY & AVG",
+    "privacyPolicyLink": "Privacybeleid",
+    "consent": "Toestemming",
+    "analyticsLabel": "Analytics",
+    "dataSaleTitle": "Verkoop van gegevens (CCPA)",
+    "dataSaleDesc": "Wij verkopen of delen je persoonlijke gegevens niet met derden voor reclamedoeleinden.",
+    "invisibleModeTitle": "Onzichtbare modus",
+    "invisibleModeDesc": "Je bent onzichtbaar voor andere gebruikers op plekken, maar je kunt de kaart of plekkenlijst niet meer bekijken zolang deze modus actief is.",
+    "shareLocationTitle": "Mijn huidige locatie delen",
+    "shareLocationDesc": "Toont andere gebruikers de precieze plek waar je je momenteel bevindt, naast je stad. Standaard uitgeschakeld om je privacy te beschermen en stalkingrisico te vermijden.",
+    "policyLoadError": "Het privacybeleid kon niet worden geladen.",
+    "savePrivacyPrefsError": "Je privacyvoorkeuren konden niet worden opgeslagen",
+    "shareLocationUpdateError": "Het delen van je huidige locatie kon niet worden bijgewerkt",
+    "invisibleModeUpdateError": "De onzichtbare modus kon niet worden bijgewerkt",
+    "notifPrefUpdateError": "Deze meldingsvoorkeur kon niet worden bijgewerkt",
+    "consentSavedTitle": "Succes",
+    "consentSaved": "Toestemming opgeslagen.",
+    "consentRevoked": "Toestemming ingetrokken.",
+    "consentSaveError": "Je toestemming kon niet worden opgeslagen",
+    "revokeConsentTitle": "Toestemming intrekken",
+    "revokeConsentMessage": "Het intrekken van je toestemming leidt tot definitieve verwijdering van je account en al je gegevens. Wil je doorgaan?",
+    "cancel": "Annuleren",
+    "continueLabel": "Doorgaan",
+    "currentPasswordRequired": "Voer je huidige wachtwoord in.",
+    "passwordTooShort": "Het nieuwe wachtwoord moet minimaal 6 tekens bevatten.",
+    "passwordConfirmMismatch": "De bevestiging komt niet overeen met het nieuwe wachtwoord.",
+    "passwordChangedTitle": "Wachtwoord gewijzigd",
+    "passwordChangedMessage": "Je wachtwoord is bijgewerkt.",
+    "currentPasswordInvalid": "Ongeldig huidig wachtwoord of serverfout.",
+    "invalidEmail": "Voer een geldig e-mailadres in.",
+    "passwordRequiredConfirm": "Voer je wachtwoord in ter bevestiging.",
+    "checkInboxTitle": "Controleer je inbox",
+    "checkInboxMessage": "Er is een bevestigingsmail verzonden naar {{email}}. Klik op de link om de wijziging te bevestigen.",
+    "emailChangeError": "Kon de wijziging niet starten. Ongeldig wachtwoord of serverfout.",
+    "exportReadyTitle": "Export gereed",
+    "exportReadyMessage": "Je gegevens zijn geëxporteerd ({{size}} tekens).",
+    "exportError": "Je gegevens konden niet worden geëxporteerd",
+    "deleteAccountConfirmTitle": "Account verwijderen",
+    "deleteAccountConfirmMessage": "Verwijdering is definitief. Bevestig je de verwijdering van je account?",
+    "profileUpdatedTitle": "Profiel",
+    "profileUpdatedMessage": "Je profiel is bijgewerkt.",
+    "loadBlockedError": "Geblokkeerde accounts konden niet worden geladen",
+    "unblockError": "Deze gebruiker kon niet worden gedeblokkeerd",
+    "sectionAccount": "ACCOUNT",
+    "emailLabel": "E-mail",
+    "notProvided": "Niet ingevuld",
+    "change": "Wijzigen",
+    "passwordLabel": "Wachtwoord",
+    "blockedAccounts": "Geblokkeerde accounts",
+    "helpAndPrivacy": "Hulp & privacy",
+    "terms": "Gebruiksvoorwaarden",
+    "sectionModeration": "MODERATIE",
+    "moderatorSpace": "Moderatorruimte",
+    "debugConsole": "Debug-console",
+    "exportData": "Mijn gegevens exporteren",
+    "deleteAccount": "Mijn account verwijderen",
+    "logout": "Uitloggen",
+    "save": "Opslaan",
+    "close": "Sluiten",
+    "privacyModalTitle": "Privacy",
+    "deleteAccountTitle": "Accountverwijdering",
+    "deleteAccountDesc": "Voer ter bevestiging je wachtwoord in. Deze actie is onomkeerbaar.",
+    "deleting": "Bezig met verwijderen...",
+    "changePasswordTitle": "Wachtwoord wijzigen",
+    "currentPasswordPlaceholder": "Huidig wachtwoord",
+    "newPasswordPlaceholder": "Nieuw wachtwoord (min. 6 tekens)",
+    "confirmPasswordPlaceholder": "Nieuw wachtwoord bevestigen",
+    "changeEmailTitle": "E-mail wijzigen",
+    "currentEmailLabel": "Huidige e-mail: {{email}}",
+    "newEmailPlaceholder": "Nieuwe e-mail",
+    "noBlockedAccounts": "Geen geblokkeerde accounts.",
+    "unblock": "Deblokkeren"
+  },
+  "statisticsScreen": {
+    "loadError": "De statistieken konden niet worden opgehaald",
+    "loadVisitorsError": "De lijst met bezoekers kon niet worden opgehaald",
+    "justNow": "Zojuist",
+    "minutesAgo": "{{count}} min geleden",
+    "hoursAgo": "{{count}}u geleden",
+    "yesterday": "Gisteren",
+    "daysAgo": "{{count}} d geleden",
+    "title": "Statistieken",
+    "comingSoonTitle": "Binnenkort beschikbaar 🚀",
+    "comingSoonDesc": "Statistieken komen binnenkort! Je ziet dan wie je profiel en sociale netwerken bezoekt.",
+    "whoStalksTitle": "Wie stalkt jou? 👀",
+    "whoStalksDesc": "Word Premium om te ontdekken wie je profiel en sociale netwerken bezoekt!",
+    "discoverVisitors": "Ontdek mijn bezoekers",
+    "later": "Later",
+    "profileViews": "Profielweergaven",
+    "views": "weergaven",
+    "last30Days": "in de afgelopen 30 dagen",
+    "clicksByNetwork": "Klikken per netwerk",
+    "lastVisits": "Recente bezoeken",
+    "noVisitorsTitle": "Nog niemand heeft je profiel bezocht",
+    "noVisitorsDesc": "Blijf plekken verkennen om ontdekt te worden!",
+    "defaultUser": "Gebruiker",
+    "hiddenVisits_one": "{{count}} verborgen bezoek",
+    "hiddenVisits_other": "{{count}} verborgen bezoeken",
+    "goPremiumToSeeAll": "Word Premium om alles te zien",
+    "showMore": "Meer tonen"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Intimidatie",
+      "spam": "Spam",
+      "inappropriate": "Ongepaste inhoud",
+      "impersonation": "Identiteitsdiefstal",
+      "scam": "Oplichting",
+      "other": "Anders"
+    },
+    "statusAvailable": "Beschikbaar",
+    "statusRestricted": "Beperkte zichtbaarheid",
+    "statusInvisible": "Onzichtbaar",
+    "noUserSelected": "Geen gebruiker geselecteerd.",
+    "backToList": "Terug naar de lijst",
+    "superlikeLockedTitle": "Binnenkort beschikbaar",
+    "superlikeLockedMessage": "Superlikes worden ontgrendeld na je eerste check-in.",
+    "superlikeSentTitle": "⭐ Superlike verstuurd!",
+    "superlikeSentMessage": "{{name}} is op de hoogte gebracht dat je hem/haar hebt opgemerkt.",
+    "errorTitle": "Fout",
+    "superlikeSendError": "Kon de superlike niet versturen.",
+    "blockConfirmTitle": "Deze gebruiker blokkeren?",
+    "blockConfirmMessage": "Je ziet deze gebruiker niet meer en die kan jou niet meer contacteren.",
+    "cancel": "Annuleren",
+    "block": "Blokkeren",
+    "userBlockedTitle": "Gebruiker geblokkeerd",
+    "userBlockedMessage": "Deze gebruiker is geblokkeerd.",
+    "blockError": "Kon deze gebruiker niet blokkeren.",
+    "reasonRequiredTitle": "Reden vereist",
+    "reasonRequiredMessage": "Geef alsjeblieft een reden op.",
+    "reportSentTitle": "Melding verzonden",
+    "reportSentMessage": "Bedankt voor je melding.",
+    "reportSendError": "Kon de melding niet verzenden.",
+    "backA11y": "Terug",
+    "moreOptionsA11y": "Meer opties",
+    "sendSuperlikeA11y": "Superlike versturen",
+    "superlikeLockedA11y": "Superlike vergrendeld, ontgrendelt na je eerste check-in",
+    "currentlyAt": "Momenteel bij {{place}}",
+    "mutualConnectionBanner": "Deze persoon wil contact leggen",
+    "socialsHidden": "Deze gebruiker deelt zijn/haar sociale media niet",
+    "noBio": "Nog geen bio toegevoegd.",
+    "noSocials": "Geen sociale media",
+    "actionsTitle": "Acties",
+    "report": "Melden",
+    "reportUserTitle": "Een gebruiker melden",
+    "reportWarning": "Misbruik van meldingen kan leiden tot sancties. Wees alsjeblieft eerlijk.",
+    "categoryLabel": "Categorie",
+    "reasonLabel": "Reden",
+    "reasonPlaceholder": "Leg de reden kort uit",
+    "descriptionLabel": "Beschrijving (optioneel)",
+    "descriptionPlaceholder": "Extra details",
+    "sending": "Versturen...",
+    "sendReport": "Melding versturen",
+    "justNow": "Zojuist",
+    "minutesAgo_one": "{{count}} min geleden",
+    "minutesAgo_other": "{{count}} min geleden",
+    "hoursAgo_one": "{{count}} uur geleden",
+    "hoursAgo_other": "{{count}} uur geleden",
+    "yesterday": "Gisteren",
+    "daysAgo_one": "{{count}} dag geleden",
+    "daysAgo_other": "{{count}} dagen geleden"
+  },
+  "warningsScreen": {
+    "title": "Waarschuwingen",
+    "banAlert": "Dit gedrag kan leiden tot een tijdelijke of permanente ban van de app.",
+    "empty": "Geen waarschuwingen.",
+    "typeLabel": "Type waarschuwing",
+    "notSpecified": "Niet opgegeven",
+    "notSpecifiedFem": "Niet opgegeven",
+    "reasonLabel": "Reden"
+  },
+  "common": {
+    "close": "Sluiten",
+    "errorTitle": "Fout"
+  },
+  "streakCard": {
+    "hintReady": "Je beloning is klaar!",
+    "hintGrow": "Log elke dag in om hem te laten stijgen.",
+    "claimBoost": "Claim je boost",
+    "claimSuperlike": "Claim je superlike"
+  },
+  "coteCard": {
+    "messageTop": "Helemaal top! Log morgen in om het te behouden.",
+    "messageZero": "Log vandaag in om het weer op gang te brengen."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Kom 30 min bovenaan te staan",
+    "boostPack5Desc": "De beste prijs-kwaliteitverhouding",
+    "superlikePack3Desc": "Toon je interesse op een unieke manier",
+    "superlikePack10Desc": "Voor echte verbinders",
+    "badgePopular": "Populair",
+    "badgeBestOffer": "Beste aanbieding",
+    "notAvailableTitle": "Niet beschikbaar",
+    "notAvailableMessage": "Dit pakket is nog niet beschikbaar in de store.",
+    "purchaseErrorMessage": "De aankoop kon niet worden voltooid.",
+    "simulate": "Simuleren"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Zoek op deze plekken",
+    "categoryBars": "Bars",
+    "categoryClubs": "Clubs",
+    "categoryRestos": "Restaurants",
+    "categoryPubs": "Pubs",
+    "categoryGyms": "Sportscholen",
+    "categoryCafes": "Cafés",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Bibliotheken"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anoniem"
+  },
+  "locationMapView": {
+    "loadError": "Kan de kaart niet laden",
+    "renderError": "Fout bij het laden van de kaart"
+  },
+  "churnSurveyModal": {
+    "title": "Eén minuutje voor je gaat?",
+    "subtitle": "Help ons te begrijpen waarom.",
+    "reasonTooManyNotifications": "Te veel meldingen",
+    "reasonPrivacyConcern": "Ik voel me niet prettig bij het delen",
+    "reasonNotUseful": "Het is niet meer nuttig voor mij",
+    "reasonOther": "Andere reden",
+    "dismiss": "Overslaan",
+    "thanks": "Bedankt voor je feedback 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Zoeken",
+    "tabNearby": "Plekken in de buurt",
+    "tabAccount": "Account"
+  },
+  "documentViewer": {
+    "openError": "Dit document kon niet worden geopend.",
+    "defaultLabel": "Document bekijken"
+  },
+  "vibeFab": {
+    "toDay": "Overschakelen naar dagmodus",
+    "toNight": "Overschakelen naar nachtmodus"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Locatie delen actief"
+  }
+}

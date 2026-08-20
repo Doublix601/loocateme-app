@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Skrá inn",
+      "welcomeBack": "Velkomin/n aftur!",
+      "subtitle": "Skráðu þig inn til að halda áfram",
+      "emailPlaceholder": "Tölvupóstur",
+      "passwordPlaceholder": "Lykilorð",
+      "submit": "Skrá inn",
+      "forgotPassword": "Gleymt lykilorð?",
+      "noAccount": "Ertu ekki með aðgang?",
+      "createAccount": "Stofna aðgang",
+      "emailNotVerifiedTitle": "Tölvupóstur ekki staðfestur",
+      "emailNotVerifiedMessage": "Tölvupóstfangið þitt hefur ekki verið staðfest ennþá. Við sendum þér rétt í þessu nýjan staðfestingarpóst. Smelltu á tengilinn til að virkja aðganginn þinn og reyndu svo aftur.",
+      "authFailedTitle": "Innskráning mistókst",
+      "authFailedMessage": "Ekki tókst að skrá þig inn. Athugaðu upplýsingarnar þínar og reyndu aftur."
+    },
+    "signup": {
+      "passwordMismatch": "Lykilorðin passa ekki saman.",
+      "requiredFields": "Fylla þarf út í öll svæði.",
+      "birthdateRequired": "Fæðingardagur er skylda.",
+      "under18": "Þú verður að vera að minnsta kosti 18 ára til að skrá þig.",
+      "policyLoadError": "Ekki tókst að hlaða persónuverndarstefnuna. Þú getur reynt aftur."
+    }
+  },
+  "consent": {
+    "title": "Persónuvernd",
+    "changelogTitle": "Hvað hefur breyst",
+    "decline": "Hafna",
+    "accept": "Samþykkja",
+    "accepting": "Vistar...",
+    "declineInfoTitle": "Upplýsingar",
+    "declineInfoMessage": "Þú verður að samþykkja persónuverndarstefnuna til að nota appið.",
+    "acceptErrorTitle": "Villa",
+    "acceptErrorMessage": "Ekki tókst að vista samþykki þitt. Reyndu aftur."
+  },
+  "ageVerification": {
+    "title": "Aldursstaðfesting",
+    "urlMissing": "Vantar staðfestingarhlekk",
+    "startError": "Ekki tókst að hefja aldursstaðfestingu. Reyndu aftur.",
+    "retry": "Reyna aftur",
+    "declinedTitle": "Staðfestingu hafnað",
+    "declinedMessage": "Við gátum ekki staðfest að þú sért eldri en 18 ára. Þú getur reynt aftur."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Tungumál",
+      "systemDefault": "Tungumál símans"
+    }
+  },
+  "forgotPassword": {
+    "title": "Gleymt lykilorð",
+    "resetTitle": "Endurstilling",
+    "instructions": "Sláðu inn tölvupóstfangið þitt til að fá endurstillingarhlekk.",
+    "emailPlaceholder": "Tölvupóstur",
+    "submit": "Senda hlekk",
+    "successTitle": "Tölvupóstur sendur",
+    "successMessage": "Ef aðgangur er til hefur tölvupóstur verið sendur.",
+    "errorTitle": "Villa",
+    "errorFallback": "Vinsamlegast reyndu aftur"
+  },
+  "dataManagement": {
+    "title": "Persónuvernd",
+    "export": {
+      "title": "Flytja út gögnin mín",
+      "desc": "Náðu í afrit af upplýsingum þínum (prófíl, samfélagsmiðlum, stillingum).",
+      "button": "Flytja út",
+      "buttonWorking": "Vinsamlegast bíðið...",
+      "successTitle": "Útflutningur gagna",
+      "successMessage": "Útflutningur þinn hefur verið búinn til og birtur í stjórnborðinu.",
+      "errorTitle": "Villa",
+      "errorMessage": "Ekki tókst að flytja út gögnin þín núna. Reyndu aftur."
+    },
+    "delete": {
+      "title": "Eyða aðgangi mínum",
+      "desc": "Eyðir aðgangi þínum og öllum tengdum gögnum varanlega.",
+      "passwordPlaceholder": "Staðfestu með lykilorðinu þínu",
+      "button": "Eyða varanlega",
+      "passwordRequiredTitle": "Lykilorð krafist",
+      "passwordRequiredMessage": "Vinsamlegast sláðu inn lykilorðið þitt.",
+      "confirmTitle": "Staðfesting",
+      "confirmMessage": "Þessa aðgerð er ekki hægt að afturkalla. Viltu örugglega eyða aðgangi þínum?",
+      "cancel": "Hætta við",
+      "confirm": "Eyða",
+      "successTitle": "Aðgangi eytt",
+      "successMessage": "Aðgangi þínum og gögnum hefur verið eytt.",
+      "errorTitle": "Villa",
+      "errorMessage": "Eyðing mistókst. Ógilt lykilorð eða vandamál á netþjóni."
+    }
+  },
+  "editProfile": {
+    "title": "Breyta prófílnum mínum",
+    "subtitle": "Ýttu á reit til að breyta honum",
+    "notSet": "Ekki stillt",
+    "backLabel": "Til baka",
+    "fields": {
+      "firstName": "Fornafn",
+      "lastName": "Eftirnafn",
+      "customName": "Sérsniðið nafn",
+      "bio": "Bio",
+      "birthdate": "Fæðingardagur",
+      "gender": "Kyn"
+    },
+    "gender": {
+      "male": "Strákur",
+      "female": "Stelpa",
+      "preferNotToSay": "Vil ekki segja"
+    },
+    "photo": {
+      "notSupportedTitle": "Ekki stutt",
+      "notSupportedMessage": "Myndavélin er ekki tiltæk á vefnum.",
+      "cameraPermissionTitle": "Heimild krafist",
+      "cameraPermissionMessage": "Appið þarf aðgang að myndavélinni til að taka mynd.",
+      "galleryPermissionMessage": "Appið þarf aðgang að myndunum þínum til að velja mynd.",
+      "errorTitle": "Villa",
+      "uploadErrorMessage": "Ekki tókst að hlaða upp myndinni",
+      "cameraOpenError": "Ekki tókst að opna myndavélina.",
+      "galleryOpenError": "Ekki tókst að opna myndasafnið.",
+      "deleteErrorMessage": "Ekki tókst að eyða prófílmyndinni",
+      "deleteConfirmTitle": "Eyða prófílmynd?",
+      "deleteConfirmMessage": "Þessa aðgerð er ekki hægt að afturkalla.",
+      "cancel": "Hætta við",
+      "delete": "Eyða",
+      "modalTitle": "Prófílmynd",
+      "takePhoto": "📸 Taka mynd",
+      "sending": "Hleð upp...",
+      "chooseGallery": "🖼️ Velja úr myndasafni",
+      "deletePhoto": "🗑️ Eyða mynd",
+      "deleting": "Eyði..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Ógilt fornafn",
+      "firstNameInvalidMessage": "Fornafn verður að byrja á hástaf og má innihalda bókstafi (broddstafir leyfðir), bil, úrfellingarmerki eða bandstrik.",
+      "lastNameInvalidTitle": "Ógilt eftirnafn",
+      "lastNameInvalidMessage": "Eftirnafn verður að byrja á hástaf og má innihalda bókstafi (broddstafir leyfðir), bil, úrfellingarmerki eða bandstrik.",
+      "incompleteIdentityTitle": "Ófullkomin auðkenni",
+      "incompleteIdentityMessage": "Sláðu inn Sérsniðið nafn EÐA Fornafn OG Eftirnafn.",
+      "customNameRequiredTitle": "Sérsniðið nafn krafist",
+      "customNameRequiredMessage": "Þú getur ekki fjarlægt sérsniðna nafnið á meðan fornafn eða eftirnafn er tómt.",
+      "invalidDateTitle": "Ógild dagsetning",
+      "invalidDateMessage": "Vinsamlegast veldu gilda fæðingardagsetningu.",
+      "minAgeTitle": "Lágmarksaldur krafist",
+      "minAgeMessage": "Þú verður að vera að minnsta kosti 18 ára.",
+      "updateErrorMessage": "Ekki tókst að uppfæra prófílinn þinn"
+    },
+    "modal": {
+      "editPrefix": "Breyta",
+      "editGeneric": "Breyta",
+      "selectDate": "Velja dagsetningu",
+      "cancel": "Hætta við",
+      "save": "Vista",
+      "placeholders": {
+        "firstName": "Fornafnið þitt",
+        "lastName": "Eftirnafnið þitt",
+        "customName": "Sérsniðna nafnið þitt",
+        "bio": "Segðu okkur aðeins frá þér...",
+        "default": "Textinn þinn"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Ósýnilegur hamur virkur",
+      "subtitle": "Þú getur ekki séð staði í kringum þig meðan ósýnilegur hamur er virkur. Slökktu á honum til að skoða staði.",
+      "disableButton": "Slökkva á ósýnilegum ham"
+    },
+    "error": {
+      "title": "Staðsetning ekki tiltæk",
+      "subtitle": "Kveiktu á staðsetningarþjónustu í stillingum tækisins til að sjá staði í kringum þig.",
+      "retry": "Reyna aftur"
+    },
+    "empty": {
+      "title": "Rólegt svæði í bili",
+      "subtitle": "Enginn virkur staður fannst í kringum þig. Stækkaðu radíusinn eða stungdu upp á nýjum stað.",
+      "expandRadius": "Stækka radíus",
+      "suggestLocation": "Stinga upp á þessum stað"
+    },
+    "footer": {
+      "loadingMore": "Hleð fleiri staði…",
+      "loadMoreError": "Ekki tókst að hlaða fleiri staði. Athugaðu tenginguna þína.",
+      "retry": "Reyna aftur",
+      "reachedEnd": "Þú hefur kannað alla virka staði í nágrenninu. Færðu þig eða leitaðu til að sjá fleiri."
+    },
+    "leaveModal": {
+      "defaultName": "Þessi staður",
+      "subtitle": "Þú ert núna skráð(ur) hér inn. Viltu yfirgefa þennan stað?",
+      "confirm": "Ég er ekki lengur hér",
+      "cancel": "Hætta við"
+    },
+    "sections": {
+      "moreLocations": "Fleiri staðir fyrir þig",
+      "sponsored": "Í brennidepli",
+      "trending": "Að gerast núna"
+    },
+    "filters": {
+      "all": "Allir"
+    },
+    "card": {
+      "visitors_one": "{{count}} gestur",
+      "visitors_other": "{{count}} gestir",
+      "sponsored": "KOSTAÐ",
+      "imHere": "Ég er hér",
+      "editLocation": "Breyta staðsetningu minni"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Handvirk innritun virkjuð",
+    "checkinModeAutoOn": "Sjálfvirk innritun virkjuð",
+    "checkinModeErrorTitle": "Villa",
+    "checkinModeErrorMessage": "Ekki tókst að breyta innritunarham núna.",
+    "checkedInToast": "Þú ert núna á {{name}}!",
+    "checkinErrorMessage": "Ekki tókst að staðfesta viðveru þína núna.",
+    "leftLocationToast": "Þú hefur yfirgefið þennan stað.",
+    "boostActiveTitle": "Örvun virk",
+    "boostActiveLeaveMessage": "Þú getur ekki yfirgefið þennan stað á meðan örvunin þín er virk.",
+    "leaveErrorMessage": "Ekki tókst að skrá þig út af þessum stað núna.",
+    "boostInProgressTitle": "Örvun í gangi",
+    "boostInProgressMessage": "Örvunin þín er virk: bíddu þar til hún lýkur áður en þú skiptir um stað.",
+    "refreshErrorToast": "Ekki tókst að uppfæra núna.",
+    "disableInvisibleErrorMessage": "Ekki tókst að slökkva á ósýnilegum ham núna.",
+    "switchToManualLabel": "Skipta yfir í handvirka innritun",
+    "switchToAutoLabel": "Skipta yfir í sjálfvirka innritun",
+    "entryAuto": "Sjálfv. innritun",
+    "entryManual": "Handvirk innritun",
+    "showMapLabel": "Sýna kort",
+    "showListLabel": "Sýna lista",
+    "mapButton": "Kort",
+    "listButton": "Listi"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Villa",
+    "checkinErrorMessage": "Ekki tókst að staðfesta viðveru þína núna.",
+    "boostActiveHereTitle": "Örvun í gangi",
+    "boostActiveHereMessage": "Örvunin þín er virk hér: bíddu þar til hún lýkur áður en þú yfirgefur þennan stað.",
+    "boostActiveMessage": "Örvunin þín er virk: bíddu þar til hún lýkur.",
+    "notFound": "Staður fannst ekki",
+    "back": "Til baka",
+    "popularityVeryPopular": "Mjög vinsælt",
+    "popularityPopular": "Vinsælt",
+    "popularityActive": "Virkt",
+    "popularityCalm": "Rólegt",
+    "checkinConfirmed": "Staðfest!",
+    "imHere": "Ég er hér",
+    "viewPdf": "Skoða PDF",
+    "pdfLoadError": "Ekki er hægt að birta þessa PDF-skrá.",
+    "openInBrowser": "Opna í vafra",
+    "profilesHere": "Prófílar hér",
+    "recentlyCrossed": "Nýlega kynnst",
+    "seeMore": "Sjá meira",
+    "boosted": "Örvað",
+    "boostProfileHere": "Örva prófílinn minn hér",
+    "boostLockedAfterCheckins": "Örvun 🔓 eftir 2 innritanir"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Deila",
+      "shareLabel": "Deila prófílnum mínum",
+      "qrCode": "QR-kóði",
+      "qrLabel": "Sýna QR-kóðann minn",
+      "stats": "Tölfræði",
+      "statsLabel": "Skoða tölfræðina mína"
+    },
+    "qr": {
+      "title": "Skannaðu til að sjá prófílinn minn",
+      "hint": "Ef appið er ekki uppsett verður þér vísað á verslunina ({{store}})."
+    },
+    "status": {
+      "title": "Staðan þín",
+      "close": "Loka",
+      "public": "Opinber prófíll",
+      "private": "Einka prófíll",
+      "incognito": "Huliðshamur",
+      "pickLabel": "Velja stöðuna mína"
+    },
+    "warnings": {
+      "title": "Viðvaranir",
+      "message_one": "Þú ert með {{count}} viðvörun.",
+      "message_other": "Þú ert með {{count}} viðvaranir.",
+      "tapForDetails": "Ýttu til að sjá nánar"
+    },
+    "referral": {
+      "invite": "Bjóddu vinum þínum",
+      "label": "Tilvísun: bjóddu vinum þínum"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Deildu staðsetningu þinni",
+      "message": "Kveiktu á deilingu núverandi staðsetningar þinnar til að aðrir notendur í nágrenninu finni þig auðveldar.",
+      "activate": "Virkja",
+      "noThanks": "Nei takk"
+    },
+    "social": {
+      "addTitle": "Bæta við neti",
+      "usernamePlaceholder": "@notandanafn eða {{platform}} auðkenni",
+      "selectPlaceholder": "Veldu net",
+      "snapchatHint": "Athugið: Snapchat leyfir ekki beina hlekki, sláðu bara inn notandanafnið þitt.",
+      "save": "Vista",
+      "saveLabel": "Vista",
+      "editTitle": "Breyta {{platform}}",
+      "usernamePlaceholderSimple": "Notandanafn",
+      "delete": "Eyða",
+      "heading": "Samfélagsmiðlar",
+      "addLabel": "Bæta við samfélagsmiðli"
+    },
+    "rewards": {
+      "heading": "Verðlaun",
+      "superlikes": "Superlikes",
+      "boosts": "Örvanir",
+      "buy": "Kaupa",
+      "buyLabel": "Kaupa superlikes eða örvanir",
+      "premiumCta": "👑 Fá Premium",
+      "premiumLabel": "Fá Premium",
+      "superlikeHistoryLabel_one": "Skoða superlike sögu, {{count}} eftir",
+      "superlikeHistoryLabel_other": "Skoða superlike sögu, {{count}} eftir"
+    },
+    "currentlyAt": "Núna á {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Bættu við setningu til að kynna þig."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Prófílmyndin þín",
+      "photoDesc": "Breyttu prófílmyndinni þinni úr stillingum (tákn efst til hægri).",
+      "bioTitle": "Bio-ið þitt",
+      "bioDesc": "Bio-ið þitt er breytt úr stillingum. Það er það fyrsta sem aðrir sjá.",
+      "socialTitle": "Samfélagsmiðlarnir þínir",
+      "socialDesc": "Ýttu á ➕ til að bæta við miðli. Haltu inni tákni til að breyta eða eyða því.",
+      "statusTitle": "Staðan þín",
+      "statusDesc": "Opinber prófíll = sýnilegur öllum · Einka prófíll = miðlar faldir · Huliðshamur = ósýnilegur. Ýttu til að breyta."
+    },
+    "errorTitle": "Villa",
+    "shareLocationUpdateError": "Ekki tókst að uppfæra deilingu á núverandi staðsetningu þinni",
+    "comingSoonTitle": "Kemur bráðum 🚀",
+    "comingSoonStats": "Tölfræði kemur mjög fljótlega! Þú munt geta séð hver heimsækir prófílinn þinn og samfélagsmiðla.",
+    "shareTitle": "Deila",
+    "shareError": "Ekki tókst að deila.",
+    "boostClaimedToast": "Örvun sótt 🚀",
+    "superlikeClaimedToast": "Superlike sótt ⭐️",
+    "claimRewardError": "Ekki tókst að sækja verðlaunin",
+    "statusVisible": "Þú ert í sýnilegum ham. Allir geta séð samfélagsmiðlana þína. Þú nýtir appið til fulls.",
+    "statusRestricted": "Þú ert í takmörkuðum sýnilegum ham. Enginn getur séð samfélagsmiðlana þína.",
+    "statusInvisible": "Þú ert í ósýnilegum ham. Héðan í frá sér enginn þig.",
+    "statusUpdateError": "Ekki tókst að uppfæra stöðu",
+    "unsupportedPlatform": "Ekki studdur vettvangur",
+    "handleRequired": "Vinsamlegast sláðu inn auðkenni",
+    "invalidInstagramHandle": "Ógilt Instagram notandanafn. Dæmi: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Ógilt TikTok notandanafn. Dæmi: https://www.tiktok.com/@username",
+    "addSocialError": "Ekki tókst að bæta við samfélagsmiðli",
+    "invalidLinkTitle": "Ógildur hlekkur",
+    "invalidInstagramHandleShort": "Ógilt Instagram notandanafn",
+    "invalidTiktokHandleShort": "Ógilt TikTok notandanafn",
+    "cannotOpenInstagramTitle": "Ekki tókst að opna Instagram",
+    "cannotOpenTiktokTitle": "Ekki tókst að opna TikTok",
+    "tryAgainLater": "Vinsamlegast reyndu aftur síðar.",
+    "editSocialError": "Ekki tókst að breyta samfélagsmiðli",
+    "deleteSocialError": "Ekki tókst að eyða samfélagsmiðli",
+    "backLabel": "Til baka",
+    "settingsLabel": "Stillingar",
+    "streakTitle": "Runan þín 🔥",
+    "streakMessage": "Skráðu þig inn á hverjum degi til að auka rununa þína. Á degi 7, sæktu superlike. Á degi 14, sæktu örvun — runan þín byrjar þá aftur frá 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Uppgötvaðu hver er úti nálægt þér",
+        "desc": "Sjáðu í rauntíma líflega staði í kringum þig og fólkið sem er þar — núna."
+      },
+      "checkin": {
+        "title": "Sjálfvirk innritun, dag eða nótt",
+        "desc": "Um leið og þú ferð inn á stað birtist þú þar sjálfkrafa — og sérð hver er þar. Appið skiptir á milli Dagham (kaffihús, garðar, íþróttir…) og Næturham (barir, veitingastaðir, klúbbar…) eftir því sem þú vilt."
+      },
+      "profile": {
+        "title": "Prófíllinn þinn, líflegu staðirnir",
+        "desc": "Bættu við samfélagsmiðlunum þínum svo fólk finni þig, skoðaðu prófíla í kringum þig. Hver staður sýnir líka 1 til 3 stjörnur eftir raunverulegri aðsókn — því líflegri sem hann er, því meira skín hann."
+      },
+      "referral": {
+        "title": "Bauð vinur þér?",
+        "desc": "Sláðu inn tilvísunarkóðann hans (valfrjálst) — það hjálpar honum að opna ókeypis Premium mánuð."
+      }
+    },
+    "referralPlaceholder": "Tilvísunarkóði",
+    "next": "Áfram",
+    "start": "Byrjum 🚀",
+    "skip": "Sleppa"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Sjáðu hver skoðar prófílinn þinn",
+      "Sýnileikaörvanir (1 ókeypis pakki)",
+      "Superlikes (3/viku ókeypis)",
+      "Ósýnilegur hamur",
+      "Leitarradíus allt að 2 km",
+      "Ítarleg tölfræði",
+      "Aukin tilkynningar"
+    ],
+    "slides": {
+      "views": {
+        "title": "Hver heimsækir þig?",
+        "desc": "Komdu að því í rauntíma hver skoðar prófílinn þinn."
+      },
+      "boosts": {
+        "title": "Sýnileikaörvanir",
+        "desc": "Farðu efst á listann í 30 mín á staðnum þínum."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Sýndu sérstakan áhuga á einhverjum sem þú tekur eftir."
+      },
+      "invisible": {
+        "title": "Ósýnilegur hamur",
+        "desc": "Hverfðu af lista yfir notendur í nágrenninu hvenær sem þú vilt."
+      },
+      "radius": {
+        "title": "Útvíkkaður radíus",
+        "desc": "Kannaðu allt að 2 km í kringum þig (500 m í ókeypis útgáfunni)."
+      },
+      "stats": {
+        "title": "Ítarleg tölfræði",
+        "desc": "Fylgstu með skoðunum og smellum á öllum samfélagsmiðlunum þínum."
+      }
+    },
+    "trialError": "Ekki tókst að hefja ókeypis prufutímabilið.",
+    "errorTitle": "Villa",
+    "offersUnavailableTitle": "Tilboð ekki tiltæk",
+    "offersUnavailableMessage": "Áskriftartilboð eru ekki hlaðin enn. Reyndu aftur eftir smá stund.",
+    "purchaseError": "Ekki tókst að ljúka kaupunum.",
+    "restoredTitle": "✅ Kaup endurheimt",
+    "restoredMessage": "Premium áskriftin þín er virk.",
+    "noRestoreTitle": "Engin kaup fundust",
+    "noRestoreMessage": "Ekki tókst að endurheimta neina virka áskrift.",
+    "restoreError": "Ekki tókst að endurheimta kaupin.",
+    "closeLabel": "Loka",
+    "title": "👑 Premium",
+    "subtitle": "Opnaðu alla eiginleika",
+    "debugBanner": "⚠️ Greiðslur óvirkar (villuleitarhamur)",
+    "monthly": "Mánaðarlega",
+    "perMonth": "/mán",
+    "annual": "Árlega",
+    "perYear": "/ár",
+    "mostChosen": "VINSÆLAST",
+    "allIncluded": "ALLT INNIFALIÐ",
+    "ctaSimulate": "Herma eftir Premium áskrift",
+    "ctaTrial": "Byrja 7 daga ókeypis prufutímabilið mitt",
+    "ctaLoading": "Hleð tilboðum…",
+    "ctaSubscribe": "Gerast áskrifandi",
+    "thenAnnual": "Svo {{price}}/ár · Hægt að segja upp hvenær sem er",
+    "thenMonthly": "Svo {{price}}/mán · Hægt að segja upp hvenær sem er",
+    "restorePurchases": "Endurheimta kaupin mín",
+    "legalText": "Áskriftin endurnýjast sjálfkrafa nema henni sé sagt upp fyrir lok núverandi tímabils. Stjórnaðu áskriftum þínum í stillingum App Store / Google Play. ",
+    "privacyPolicy": "Persónuverndarstefna",
+    "terms": "Skilmálar"
+  },
+  "premiumWelcome": {
+    "header": "👑 Velkomin(n) í Premium",
+    "finalTitle": "Byrjum!",
+    "finalDesc": "Njóttu allra nýju Premium fríðindanna þinna núna.",
+    "discover": "Uppgötva",
+    "next": "Áfram",
+    "skip": "Sleppa"
+  },
+  "referralScreen": {
+    "loadError": "Ekki tókst að hlaða tilvísunarupplýsingunum þínum.",
+    "errorTitle": "Villa",
+    "shareMessage": "Komdu með mér á LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Bjóddu vini á LoocateMe",
+    "shareErrorTitle": "Deila",
+    "shareError": "Ekki tókst að deila.",
+    "codeSavedTitle": "Tilvísun",
+    "codeSaved": "Tilvísunarkóði vistaður!",
+    "selfReferralError": "Þú getur ekki notað þinn eigin kóða.",
+    "alreadyReferredError": "Þú hefur þegar notað tilvísunarkóða.",
+    "invalidCodeError": "Þessi tilvísunarkóði er ógildur.",
+    "genericCodeError": "Ekki tókst að staðfesta þennan kóða.",
+    "title": "Tilvísun",
+    "infoText": "Bjóddu 5 vinum í mánuðinum (hver þarf að fara út og gera sína 1. staðfestu innritun) og græddu 1 ókeypis Premium mánuð 🎉",
+    "confirmCode": "Staðfesta tilvísunarkóðann „{{code}}“?",
+    "validate": "Staðfesta",
+    "rewardActive": "💎 Ókeypis Premium mánuðurinn þinn er virkur",
+    "rewardActiveUntil": " til {{date}}",
+    "yourCode": "Tilvísunarkóðinn þinn",
+    "shareButton": "📤 Deila kóðanum mínum",
+    "shareLabel": "Deila kóðanum mínum",
+    "progressLabel": "{{count}} / {{target}} tilvísanir í mánuðinum",
+    "invitedFriends": "Boðnir vinir",
+    "noInvites": "Enginn vinur boðinn ennþá.",
+    "defaultUser": "Notandi",
+    "statusValidated": "Staðfest",
+    "statusVoid": "Hætt við",
+    "statusPending": "Í bið"
+  },
+  "searchView": {
+    "closeLabel": "Loka leit",
+    "title": "Leit",
+    "placeholder": "Notandanafn, staður...",
+    "clearLabel": "Hreinsa leit",
+    "filterUsers": "Notendur",
+    "filterLocations": "Staðir",
+    "searching": "Leita…",
+    "typeToSearch": "Sláðu inn að minnsta kosti 2 stafi til að hefja leit",
+    "noResults": "Engar niðurstöður fundust fyrir þessa leit.",
+    "checkFilters": "Athugaðu síurnar eða prófaðu annað leitarorð.",
+    "resultsCount_one": "{{count}} niðurstaða",
+    "resultsCount_other": "{{count}} niðurstöður",
+    "noLongerHere": "Ekki lengur hér"
+  },
+  "settingsScreen": {
+    "title": "Stillingar",
+    "tabProfile": "Prófíll",
+    "tabSettings": "Stillingar",
+    "sectionIdentity": "AUÐKENNI",
+    "firstName": "Fornafn",
+    "lastName": "Eftirnafn",
+    "customNameLabel": "Sérsniðið nafn",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ÁSKRIFT",
+    "premiumMonthly": "· Mánaðarlega",
+    "premiumAnnual": "· Árlega",
+    "statusLoading": "Hleð stöðu…",
+    "grantedOutsideStore": "Veitt utan App Store/Play Store áskriftar (ókeypis prufa eða sértilboð)",
+    "renewsOn": "Endurnýjast {{date}}",
+    "expiresOn": "Rennur út {{date}}",
+    "opening": "Opna…",
+    "manageSubscription": "Stjórna áskriftinni minni",
+    "goPremium": "👑 Fá Premium",
+    "manageSubError": "Ekki tókst að opna áskriftarstjórnun.",
+    "sectionGeneral": "ALMENNT",
+    "displayMode": "Birtingarhamur",
+    "fullNameMode": "Fornafn Eftirnafn",
+    "classicMode": "Klassískt",
+    "customMode": "Sérsniðið",
+    "sectionReferral": "TILVÍSUN",
+    "alreadyReferred": "Þér hefur þegar verið vísað.",
+    "referralHint": "Deildi vinur kóða með þér? Sláðu hann inn hér.",
+    "referralPlaceholder": "Tilvísunarkóði",
+    "validate": "Staðfesta",
+    "sectionNotifications": "TILKYNNINGAR",
+    "notifKinds": {
+      "superlike": "Móttekin superlikes",
+      "superlikeAccepted": "Samþykkt superlikes",
+      "eventBoost": "Viðburðaörvanir",
+      "streakExpiring": "Áminningar um runu",
+      "profileView": "Skoðanir á prófíl",
+      "socialClick": "Skoðanir á samfélagsmiðlum þínum",
+      "inactiveProfileViews": "Skoðanir mótteknar meðan þú varst fjarverandi",
+      "referralValidated": "Tilvísun staðfest",
+      "referralRewardGranted": "Tilvísunarverðlaun",
+      "nightModeActivated": "Virkjun næturstillingar",
+      "atRiskReactivation": "Áminningar um endurvirkjun",
+      "weeklyDigest": "Vikuleg samantekt"
+    },
+    "notifCategories": {
+      "social": "Félagsleg virkni",
+      "rewards": "Runur og verðlaun",
+      "system": "Kerfi og samantektir"
+    },
+    "sectionPrivacy": "PERSÓNUVERND OG GDPR",
+    "privacyPolicyLink": "Persónuverndarstefna",
+    "consent": "Samþykki",
+    "analyticsLabel": "Greiningar",
+    "dataSaleTitle": "Sala gagna (CCPA)",
+    "dataSaleDesc": "Við seljum ekki né deilum persónuupplýsingum þínum með þriðja aðila í auglýsingaskyni.",
+    "invisibleModeTitle": "Ósýnilegur hamur",
+    "invisibleModeDesc": "Þú verður ósýnilegur öðrum notendum á stöðum, en þú getur ekki lengur skoðað kortið eða staðalistann meðan þessi hamur er virkur.",
+    "shareLocationTitle": "Deila núverandi staðsetningu minni",
+    "shareLocationDesc": "Sýnir öðrum notendum nákvæman stað þar sem þú ert núna, auk borgarinnar þinnar. Óvirkt sjálfgefið til að vernda friðhelgi þína og forðast áhættu af eltingu.",
+    "policyLoadError": "Ekki tókst að hlaða persónuverndarstefnuna.",
+    "savePrivacyPrefsError": "Ekki tókst að vista persónuverndarstillingar þínar",
+    "shareLocationUpdateError": "Ekki tókst að uppfæra deilingu núverandi staðsetningar þinnar",
+    "invisibleModeUpdateError": "Ekki tókst að uppfæra ósýnilega haminn",
+    "notifPrefUpdateError": "Ekki tókst að uppfæra þessa tilkynningarstillingu",
+    "consentSavedTitle": "Tókst",
+    "consentSaved": "Samþykki vistað.",
+    "consentRevoked": "Samþykki afturkallað.",
+    "consentSaveError": "Ekki tókst að vista samþykki þitt",
+    "revokeConsentTitle": "Afturköllun samþykkis",
+    "revokeConsentMessage": "Afturköllun samþykkis þíns mun leiða til varanlegrar eyðingar reikningsins þíns og allra gagna þinna. Viltu halda áfram?",
+    "cancel": "Hætta við",
+    "continueLabel": "Halda áfram",
+    "currentPasswordRequired": "Vinsamlegast sláðu inn núverandi lykilorð.",
+    "passwordTooShort": "Nýja lykilorðið verður að innihalda að minnsta kosti 6 stafi.",
+    "passwordConfirmMismatch": "Staðfestingin passar ekki við nýja lykilorðið.",
+    "passwordChangedTitle": "Lykilorði breytt",
+    "passwordChangedMessage": "Lykilorðið þitt hefur verið uppfært.",
+    "currentPasswordInvalid": "Ógilt núverandi lykilorð eða villa á netþjóni.",
+    "invalidEmail": "Vinsamlegast sláðu inn gilt netfang.",
+    "passwordRequiredConfirm": "Vinsamlegast sláðu inn lykilorðið þitt til að staðfesta.",
+    "checkInboxTitle": "Athugaðu pósthólfið þitt",
+    "checkInboxMessage": "Staðfestingarpóstur hefur verið sendur á {{email}}. Smelltu á hlekkinn til að staðfesta breytinguna.",
+    "emailChangeError": "Ekki tókst að hefja breytinguna. Ógilt lykilorð eða villa á netþjóni.",
+    "exportReadyTitle": "Útflutningur tilbúinn",
+    "exportReadyMessage": "Gögnin þín hafa verið flutt út ({{size}} stafir).",
+    "exportError": "Ekki tókst að flytja út gögnin þín",
+    "deleteAccountConfirmTitle": "Eyða reikningi",
+    "deleteAccountConfirmMessage": "Eyðingin er endanleg. Staðfestir þú eyðingu reikningsins þíns?",
+    "profileUpdatedTitle": "Prófíll",
+    "profileUpdatedMessage": "Prófíllinn þinn hefur verið uppfærður.",
+    "loadBlockedError": "Ekki tókst að hlaða læsta reikninga",
+    "unblockError": "Ekki tókst að aflæsa þessum notanda",
+    "sectionAccount": "REIKNINGUR",
+    "emailLabel": "Netfang",
+    "notProvided": "Ekki tilgreint",
+    "change": "Breyta",
+    "passwordLabel": "Lykilorð",
+    "blockedAccounts": "Læstir reikningar",
+    "helpAndPrivacy": "Hjálp og persónuvernd",
+    "terms": "Notkunarskilmálar",
+    "sectionModeration": "STJÓRNUN",
+    "moderatorSpace": "Svæði umsjónarmanns",
+    "debugConsole": "Villuleitarstjórnborð",
+    "exportData": "Flytja út gögnin mín",
+    "deleteAccount": "Eyða reikningnum mínum",
+    "logout": "Skrá út",
+    "save": "Vista",
+    "close": "Loka",
+    "privacyModalTitle": "Persónuvernd",
+    "deleteAccountTitle": "Eyðing reiknings",
+    "deleteAccountDesc": "Til að staðfesta skaltu slá inn lykilorðið þitt. Þessa aðgerð er ekki hægt að afturkalla.",
+    "deleting": "Eyði...",
+    "changePasswordTitle": "Breyta lykilorði",
+    "currentPasswordPlaceholder": "Núverandi lykilorð",
+    "newPasswordPlaceholder": "Nýtt lykilorð (min. 6 stafir)",
+    "confirmPasswordPlaceholder": "Staðfesta nýtt lykilorð",
+    "changeEmailTitle": "Breyta netfangi",
+    "currentEmailLabel": "Núverandi netfang: {{email}}",
+    "newEmailPlaceholder": "Nýtt netfang",
+    "noBlockedAccounts": "Engir læstir reikningar.",
+    "unblock": "Aflæsa"
+  },
+  "statisticsScreen": {
+    "loadError": "Ekki tókst að sækja tölfræði",
+    "loadVisitorsError": "Ekki tókst að sækja lista yfir gesti",
+    "justNow": "Rétt í þessu",
+    "minutesAgo": "fyrir {{count}} mín",
+    "hoursAgo": "fyrir {{count}} klst",
+    "yesterday": "Í gær",
+    "daysAgo": "fyrir {{count}} d",
+    "title": "Tölfræði",
+    "comingSoonTitle": "Kemur bráðum 🚀",
+    "comingSoonDesc": "Tölfræði kemur mjög fljótlega! Þú munt geta séð hver heimsækir prófílinn þinn og samfélagsmiðla.",
+    "whoStalksTitle": "Hver er að fylgjast með þér? 👀",
+    "whoStalksDesc": "Fáðu Premium til að uppgötva hver heimsækir prófílinn þinn og samfélagsmiðla!",
+    "discoverVisitors": "Uppgötva gesti mína",
+    "later": "Síðar",
+    "profileViews": "Prófílskoðanir",
+    "views": "skoðanir",
+    "last30Days": "síðustu 30 daga",
+    "clicksByNetwork": "Smellir eftir miðli",
+    "lastVisits": "Nýlegar heimsóknir",
+    "noVisitorsTitle": "Enginn hefur enn heimsótt prófílinn þinn",
+    "noVisitorsDesc": "Haltu áfram að kanna staði til að vera uppgötvað(ur)!",
+    "defaultUser": "Notandi",
+    "hiddenVisits_one": "{{count}} falin heimsókn",
+    "hiddenVisits_other": "{{count}} faldar heimsóknir",
+    "goPremiumToSeeAll": "Fáðu Premium til að sjá allt",
+    "showMore": "Sýna meira"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Áreitni",
+      "spam": "Ruslpóstur",
+      "inappropriate": "Óviðeigandi efni",
+      "impersonation": "Persónuþjófnaður",
+      "scam": "Svik",
+      "other": "Annað"
+    },
+    "statusAvailable": "Tiltækur/tiltæk",
+    "statusRestricted": "Takmörkuð sýnileiki",
+    "statusInvisible": "Ósýnilegur/ósýnileg",
+    "noUserSelected": "Enginn notandi valinn.",
+    "backToList": "Til baka í listann",
+    "superlikeLockedTitle": "Væntanlegt",
+    "superlikeLockedMessage": "Ofurlæk opnast eftir fyrstu innritun þína.",
+    "superlikeSentTitle": "⭐ Ofurlæk sent!",
+    "superlikeSentMessage": "{{name}} var látin/n vita að þú tókst eftir honum/henni.",
+    "errorTitle": "Villa",
+    "superlikeSendError": "Ekki tókst að senda ofurlæk.",
+    "blockConfirmTitle": "Loka á þennan notanda?",
+    "blockConfirmMessage": "Þú munt ekki lengur sjá þennan notanda og hann getur ekki lengur haft samband við þig.",
+    "cancel": "Hætta við",
+    "block": "Loka á",
+    "userBlockedTitle": "Notanda lokað á",
+    "userBlockedMessage": "Lokað hefur verið á þennan notanda.",
+    "blockError": "Ekki tókst að loka á þennan notanda.",
+    "reasonRequiredTitle": "Ástæðu vantar",
+    "reasonRequiredMessage": "Vinsamlegast tilgreindu ástæðu.",
+    "reportSentTitle": "Tilkynning send",
+    "reportSentMessage": "Takk fyrir tilkynninguna.",
+    "reportSendError": "Ekki tókst að senda tilkynninguna.",
+    "backA11y": "Til baka",
+    "moreOptionsA11y": "Fleiri valkostir",
+    "sendSuperlikeA11y": "Senda ofurlæk",
+    "superlikeLockedA11y": "Ofurlæk læst, opnast eftir fyrstu innritun þína",
+    "currentlyAt": "Núna hjá {{place}}",
+    "mutualConnectionBanner": "Þessi einstaklingur vill hafa samband",
+    "socialsHidden": "Þessi notandi deilir ekki samfélagsmiðlum sínum",
+    "noBio": "Engin ævisaga skráð enn.",
+    "noSocials": "Engir samfélagsmiðlar",
+    "actionsTitle": "Aðgerðir",
+    "report": "Tilkynna",
+    "reportUserTitle": "Tilkynna notanda",
+    "reportWarning": "Misnotkun á tilkynningum getur leitt til viðurlaga. Vinsamlegast vertu heiðarleg/ur.",
+    "categoryLabel": "Flokkur",
+    "reasonLabel": "Ástæða",
+    "reasonPlaceholder": "Útskýrðu ástæðuna í stuttu máli",
+    "descriptionLabel": "Lýsing (valfrjálst)",
+    "descriptionPlaceholder": "Frekari upplýsingar",
+    "sending": "Sendi...",
+    "sendReport": "Senda tilkynningu",
+    "justNow": "Rétt í þessu",
+    "minutesAgo_one": "Fyrir {{count}} mín.",
+    "minutesAgo_other": "Fyrir {{count}} mín.",
+    "hoursAgo_one": "Fyrir {{count}} klst.",
+    "hoursAgo_other": "Fyrir {{count}} klst.",
+    "yesterday": "Í gær",
+    "daysAgo_one": "Fyrir {{count}} degi",
+    "daysAgo_other": "Fyrir {{count}} dögum"
+  },
+  "warningsScreen": {
+    "title": "Viðvaranir",
+    "banAlert": "Þessi hegðun getur leitt til tímabundinnar eða varanlegrar útilokunar frá appinu.",
+    "empty": "Engar viðvaranir.",
+    "typeLabel": "Tegund viðvörunar",
+    "notSpecified": "Ekki tilgreint",
+    "notSpecifiedFem": "Ekki tilgreint",
+    "reasonLabel": "Ástæða"
+  },
+  "common": {
+    "close": "Loka",
+    "errorTitle": "Villa"
+  },
+  "streakCard": {
+    "hintReady": "Verðlaunin þín eru tilbúin!",
+    "hintGrow": "Skráðu þig inn á hverjum degi til að hækka hana.",
+    "claimBoost": "Sæktu boost-ið þitt",
+    "claimSuperlike": "Sæktu superlike-ið þitt"
+  },
+  "coteCard": {
+    "messageTop": "Á toppnum! Skráðu þig inn á morgun til að halda henni.",
+    "messageZero": "Skráðu þig inn í dag til að endurræsa hana."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Vertu efst í 30 mín",
+    "boostPack5Desc": "Besta verð fyrir gæði",
+    "superlikePack3Desc": "Sýndu áhuga þinn á einstakan hátt",
+    "superlikePack10Desc": "Fyrir sanna tengjendur",
+    "badgePopular": "Vinsælt",
+    "badgeBestOffer": "Besta tilboðið",
+    "notAvailableTitle": "Ekki tiltækt",
+    "notAvailableMessage": "Þessi pakki er ekki enn fáanlegur í versluninni.",
+    "purchaseErrorMessage": "Ekki tókst að ljúka kaupunum.",
+    "simulate": "Herma eftir"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Leitaðu á þessum stöðum",
+    "categoryBars": "Barir",
+    "categoryClubs": "Klúbbar",
+    "categoryRestos": "Veitingastaðir",
+    "categoryPubs": "Krár",
+    "categoryGyms": "Líkamsræktarstöðvar",
+    "categoryCafes": "Kaffihús",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Bókasöfn"
+  },
+  "profileCard": {
+    "anonymousFallback": "Nafnlaus"
+  },
+  "locationMapView": {
+    "loadError": "Ekki tókst að hlaða kortið",
+    "renderError": "Villa við að hlaða kortið"
+  },
+  "churnSurveyModal": {
+    "title": "Eina mínútu áður en þú ferð?",
+    "subtitle": "Hjálpaðu okkur að skilja hvers vegna.",
+    "reasonTooManyNotifications": "Of margar tilkynningar",
+    "reasonPrivacyConcern": "Mér líður ekki vel með deilinguna",
+    "reasonNotUseful": "Það nýtist mér ekki lengur",
+    "reasonOther": "Önnur ástæða",
+    "dismiss": "Sleppa",
+    "thanks": "Takk fyrir álit þitt 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Leit",
+    "tabNearby": "Staðir í nágrenninu",
+    "tabAccount": "Reikningur"
+  },
+  "documentViewer": {
+    "openError": "Ekki tókst að opna þetta skjal.",
+    "defaultLabel": "Skoða skjal"
+  },
+  "vibeFab": {
+    "toDay": "Skipta í dagstillingu",
+    "toNight": "Skipta í næturstillingu"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Staðsetningardeiling virk"
+  }
+}

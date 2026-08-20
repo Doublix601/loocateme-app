@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Přihlásit se",
+      "welcomeBack": "Vítejte zpět!",
+      "subtitle": "Přihlaste se a pokračujte",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Heslo",
+      "submit": "Přihlásit se",
+      "forgotPassword": "Zapomenuté heslo?",
+      "noAccount": "Ještě nemáte účet?",
+      "createAccount": "Vytvořit účet",
+      "emailNotVerifiedTitle": "E-mail není ověřen",
+      "emailNotVerifiedMessage": "Vaše e-mailová adresa ještě nebyla ověřena. Právě jsme vám znovu odeslali potvrzovací e-mail. Klikněte na odkaz pro aktivaci účtu a zkuste to znovu.",
+      "authFailedTitle": "Přihlášení se nezdařilo",
+      "authFailedMessage": "Nepodařilo se vás přihlásit. Zkontrolujte své údaje a zkuste to znovu."
+    },
+    "signup": {
+      "passwordMismatch": "Hesla se neshodují.",
+      "requiredFields": "Všechna pole musí být vyplněna.",
+      "birthdateRequired": "Datum narození je povinné.",
+      "under18": "Pro registraci musíte mít alespoň 18 let.",
+      "policyLoadError": "Zásady ochrany osobních údajů se nepodařilo načíst. Můžete to zkusit znovu."
+    }
+  },
+  "consent": {
+    "title": "Soukromí",
+    "changelogTitle": "Co se změnilo",
+    "decline": "Odmítnout",
+    "accept": "Přijmout",
+    "accepting": "Ukládání...",
+    "declineInfoTitle": "Informace",
+    "declineInfoMessage": "Pro používání aplikace musíte přijmout zásady ochrany osobních údajů.",
+    "acceptErrorTitle": "Chyba",
+    "acceptErrorMessage": "Váš souhlas se nepodařilo uložit. Zkuste to znovu."
+  },
+  "ageVerification": {
+    "title": "Ověření věku",
+    "urlMissing": "Chybí URL pro ověření",
+    "startError": "Ověření věku se nepodařilo spustit. Zkuste to znovu.",
+    "retry": "Zkusit znovu",
+    "declinedTitle": "Ověření zamítnuto",
+    "declinedMessage": "Nepodařilo se nám potvrdit, že je vám více než 18 let. Můžete to zkusit znovu."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Jazyk",
+      "systemDefault": "Jazyk telefonu"
+    }
+  },
+  "forgotPassword": {
+    "title": "Zapomenuté heslo",
+    "resetTitle": "Obnovení hesla",
+    "instructions": "Zadejte svou e-mailovou adresu pro obdržení odkazu na obnovení.",
+    "emailPlaceholder": "E-mail",
+    "submit": "Odeslat odkaz",
+    "successTitle": "E-mail odeslán",
+    "successMessage": "Pokud účet existuje, byl odeslán e-mail.",
+    "errorTitle": "Chyba",
+    "errorFallback": "Zkuste to prosím znovu"
+  },
+  "dataManagement": {
+    "title": "Soukromí",
+    "export": {
+      "title": "Exportovat moje data",
+      "desc": "Stáhněte si kopii svých informací (profil, sociální sítě, nastavení).",
+      "button": "Exportovat",
+      "buttonWorking": "Čekejte prosím...",
+      "successTitle": "Export dat",
+      "successMessage": "Váš export byl vygenerován a zobrazen v konzoli.",
+      "errorTitle": "Chyba",
+      "errorMessage": "Vaše data se nyní nepodařilo exportovat. Zkuste to znovu."
+    },
+    "delete": {
+      "title": "Smazat můj účet",
+      "desc": "Trvale smaže váš účet a všechna související data.",
+      "passwordPlaceholder": "Potvrďte svým heslem",
+      "button": "Trvale smazat",
+      "passwordRequiredTitle": "Vyžadováno heslo",
+      "passwordRequiredMessage": "Zadejte prosím své heslo.",
+      "confirmTitle": "Potvrzení",
+      "confirmMessage": "Tato akce je nevratná. Opravdu chcete smazat svůj účet?",
+      "cancel": "Zrušit",
+      "confirm": "Smazat",
+      "successTitle": "Účet smazán",
+      "successMessage": "Váš účet a data byly smazány.",
+      "errorTitle": "Chyba",
+      "errorMessage": "Smazání se nezdařilo. Neplatné heslo nebo problém serveru."
+    }
+  },
+  "editProfile": {
+    "title": "Upravit můj profil",
+    "subtitle": "Klepnutím na pole jej upravíte",
+    "notSet": "Nenastaveno",
+    "backLabel": "Zpět",
+    "fields": {
+      "firstName": "Jméno",
+      "lastName": "Příjmení",
+      "customName": "Vlastní jméno",
+      "bio": "Bio",
+      "birthdate": "Datum narození",
+      "gender": "Pohlaví"
+    },
+    "gender": {
+      "male": "Chlapec",
+      "female": "Dívka",
+      "preferNotToSay": "Nechci uvádět"
+    },
+    "photo": {
+      "notSupportedTitle": "Nepodporováno",
+      "notSupportedMessage": "Fotoaparát není na webu k dispozici.",
+      "cameraPermissionTitle": "Vyžadováno oprávnění",
+      "cameraPermissionMessage": "Aplikace potřebuje přístup k fotoaparátu, aby mohla pořídit fotografii.",
+      "galleryPermissionMessage": "Aplikace potřebuje přístup k vašim fotkám, aby mohla vybrat obrázek.",
+      "errorTitle": "Chyba",
+      "uploadErrorMessage": "Obrázek se nepodařilo nahrát",
+      "cameraOpenError": "Fotoaparát se nepodařilo otevřít.",
+      "galleryOpenError": "Galerii se nepodařilo otevřít.",
+      "deleteErrorMessage": "Profilovou fotku se nepodařilo smazat",
+      "deleteConfirmTitle": "Smazat profilovou fotku?",
+      "deleteConfirmMessage": "Tato akce je konečná.",
+      "cancel": "Zrušit",
+      "delete": "Smazat",
+      "modalTitle": "Profilová fotka",
+      "takePhoto": "📸 Vyfotit",
+      "sending": "Nahrávání...",
+      "chooseGallery": "🖼️ Vybrat z galerie",
+      "deletePhoto": "🗑️ Smazat fotku",
+      "deleting": "Mazání..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Neplatné jméno",
+      "firstNameInvalidMessage": "Jméno musí začínat velkým písmenem a může obsahovat písmena (diakritika povolena), mezery, apostrofy nebo pomlčky.",
+      "lastNameInvalidTitle": "Neplatné příjmení",
+      "lastNameInvalidMessage": "Příjmení musí začínat velkým písmenem a může obsahovat písmena (diakritika povolena), mezery, apostrofy nebo pomlčky.",
+      "incompleteIdentityTitle": "Neúplná identita",
+      "incompleteIdentityMessage": "Zadejte Vlastní jméno NEBO Jméno A Příjmení.",
+      "customNameRequiredTitle": "Vyžadováno vlastní jméno",
+      "customNameRequiredMessage": "Vlastní jméno nelze odstranit, dokud je jméno nebo příjmení prázdné.",
+      "invalidDateTitle": "Neplatné datum",
+      "invalidDateMessage": "Vyberte prosím platné datum narození.",
+      "minAgeTitle": "Vyžadován minimální věk",
+      "minAgeMessage": "Musíte mít alespoň 18 let.",
+      "updateErrorMessage": "Váš profil se nepodařilo aktualizovat"
+    },
+    "modal": {
+      "editPrefix": "Upravit",
+      "editGeneric": "Upravit",
+      "selectDate": "Vybrat datum",
+      "cancel": "Zrušit",
+      "save": "Uložit",
+      "placeholders": {
+        "firstName": "Vaše jméno",
+        "lastName": "Vaše příjmení",
+        "customName": "Vaše vlastní jméno",
+        "bio": "Řekněte nám něco o sobě...",
+        "default": "Váš text"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Neviditelný režim aktivní",
+      "subtitle": "Nemůžeš vidět místa kolem sebe, dokud je neviditelný režim aktivní. Vypni ho pro procházení míst.",
+      "disableButton": "Vypnout neviditelný režim"
+    },
+    "error": {
+      "title": "Poloha není dostupná",
+      "subtitle": "Aktivuj služby polohy v nastavení zařízení, abys viděl místa kolem sebe.",
+      "retry": "Zkusit znovu"
+    },
+    "empty": {
+      "title": "Prozatím klidná zóna",
+      "subtitle": "Kolem tebe nebylo nalezeno žádné aktivní místo. Rozšiř okruh nebo navrhni nové místo.",
+      "expandRadius": "Rozšířit okruh",
+      "suggestLocation": "Navrhnout toto místo"
+    },
+    "footer": {
+      "loadingMore": "Načítání dalších míst…",
+      "loadMoreError": "Nepodařilo se načíst další místa. Zkontroluj své připojení.",
+      "retry": "Zkusit znovu",
+      "reachedEnd": "Prozkoumal jsi všechna aktivní místa v okolí. Přesuň se nebo vyhledej, abys viděl více."
+    },
+    "leaveModal": {
+      "defaultName": "Toto místo",
+      "subtitle": "Aktuálně jsi zde přihlášen. Chceš toto místo opustit?",
+      "confirm": "Už tu nejsem",
+      "cancel": "Zrušit"
+    },
+    "sections": {
+      "moreLocations": "Další místa pro tebe",
+      "sponsored": "Doporučené",
+      "trending": "Právě se děje"
+    },
+    "filters": {
+      "all": "Vše"
+    },
+    "card": {
+      "visitors_one": "{{count}} návštěvník",
+      "visitors_other": "{{count}} návštěvníků",
+      "sponsored": "SPONZOROVÁNO",
+      "imHere": "Jsem tady",
+      "editLocation": "Upravit mou polohu"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Ruční check-in aktivován",
+    "checkinModeAutoOn": "Automatický check-in aktivován",
+    "checkinModeErrorTitle": "Chyba",
+    "checkinModeErrorMessage": "Nyní se nepodařilo změnit režim check-inu.",
+    "checkedInToast": "Nyní jsi na místě {{name}}!",
+    "checkinErrorMessage": "Nyní se nepodařilo potvrdit tvou přítomnost.",
+    "leftLocationToast": "Opustil jsi toto místo.",
+    "boostActiveTitle": "Boost aktivní",
+    "boostActiveLeaveMessage": "Nemůžeš opustit toto místo, dokud běží tvůj boost.",
+    "leaveErrorMessage": "Nyní se nepodařilo tě z tohoto místa odhlásit.",
+    "boostInProgressTitle": "Boost probíhá",
+    "boostInProgressMessage": "Tvůj boost je aktivní: počkej, až skončí, než změníš místo.",
+    "refreshErrorToast": "Nyní se nepodařilo obnovit.",
+    "disableInvisibleErrorMessage": "Nyní se nepodařilo deaktivovat neviditelný režim.",
+    "switchToManualLabel": "Přepnout na ruční check-in",
+    "switchToAutoLabel": "Přepnout na automatický check-in",
+    "entryAuto": "Auto. vstup",
+    "entryManual": "Ruční vstup",
+    "showMapLabel": "Zobrazit mapu",
+    "showListLabel": "Zobrazit seznam",
+    "mapButton": "Mapa",
+    "listButton": "Seznam"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Chyba",
+    "checkinErrorMessage": "Nyní se nepodařilo potvrdit tvou přítomnost.",
+    "boostActiveHereTitle": "Boost probíhá",
+    "boostActiveHereMessage": "Tvůj boost je zde aktivní: počkej, až skončí, než toto místo opustíš.",
+    "boostActiveMessage": "Tvůj boost je aktivní: počkej, až skončí.",
+    "notFound": "Místo nenalezeno",
+    "back": "Zpět",
+    "popularityVeryPopular": "Velmi oblíbené",
+    "popularityPopular": "Oblíbené",
+    "popularityActive": "Aktivní",
+    "popularityCalm": "Klidné",
+    "checkinConfirmed": "Potvrzeno!",
+    "imHere": "Jsem tady",
+    "viewPdf": "Zobrazit PDF",
+    "pdfLoadError": "Tento PDF nelze zobrazit.",
+    "openInBrowser": "Otevřít v prohlížeči",
+    "profilesHere": "Profily zde",
+    "recentlyCrossed": "Nedávno potkaní",
+    "seeMore": "Zobrazit více",
+    "boosted": "Posíleno",
+    "boostProfileHere": "Posílit můj profil zde",
+    "boostLockedAfterCheckins": "Boost 🔓 po 2 check-inech"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Sdílet",
+      "shareLabel": "Sdílet můj profil",
+      "qrCode": "QR kód",
+      "qrLabel": "Zobrazit můj QR kód",
+      "stats": "Statistiky",
+      "statsLabel": "Zobrazit mé statistiky"
+    },
+    "qr": {
+      "title": "Naskenuj a zobraz můj profil",
+      "hint": "Pokud aplikace není nainstalována, budeš přesměrován do obchodu ({{store}})."
+    },
+    "status": {
+      "title": "Tvůj stav",
+      "close": "Zavřít",
+      "public": "Veřejný profil",
+      "private": "Soukromý profil",
+      "incognito": "Inkognito",
+      "pickLabel": "Vybrat můj stav"
+    },
+    "warnings": {
+      "title": "Upozornění",
+      "message_one": "Máš {{count}} upozornění.",
+      "message_other": "Máš {{count}} upozornění.",
+      "tapForDetails": "Klepnutím zobrazíš podrobnosti"
+    },
+    "referral": {
+      "invite": "Pozvi své přátele",
+      "label": "Doporučení: pozvi své přátele"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Sdílej svou polohu",
+      "message": "Aktivuj sdílení svého aktuálního místa, aby tě ostatní uživatelé v okolí snadněji našli.",
+      "activate": "Aktivovat",
+      "noThanks": "Ne, díky"
+    },
+    "social": {
+      "addTitle": "Přidat síť",
+      "usernamePlaceholder": "@username nebo ID {{platform}}",
+      "selectPlaceholder": "Vyber síť",
+      "snapchatHint": "Poznámka: Snapchat nepovoluje přímé odkazy, zadej jen své uživatelské jméno.",
+      "save": "Uložit",
+      "saveLabel": "Uložit",
+      "editTitle": "Upravit {{platform}}",
+      "usernamePlaceholderSimple": "Uživatelské jméno",
+      "delete": "Smazat",
+      "heading": "Sociální sítě",
+      "addLabel": "Přidat sociální síť"
+    },
+    "rewards": {
+      "heading": "Odměny",
+      "superlikes": "Superlikes",
+      "boosts": "Boosty",
+      "buy": "Koupit",
+      "buyLabel": "Koupit superlikes nebo boosty",
+      "premiumCta": "👑 Přejít na Premium",
+      "premiumLabel": "Přejít na Premium",
+      "superlikeHistoryLabel_one": "Zobrazit historii superlikes, zbývá {{count}}",
+      "superlikeHistoryLabel_other": "Zobrazit historii superlikes, zbývá {{count}}"
+    },
+    "currentlyAt": "Aktuálně na {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Přidej větu, kterou se představíš."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Tvoje profilová fotka",
+      "photoDesc": "Změň svou profilovou fotku v nastavení (ikona vpravo nahoře).",
+      "bioTitle": "Tvoje bio",
+      "bioDesc": "Tvoje bio se upravuje v nastavení. Je to první věc, kterou ostatní vidí.",
+      "socialTitle": "Tvoje sociální sítě",
+      "socialDesc": "Klepni na ➕ pro přidání sítě. Podrž ikonu pro její úpravu nebo smazání.",
+      "statusTitle": "Tvůj stav",
+      "statusDesc": "Veřejný profil = viditelný pro všechny · Soukromý profil = sítě skryté · Inkognito = neviditelný. Klepnutím změníš."
+    },
+    "errorTitle": "Chyba",
+    "shareLocationUpdateError": "Sdílení tvé aktuální polohy se nepodařilo aktualizovat",
+    "comingSoonTitle": "Již brzy 🚀",
+    "comingSoonStats": "Statistiky přicházejí již brzy! Budeš moci vidět, kdo navštěvuje tvůj profil a sociální sítě.",
+    "shareTitle": "Sdílet",
+    "shareError": "Sdílení se nezdařilo.",
+    "boostClaimedToast": "Boost získán 🚀",
+    "superlikeClaimedToast": "Superlike získán ⭐️",
+    "claimRewardError": "Odměnu se nepodařilo získat",
+    "statusVisible": "Jsi ve viditelném režimu. Všichni vidí tvé sociální sítě. Plně využíváš aplikaci.",
+    "statusRestricted": "Jsi v omezeně viditelném režimu. Nikdo nevidí tvé sociální sítě.",
+    "statusInvisible": "Jsi v neviditelném režimu. Od nynějška tě nikdo neuvidí.",
+    "statusUpdateError": "Stav se nepodařilo aktualizovat",
+    "unsupportedPlatform": "Nepodporovaná platforma",
+    "handleRequired": "Zadej prosím identifikátor",
+    "invalidInstagramHandle": "Neplatné uživatelské jméno Instagram. Příklad: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Neplatné uživatelské jméno TikTok. Příklad: https://www.tiktok.com/@username",
+    "addSocialError": "Sociální síť se nepodařilo přidat",
+    "invalidLinkTitle": "Neplatný odkaz",
+    "invalidInstagramHandleShort": "Neplatné uživatelské jméno Instagram",
+    "invalidTiktokHandleShort": "Neplatné uživatelské jméno TikTok",
+    "cannotOpenInstagramTitle": "Instagram se nepodařilo otevřít",
+    "cannotOpenTiktokTitle": "TikTok se nepodařilo otevřít",
+    "tryAgainLater": "Zkus to prosím později znovu.",
+    "editSocialError": "Sociální síť se nepodařilo upravit",
+    "deleteSocialError": "Sociální síť se nepodařilo smazat",
+    "backLabel": "Zpět",
+    "settingsLabel": "Nastavení",
+    "streakTitle": "Tvoje série 🔥",
+    "streakMessage": "Přihlašuj se každý den, aby tvá série rostla. V den 7 získej superlike. V den 14 získej boost — tvá série se pak vrátí na 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Zjisti, kdo je poblíž tebe",
+        "desc": "Sleduj v reálném čase rušná místa kolem sebe a lidi, kteří tam jsou — právě teď."
+      },
+      "checkin": {
+        "title": "Automatický check-in, ve dne i v noci",
+        "desc": "Jakmile vstoupíš na místo, automaticky se tam objevíš — a vidíš, kdo tam je. Aplikace přepíná mezi Denním režimem (kavárny, parky, sport…) a Nočním režimem (bary, restaurace, kluby…) podle nálady."
+      },
+      "profile": {
+        "title": "Tvůj profil, místa v pohybu",
+        "desc": "Přidej své sociální sítě, aby tě lidé našli, prohlížej si profily kolem sebe. Každé místo také zobrazuje 1 až 3 hvězdičky podle skutečné návštěvnosti — čím živější, tím víc září."
+      },
+      "referral": {
+        "title": "Pozval tě přítel?",
+        "desc": "Zadej jeho doporučující kód (volitelné) — pomůže mu to odemknout měsíc Premium zdarma."
+      }
+    },
+    "referralPlaceholder": "Doporučující kód",
+    "next": "Další",
+    "start": "Jdeme na to 🚀",
+    "skip": "Přeskočit"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Zjisti, kdo si prohlíží tvůj profil",
+      "Zvýraznění viditelnosti (1 balíček zdarma)",
+      "Superlikes (3/týden zdarma)",
+      "Neviditelný režim",
+      "Dosah hledání až 2 km",
+      "Pokročilé statistiky",
+      "Rozšířená oznámení"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kdo tě navštěvuje?",
+        "desc": "Zjisti v reálném čase, kdo se dívá na tvůj profil."
+      },
+      "boosts": {
+        "title": "Zvýraznění viditelnosti",
+        "desc": "Vyskoč na vrchol seznamu na 30 minut ve svém podniku."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Ukaž zvláštní zájem o někoho, koho si všimneš."
+      },
+      "invisible": {
+        "title": "Neviditelný režim",
+        "desc": "Zmiz ze seznamu blízkých uživatelů, kdykoli chceš."
+      },
+      "radius": {
+        "title": "Rozšířený dosah",
+        "desc": "Prozkoumej až 2 km kolem sebe (500 m ve zdarma verzi)."
+      },
+      "stats": {
+        "title": "Pokročilé statistiky",
+        "desc": "Sleduj zobrazení a kliknutí na všech svých sociálních sítích."
+      }
+    },
+    "trialError": "Bezplatnou zkušební verzi se nepodařilo spustit.",
+    "errorTitle": "Chyba",
+    "offersUnavailableTitle": "Nabídky nejsou dostupné",
+    "offersUnavailableMessage": "Nabídky předplatného zatím nejsou načtené. Zkus to za chvíli znovu.",
+    "purchaseError": "Nákup se nepodařilo dokončit.",
+    "restoredTitle": "✅ Nákupy obnoveny",
+    "restoredMessage": "Tvé Premium předplatné je aktivní.",
+    "noRestoreTitle": "Nebyl nalezen žádný nákup",
+    "noRestoreMessage": "Nepodařilo se obnovit žádné aktivní předplatné.",
+    "restoreError": "Nákupy se nepodařilo obnovit.",
+    "closeLabel": "Zavřít",
+    "title": "👑 Premium",
+    "subtitle": "Odemkni všechny funkce",
+    "debugBanner": "⚠️ Platby zakázány (režim ladění)",
+    "monthly": "Měsíčně",
+    "perMonth": "/měsíc",
+    "annual": "Ročně",
+    "perYear": "/rok",
+    "mostChosen": "NEJVOLENĚJŠÍ",
+    "allIncluded": "VŠE ZAHRNUTO",
+    "ctaSimulate": "Simulovat Premium předplatné",
+    "ctaTrial": "Začít 7denní bezplatnou zkušební verzi",
+    "ctaLoading": "Načítání nabídek…",
+    "ctaSubscribe": "Předplatit",
+    "thenAnnual": "Poté {{price}}/rok · Kdykoli zrušitelné",
+    "thenMonthly": "Poté {{price}}/měsíc · Kdykoli zrušitelné",
+    "restorePurchases": "Obnovit mé nákupy",
+    "legalText": "Předplatné se automaticky obnovuje, pokud není zrušeno před koncem aktuálního období. Spravuj svá předplatná v nastavení App Store / Google Play. ",
+    "privacyPolicy": "Zásady ochrany osobních údajů",
+    "terms": "Podmínky"
+  },
+  "premiumWelcome": {
+    "header": "👑 Vítej v Premium",
+    "finalTitle": "Jdeme na to!",
+    "finalDesc": "Užij si hned všechny své nové výhody Premium.",
+    "discover": "Objevit",
+    "next": "Další",
+    "skip": "Přeskočit"
+  },
+  "referralScreen": {
+    "loadError": "Tvé informace o doporučení se nepodařilo načíst.",
+    "errorTitle": "Chyba",
+    "shareMessage": "Připoj se ke mně na LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Pozvi přítele na LoocateMe",
+    "shareErrorTitle": "Sdílet",
+    "shareError": "Sdílení se nezdařilo.",
+    "codeSavedTitle": "Doporučení",
+    "codeSaved": "Doporučující kód uložen!",
+    "selfReferralError": "Nemůžeš použít svůj vlastní kód.",
+    "alreadyReferredError": "Doporučující kód jsi již použil.",
+    "invalidCodeError": "Tento doporučující kód je neplatný.",
+    "genericCodeError": "Tento kód se nepodařilo ověřit.",
+    "title": "Doporučení",
+    "infoText": "Pozvi tento měsíc 5 přátel (každý musí jít ven a udělat svůj 1. ověřený check-in) a získej 1 měsíc Premium zdarma 🎉",
+    "confirmCode": "Potvrdit doporučující kód „{{code}}“?",
+    "validate": "Potvrdit",
+    "rewardActive": "💎 Tvůj zdarma měsíc Premium je aktivní",
+    "rewardActiveUntil": " do {{date}}",
+    "yourCode": "Tvůj doporučující kód",
+    "shareButton": "📤 Sdílet můj kód",
+    "shareLabel": "Sdílet můj kód",
+    "progressLabel": "{{count}} / {{target}} doporučení tento měsíc",
+    "invitedFriends": "Pozvaní přátelé",
+    "noInvites": "Zatím žádní pozvaní přátelé.",
+    "defaultUser": "Uživatel",
+    "statusValidated": "Ověřeno",
+    "statusVoid": "Zrušeno",
+    "statusPending": "Čeká se"
+  },
+  "searchView": {
+    "closeLabel": "Zavřít vyhledávání",
+    "title": "Vyhledávání",
+    "placeholder": "Uživatelské jméno, místo...",
+    "clearLabel": "Vymazat vyhledávání",
+    "filterUsers": "Uživatelé",
+    "filterLocations": "Místa",
+    "searching": "Vyhledávání…",
+    "typeToSearch": "Napiš alespoň 2 písmena pro zahájení vyhledávání",
+    "noResults": "Pro toto vyhledávání nebyly nalezeny žádné výsledky.",
+    "checkFilters": "Zkontroluj filtry nebo zkus jiné klíčové slovo.",
+    "resultsCount_one": "{{count}} výsledek",
+    "resultsCount_other": "{{count}} výsledků",
+    "noLongerHere": "Už tu není"
+  },
+  "settingsScreen": {
+    "title": "Nastavení",
+    "tabProfile": "Profil",
+    "tabSettings": "Nastavení",
+    "sectionIdentity": "IDENTITA",
+    "firstName": "Jméno",
+    "lastName": "Příjmení",
+    "customNameLabel": "Vlastní jméno",
+    "bioLabel": "Bio",
+    "sectionSubscription": "PŘEDPLATNÉ",
+    "premiumMonthly": "· Měsíční",
+    "premiumAnnual": "· Roční",
+    "statusLoading": "Načítání stavu…",
+    "grantedOutsideStore": "Uděleno mimo předplatné App Store/Play Store (zkušební verze zdarma nebo speciální nabídka)",
+    "renewsOn": "Obnoví se {{date}}",
+    "expiresOn": "Vyprší {{date}}",
+    "opening": "Otevírání…",
+    "manageSubscription": "Spravovat mé předplatné",
+    "goPremium": "👑 Přejít na Premium",
+    "manageSubError": "Nepodařilo se otevřít správu předplatného.",
+    "sectionGeneral": "OBECNÉ",
+    "displayMode": "Režim zobrazení",
+    "fullNameMode": "Jméno Příjmení",
+    "classicMode": "Klasický",
+    "customMode": "Vlastní",
+    "sectionReferral": "DOPORUČENÍ",
+    "alreadyReferred": "Už jsi byl doporučen.",
+    "referralHint": "Sdílel s tebou přítel kód? Zadej ho zde.",
+    "referralPlaceholder": "Doporučující kód",
+    "validate": "Potvrdit",
+    "sectionNotifications": "OZNÁMENÍ",
+    "notifKinds": {
+      "superlike": "Přijaté superlikes",
+      "superlikeAccepted": "Přijaté superlikes",
+      "eventBoost": "Boosty událostí",
+      "streakExpiring": "Připomenutí série",
+      "profileView": "Zobrazení profilu",
+      "socialClick": "Zobrazení tvých sociálních sítí",
+      "inactiveProfileViews": "Zobrazení přijatá během tvé nepřítomnosti",
+      "referralValidated": "Doporučení ověřeno",
+      "referralRewardGranted": "Odměna za doporučení",
+      "nightModeActivated": "Aktivace nočního režimu",
+      "atRiskReactivation": "Připomenutí reaktivace",
+      "weeklyDigest": "Týdenní souhrn"
+    },
+    "notifCategories": {
+      "social": "Sociální aktivita",
+      "rewards": "Série a odměny",
+      "system": "Systém a souhrny"
+    },
+    "sectionPrivacy": "SOUKROMÍ A GDPR",
+    "privacyPolicyLink": "Zásady ochrany osobních údajů",
+    "consent": "Souhlas",
+    "analyticsLabel": "Analytika",
+    "dataSaleTitle": "Prodej dat (CCPA)",
+    "dataSaleDesc": "Neprodáváme ani nesdílíme tvé osobní údaje s třetími stranami pro reklamní účely.",
+    "invisibleModeTitle": "Neviditelný režim",
+    "invisibleModeDesc": "Budeš neviditelný pro ostatní uživatele na místech, ale nebudeš moci prohlížet mapu ani seznam míst, dokud je tento režim aktivní.",
+    "shareLocationTitle": "Sdílet mou aktuální polohu",
+    "shareLocationDesc": "Zobrazuje ostatním uživatelům přesné místo, kde se aktuálně nacházíš, kromě tvého města. Ve výchozím nastavení vypnuto, aby chránilo tvé soukromí a předešlo riziku pronásledování.",
+    "policyLoadError": "Zásady ochrany osobních údajů se nepodařilo načíst.",
+    "savePrivacyPrefsError": "Tvé preference ochrany osobních údajů se nepodařilo uložit",
+    "shareLocationUpdateError": "Sdílení tvé aktuální polohy se nepodařilo aktualizovat",
+    "invisibleModeUpdateError": "Neviditelný režim se nepodařilo aktualizovat",
+    "notifPrefUpdateError": "Tuto předvolbu oznámení se nepodařilo aktualizovat",
+    "consentSavedTitle": "Úspěch",
+    "consentSaved": "Souhlas uložen.",
+    "consentRevoked": "Souhlas odvolán.",
+    "consentSaveError": "Tvůj souhlas se nepodařilo uložit",
+    "revokeConsentTitle": "Odvolání souhlasu",
+    "revokeConsentMessage": "Odvolání souhlasu povede k trvalému smazání tvého účtu a všech tvých dat. Chceš pokračovat?",
+    "cancel": "Zrušit",
+    "continueLabel": "Pokračovat",
+    "currentPasswordRequired": "Zadej prosím své aktuální heslo.",
+    "passwordTooShort": "Nové heslo musí obsahovat alespoň 6 znaků.",
+    "passwordConfirmMismatch": "Potvrzení neodpovídá novému heslu.",
+    "passwordChangedTitle": "Heslo změněno",
+    "passwordChangedMessage": "Tvé heslo bylo aktualizováno.",
+    "currentPasswordInvalid": "Neplatné aktuální heslo nebo chyba serveru.",
+    "invalidEmail": "Zadej prosím platnou e-mailovou adresu.",
+    "passwordRequiredConfirm": "Zadej pro potvrzení své heslo.",
+    "checkInboxTitle": "Zkontroluj svou schránku",
+    "checkInboxMessage": "Potvrzovací e-mail byl odeslán na {{email}}. Klikni na odkaz pro potvrzení změny.",
+    "emailChangeError": "Změnu se nepodařilo spustit. Neplatné heslo nebo chyba serveru.",
+    "exportReadyTitle": "Export připraven",
+    "exportReadyMessage": "Tvá data byla exportována ({{size}} znaků).",
+    "exportError": "Tvá data se nepodařilo exportovat",
+    "deleteAccountConfirmTitle": "Smazat účet",
+    "deleteAccountConfirmMessage": "Smazání je definitivní. Potvrzuješ smazání svého účtu?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Tvůj profil byl aktualizován.",
+    "loadBlockedError": "Blokované účty se nepodařilo načíst",
+    "unblockError": "Tohoto uživatele se nepodařilo odblokovat",
+    "sectionAccount": "ÚČET",
+    "emailLabel": "E-mail",
+    "notProvided": "Neuvedeno",
+    "change": "Změnit",
+    "passwordLabel": "Heslo",
+    "blockedAccounts": "Blokované účty",
+    "helpAndPrivacy": "Nápověda a soukromí",
+    "terms": "Podmínky užívání",
+    "sectionModeration": "MODEROVÁNÍ",
+    "moderatorSpace": "Prostor moderátora",
+    "debugConsole": "Ladicí konzole",
+    "exportData": "Exportovat moje data",
+    "deleteAccount": "Smazat můj účet",
+    "logout": "Odhlásit se",
+    "save": "Uložit",
+    "close": "Zavřít",
+    "privacyModalTitle": "Soukromí",
+    "deleteAccountTitle": "Smazání účtu",
+    "deleteAccountDesc": "Pro potvrzení zadej své heslo. Tato akce je nevratná.",
+    "deleting": "Mazání...",
+    "changePasswordTitle": "Změnit heslo",
+    "currentPasswordPlaceholder": "Aktuální heslo",
+    "newPasswordPlaceholder": "Nové heslo (min. 6 znaků)",
+    "confirmPasswordPlaceholder": "Potvrdit nové heslo",
+    "changeEmailTitle": "Změnit e-mail",
+    "currentEmailLabel": "Aktuální e-mail: {{email}}",
+    "newEmailPlaceholder": "Nový e-mail",
+    "noBlockedAccounts": "Žádné blokované účty.",
+    "unblock": "Odblokovat"
+  },
+  "statisticsScreen": {
+    "loadError": "Statistiky se nepodařilo načíst",
+    "loadVisitorsError": "Seznam návštěvníků se nepodařilo načíst",
+    "justNow": "Právě teď",
+    "minutesAgo": "před {{count}} min",
+    "hoursAgo": "před {{count}}h",
+    "yesterday": "Včera",
+    "daysAgo": "před {{count}} d",
+    "title": "Statistiky",
+    "comingSoonTitle": "Již brzy 🚀",
+    "comingSoonDesc": "Statistiky přicházejí již brzy! Budeš moci vidět, kdo navštěvuje tvůj profil a sociální sítě.",
+    "whoStalksTitle": "Kdo tě sleduje? 👀",
+    "whoStalksDesc": "Přejdi na Premium a zjisti, kdo navštěvuje tvůj profil a sociální sítě!",
+    "discoverVisitors": "Objevit mé návštěvníky",
+    "later": "Později",
+    "profileViews": "Zobrazení profilu",
+    "views": "zobrazení",
+    "last30Days": "za posledních 30 dní",
+    "clicksByNetwork": "Kliknutí podle sítě",
+    "lastVisits": "Poslední návštěvy",
+    "noVisitorsTitle": "Zatím nikdo nenavštívil tvůj profil",
+    "noVisitorsDesc": "Pokračuj v prozkoumávání míst, abys byl objeven!",
+    "defaultUser": "Uživatel",
+    "hiddenVisits_one": "{{count}} skrytá návštěva",
+    "hiddenVisits_other": "{{count}} skrytých návštěv",
+    "goPremiumToSeeAll": "Přejdi na Premium a uvidíš vše",
+    "showMore": "Zobrazit více"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Obtěžování",
+      "spam": "Spam",
+      "inappropriate": "Nevhodný obsah",
+      "impersonation": "Krádež identity",
+      "scam": "Podvod",
+      "other": "Jiné"
+    },
+    "statusAvailable": "Dostupný/á",
+    "statusRestricted": "Omezená viditelnost",
+    "statusInvisible": "Neviditelný/á",
+    "noUserSelected": "Nebyl vybrán žádný uživatel.",
+    "backToList": "Zpět na seznam",
+    "superlikeLockedTitle": "Již brzy",
+    "superlikeLockedMessage": "Superlikes se odemknou po tvém prvním check-inu.",
+    "superlikeSentTitle": "⭐ Superlike odeslán!",
+    "superlikeSentMessage": "{{name}} byl(a) upozorněn(a), že sis ho/jí všiml(a).",
+    "errorTitle": "Chyba",
+    "superlikeSendError": "Superlike se nepodařilo odeslat.",
+    "blockConfirmTitle": "Zablokovat tohoto uživatele?",
+    "blockConfirmMessage": "Tohoto uživatele už neuvidíte a on vás nebude moci kontaktovat.",
+    "cancel": "Zrušit",
+    "block": "Zablokovat",
+    "userBlockedTitle": "Uživatel zablokován",
+    "userBlockedMessage": "Tento uživatel byl zablokován.",
+    "blockError": "Tohoto uživatele se nepodařilo zablokovat.",
+    "reasonRequiredTitle": "Vyžadován důvod",
+    "reasonRequiredMessage": "Uveďte prosím důvod.",
+    "reportSentTitle": "Nahlášení odesláno",
+    "reportSentMessage": "Děkujeme za vaše nahlášení.",
+    "reportSendError": "Nahlášení se nepodařilo odeslat.",
+    "backA11y": "Zpět",
+    "moreOptionsA11y": "Další možnosti",
+    "sendSuperlikeA11y": "Odeslat superlike",
+    "superlikeLockedA11y": "Superlike uzamčen, odemkne se po tvém prvním check-inu",
+    "currentlyAt": "Aktuálně v {{place}}",
+    "mutualConnectionBanner": "Tato osoba chce navázat kontakt",
+    "socialsHidden": "Tento uživatel nesdílí své sociální sítě",
+    "noBio": "Zatím žádné bio.",
+    "noSocials": "Žádná sociální síť",
+    "actionsTitle": "Akce",
+    "report": "Nahlásit",
+    "reportUserTitle": "Nahlásit uživatele",
+    "reportWarning": "Zneužívání nahlášení může vést k sankcím. Buďte prosím upřímní.",
+    "categoryLabel": "Kategorie",
+    "reasonLabel": "Důvod",
+    "reasonPlaceholder": "Stručně vysvětlete důvod",
+    "descriptionLabel": "Popis (volitelné)",
+    "descriptionPlaceholder": "Další podrobnosti",
+    "sending": "Odesílání...",
+    "sendReport": "Odeslat nahlášení",
+    "justNow": "Právě teď",
+    "minutesAgo_one": "Před {{count}} min",
+    "minutesAgo_other": "Před {{count}} min",
+    "hoursAgo_one": "Před {{count}} h",
+    "hoursAgo_other": "Před {{count}} h",
+    "yesterday": "Včera",
+    "daysAgo_one": "Před {{count}} dnem",
+    "daysAgo_other": "Před {{count}} dny"
+  },
+  "warningsScreen": {
+    "title": "Upozornění",
+    "banAlert": "Toto chování může vést k dočasnému nebo trvalému zablokování v aplikaci.",
+    "empty": "Žádná upozornění.",
+    "typeLabel": "Typ upozornění",
+    "notSpecified": "Neuvedeno",
+    "notSpecifiedFem": "Neuvedeno",
+    "reasonLabel": "Důvod"
+  },
+  "common": {
+    "close": "Zavřít",
+    "errorTitle": "Chyba"
+  },
+  "streakCard": {
+    "hintReady": "Tvoje odměna je připravena!",
+    "hintGrow": "Přihlašuj se každý den, aby rostla.",
+    "claimBoost": "Vyzvednout boost",
+    "claimSuperlike": "Vyzvednout superlike"
+  },
+  "coteCard": {
+    "messageTop": "Na vrcholu! Přihlas se zítra, abys si to udržel.",
+    "messageZero": "Přihlas se dnes, abys ji znovu rozjel."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Buď na vrcholu po dobu 30 min",
+    "boostPack5Desc": "Nejlepší poměr cena/výkon",
+    "superlikePack3Desc": "Ukaž svůj zájem jedinečným způsobem",
+    "superlikePack10Desc": "Pro opravdové spojovatele",
+    "badgePopular": "Oblíbené",
+    "badgeBestOffer": "Nejlepší nabídka",
+    "notAvailableTitle": "Nedostupné",
+    "notAvailableMessage": "Tento balíček zatím není v obchodě dostupný.",
+    "purchaseErrorMessage": "Nákup se nepodařilo dokončit.",
+    "simulate": "Simulovat"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Hledej na těchto místech",
+    "categoryBars": "Bary",
+    "categoryClubs": "Kluby",
+    "categoryRestos": "Restaurace",
+    "categoryPubs": "Puby",
+    "categoryGyms": "Posilovny",
+    "categoryCafes": "Kavárny",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Knihovny"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonym"
+  },
+  "locationMapView": {
+    "loadError": "Mapu se nepodařilo načíst",
+    "renderError": "Chyba při načítání mapy"
+  },
+  "churnSurveyModal": {
+    "title": "Minutku, než odejdeš?",
+    "subtitle": "Pomoz nám pochopit proč.",
+    "reasonTooManyNotifications": "Příliš mnoho oznámení",
+    "reasonPrivacyConcern": "Necítím se dobře se sdílením",
+    "reasonNotUseful": "Už mi to není užitečné",
+    "reasonOther": "Jiný důvod",
+    "dismiss": "Přeskočit",
+    "thanks": "Děkujeme za tvou zpětnou vazbu 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Hledat",
+    "tabNearby": "Místa v okolí",
+    "tabAccount": "Účet"
+  },
+  "documentViewer": {
+    "openError": "Tento dokument se nepodařilo otevřít.",
+    "defaultLabel": "Zobrazit dokument"
+  },
+  "vibeFab": {
+    "toDay": "Přepnout do denního režimu",
+    "toNight": "Přepnout do nočního režimu"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Sdílení polohy aktivní"
+  }
+}

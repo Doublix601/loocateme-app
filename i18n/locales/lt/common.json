@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Prisijungti",
+      "welcomeBack": "Sveiki sugrįžę!",
+      "subtitle": "Prisijunkite, kad tęstumėte",
+      "emailPlaceholder": "El. paštas",
+      "passwordPlaceholder": "Slaptažodis",
+      "submit": "Prisijungti",
+      "forgotPassword": "Pamiršote slaptažodį?",
+      "noAccount": "Dar neturite paskyros?",
+      "createAccount": "Sukurti paskyrą",
+      "emailNotVerifiedTitle": "El. paštas nepatvirtintas",
+      "emailNotVerifiedMessage": "Jūsų el. pašto adresas dar nepatvirtintas. Ką tik išsiuntėme jums naują patvirtinimo laišką. Spustelėkite nuorodą, kad aktyvuotumėte paskyrą, ir bandykite dar kartą.",
+      "authFailedTitle": "Prisijungti nepavyko",
+      "authFailedMessage": "Nepavyko jūsų prijungti. Patikrinkite duomenis ir bandykite dar kartą."
+    },
+    "signup": {
+      "passwordMismatch": "Slaptažodžiai nesutampa.",
+      "requiredFields": "Visi laukai turi būti užpildyti.",
+      "birthdateRequired": "Gimimo data yra privaloma.",
+      "under18": "Norėdami registruotis, turite būti bent 18 metų.",
+      "policyLoadError": "Nepavyko įkelti privatumo politikos. Galite bandyti dar kartą."
+    }
+  },
+  "consent": {
+    "title": "Privatumas",
+    "changelogTitle": "Kas pasikeitė",
+    "decline": "Atmesti",
+    "accept": "Sutikti",
+    "accepting": "Išsaugoma...",
+    "declineInfoTitle": "Informacija",
+    "declineInfoMessage": "Norėdami naudotis programėle, turite sutikti su privatumo politika.",
+    "acceptErrorTitle": "Klaida",
+    "acceptErrorMessage": "Nepavyko išsaugoti jūsų sutikimo. Bandykite dar kartą."
+  },
+  "ageVerification": {
+    "title": "Amžiaus patikra",
+    "urlMissing": "Trūksta patikros nuorodos",
+    "startError": "Nepavyko pradėti amžiaus patikros. Bandykite dar kartą.",
+    "retry": "Bandyti dar kartą",
+    "declinedTitle": "Patikra atmesta",
+    "declinedMessage": "Nepavyko patvirtinti, kad esate vyresnis nei 18 metų. Galite bandyti dar kartą."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Kalba",
+      "systemDefault": "Telefono kalba"
+    }
+  },
+  "forgotPassword": {
+    "title": "Pamiršau slaptažodį",
+    "resetTitle": "Atkūrimas",
+    "instructions": "Įveskite savo el. pašto adresą, kad gautumėte atkūrimo nuorodą.",
+    "emailPlaceholder": "El. paštas",
+    "submit": "Siųsti nuorodą",
+    "successTitle": "El. laiškas išsiųstas",
+    "successMessage": "Jei paskyra egzistuoja, el. laiškas buvo išsiųstas.",
+    "errorTitle": "Klaida",
+    "errorFallback": "Bandykite dar kartą"
+  },
+  "dataManagement": {
+    "title": "Privatumas",
+    "export": {
+      "title": "Eksportuoti mano duomenis",
+      "desc": "Atsisiųskite savo informacijos kopiją (profilis, socialiniai tinklai, nustatymai).",
+      "button": "Eksportuoti",
+      "buttonWorking": "Palaukite...",
+      "successTitle": "Duomenų eksportas",
+      "successMessage": "Jūsų eksportas sukurtas ir rodomas konsolėje.",
+      "errorTitle": "Klaida",
+      "errorMessage": "Šiuo metu nepavyko eksportuoti jūsų duomenų. Bandykite dar kartą."
+    },
+    "delete": {
+      "title": "Ištrinti mano paskyrą",
+      "desc": "Negrįžtamai ištrina jūsų paskyrą ir visus susijusius duomenis.",
+      "passwordPlaceholder": "Patvirtinkite savo slaptažodžiu",
+      "button": "Ištrinti negrįžtamai",
+      "passwordRequiredTitle": "Reikalingas slaptažodis",
+      "passwordRequiredMessage": "Įveskite savo slaptažodį.",
+      "confirmTitle": "Patvirtinimas",
+      "confirmMessage": "Šis veiksmas negrįžtamas. Ar tikrai norite ištrinti savo paskyrą?",
+      "cancel": "Atšaukti",
+      "confirm": "Ištrinti",
+      "successTitle": "Paskyra ištrinta",
+      "successMessage": "Jūsų paskyra ir duomenys buvo ištrinti.",
+      "errorTitle": "Klaida",
+      "errorMessage": "Ištrinti nepavyko. Neteisingas slaptažodis arba serverio problema."
+    }
+  },
+  "editProfile": {
+    "title": "Redaguoti profilį",
+    "subtitle": "Palieskite lauką, kad jį redaguotumėte",
+    "notSet": "Nenurodyta",
+    "backLabel": "Atgal",
+    "fields": {
+      "firstName": "Vardas",
+      "lastName": "Pavardė",
+      "customName": "Individualus vardas",
+      "bio": "Bio",
+      "birthdate": "Gimimo data",
+      "gender": "Lytis"
+    },
+    "gender": {
+      "male": "Berniukas",
+      "female": "Mergaitė",
+      "preferNotToSay": "Nenoriu sakyti"
+    },
+    "photo": {
+      "notSupportedTitle": "Nepalaikoma",
+      "notSupportedMessage": "Kamera neprieinama žiniatinklyje.",
+      "cameraPermissionTitle": "Reikalingas leidimas",
+      "cameraPermissionMessage": "Programai reikia prieigos prie kameros, kad padarytų nuotrauką.",
+      "galleryPermissionMessage": "Programai reikia prieigos prie jūsų nuotraukų, kad pasirinktų vaizdą.",
+      "errorTitle": "Klaida",
+      "uploadErrorMessage": "Nepavyko įkelti vaizdo",
+      "cameraOpenError": "Nepavyko atidaryti kameros.",
+      "galleryOpenError": "Nepavyko atidaryti galerijos.",
+      "deleteErrorMessage": "Nepavyko ištrinti profilio nuotraukos",
+      "deleteConfirmTitle": "Ištrinti profilio nuotrauką?",
+      "deleteConfirmMessage": "Šis veiksmas negrįžtamas.",
+      "cancel": "Atšaukti",
+      "delete": "Ištrinti",
+      "modalTitle": "Profilio nuotrauka",
+      "takePhoto": "📸 Fotografuoti",
+      "sending": "Įkeliama...",
+      "chooseGallery": "🖼️ Pasirinkti iš galerijos",
+      "deletePhoto": "🗑️ Ištrinti nuotrauką",
+      "deleting": "Trinama..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Neteisingas vardas",
+      "firstNameInvalidMessage": "Vardas turi prasidėti didžiąja raide ir gali turėti raides (diakritiniai ženklai leidžiami), tarpus, apostrofus arba brūkšnelius.",
+      "lastNameInvalidTitle": "Neteisinga pavardė",
+      "lastNameInvalidMessage": "Pavardė turi prasidėti didžiąja raide ir gali turėti raides (diakritiniai ženklai leidžiami), tarpus, apostrofus arba brūkšnelius.",
+      "incompleteIdentityTitle": "Neišsami tapatybė",
+      "incompleteIdentityMessage": "Įveskite Individualų vardą ARBA Vardą IR Pavardę.",
+      "customNameRequiredTitle": "Reikalingas individualus vardas",
+      "customNameRequiredMessage": "Negalite pašalinti individualaus vardo, kol vardas arba pavardė yra tušti.",
+      "invalidDateTitle": "Neteisinga data",
+      "invalidDateMessage": "Pasirinkite galiojančią gimimo datą.",
+      "minAgeTitle": "Reikalingas minimalus amžius",
+      "minAgeMessage": "Jums turi būti bent 18 metų.",
+      "updateErrorMessage": "Nepavyko atnaujinti jūsų profilio"
+    },
+    "modal": {
+      "editPrefix": "Redaguoti",
+      "editGeneric": "Redaguoti",
+      "selectDate": "Pasirinkti datą",
+      "cancel": "Atšaukti",
+      "save": "Išsaugoti",
+      "placeholders": {
+        "firstName": "Jūsų vardas",
+        "lastName": "Jūsų pavardė",
+        "customName": "Jūsų individualus vardas",
+        "bio": "Papasakokite mums šiek tiek apie save...",
+        "default": "Jūsų tekstas"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Nematomas režimas įjungtas",
+      "subtitle": "Negalite matyti vietų aplink save, kol nematomas režimas įjungtas. Išjunkite jį, kad naršytumėte vietas.",
+      "disableButton": "Išjungti nematomą režimą"
+    },
+    "error": {
+      "title": "Vieta nepasiekiama",
+      "subtitle": "Įjunkite vietos nustatymo paslaugas įrenginio nustatymuose, kad matytumėte vietas aplink save.",
+      "retry": "Bandyti dar kartą"
+    },
+    "empty": {
+      "title": "Kol kas rami zona",
+      "subtitle": "Aplink jus nerasta jokios aktyvios vietos. Padidinkite spindulį arba pasiūlykite naują vietą.",
+      "expandRadius": "Padidinti spindulį",
+      "suggestLocation": "Pasiūlyti šią vietą"
+    },
+    "footer": {
+      "loadingMore": "Įkeliama daugiau vietų…",
+      "loadMoreError": "Nepavyko įkelti daugiau vietų. Patikrinkite ryšį.",
+      "retry": "Bandyti dar kartą",
+      "reachedEnd": "Išnagrinėjote visas aktyvias vietas netoliese. Pajudėkite arba ieškokite, kad pamatytumėte daugiau."
+    },
+    "leaveModal": {
+      "defaultName": "Ši vieta",
+      "subtitle": "Šiuo metu esate čia užsiregistravęs. Ar norite palikti šią vietą?",
+      "confirm": "Manęs čia nebėra",
+      "cancel": "Atšaukti"
+    },
+    "sections": {
+      "moreLocations": "Daugiau vietų jums",
+      "sponsored": "Rekomenduojama",
+      "trending": "Vyksta dabar"
+    },
+    "filters": {
+      "all": "Visos"
+    },
+    "card": {
+      "visitors_one": "{{count}} lankytojas",
+      "visitors_other": "{{count}} lankytojai",
+      "sponsored": "REMIAMA",
+      "imHere": "Aš čia esu",
+      "editLocation": "Redaguoti mano vietą"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Rankinis įsiregistravimas įjungtas",
+    "checkinModeAutoOn": "Automatinis įsiregistravimas įjungtas",
+    "checkinModeErrorTitle": "Klaida",
+    "checkinModeErrorMessage": "Šiuo metu nepavyko pakeisti įsiregistravimo režimo.",
+    "checkedInToast": "Dabar esi {{name}}!",
+    "checkinErrorMessage": "Šiuo metu nepavyko patvirtinti tavo buvimo.",
+    "leftLocationToast": "Palikai šią vietą.",
+    "boostActiveTitle": "Pagreitinimas aktyvus",
+    "boostActiveLeaveMessage": "Negali palikti šios vietos, kol veikia tavo pagreitinimas.",
+    "leaveErrorMessage": "Šiuo metu nepavyko tavęs išregistruoti iš šios vietos.",
+    "boostInProgressTitle": "Vyksta pagreitinimas",
+    "boostInProgressMessage": "Tavo pagreitinimas aktyvus: palauk, kol jis baigsis, prieš keisdamas vietą.",
+    "refreshErrorToast": "Šiuo metu nepavyko atnaujinti.",
+    "disableInvisibleErrorMessage": "Šiuo metu nepavyko išjungti nematomo režimo.",
+    "switchToManualLabel": "Perjungti į rankinį įsiregistravimą",
+    "switchToAutoLabel": "Perjungti į automatinį įsiregistravimą",
+    "entryAuto": "Auto. įėjimas",
+    "entryManual": "Rankinis įėjimas",
+    "showMapLabel": "Rodyti žemėlapį",
+    "showListLabel": "Rodyti sąrašą",
+    "mapButton": "Žemėlapis",
+    "listButton": "Sąrašas"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Klaida",
+    "checkinErrorMessage": "Šiuo metu nepavyko patvirtinti tavo buvimo.",
+    "boostActiveHereTitle": "Vyksta pagreitinimas",
+    "boostActiveHereMessage": "Tavo pagreitinimas čia aktyvus: palauk, kol jis baigsis, prieš palikdamas šią vietą.",
+    "boostActiveMessage": "Tavo pagreitinimas aktyvus: palauk, kol jis baigsis.",
+    "notFound": "Vieta nerasta",
+    "back": "Atgal",
+    "popularityVeryPopular": "Labai populiaru",
+    "popularityPopular": "Populiaru",
+    "popularityActive": "Aktyvu",
+    "popularityCalm": "Ramu",
+    "checkinConfirmed": "Patvirtinta!",
+    "imHere": "Aš čia esu",
+    "viewPdf": "Žiūrėti PDF",
+    "pdfLoadError": "Šio PDF negalima parodyti.",
+    "openInBrowser": "Atidaryti naršyklėje",
+    "profilesHere": "Profiliai čia",
+    "recentlyCrossed": "Neseniai sutikti",
+    "seeMore": "Žiūrėti daugiau",
+    "boosted": "Pagreitinta",
+    "boostProfileHere": "Pagreitinti mano profilį čia",
+    "boostLockedAfterCheckins": "Pagreitinimas 🔓 po 2 įsiregistravimų"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Dalintis",
+      "shareLabel": "Dalintis mano profiliu",
+      "qrCode": "QR kodas",
+      "qrLabel": "Rodyti mano QR kodą",
+      "stats": "Statistika",
+      "statsLabel": "Peržiūrėti mano statistiką"
+    },
+    "qr": {
+      "title": "Nuskenuok, kad pamatytum mano profilį",
+      "hint": "Jei programėlė neįdiegta, būsi nukreiptas į parduotuvę ({{store}})."
+    },
+    "status": {
+      "title": "Tavo statusas",
+      "close": "Uždaryti",
+      "public": "Viešas profilis",
+      "private": "Privatus profilis",
+      "incognito": "Inkognito",
+      "pickLabel": "Pasirinkti mano statusą"
+    },
+    "warnings": {
+      "title": "Įspėjimai",
+      "message_one": "Turi {{count}} įspėjimą.",
+      "message_other": "Turi {{count}} įspėjimų.",
+      "tapForDetails": "Palieskite, kad pamatytumėte detales"
+    },
+    "referral": {
+      "invite": "Pakviesk savo draugus",
+      "label": "Rekomendacija: pakviesk savo draugus"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Pasidalink savo vieta",
+      "message": "Įjunk savo dabartinės vietos bendrinimą, kad kiti netoliese esantys naudotojai galėtų tave lengviau rasti.",
+      "activate": "Aktyvuoti",
+      "noThanks": "Ne, ačiū"
+    },
+    "social": {
+      "addTitle": "Pridėti tinklą",
+      "usernamePlaceholder": "@vartotojo vardas arba {{platform}} ID",
+      "selectPlaceholder": "Pasirink tinklą",
+      "snapchatHint": "Pastaba: „Snapchat“ neleidžia tiesioginių nuorodų, tiesiog įveskite savo vartotojo vardą.",
+      "save": "Išsaugoti",
+      "saveLabel": "Išsaugoti",
+      "editTitle": "Redaguoti {{platform}}",
+      "usernamePlaceholderSimple": "Vartotojo vardas",
+      "delete": "Ištrinti",
+      "heading": "Socialiniai tinklai",
+      "addLabel": "Pridėti socialinį tinklą"
+    },
+    "rewards": {
+      "heading": "Apdovanojimai",
+      "superlikes": "Superlikes",
+      "boosts": "Pagreitinimai",
+      "buy": "Pirkti",
+      "buyLabel": "Pirkti superlikes arba pagreitinimus",
+      "premiumCta": "👑 Tapti Premium",
+      "premiumLabel": "Tapti Premium",
+      "superlikeHistoryLabel_one": "Peržiūrėti superlike istoriją, liko {{count}}",
+      "superlikeHistoryLabel_other": "Peržiūrėti superlike istoriją, liko {{count}}"
+    },
+    "currentlyAt": "Šiuo metu {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Pridėk sakinį, kad prisistatytum."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Tavo profilio nuotrauka",
+      "photoDesc": "Pakeisk savo profilio nuotrauką nustatymuose (piktograma viršuje dešinėje).",
+      "bioTitle": "Tavo bio",
+      "bioDesc": "Tavo bio redaguojamas nustatymuose. Tai pirmas dalykas, kurį mato kiti.",
+      "socialTitle": "Tavo socialiniai tinklai",
+      "socialDesc": "Bakstelėk ➕, kad pridėtum tinklą. Palaikyk piktogramą, kad ją redaguotum ar ištrintum.",
+      "statusTitle": "Tavo statusas",
+      "statusDesc": "Viešas profilis = matomas visiems · Privatus profilis = tinklai paslėpti · Inkognito = nematomas. Bakstelėk, kad pakeistum."
+    },
+    "errorTitle": "Klaida",
+    "shareLocationUpdateError": "Nepavyko atnaujinti tavo dabartinės vietos bendrinimo",
+    "comingSoonTitle": "Netrukus 🚀",
+    "comingSoonStats": "Statistika greitai pasirodys! Galėsi matyti, kas lankosi tavo profilyje ir socialiniuose tinkluose.",
+    "shareTitle": "Bendrinti",
+    "shareError": "Bendrinti nepavyko.",
+    "boostClaimedToast": "Pagreitinimas gautas 🚀",
+    "superlikeClaimedToast": "Superlike gautas ⭐️",
+    "claimRewardError": "Nepavyko gauti apdovanojimo",
+    "statusVisible": "Esi matomame režime. Visi gali matyti tavo socialinius tinklus. Visapusiškai naudojiesi programėle.",
+    "statusRestricted": "Esi ribotai matomame režime. Niekas negali matyti tavo socialinių tinklų.",
+    "statusInvisible": "Esi nematomame režime. Nuo šiol tavęs niekas nematys.",
+    "statusUpdateError": "Nepavyko atnaujinti statuso",
+    "unsupportedPlatform": "Nepalaikoma platforma",
+    "handleRequired": "Įveskite identifikatorių",
+    "invalidInstagramHandle": "Neteisingas Instagram vartotojo vardas. Pavyzdys: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Neteisingas TikTok vartotojo vardas. Pavyzdys: https://www.tiktok.com/@username",
+    "addSocialError": "Nepavyko pridėti socialinio tinklo",
+    "invalidLinkTitle": "Neteisinga nuoroda",
+    "invalidInstagramHandleShort": "Neteisingas Instagram vartotojo vardas",
+    "invalidTiktokHandleShort": "Neteisingas TikTok vartotojo vardas",
+    "cannotOpenInstagramTitle": "Nepavyko atidaryti Instagram",
+    "cannotOpenTiktokTitle": "Nepavyko atidaryti TikTok",
+    "tryAgainLater": "Bandykite vėliau dar kartą.",
+    "editSocialError": "Nepavyko redaguoti socialinio tinklo",
+    "deleteSocialError": "Nepavyko ištrinti socialinio tinklo",
+    "backLabel": "Atgal",
+    "settingsLabel": "Nustatymai",
+    "streakTitle": "Tavo serija 🔥",
+    "streakMessage": "Prisijunk kasdien, kad padidintum savo seriją. 7 dieną gauk superlike. 14 dieną gauk pagreitinimą — tavo serija tada prasideda iš naujo nuo 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Sužinok, kas yra netoli tavęs",
+        "desc": "Realiu laiku matyk gyvybingas vietas aplink save ir ten esančius žmones — kaip tik dabar."
+      },
+      "checkin": {
+        "title": "Automatinis įsiregistravimas, dieną ar naktį",
+        "desc": "Vos įėjus į vietą, automatiškai pasirodai ten — ir matai, kas ten yra. Programėlė perjungiama tarp Dienos režimo (kavinės, parkai, sportas…) ir Nakties režimo (barai, restoranai, klubai…) pagal tavo nuotaiką."
+      },
+      "profile": {
+        "title": "Tavo profilis, gyvybingos vietos",
+        "desc": "Pridėk savo socialinius tinklus, kad žmonės tave rastų, peržiūrėk profilius aplink save. Kiekviena vieta taip pat rodo nuo 1 iki 3 žvaigždučių pagal realų lankomumą — kuo gyvybingiau, tuo labiau šviečia."
+      },
+      "referral": {
+        "title": "Draugas tave pakvietė?",
+        "desc": "Įvesk jo rekomendacijos kodą (neprivaloma) — tai padeda jam atrakinti nemokamą Premium mėnesį."
+      }
+    },
+    "referralPlaceholder": "Rekomendacijos kodas",
+    "next": "Toliau",
+    "start": "Pradėkime 🚀",
+    "skip": "Praleisti"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Pamatyk, kas peržiūri tavo profilį",
+      "Matomumo pagreitinimai (1 nemokamas paketas)",
+      "Superlikes (3/savaitę nemokamai)",
+      "Nematomas režimas",
+      "Paieškos spindulys iki 2 km",
+      "Išplėstinė statistika",
+      "Praplėsti pranešimai"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kas tave lanko?",
+        "desc": "Sužinok realiuoju laiku, kas peržiūri tavo profilį."
+      },
+      "boosts": {
+        "title": "Matomumo pagreitinimai",
+        "desc": "Užimk sąrašo viršų 30 min savo vietoje."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Parodyk ypatingą susidomėjimą kažkuo, ką pastebi."
+      },
+      "invisible": {
+        "title": "Nematomas režimas",
+        "desc": "Dingk iš netoliese esančių vartotojų sąrašo, kada tik nori."
+      },
+      "radius": {
+        "title": "Išplėstas spindulys",
+        "desc": "Tyrinėk iki 2 km aplink save (500 m nemokamoje versijoje)."
+      },
+      "stats": {
+        "title": "Išplėstinė statistika",
+        "desc": "Sek peržiūras ir paspaudimus visuose savo socialiniuose tinkluose."
+      }
+    },
+    "trialError": "Nemokamo bandomojo laikotarpio nepavyko pradėti.",
+    "errorTitle": "Klaida",
+    "offersUnavailableTitle": "Pasiūlymai nepasiekiami",
+    "offersUnavailableMessage": "Prenumeratos pasiūlymai dar neįkelti. Bandyk dar kartą po akimirkos.",
+    "purchaseError": "Pirkimo nepavyko užbaigti.",
+    "restoredTitle": "✅ Pirkiniai atkurti",
+    "restoredMessage": "Tavo Premium prenumerata aktyvi.",
+    "noRestoreTitle": "Pirkinys nerastas",
+    "noRestoreMessage": "Nepavyko atkurti nė vienos aktyvios prenumeratos.",
+    "restoreError": "Pirkinių nepavyko atkurti.",
+    "closeLabel": "Uždaryti",
+    "title": "👑 Premium",
+    "subtitle": "Atrakink visas funkcijas",
+    "debugBanner": "⚠️ Mokėjimai išjungti (derinimo režimas)",
+    "monthly": "Mėnesinė",
+    "perMonth": "/mėn",
+    "annual": "Metinė",
+    "perYear": "/metai",
+    "mostChosen": "DAŽNIAUSIAI RENKAMA",
+    "allIncluded": "VISKAS ĮSKAIČIUOTA",
+    "ctaSimulate": "Simuliuoti Premium prenumeratą",
+    "ctaTrial": "Pradėti 7 dienų nemokamą bandomąjį laikotarpį",
+    "ctaLoading": "Įkeliami pasiūlymai…",
+    "ctaSubscribe": "Prenumeruoti",
+    "thenAnnual": "Tada {{price}}/metai · Galima atšaukti bet kada",
+    "thenMonthly": "Tada {{price}}/mėn · Galima atšaukti bet kada",
+    "restorePurchases": "Atkurti mano pirkinius",
+    "legalText": "Prenumerata automatiškai atnaujinama, nebent atšaukiama iki dabartinio laikotarpio pabaigos. Tvarkyk savo prenumeratas App Store / Google Play nustatymuose. ",
+    "privacyPolicy": "Privatumo politika",
+    "terms": "Sąlygos"
+  },
+  "premiumWelcome": {
+    "header": "👑 Sveiki atvykę į Premium",
+    "finalTitle": "Pradėkime!",
+    "finalDesc": "Mėgaukis visais naujais Premium privalumais jau dabar.",
+    "discover": "Sužinoti",
+    "next": "Toliau",
+    "skip": "Praleisti"
+  },
+  "referralScreen": {
+    "loadError": "Tavo rekomendacijos informacijos nepavyko įkelti.",
+    "errorTitle": "Klaida",
+    "shareMessage": "Prisijunk prie manęs LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Pakviesk draugą į LoocateMe",
+    "shareErrorTitle": "Bendrinti",
+    "shareError": "Bendrinti nepavyko.",
+    "codeSavedTitle": "Rekomendacija",
+    "codeSaved": "Rekomendacijos kodas išsaugotas!",
+    "selfReferralError": "Negali naudoti savo paties kodo.",
+    "alreadyReferredError": "Jau naudojai rekomendacijos kodą.",
+    "invalidCodeError": "Šis rekomendacijos kodas negalioja.",
+    "genericCodeError": "Šio kodo nepavyko patvirtinti.",
+    "title": "Rekomendacija",
+    "infoText": "Pakviesk 5 draugus šį mėnesį (kiekvienas turi išeiti ir atlikti savo 1-ą patvirtintą įsiregistravimą) ir gauk 1 nemokamą Premium mėnesį 🎉",
+    "confirmCode": "Patvirtinti rekomendacijos kodą „{{code}}“?",
+    "validate": "Patvirtinti",
+    "rewardActive": "💎 Tavo nemokamas Premium mėnuo aktyvus",
+    "rewardActiveUntil": " iki {{date}}",
+    "yourCode": "Tavo rekomendacijos kodas",
+    "shareButton": "📤 Bendrinti mano kodą",
+    "shareLabel": "Bendrinti mano kodą",
+    "progressLabel": "{{count}} / {{target}} rekomendacijos šį mėnesį",
+    "invitedFriends": "Pakviesti draugai",
+    "noInvites": "Kol kas jokių pakviestų draugų.",
+    "defaultUser": "Vartotojas",
+    "statusValidated": "Patvirtinta",
+    "statusVoid": "Atšaukta",
+    "statusPending": "Laukiama"
+  },
+  "searchView": {
+    "closeLabel": "Uždaryti paiešką",
+    "title": "Paieška",
+    "placeholder": "Vartotojo vardas, vieta...",
+    "clearLabel": "Išvalyti paiešką",
+    "filterUsers": "Vartotojai",
+    "filterLocations": "Vietos",
+    "searching": "Ieškoma…",
+    "typeToSearch": "Įvesk bent 2 raides, kad pradėtum paiešką",
+    "noResults": "Šiai paieškai rezultatų nerasta.",
+    "checkFilters": "Patikrink filtrus arba pabandyk kitą raktažodį.",
+    "resultsCount_one": "{{count}} rezultatas",
+    "resultsCount_other": "{{count}} rezultatai",
+    "noLongerHere": "Nebėra čia"
+  },
+  "settingsScreen": {
+    "title": "Nustatymai",
+    "tabProfile": "Profilis",
+    "tabSettings": "Nustatymai",
+    "sectionIdentity": "TAPATYBĖ",
+    "firstName": "Vardas",
+    "lastName": "Pavardė",
+    "customNameLabel": "Individualus vardas",
+    "bioLabel": "Bio",
+    "sectionSubscription": "PRENUMERATA",
+    "premiumMonthly": "· Mėnesinė",
+    "premiumAnnual": "· Metinė",
+    "statusLoading": "Kraunama būsena…",
+    "grantedOutsideStore": "Suteikta ne per App Store/Play Store prenumeratą (nemokamas bandomasis laikotarpis arba specialus pasiūlymas)",
+    "renewsOn": "Atsinaujins {{date}}",
+    "expiresOn": "Baigiasi {{date}}",
+    "opening": "Atidaroma…",
+    "manageSubscription": "Tvarkyti mano prenumeratą",
+    "goPremium": "👑 Tapti Premium",
+    "manageSubError": "Nepavyko atidaryti prenumeratos valdymo.",
+    "sectionGeneral": "BENDRA",
+    "displayMode": "Rodymo režimas",
+    "fullNameMode": "Vardas Pavardė",
+    "classicMode": "Klasikinis",
+    "customMode": "Individualus",
+    "sectionReferral": "REKOMENDACIJA",
+    "alreadyReferred": "Jau buvote rekomenduotas.",
+    "referralHint": "Draugas pasidalino su jumis kodu? Įveskite jį čia.",
+    "referralPlaceholder": "Rekomendacijos kodas",
+    "validate": "Patvirtinti",
+    "sectionNotifications": "PRANEŠIMAI",
+    "notifKinds": {
+      "superlike": "Gauti superlikes",
+      "superlikeAccepted": "Priimti superlikes",
+      "eventBoost": "Renginių pagreitinimai",
+      "streakExpiring": "Serijos priminimai",
+      "profileView": "Profilio peržiūros",
+      "socialClick": "Jūsų socialinių tinklų peržiūros",
+      "inactiveProfileViews": "Peržiūros, gautos jūsų nebuvimo metu",
+      "referralValidated": "Rekomendacija patvirtinta",
+      "referralRewardGranted": "Rekomendacijos apdovanojimas",
+      "nightModeActivated": "Nakties režimo aktyvavimas",
+      "atRiskReactivation": "Reaktyvavimo priminimai",
+      "weeklyDigest": "Savaitės apžvalga"
+    },
+    "notifCategories": {
+      "social": "Socialinė veikla",
+      "rewards": "Serijos ir apdovanojimai",
+      "system": "Sistema ir apžvalgos"
+    },
+    "sectionPrivacy": "PRIVATUMAS IR BDAR",
+    "privacyPolicyLink": "Privatumo politika",
+    "consent": "Sutikimas",
+    "analyticsLabel": "Analitika",
+    "dataSaleTitle": "Duomenų pardavimas (CCPA)",
+    "dataSaleDesc": "Mes neparduodame ir nesidaliname jūsų asmens duomenimis su trečiosiomis šalimis reklamos tikslais.",
+    "invisibleModeTitle": "Nematomas režimas",
+    "invisibleModeDesc": "Būsite nematomi kitiems vartotojams vietose, tačiau negalėsite peržiūrėti žemėlapio ar vietų sąrašo, kol šis režimas aktyvus.",
+    "shareLocationTitle": "Bendrinti mano dabartinę vietą",
+    "shareLocationDesc": "Rodo kitiems vartotojams tikslią vietą, kurioje šiuo metu esate, be jūsų miesto. Pagal nutylėjimą išjungta, kad apsaugotų jūsų privatumą ir išvengtų sekimo rizikos.",
+    "policyLoadError": "Nepavyko įkelti privatumo politikos.",
+    "savePrivacyPrefsError": "Nepavyko išsaugoti jūsų privatumo nuostatų",
+    "shareLocationUpdateError": "Nepavyko atnaujinti jūsų dabartinės vietos bendrinimo",
+    "invisibleModeUpdateError": "Nepavyko atnaujinti nematomo režimo",
+    "notifPrefUpdateError": "Nepavyko atnaujinti šios pranešimų nuostatos",
+    "consentSavedTitle": "Sėkmė",
+    "consentSaved": "Sutikimas išsaugotas.",
+    "consentRevoked": "Sutikimas atšauktas.",
+    "consentSaveError": "Nepavyko išsaugoti jūsų sutikimo",
+    "revokeConsentTitle": "Sutikimo atšaukimas",
+    "revokeConsentMessage": "Sutikimo atšaukimas lems visišką jūsų paskyros ir visų jūsų duomenų ištrynimą. Ar norite tęsti?",
+    "cancel": "Atšaukti",
+    "continueLabel": "Tęsti",
+    "currentPasswordRequired": "Įveskite savo dabartinį slaptažodį.",
+    "passwordTooShort": "Naujas slaptažodis turi būti bent 6 simbolių ilgio.",
+    "passwordConfirmMismatch": "Patvirtinimas neatitinka naujo slaptažodžio.",
+    "passwordChangedTitle": "Slaptažodis pakeistas",
+    "passwordChangedMessage": "Jūsų slaptažodis atnaujintas.",
+    "currentPasswordInvalid": "Neteisingas dabartinis slaptažodis arba serverio klaida.",
+    "invalidEmail": "Įveskite galiojantį el. pašto adresą.",
+    "passwordRequiredConfirm": "Įveskite savo slaptažodį patvirtinimui.",
+    "checkInboxTitle": "Patikrinkite savo pašto dėžutę",
+    "checkInboxMessage": "Patvirtinimo el. laiškas išsiųstas adresu {{email}}. Spustelėkite nuorodą, kad patvirtintumėte pakeitimą.",
+    "emailChangeError": "Nepavyko pradėti pakeitimo. Neteisingas slaptažodis arba serverio klaida.",
+    "exportReadyTitle": "Eksportas paruoštas",
+    "exportReadyMessage": "Jūsų duomenys eksportuoti ({{size}} simbolių).",
+    "exportError": "Nepavyko eksportuoti jūsų duomenų",
+    "deleteAccountConfirmTitle": "Ištrinti paskyrą",
+    "deleteAccountConfirmMessage": "Ištrynimas yra negrįžtamas. Ar patvirtinate savo paskyros ištrynimą?",
+    "profileUpdatedTitle": "Profilis",
+    "profileUpdatedMessage": "Jūsų profilis atnaujintas.",
+    "loadBlockedError": "Nepavyko įkelti užblokuotų paskyrų",
+    "unblockError": "Nepavyko atblokuoti šio vartotojo",
+    "sectionAccount": "PASKYRA",
+    "emailLabel": "El. paštas",
+    "notProvided": "Nenurodyta",
+    "change": "Keisti",
+    "passwordLabel": "Slaptažodis",
+    "blockedAccounts": "Užblokuotos paskyros",
+    "helpAndPrivacy": "Pagalba ir privatumas",
+    "terms": "Naudojimo sąlygos",
+    "sectionModeration": "MODERAVIMAS",
+    "moderatorSpace": "Moderatoriaus erdvė",
+    "debugConsole": "Derinimo konsolė",
+    "exportData": "Eksportuoti mano duomenis",
+    "deleteAccount": "Ištrinti mano paskyrą",
+    "logout": "Atsijungti",
+    "save": "Išsaugoti",
+    "close": "Uždaryti",
+    "privacyModalTitle": "Privatumas",
+    "deleteAccountTitle": "Paskyros ištrynimas",
+    "deleteAccountDesc": "Norėdami patvirtinti, įveskite slaptažodį. Šis veiksmas negrįžtamas.",
+    "deleting": "Trinama...",
+    "changePasswordTitle": "Keisti slaptažodį",
+    "currentPasswordPlaceholder": "Dabartinis slaptažodis",
+    "newPasswordPlaceholder": "Naujas slaptažodis (min. 6 simboliai)",
+    "confirmPasswordPlaceholder": "Patvirtinti naują slaptažodį",
+    "changeEmailTitle": "Keisti el. paštą",
+    "currentEmailLabel": "Dabartinis el. paštas: {{email}}",
+    "newEmailPlaceholder": "Naujas el. paštas",
+    "noBlockedAccounts": "Nėra užblokuotų paskyrų.",
+    "unblock": "Atblokuoti"
+  },
+  "statisticsScreen": {
+    "loadError": "Nepavyko gauti statistikos",
+    "loadVisitorsError": "Nepavyko gauti lankytojų sąrašo",
+    "justNow": "Ką tik",
+    "minutesAgo": "prieš {{count}} min",
+    "hoursAgo": "prieš {{count}}h",
+    "yesterday": "Vakar",
+    "daysAgo": "prieš {{count}} d",
+    "title": "Statistika",
+    "comingSoonTitle": "Netrukus 🚀",
+    "comingSoonDesc": "Statistika greitai pasirodys! Galėsi matyti, kas lankosi tavo profilyje ir socialiniuose tinkluose.",
+    "whoStalksTitle": "Kas tave seka? 👀",
+    "whoStalksDesc": "Tapk Premium, kad sužinotum, kas lankosi tavo profilyje ir socialiniuose tinkluose!",
+    "discoverVisitors": "Sužinoti savo lankytojus",
+    "later": "Vėliau",
+    "profileViews": "Profilio peržiūros",
+    "views": "peržiūros",
+    "last30Days": "per pastarąsias 30 dienų",
+    "clicksByNetwork": "Paspaudimai pagal tinklą",
+    "lastVisits": "Naujausi apsilankymai",
+    "noVisitorsTitle": "Niekas dar neaplankė tavo profilio",
+    "noVisitorsDesc": "Toliau tyrinėk vietas, kad būtum atrastas!",
+    "defaultUser": "Vartotojas",
+    "hiddenVisits_one": "{{count}} paslėptas apsilankymas",
+    "hiddenVisits_other": "{{count}} paslėpti apsilankymai",
+    "goPremiumToSeeAll": "Tapk Premium, kad matytum viską",
+    "showMore": "Rodyti daugiau"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Priekabiavimas",
+      "spam": "Šlamštas",
+      "inappropriate": "Netinkamas turinys",
+      "impersonation": "Tapatybės vagystė",
+      "scam": "Sukčiavimas",
+      "other": "Kita"
+    },
+    "statusAvailable": "Pasiekiamas/a",
+    "statusRestricted": "Ribotas matomumas",
+    "statusInvisible": "Nematomas/a",
+    "noUserSelected": "Nepasirinktas joks vartotojas.",
+    "backToList": "Atgal į sąrašą",
+    "superlikeLockedTitle": "Netrukus",
+    "superlikeLockedMessage": "„Superlike“ atsirakina po pirmojo prisijungimo vietoje.",
+    "superlikeSentTitle": "⭐ „Superlike“ išsiųstas!",
+    "superlikeSentMessage": "{{name}} buvo informuotas/a, kad jį/ją pastebėjai.",
+    "errorTitle": "Klaida",
+    "superlikeSendError": "Nepavyko išsiųsti „superlike“.",
+    "blockConfirmTitle": "Blokuoti šį vartotoją?",
+    "blockConfirmMessage": "Daugiau nematysite šio vartotojo, o jis negalės su jumis susisiekti.",
+    "cancel": "Atšaukti",
+    "block": "Blokuoti",
+    "userBlockedTitle": "Vartotojas užblokuotas",
+    "userBlockedMessage": "Šis vartotojas buvo užblokuotas.",
+    "blockError": "Nepavyko užblokuoti šio vartotojo.",
+    "reasonRequiredTitle": "Būtina priežastis",
+    "reasonRequiredMessage": "Prašome nurodyti priežastį.",
+    "reportSentTitle": "Pranešimas išsiųstas",
+    "reportSentMessage": "Dėkojame už jūsų pranešimą.",
+    "reportSendError": "Nepavyko išsiųsti pranešimo.",
+    "backA11y": "Atgal",
+    "moreOptionsA11y": "Daugiau parinkčių",
+    "sendSuperlikeA11y": "Siųsti „superlike“",
+    "superlikeLockedA11y": "„Superlike“ užrakintas, atsirakina po pirmojo prisijungimo vietoje",
+    "currentlyAt": "Šiuo metu {{place}}",
+    "mutualConnectionBanner": "Šis žmogus nori susisiekti",
+    "socialsHidden": "Šis vartotojas nesidalija savo socialiniais tinklais",
+    "noBio": "Aprašymas dar nepridėtas.",
+    "noSocials": "Jokių socialinių tinklų",
+    "actionsTitle": "Veiksmai",
+    "report": "Pranešti",
+    "reportUserTitle": "Pranešti apie vartotoją",
+    "reportWarning": "Piktnaudžiavimas pranešimais gali sukelti sankcijas. Prašome būti sąžiningiems.",
+    "categoryLabel": "Kategorija",
+    "reasonLabel": "Priežastis",
+    "reasonPlaceholder": "Trumpai paaiškinkite priežastį",
+    "descriptionLabel": "Aprašymas (neprivalomas)",
+    "descriptionPlaceholder": "Papildoma informacija",
+    "sending": "Siunčiama...",
+    "sendReport": "Siųsti pranešimą",
+    "justNow": "Ką tik",
+    "minutesAgo_one": "Prieš {{count}} min",
+    "minutesAgo_other": "Prieš {{count}} min",
+    "hoursAgo_one": "Prieš {{count}} val.",
+    "hoursAgo_other": "Prieš {{count}} val.",
+    "yesterday": "Vakar",
+    "daysAgo_one": "Prieš {{count}} dieną",
+    "daysAgo_other": "Prieš {{count}} dienas"
+  },
+  "warningsScreen": {
+    "title": "Įspėjimai",
+    "banAlert": "Toks elgesys gali sukelti laikiną arba nuolatinį draudimą naudotis programėle.",
+    "empty": "Nėra įspėjimų.",
+    "typeLabel": "Įspėjimo tipas",
+    "notSpecified": "Nenurodyta",
+    "notSpecifiedFem": "Nenurodyta",
+    "reasonLabel": "Priežastis"
+  },
+  "common": {
+    "close": "Uždaryti",
+    "errorTitle": "Klaida"
+  },
+  "streakCard": {
+    "hintReady": "Tavo apdovanojimas paruoštas!",
+    "hintGrow": "Prisijunk kasdien, kad jis augtų.",
+    "claimBoost": "Atsiimk savo boost",
+    "claimSuperlike": "Atsiimk savo superlike"
+  },
+  "coteCard": {
+    "messageTop": "Viršūnėje! Prisijunk rytoj, kad tai išlaikytum.",
+    "messageZero": "Prisijunk šiandien, kad tai vėl paleistum."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Būk viršuje 30 min",
+    "boostPack5Desc": "Geriausias kainos ir kokybės santykis",
+    "superlikePack3Desc": "Parodyk savo susidomėjimą unikaliu būdu",
+    "superlikePack10Desc": "Tikriems ryšių kūrėjams",
+    "badgePopular": "Populiaru",
+    "badgeBestOffer": "Geriausias pasiūlymas",
+    "notAvailableTitle": "Neprieinama",
+    "notAvailableMessage": "Šis paketas parduotuvėje dar nepasiekiamas.",
+    "purchaseErrorMessage": "Pirkimo užbaigti nepavyko.",
+    "simulate": "Simuliuoti"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Ieškok šiose vietose",
+    "categoryBars": "Barai",
+    "categoryClubs": "Klubai",
+    "categoryRestos": "Restoranai",
+    "categoryPubs": "Pubai",
+    "categoryGyms": "Sporto salės",
+    "categoryCafes": "Kavinės",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Bibliotekos"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonimas"
+  },
+  "locationMapView": {
+    "loadError": "Nepavyko įkelti žemėlapio",
+    "renderError": "Klaida įkeliant žemėlapį"
+  },
+  "churnSurveyModal": {
+    "title": "Minutėlę prieš išeinant?",
+    "subtitle": "Padėk mums suprasti kodėl.",
+    "reasonTooManyNotifications": "Per daug pranešimų",
+    "reasonPrivacyConcern": "Man nepatogu dėl dalijimosi",
+    "reasonNotUseful": "Man tai daugiau nebenaudinga",
+    "reasonOther": "Kita priežastis",
+    "dismiss": "Praleisti",
+    "thanks": "Ačiū už atsiliepimą 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Paieška",
+    "tabNearby": "Netoliese esančios vietos",
+    "tabAccount": "Paskyra"
+  },
+  "documentViewer": {
+    "openError": "Nepavyko atidaryti šio dokumento.",
+    "defaultLabel": "Peržiūrėti dokumentą"
+  },
+  "vibeFab": {
+    "toDay": "Perjungti į dienos režimą",
+    "toNight": "Perjungti į nakties režimą"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Vietos bendrinimas aktyvus"
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
   Easing,
@@ -65,6 +66,7 @@ function useReduceMotion() {
 }
 
 export default function VibeTransitOverlay() {
+  const { t } = useTranslation();
   const { transitioningTo, skipVibeTransition } = useVibe();
   const goingToMoon = transitioningTo === 'moon';
   const reduceMotion = useReduceMotion();
@@ -90,6 +92,23 @@ export default function VibeTransitOverlay() {
       prog.value = 0;
     }
   }, [transitioningTo, duration]);
+
+  // Filet de sécurité indépendant de VibeContext/AppState : cet overlay est
+  // plein écran et capte tous les touchers tant que `transitioningTo` est
+  // vrai (voir onStartShouldSetResponder ci-dessous), donc s'il reste monté
+  // au-delà de sa propre durée d'animation — pour quelque raison que ce
+  // soit, y compris un cas non couvert par la reprise sur AppState dans
+  // VibeContext — l'app entière se retrouve gelée (le scroll natif continue
+  // de fonctionner mais plus aucun toucher JS n'est délivré). Ce watchdog ne
+  // dépend d'aucun autre mécanisme : il se contente de forcer la résolution
+  // de la transition si elle dure sensiblement plus longtemps que prévu.
+  useEffect(() => {
+    if (!transitioningTo) return undefined;
+    const watchdog = setTimeout(() => {
+      skipVibeTransition();
+    }, duration + 1500);
+    return () => clearTimeout(watchdog);
+  }, [transitioningTo, duration, skipVibeTransition]);
 
   // Fade the whole overlay in/out at the very start/end of the transition so it
   // doesn't pop in/out abruptly. `prog` spans the full transition duration and
@@ -159,19 +178,19 @@ export default function VibeTransitOverlay() {
   if (!transitioningTo) return null;
 
   const label = goingToMoon ? 'Le soleil se couche…' : "Le monde s'éveille…";
-  const sub = 'Recherchez dans ces lieux';
+  const sub = t('vibeTransitOverlay.sub');
   const items = goingToMoon
     ? [
-        { icon: '🍸', label: 'Bars' },
-        { icon: '🪩', label: 'Clubs' },
-        { icon: '🍕', label: 'Restos' },
-        { icon: '🍻', label: 'Pubs' },
+        { icon: '🍸', label: t('vibeTransitOverlay.categoryBars') },
+        { icon: '🪩', label: t('vibeTransitOverlay.categoryClubs') },
+        { icon: '🍕', label: t('vibeTransitOverlay.categoryRestos') },
+        { icon: '🍻', label: t('vibeTransitOverlay.categoryPubs') },
       ]
     : [
-        { icon: '🏋️', label: 'Gyms' },
-        { icon: '☕️', label: 'Cafés' },
-        { icon: '🏢', label: 'Coworking' },
-        { icon: '📚', label: 'Bibliothèques' },
+        { icon: '🏋️', label: t('vibeTransitOverlay.categoryGyms') },
+        { icon: '☕️', label: t('vibeTransitOverlay.categoryCafes') },
+        { icon: '🏢', label: t('vibeTransitOverlay.categoryCoworking') },
+        { icon: '📚', label: t('vibeTransitOverlay.categoryLibraries') },
       ];
 
   return (

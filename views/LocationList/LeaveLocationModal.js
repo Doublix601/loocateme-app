@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, Pressable, Dimensions, ActivityIndicator } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 const { width, height } = Dimensions.get('window');
 
@@ -9,6 +10,7 @@ const { width, height } = Dimensions.get('window');
 // actuellement checké (cf. LocationCard.onLongPressHere) : propose un
 // check-out manuel via forceCheckOut (cf. LocationListScreen.handleConfirmLeaveLocation).
 const LeaveLocationModal = ({ visible, item, colors, isDark, loading, onConfirm, onClose }) => {
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={[styles.modalContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
@@ -16,10 +18,10 @@ const LeaveLocationModal = ({ visible, item, colors, isDark, loading, onConfirm,
         <Pressable style={StyleSheet.absoluteFill} onPress={loading ? undefined : onClose} />
         <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.modalTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>
-            {item?.name || 'Ce lieu'}
+            {item?.name || t('locationList.leaveModal.defaultName')}
           </Text>
           <Text style={[styles.modalSubtitle, { color: colors.textSecondary }]}>
-            Tu es actuellement checké ici. Veux-tu quitter ce lieu ?
+            {t('locationList.leaveModal.subtitle')}
           </Text>
 
           <TouchableOpacity onPress={onConfirm} disabled={loading} style={styles.confirmTouchable}>
@@ -27,13 +29,13 @@ const LeaveLocationModal = ({ visible, item, colors, isDark, loading, onConfirm,
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.confirmButtonText}>Je ne suis plus ici</Text>
+                <Text style={styles.confirmButtonText}>{t('locationList.leaveModal.confirm')}</Text>
               )}
             </LinearGradient>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onClose} disabled={loading} style={styles.closeButton}>
-            <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>Annuler</Text>
+            <Text style={[styles.closeButtonText, { color: colors.textSecondary }]}>{t('locationList.leaveModal.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </View>

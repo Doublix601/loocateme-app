@@ -137,7 +137,16 @@ export function VibeProvider({ children, onVibeChanged }) {
       // JS ne se déclenche pas de façon fiable en arrière-plan, ce qui
       // laissait l'overlay bloqué et gelait l'app au retour au premier
       // plan. On force la résolution immédiate de la transition.
-      if (transitionTimer.current) {
+      // On se base sur `transitioningToRef` (l'état réel affiché par
+      // l'overlay) plutôt que sur les refs de timer : ces dernières ne sont
+      // qu'une implémentation de la façon dont la transition se termine
+      // normalement, et rien ne garantit qu'elles restent synchronisées
+      // avec `transitioningTo` dans tous les cas (ex: futur changement,
+      // course avec le déclenchement d'un timer pile au retour au premier
+      // plan). Se fier à elles pour décider s'il faut réparer l'état
+      // laissait ce filet de sécurité potentiellement no-op alors même que
+      // l'overlay bloquant reste affiché.
+      if (transitioningToRef.current) {
         try {
           clearTimeout(transitionTimer.current);
         } catch (_) {}

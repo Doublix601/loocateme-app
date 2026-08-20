@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Bejelentkezés",
+      "welcomeBack": "Üdvözlünk újra!",
+      "subtitle": "Jelentkezz be a folytatáshoz",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Jelszó",
+      "submit": "Bejelentkezés",
+      "forgotPassword": "Elfelejtett jelszó?",
+      "noAccount": "Még nincs fiókod?",
+      "createAccount": "Fiók létrehozása",
+      "emailNotVerifiedTitle": "Az e-mail nincs megerősítve",
+      "emailNotVerifiedMessage": "E-mail címed még nincs megerősítve. Most küldtünk egy új megerősítő e-mailt. Kattints a linkre a fiókod aktiválásához, majd próbáld újra.",
+      "authFailedTitle": "Sikertelen bejelentkezés",
+      "authFailedMessage": "Nem sikerült bejelentkeztetni. Ellenőrizd az adataidat, és próbáld újra."
+    },
+    "signup": {
+      "passwordMismatch": "A jelszavak nem egyeznek.",
+      "requiredFields": "Minden mezőt ki kell tölteni.",
+      "birthdateRequired": "A születési dátum megadása kötelező.",
+      "under18": "Legalább 18 évesnek kell lenned a regisztrációhoz.",
+      "policyLoadError": "Az adatvédelmi szabályzatot nem sikerült betölteni. Próbáld újra."
+    }
+  },
+  "consent": {
+    "title": "Adatvédelem",
+    "changelogTitle": "Mi változott",
+    "decline": "Elutasítás",
+    "accept": "Elfogadás",
+    "accepting": "Mentés...",
+    "declineInfoTitle": "Információ",
+    "declineInfoMessage": "Az alkalmazás használatához el kell fogadnod az adatvédelmi szabályzatot.",
+    "acceptErrorTitle": "Hiba",
+    "acceptErrorMessage": "A hozzájárulásodat nem sikerült menteni. Próbáld újra."
+  },
+  "ageVerification": {
+    "title": "Életkor-ellenőrzés",
+    "urlMissing": "Hiányzik az ellenőrzési URL",
+    "startError": "Az életkor-ellenőrzést nem sikerült elindítani. Próbáld újra.",
+    "retry": "Újra",
+    "declinedTitle": "Ellenőrzés elutasítva",
+    "declinedMessage": "Nem sikerült megerősítenünk, hogy elmúltál 18 éves. Próbáld újra."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Nyelv",
+      "systemDefault": "Telefon nyelve"
+    }
+  },
+  "forgotPassword": {
+    "title": "Elfelejtett jelszó",
+    "resetTitle": "Jelszó visszaállítása",
+    "instructions": "Add meg az e-mail címedet, hogy megkapd a visszaállító linket.",
+    "emailPlaceholder": "E-mail",
+    "submit": "Link küldése",
+    "successTitle": "E-mail elküldve",
+    "successMessage": "Ha létezik fiók, elküldtünk egy e-mailt.",
+    "errorTitle": "Hiba",
+    "errorFallback": "Kérjük, próbáld újra"
+  },
+  "dataManagement": {
+    "title": "Adatvédelem",
+    "export": {
+      "title": "Adataim exportálása",
+      "desc": "Töltsd le adataid másolatát (profil, közösségi hálózatok, beállítások).",
+      "button": "Exportálás",
+      "buttonWorking": "Kérjük, várj...",
+      "successTitle": "Adatexport",
+      "successMessage": "Az exportod elkészült és megjelent a konzolon.",
+      "errorTitle": "Hiba",
+      "errorMessage": "Az adataidat most nem sikerült exportálni. Próbáld újra."
+    },
+    "delete": {
+      "title": "Fiókom törlése",
+      "desc": "Véglegesen törli fiókodat és minden hozzá tartozó adatot.",
+      "passwordPlaceholder": "Erősítsd meg jelszavaddal",
+      "button": "Végleges törlés",
+      "passwordRequiredTitle": "Jelszó szükséges",
+      "passwordRequiredMessage": "Kérjük, add meg jelszavadat.",
+      "confirmTitle": "Megerősítés",
+      "confirmMessage": "Ez a művelet visszavonhatatlan. Biztosan törölni szeretnéd a fiókodat?",
+      "cancel": "Mégse",
+      "confirm": "Törlés",
+      "successTitle": "Fiók törölve",
+      "successMessage": "Fiókod és adataid törölve lettek.",
+      "errorTitle": "Hiba",
+      "errorMessage": "A törlés sikertelen. Érvénytelen jelszó vagy szerverprobléma."
+    }
+  },
+  "editProfile": {
+    "title": "Profilom szerkesztése",
+    "subtitle": "Koppints egy mezőre a szerkesztéshez",
+    "notSet": "Nincs megadva",
+    "backLabel": "Vissza",
+    "fields": {
+      "firstName": "Keresztnév",
+      "lastName": "Vezetéknév",
+      "customName": "Egyéni név",
+      "bio": "Bio",
+      "birthdate": "Születési dátum",
+      "gender": "Nem"
+    },
+    "gender": {
+      "male": "Fiú",
+      "female": "Lány",
+      "preferNotToSay": "Inkább nem mondom meg"
+    },
+    "photo": {
+      "notSupportedTitle": "Nem támogatott",
+      "notSupportedMessage": "A kamera nem érhető el a weben.",
+      "cameraPermissionTitle": "Engedély szükséges",
+      "cameraPermissionMessage": "Az alkalmazásnak hozzáférésre van szüksége a kamerához fénykép készítéséhez.",
+      "galleryPermissionMessage": "Az alkalmazásnak hozzáférésre van szüksége a fotóidhoz egy kép kiválasztásához.",
+      "errorTitle": "Hiba",
+      "uploadErrorMessage": "A képet nem sikerült feltölteni",
+      "cameraOpenError": "A kamerát nem sikerült megnyitni.",
+      "galleryOpenError": "A galériát nem sikerült megnyitni.",
+      "deleteErrorMessage": "A profilképet nem sikerült törölni",
+      "deleteConfirmTitle": "Törlöd a profilképet?",
+      "deleteConfirmMessage": "Ez a művelet végleges.",
+      "cancel": "Mégse",
+      "delete": "Törlés",
+      "modalTitle": "Profilkép",
+      "takePhoto": "📸 Fénykép készítése",
+      "sending": "Feltöltés...",
+      "chooseGallery": "🖼️ Kiválasztás a galériából",
+      "deletePhoto": "🗑️ Fénykép törlése",
+      "deleting": "Törlés..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Érvénytelen keresztnév",
+      "firstNameInvalidMessage": "A keresztnévnek nagybetűvel kell kezdődnie, és tartalmazhat betűket (ékezetek engedélyezettek), szóközöket, aposztrófokat vagy kötőjeleket.",
+      "lastNameInvalidTitle": "Érvénytelen vezetéknév",
+      "lastNameInvalidMessage": "A vezetéknévnek nagybetűvel kell kezdődnie, és tartalmazhat betűket (ékezetek engedélyezettek), szóközöket, aposztrófokat vagy kötőjeleket.",
+      "incompleteIdentityTitle": "Hiányos személyazonosság",
+      "incompleteIdentityMessage": "Adj meg egy Egyéni nevet VAGY egy Keresztnevet ÉS egy Vezetéknevet.",
+      "customNameRequiredTitle": "Egyéni név szükséges",
+      "customNameRequiredMessage": "Nem távolíthatod el az egyéni nevet, amíg a kereszt- vagy vezetéknév üres.",
+      "invalidDateTitle": "Érvénytelen dátum",
+      "invalidDateMessage": "Kérjük, válassz érvényes születési dátumot.",
+      "minAgeTitle": "Minimum életkor szükséges",
+      "minAgeMessage": "Legalább 18 évesnek kell lenned.",
+      "updateErrorMessage": "A profilodat nem sikerült frissíteni"
+    },
+    "modal": {
+      "editPrefix": "Szerkesztés",
+      "editGeneric": "Szerkesztés",
+      "selectDate": "Válassz dátumot",
+      "cancel": "Mégse",
+      "save": "Mentés",
+      "placeholders": {
+        "firstName": "A keresztneved",
+        "lastName": "A vezetékneved",
+        "customName": "Az egyéni neved",
+        "bio": "Mesélj egy kicsit magadról...",
+        "default": "A szöveged"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Láthatatlan mód aktív",
+      "subtitle": "Nem látod a helyeket magad körül, amíg a láthatatlan mód be van kapcsolva. Kapcsold ki a helyek böngészéséhez.",
+      "disableButton": "Láthatatlan mód kikapcsolása"
+    },
+    "error": {
+      "title": "Helyzet nem elérhető",
+      "subtitle": "Engedélyezd a helyszolgáltatásokat a készüléked beállításaiban, hogy lásd a körülötted lévő helyeket.",
+      "retry": "Újra"
+    },
+    "empty": {
+      "title": "Egyelőre csendes zóna",
+      "subtitle": "Nem található aktív hely a közeledben. Bővítsd a sugarat, vagy javasolj új helyet.",
+      "expandRadius": "Sugár bővítése",
+      "suggestLocation": "Hely javaslása"
+    },
+    "footer": {
+      "loadingMore": "További helyek betöltése…",
+      "loadMoreError": "Nem sikerült további helyeket betölteni. Ellenőrizd a kapcsolatot.",
+      "retry": "Újra",
+      "reachedEnd": "Megnézted az összes aktív helyet a közeledben. Mozogj vagy keress, hogy többet láss."
+    },
+    "leaveModal": {
+      "defaultName": "Ez a hely",
+      "subtitle": "Jelenleg itt vagy bejelentkezve. El szeretnéd hagyni ezt a helyet?",
+      "confirm": "Már nem vagyok itt",
+      "cancel": "Mégse"
+    },
+    "sections": {
+      "moreLocations": "További helyek neked",
+      "sponsored": "Kiemelt",
+      "trending": "Most történik"
+    },
+    "filters": {
+      "all": "Összes"
+    },
+    "card": {
+      "visitors_one": "{{count}} látogató",
+      "visitors_other": "{{count}} látogató",
+      "sponsored": "SZPONZORÁLT",
+      "imHere": "Itt vagyok",
+      "editLocation": "Helyzetem szerkesztése"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Manuális bejelentkezés aktiválva",
+    "checkinModeAutoOn": "Automatikus bejelentkezés aktiválva",
+    "checkinModeErrorTitle": "Hiba",
+    "checkinModeErrorMessage": "Most nem sikerült megváltoztatni a bejelentkezési módot.",
+    "checkedInToast": "Most itt vagy: {{name}}!",
+    "checkinErrorMessage": "Most nem sikerült megerősíteni a jelenlétedet.",
+    "leftLocationToast": "Elhagytad ezt a helyet.",
+    "boostActiveTitle": "Boost aktív",
+    "boostActiveLeaveMessage": "Nem hagyhatod el ezt a helyet, amíg a boostod fut.",
+    "leaveErrorMessage": "Most nem sikerült kijelentkeztetni erről a helyről.",
+    "boostInProgressTitle": "Boost folyamatban",
+    "boostInProgressMessage": "A boostod aktív: várj, amíg véget ér, mielőtt helyet váltasz.",
+    "refreshErrorToast": "Most nem sikerült frissíteni.",
+    "disableInvisibleErrorMessage": "Most nem sikerült kikapcsolni a láthatatlan módot.",
+    "switchToManualLabel": "Váltás manuális bejelentkezésre",
+    "switchToAutoLabel": "Váltás automatikus bejelentkezésre",
+    "entryAuto": "Auto. belépés",
+    "entryManual": "Manuális belépés",
+    "showMapLabel": "Térkép megjelenítése",
+    "showListLabel": "Lista megjelenítése",
+    "mapButton": "Térkép",
+    "listButton": "Lista"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Hiba",
+    "checkinErrorMessage": "Most nem sikerült megerősíteni a jelenlétedet.",
+    "boostActiveHereTitle": "Boost folyamatban",
+    "boostActiveHereMessage": "A boostod itt aktív: várj, amíg véget ér, mielőtt elhagyod ezt a helyet.",
+    "boostActiveMessage": "A boostod aktív: várj, amíg véget ér.",
+    "notFound": "A hely nem található",
+    "back": "Vissza",
+    "popularityVeryPopular": "Nagyon népszerű",
+    "popularityPopular": "Népszerű",
+    "popularityActive": "Aktív",
+    "popularityCalm": "Nyugodt",
+    "checkinConfirmed": "Megerősítve!",
+    "imHere": "Itt vagyok",
+    "viewPdf": "PDF megtekintése",
+    "pdfLoadError": "Ez a PDF nem jeleníthető meg.",
+    "openInBrowser": "Megnyitás böngészőben",
+    "profilesHere": "Profilok itt",
+    "recentlyCrossed": "Nemrég találkoztatok",
+    "seeMore": "Több megtekintése",
+    "boosted": "Megerősítve",
+    "boostProfileHere": "Profilom megerősítése itt",
+    "boostLockedAfterCheckins": "Boost 🔓 2 bejelentkezés után"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Megosztás",
+      "shareLabel": "Profilom megosztása",
+      "qrCode": "QR-kód",
+      "qrLabel": "QR-kódom megjelenítése",
+      "stats": "Statisztikák",
+      "statsLabel": "Statisztikáim megtekintése"
+    },
+    "qr": {
+      "title": "Szkenneld be a profilom megtekintéséhez",
+      "hint": "Ha az alkalmazás nincs telepítve, átirányítunk az áruházba ({{store}})."
+    },
+    "status": {
+      "title": "Az állapotod",
+      "close": "Bezárás",
+      "public": "Nyilvános profil",
+      "private": "Privát profil",
+      "incognito": "Inkognitó",
+      "pickLabel": "Állapotom kiválasztása"
+    },
+    "warnings": {
+      "title": "Figyelmeztetések",
+      "message_one": "{{count}} figyelmeztetésed van.",
+      "message_other": "{{count}} figyelmeztetésed van.",
+      "tapForDetails": "Koppints a részletekért"
+    },
+    "referral": {
+      "invite": "Hívd meg a barátaidat",
+      "label": "Ajánlás: hívd meg a barátaidat"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Oszd meg a helyzetedet",
+      "message": "Kapcsold be a jelenlegi helyed megosztását, hogy a közelben lévő felhasználók könnyebben megtaláljanak.",
+      "activate": "Aktiválás",
+      "noThanks": "Nem, köszönöm"
+    },
+    "social": {
+      "addTitle": "Hálózat hozzáadása",
+      "usernamePlaceholder": "@felhasználónév vagy {{platform}} azonosító",
+      "selectPlaceholder": "Válassz egy hálózatot",
+      "snapchatHint": "Megjegyzés: A Snapchat nem engedélyez közvetlen linkeket, csak add meg a felhasználóneved.",
+      "save": "Mentés",
+      "saveLabel": "Mentés",
+      "editTitle": "{{platform}} szerkesztése",
+      "usernamePlaceholderSimple": "Felhasználónév",
+      "delete": "Törlés",
+      "heading": "Közösségi hálózatok",
+      "addLabel": "Közösségi hálózat hozzáadása"
+    },
+    "rewards": {
+      "heading": "Jutalmak",
+      "superlikes": "Superlikes",
+      "boosts": "Boostok",
+      "buy": "Vásárlás",
+      "buyLabel": "Superlikes vagy boostok vásárlása",
+      "premiumCta": "👑 Legyél Premium",
+      "premiumLabel": "Legyél Premium",
+      "superlikeHistoryLabel_one": "Superlike előzmények megtekintése, {{count}} maradt",
+      "superlikeHistoryLabel_other": "Superlike előzmények megtekintése, {{count}} maradt"
+    },
+    "currentlyAt": "Jelenleg itt: {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Adj hozzá egy mondatot, hogy bemutatkozz."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "A profilképed",
+      "photoDesc": "Változtasd meg a profilképed a beállításokból (ikon jobb felül).",
+      "bioTitle": "A bio-d",
+      "bioDesc": "A bio-d a beállításokból szerkeszthető. Ez az első, amit mások látnak.",
+      "socialTitle": "A közösségi hálózataid",
+      "socialDesc": "Koppints a ➕ gombra hálózat hozzáadásához. Tartsd nyomva az ikont szerkesztéshez vagy törléshez.",
+      "statusTitle": "Az állapotod",
+      "statusDesc": "Nyilvános profil = mindenki számára látható · Privát profil = hálózatok rejtve · Inkognitó = láthatatlan. Koppints a módosításhoz."
+    },
+    "errorTitle": "Hiba",
+    "shareLocationUpdateError": "A jelenlegi helyzeted megosztását nem sikerült frissíteni",
+    "comingSoonTitle": "Hamarosan elérhető 🚀",
+    "comingSoonStats": "A statisztikák hamarosan érkeznek! Látni fogod, ki látogatja a profilodat és közösségi hálózataidat.",
+    "shareTitle": "Megosztás",
+    "shareError": "A megosztás nem sikerült.",
+    "boostClaimedToast": "Boost beváltva 🚀",
+    "superlikeClaimedToast": "Superlike beváltva ⭐️",
+    "claimRewardError": "A jutalmat nem sikerült beváltani",
+    "statusVisible": "Látható módban vagy. Mindenki láthatja a közösségi hálózataidat. Teljes mértékben kihasználod az appot.",
+    "statusRestricted": "Korlátozottan látható módban vagy. Senki sem láthatja a közösségi hálózataidat.",
+    "statusInvisible": "Láthatatlan módban vagy. Mostantól senki sem lát téged.",
+    "statusUpdateError": "Az állapotot nem sikerült frissíteni",
+    "unsupportedPlatform": "Nem támogatott platform",
+    "handleRequired": "Kérjük, adj meg egy azonosítót",
+    "invalidInstagramHandle": "Érvénytelen Instagram felhasználónév. Példa: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Érvénytelen TikTok felhasználónév. Példa: https://www.tiktok.com/@username",
+    "addSocialError": "A közösségi hálózatot nem sikerült hozzáadni",
+    "invalidLinkTitle": "Érvénytelen link",
+    "invalidInstagramHandleShort": "Érvénytelen Instagram felhasználónév",
+    "invalidTiktokHandleShort": "Érvénytelen TikTok felhasználónév",
+    "cannotOpenInstagramTitle": "Az Instagramot nem sikerült megnyitni",
+    "cannotOpenTiktokTitle": "A TikTokot nem sikerült megnyitni",
+    "tryAgainLater": "Kérjük, próbáld újra később.",
+    "editSocialError": "A közösségi hálózatot nem sikerült szerkeszteni",
+    "deleteSocialError": "A közösségi hálózatot nem sikerült törölni",
+    "backLabel": "Vissza",
+    "settingsLabel": "Beállítások",
+    "streakTitle": "A sorozatod 🔥",
+    "streakMessage": "Jelentkezz be minden nap, hogy növeld a sorozatodat. A 7. napon válts be egy superlike-ot. A 14. napon válts be egy boostot — a sorozatod ekkor 0-ról indul újra."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Fedezd fel, ki van a közeledben",
+        "desc": "Nézd meg valós időben a körülötted lévő élettel teli helyeket és az ott lévő embereket — most azonnal."
+      },
+      "checkin": {
+        "title": "Automatikus bejelentkezés, nappal vagy éjjel",
+        "desc": "Amint belépsz egy helyre, automatikusan megjelensz ott — és látod, ki van ott. Az app kedved szerint vált Nappali mód (kávézók, parkok, sport…) és Éjszakai mód (bárok, éttermek, klubok…) között."
+      },
+      "profile": {
+        "title": "A profilod, a pezsgő helyek",
+        "desc": "Add hozzá közösségi hálózataidat, hogy megtaláljanak, nézd meg a körülötted lévő profilokat. Minden hely 1-3 csillagot is mutat a valós látogatottság alapján — minél élénkebb, annál jobban ragyog."
+      },
+      "referral": {
+        "title": "Egy barátod hívott meg?",
+        "desc": "Add meg az ő ajánlási kódját (opcionális) — ez segít neki egy ingyenes Premium hónapot feloldani."
+      }
+    },
+    "referralPlaceholder": "Ajánlási kód",
+    "next": "Tovább",
+    "start": "Kezdjük 🚀",
+    "skip": "Kihagyás"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Lásd, ki nézi meg a profilodat",
+      "Láthatósági boostok (1 ingyenes csomag)",
+      "Superlikes (3/hét ingyen)",
+      "Láthatatlan mód",
+      "Keresési sugár 2 km-ig",
+      "Fejlett statisztikák",
+      "Bővített értesítések"
+    ],
+    "slides": {
+      "views": {
+        "title": "Ki keres fel téged?",
+        "desc": "Tudd meg valós időben, ki nézi a profilodat."
+      },
+      "boosts": {
+        "title": "Láthatósági boostok",
+        "desc": "Ugorj a lista élére 30 percre a helyeden."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Mutass különleges érdeklődést valaki iránt, akit észreveszel."
+      },
+      "invisible": {
+        "title": "Láthatatlan mód",
+        "desc": "Tűnj el a közeli felhasználók listájáról, amikor csak akarod."
+      },
+      "radius": {
+        "title": "Kibővített sugár",
+        "desc": "Fedezz fel akár 2 km-t magad körül (500 m az ingyenes verzióban)."
+      },
+      "stats": {
+        "title": "Fejlett statisztikák",
+        "desc": "Kövesd nyomon a megtekintéseket és kattintásokat minden közösségi hálózatodon."
+      }
+    },
+    "trialError": "Az ingyenes próbaidőszakot nem sikerült elindítani.",
+    "errorTitle": "Hiba",
+    "offersUnavailableTitle": "Az ajánlatok nem érhetők el",
+    "offersUnavailableMessage": "Az előfizetési ajánlatok még nincsenek betöltve. Próbáld újra egy pillanat múlva.",
+    "purchaseError": "A vásárlást nem sikerült véglegesíteni.",
+    "restoredTitle": "✅ Vásárlások visszaállítva",
+    "restoredMessage": "A Premium előfizetésed aktív.",
+    "noRestoreTitle": "Nem található vásárlás",
+    "noRestoreMessage": "Egyetlen aktív előfizetést sem sikerült visszaállítani.",
+    "restoreError": "A vásárlásokat nem sikerült visszaállítani.",
+    "closeLabel": "Bezárás",
+    "title": "👑 Premium",
+    "subtitle": "Oldj fel minden funkciót",
+    "debugBanner": "⚠️ Fizetések letiltva (hibakeresési mód)",
+    "monthly": "Havi",
+    "perMonth": "/hó",
+    "annual": "Éves",
+    "perYear": "/év",
+    "mostChosen": "LEGNÉPSZERŰBB",
+    "allIncluded": "MINDEN BENNE VAN",
+    "ctaSimulate": "Premium előfizetés szimulálása",
+    "ctaTrial": "Kezdd el 7 napos ingyenes próbaidőszakomat",
+    "ctaLoading": "Ajánlatok betöltése…",
+    "ctaSubscribe": "Feliratkozás",
+    "thenAnnual": "Majd {{price}}/év · Bármikor lemondható",
+    "thenMonthly": "Majd {{price}}/hó · Bármikor lemondható",
+    "restorePurchases": "Vásárlásaim visszaállítása",
+    "legalText": "Az előfizetés automatikusan megújul, hacsak nem mondod le a jelenlegi időszak vége előtt. Kezeld előfizetéseidet az App Store / Google Play beállításaiban. ",
+    "privacyPolicy": "Adatvédelmi szabályzat",
+    "terms": "Feltételek"
+  },
+  "premiumWelcome": {
+    "header": "👑 Üdvözlünk a Premiumban",
+    "finalTitle": "Kezdjük!",
+    "finalDesc": "Élvezd most az összes új Premium előnyödet.",
+    "discover": "Felfedezés",
+    "next": "Tovább",
+    "skip": "Kihagyás"
+  },
+  "referralScreen": {
+    "loadError": "Az ajánlási információidat nem sikerült betölteni.",
+    "errorTitle": "Hiba",
+    "shareMessage": "Csatlakozz hozzám a LoocateMe-n 👋\n\n{{url}}",
+    "shareTitle": "Hívj meg egy barátot a LoocateMe-re",
+    "shareErrorTitle": "Megosztás",
+    "shareError": "A megosztás nem sikerült.",
+    "codeSavedTitle": "Ajánlás",
+    "codeSaved": "Ajánlási kód mentve!",
+    "selfReferralError": "Nem használhatod a saját kódodat.",
+    "alreadyReferredError": "Már használtál egy ajánlási kódot.",
+    "invalidCodeError": "Ez az ajánlási kód érvénytelen.",
+    "genericCodeError": "Ezt a kódot nem sikerült érvényesíteni.",
+    "title": "Ajánlás",
+    "infoText": "Hívj meg 5 barátot ebben a hónapban (mindegyiküknek ki kell mennie és el kell végeznie az 1. igazolt bejelentkezését), és szerezz 1 ingyenes Premium hónapot 🎉",
+    "confirmCode": "Megerősíted a(z) „{{code}}” ajánlási kódot?",
+    "validate": "Megerősítés",
+    "rewardActive": "💎 Az ingyenes Premium hónapod aktív",
+    "rewardActiveUntil": " eddig: {{date}}",
+    "yourCode": "A te ajánlási kódod",
+    "shareButton": "📤 Kódom megosztása",
+    "shareLabel": "Kódom megosztása",
+    "progressLabel": "{{count}} / {{target}} ajánlás ebben a hónapban",
+    "invitedFriends": "Meghívott barátok",
+    "noInvites": "Még nincs meghívott barát.",
+    "defaultUser": "Felhasználó",
+    "statusValidated": "Érvényesítve",
+    "statusVoid": "Törölve",
+    "statusPending": "Függőben"
+  },
+  "searchView": {
+    "closeLabel": "Keresés bezárása",
+    "title": "Keresés",
+    "placeholder": "Felhasználónév, hely...",
+    "clearLabel": "Keresés törlése",
+    "filterUsers": "Felhasználók",
+    "filterLocations": "Helyek",
+    "searching": "Keresés folyamatban…",
+    "typeToSearch": "Írj be legalább 2 betűt a kereséshez",
+    "noResults": "Nincs találat erre a keresésre.",
+    "checkFilters": "Ellenőrizd a szűrőket, vagy próbálj más kulcsszót.",
+    "resultsCount_one": "{{count}} találat",
+    "resultsCount_other": "{{count}} találat",
+    "noLongerHere": "Már nincs itt"
+  },
+  "settingsScreen": {
+    "title": "Beállítások",
+    "tabProfile": "Profil",
+    "tabSettings": "Beállítások",
+    "sectionIdentity": "SZEMÉLYES ADATOK",
+    "firstName": "Keresztnév",
+    "lastName": "Vezetéknév",
+    "customNameLabel": "Egyéni név",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ELŐFIZETÉS",
+    "premiumMonthly": "· Havi",
+    "premiumAnnual": "· Éves",
+    "statusLoading": "Állapot betöltése…",
+    "grantedOutsideStore": "App Store/Play Store előfizetésen kívül biztosítva (ingyenes próba vagy speciális ajánlat)",
+    "renewsOn": "Megújul: {{date}}",
+    "expiresOn": "Lejár: {{date}}",
+    "opening": "Megnyitás…",
+    "manageSubscription": "Előfizetésem kezelése",
+    "goPremium": "👑 Legyél Premium",
+    "manageSubError": "Nem sikerült megnyitni az előfizetéskezelést.",
+    "sectionGeneral": "ÁLTALÁNOS",
+    "displayMode": "Megjelenítési mód",
+    "fullNameMode": "Keresztnév Vezetéknév",
+    "classicMode": "Klasszikus",
+    "customMode": "Egyéni",
+    "sectionReferral": "AJÁNLÁS",
+    "alreadyReferred": "Már ajánlottak téged.",
+    "referralHint": "Egy barátod megosztott veled egy kódot? Írd be ide.",
+    "referralPlaceholder": "Ajánlási kód",
+    "validate": "Megerősítés",
+    "sectionNotifications": "ÉRTESÍTÉSEK",
+    "notifKinds": {
+      "superlike": "Kapott superlikes",
+      "superlikeAccepted": "Elfogadott superlikes",
+      "eventBoost": "Esemény boostok",
+      "streakExpiring": "Sorozat emlékeztetők",
+      "profileView": "Profilmegtekintések",
+      "socialClick": "Közösségi hálózataid megtekintései",
+      "inactiveProfileViews": "Távollétedben kapott megtekintések",
+      "referralValidated": "Ajánlás megerősítve",
+      "referralRewardGranted": "Ajánlási jutalom",
+      "nightModeActivated": "Éjszakai mód aktiválva",
+      "atRiskReactivation": "Újraaktiválási emlékeztetők",
+      "weeklyDigest": "Heti összefoglaló"
+    },
+    "notifCategories": {
+      "social": "Közösségi tevékenység",
+      "rewards": "Sorozatok és jutalmak",
+      "system": "Rendszer és összefoglalók"
+    },
+    "sectionPrivacy": "ADATVÉDELEM ÉS GDPR",
+    "privacyPolicyLink": "Adatvédelmi szabályzat",
+    "consent": "Hozzájárulás",
+    "analyticsLabel": "Analitika",
+    "dataSaleTitle": "Adatértékesítés (CCPA)",
+    "dataSaleDesc": "Nem adjuk el és nem osztjuk meg személyes adataidat harmadik felekkel reklámcélokra.",
+    "invisibleModeTitle": "Láthatatlan mód",
+    "invisibleModeDesc": "Láthatatlan leszel a helyeken lévő más felhasználók számára, de nem tudod majd megtekinteni a térképet vagy a helyek listáját, amíg ez a mód aktív.",
+    "shareLocationTitle": "Jelenlegi helyzetem megosztása",
+    "shareLocationDesc": "Megmutatja más felhasználóknak a pontos helyet, ahol jelenleg tartózkodsz, a városod mellett. Alapértelmezetten kikapcsolva, hogy védje a magánéletedet és elkerülje a zaklatás kockázatát.",
+    "policyLoadError": "Az adatvédelmi szabályzatot nem sikerült betölteni.",
+    "savePrivacyPrefsError": "Az adatvédelmi beállításaidat nem sikerült menteni",
+    "shareLocationUpdateError": "A jelenlegi helyzeted megosztását nem sikerült frissíteni",
+    "invisibleModeUpdateError": "A láthatatlan módot nem sikerült frissíteni",
+    "notifPrefUpdateError": "Ezt az értesítési beállítást nem sikerült frissíteni",
+    "consentSavedTitle": "Siker",
+    "consentSaved": "Hozzájárulás mentve.",
+    "consentRevoked": "Hozzájárulás visszavonva.",
+    "consentSaveError": "A hozzájárulásodat nem sikerült menteni",
+    "revokeConsentTitle": "Hozzájárulás visszavonása",
+    "revokeConsentMessage": "A hozzájárulásod visszavonása a fiókod és minden adatod végleges törlését eredményezi. Szeretnéd folytatni?",
+    "cancel": "Mégse",
+    "continueLabel": "Folytatás",
+    "currentPasswordRequired": "Kérjük, add meg jelenlegi jelszavadat.",
+    "passwordTooShort": "Az új jelszónak legalább 6 karakterből kell állnia.",
+    "passwordConfirmMismatch": "A megerősítés nem egyezik az új jelszóval.",
+    "passwordChangedTitle": "Jelszó módosítva",
+    "passwordChangedMessage": "A jelszavad frissítve lett.",
+    "currentPasswordInvalid": "Érvénytelen jelenlegi jelszó vagy szerverhiba.",
+    "invalidEmail": "Kérjük, adj meg egy érvényes e-mail címet.",
+    "passwordRequiredConfirm": "Kérjük, add meg jelszavadat a megerősítéshez.",
+    "checkInboxTitle": "Nézd meg a postaládádat",
+    "checkInboxMessage": "Egy megerősítő e-mailt küldtünk a(z) {{email}} címre. Kattints a linkre a módosítás megerősítéséhez.",
+    "emailChangeError": "A módosítást nem sikerült elindítani. Érvénytelen jelszó vagy szerverhiba.",
+    "exportReadyTitle": "Exportálás kész",
+    "exportReadyMessage": "Az adataid exportálva lettek ({{size}} karakter).",
+    "exportError": "Az adataidat nem sikerült exportálni",
+    "deleteAccountConfirmTitle": "Fiók törlése",
+    "deleteAccountConfirmMessage": "A törlés végleges. Megerősíted a fiókod törlését?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "A profilod frissítve lett.",
+    "loadBlockedError": "A blokkolt fiókokat nem sikerült betölteni",
+    "unblockError": "Ezt a felhasználót nem sikerült feloldani",
+    "sectionAccount": "FIÓK",
+    "emailLabel": "E-mail",
+    "notProvided": "Nincs megadva",
+    "change": "Módosítás",
+    "passwordLabel": "Jelszó",
+    "blockedAccounts": "Blokkolt fiókok",
+    "helpAndPrivacy": "Súgó és adatvédelem",
+    "terms": "Felhasználási feltételek",
+    "sectionModeration": "MODERÁLÁS",
+    "moderatorSpace": "Moderátori terület",
+    "debugConsole": "Hibakereső konzol",
+    "exportData": "Adataim exportálása",
+    "deleteAccount": "Fiókom törlése",
+    "logout": "Kijelentkezés",
+    "save": "Mentés",
+    "close": "Bezárás",
+    "privacyModalTitle": "Adatvédelem",
+    "deleteAccountTitle": "Fiók törlése",
+    "deleteAccountDesc": "A megerősítéshez add meg jelszavadat. Ez a művelet visszavonhatatlan.",
+    "deleting": "Törlés...",
+    "changePasswordTitle": "Jelszó módosítása",
+    "currentPasswordPlaceholder": "Jelenlegi jelszó",
+    "newPasswordPlaceholder": "Új jelszó (min. 6 karakter)",
+    "confirmPasswordPlaceholder": "Új jelszó megerősítése",
+    "changeEmailTitle": "E-mail módosítása",
+    "currentEmailLabel": "Jelenlegi e-mail: {{email}}",
+    "newEmailPlaceholder": "Új e-mail",
+    "noBlockedAccounts": "Nincsenek blokkolt fiókok.",
+    "unblock": "Feloldás"
+  },
+  "statisticsScreen": {
+    "loadError": "A statisztikákat nem sikerült lekérni",
+    "loadVisitorsError": "A látogatók listáját nem sikerült lekérni",
+    "justNow": "Éppen most",
+    "minutesAgo": "{{count}} perce",
+    "hoursAgo": "{{count}} órája",
+    "yesterday": "Tegnap",
+    "daysAgo": "{{count}} napja",
+    "title": "Statisztikák",
+    "comingSoonTitle": "Hamarosan elérhető 🚀",
+    "comingSoonDesc": "A statisztikák hamarosan érkeznek! Látni fogod, ki látogatja a profilodat és közösségi hálózataidat.",
+    "whoStalksTitle": "Ki követ téged? 👀",
+    "whoStalksDesc": "Válts Premiumra, hogy megtudd, ki látogatja a profilodat és közösségi hálózataidat!",
+    "discoverVisitors": "Látogatóim felfedezése",
+    "later": "Később",
+    "profileViews": "Profilmegtekintések",
+    "views": "megtekintés",
+    "last30Days": "az elmúlt 30 napban",
+    "clicksByNetwork": "Kattintások hálózatonként",
+    "lastVisits": "Legutóbbi látogatások",
+    "noVisitorsTitle": "Még senki sem látogatta meg a profilodat",
+    "noVisitorsDesc": "Folytasd a helyek felfedezését, hogy megtaláljanak!",
+    "defaultUser": "Felhasználó",
+    "hiddenVisits_one": "{{count}} rejtett látogatás",
+    "hiddenVisits_other": "{{count}} rejtett látogatás",
+    "goPremiumToSeeAll": "Válts Premiumra, hogy mindent láss",
+    "showMore": "Több megjelenítése"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Zaklatás",
+      "spam": "Spam",
+      "inappropriate": "Nem megfelelő tartalom",
+      "impersonation": "Személyazonosság-lopás",
+      "scam": "Csalás",
+      "other": "Egyéb"
+    },
+    "statusAvailable": "Elérhető",
+    "statusRestricted": "Korlátozott láthatóság",
+    "statusInvisible": "Láthatatlan",
+    "noUserSelected": "Nincs kiválasztott felhasználó.",
+    "backToList": "Vissza a listához",
+    "superlikeLockedTitle": "Hamarosan",
+    "superlikeLockedMessage": "A szuperlike-ok az első check-in után oldódnak fel.",
+    "superlikeSentTitle": "⭐ Szuperlike elküldve!",
+    "superlikeSentMessage": "{{name}} értesítést kapott, hogy felfigyeltél rá.",
+    "errorTitle": "Hiba",
+    "superlikeSendError": "A szuperlike-ot nem sikerült elküldeni.",
+    "blockConfirmTitle": "Letiltod ezt a felhasználót?",
+    "blockConfirmMessage": "Ezt a felhasználót többé nem fogod látni, és ő sem tud majd kapcsolatba lépni veled.",
+    "cancel": "Mégse",
+    "block": "Letiltás",
+    "userBlockedTitle": "Felhasználó letiltva",
+    "userBlockedMessage": "Ezt a felhasználót letiltottuk.",
+    "blockError": "Ezt a felhasználót nem sikerült letiltani.",
+    "reasonRequiredTitle": "Indoklás szükséges",
+    "reasonRequiredMessage": "Kérjük, adj meg egy indoklást.",
+    "reportSentTitle": "Bejelentés elküldve",
+    "reportSentMessage": "Köszönjük a bejelentésed.",
+    "reportSendError": "A bejelentést nem sikerült elküldeni.",
+    "backA11y": "Vissza",
+    "moreOptionsA11y": "További lehetőségek",
+    "sendSuperlikeA11y": "Szuperlike küldése",
+    "superlikeLockedA11y": "A szuperlike zárolva, az első check-in után oldódik fel",
+    "currentlyAt": "Jelenleg itt: {{place}}",
+    "mutualConnectionBanner": "Ez a személy szeretné felvenni veled a kapcsolatot",
+    "socialsHidden": "Ez a felhasználó nem osztja meg közösségi médiáját",
+    "noBio": "Még nincs bemutatkozás.",
+    "noSocials": "Nincs közösségi média",
+    "actionsTitle": "Műveletek",
+    "report": "Bejelentés",
+    "reportUserTitle": "Felhasználó bejelentése",
+    "reportWarning": "A visszaélésszerű bejelentések szankciókkal járhatnak. Kérjük, légy őszinte.",
+    "categoryLabel": "Kategória",
+    "reasonLabel": "Indoklás",
+    "reasonPlaceholder": "Röviden magyarázd el az okot",
+    "descriptionLabel": "Leírás (opcionális)",
+    "descriptionPlaceholder": "További részletek",
+    "sending": "Küldés...",
+    "sendReport": "Bejelentés küldése",
+    "justNow": "Épp most",
+    "minutesAgo_one": "{{count}} perce",
+    "minutesAgo_other": "{{count}} perce",
+    "hoursAgo_one": "{{count}} órája",
+    "hoursAgo_other": "{{count}} órája",
+    "yesterday": "Tegnap",
+    "daysAgo_one": "{{count}} napja",
+    "daysAgo_other": "{{count}} napja"
+  },
+  "warningsScreen": {
+    "title": "Figyelmeztetések",
+    "banAlert": "Ez a viselkedés ideiglenes vagy végleges kitiltást vonhat maga után az alkalmazásból.",
+    "empty": "Nincsenek figyelmeztetések.",
+    "typeLabel": "Figyelmeztetés típusa",
+    "notSpecified": "Nincs megadva",
+    "notSpecifiedFem": "Nincs megadva",
+    "reasonLabel": "Ok"
+  },
+  "common": {
+    "close": "Bezárás",
+    "errorTitle": "Hiba"
+  },
+  "streakCard": {
+    "hintReady": "A jutalmad készen áll!",
+    "hintGrow": "Jelentkezz be minden nap, hogy növekedjen.",
+    "claimBoost": "Boost igénylése",
+    "claimSuperlike": "Superlike igénylése"
+  },
+  "coteCard": {
+    "messageTop": "Csúcson vagy! Jelentkezz be holnap, hogy megtartsd.",
+    "messageZero": "Jelentkezz be ma, hogy újraindítsd."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Legyél a listák élén 30 percig",
+    "boostPack5Desc": "A legjobb ár-érték arány",
+    "superlikePack3Desc": "Mutasd meg az érdeklődésedet egyedi módon",
+    "superlikePack10Desc": "Az igazi kapcsolatteremtőknek",
+    "badgePopular": "Népszerű",
+    "badgeBestOffer": "Legjobb ajánlat",
+    "notAvailableTitle": "Nem elérhető",
+    "notAvailableMessage": "Ez a csomag még nem érhető el az áruházban.",
+    "purchaseErrorMessage": "A vásárlást nem sikerült befejezni.",
+    "simulate": "Szimulálás"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Keress ezeken a helyeken",
+    "categoryBars": "Bárok",
+    "categoryClubs": "Klubok",
+    "categoryRestos": "Éttermek",
+    "categoryPubs": "Pubok",
+    "categoryGyms": "Edzőtermek",
+    "categoryCafes": "Kávézók",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Könyvtárak"
+  },
+  "profileCard": {
+    "anonymousFallback": "Névtelen"
+  },
+  "locationMapView": {
+    "loadError": "A térképet nem sikerült betölteni",
+    "renderError": "Hiba a térkép betöltésekor"
+  },
+  "churnSurveyModal": {
+    "title": "Egy perc, mielőtt elmész?",
+    "subtitle": "Segíts megérteni, miért.",
+    "reasonTooManyNotifications": "Túl sok értesítés",
+    "reasonPrivacyConcern": "Nem érzem magam jól a megosztással",
+    "reasonNotUseful": "Már nem hasznos számomra",
+    "reasonOther": "Más ok",
+    "dismiss": "Kihagyás",
+    "thanks": "Köszönjük a visszajelzést 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Keresés",
+    "tabNearby": "Közeli helyek",
+    "tabAccount": "Fiók"
+  },
+  "documentViewer": {
+    "openError": "Ezt a dokumentumot nem sikerült megnyitni.",
+    "defaultLabel": "Dokumentum megtekintése"
+  },
+  "vibeFab": {
+    "toDay": "Váltás nappali módra",
+    "toNight": "Váltás éjszakai módra"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Helymegosztás aktív"
+  }
+}

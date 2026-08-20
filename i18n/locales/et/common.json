@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Logi sisse",
+      "welcomeBack": "Tere tulemast tagasi!",
+      "subtitle": "Jätkamiseks logi sisse",
+      "emailPlaceholder": "E-post",
+      "passwordPlaceholder": "Parool",
+      "submit": "Logi sisse",
+      "forgotPassword": "Unustasid parooli?",
+      "noAccount": "Kontot veel pole?",
+      "createAccount": "Loo konto",
+      "emailNotVerifiedTitle": "E-post pole kinnitatud",
+      "emailNotVerifiedMessage": "Sinu e-posti aadressi pole veel kinnitatud. Saatsime sulle just uue kinnituskirja. Konto aktiveerimiseks klõpsa lingil ja proovi uuesti.",
+      "authFailedTitle": "Sisselogimine ebaõnnestus",
+      "authFailedMessage": "Sisse logida ei õnnestunud. Kontrolli oma andmeid ja proovi uuesti."
+    },
+    "signup": {
+      "passwordMismatch": "Paroolid ei kattu.",
+      "requiredFields": "Kõik väljad tuleb täita.",
+      "birthdateRequired": "Sünnikuupäev on kohustuslik.",
+      "under18": "Registreerumiseks pead olema vähemalt 18-aastane.",
+      "policyLoadError": "Privaatsuspoliitikat ei õnnestunud laadida. Võid uuesti proovida."
+    }
+  },
+  "consent": {
+    "title": "Privaatsus",
+    "changelogTitle": "Mis on muutunud",
+    "decline": "Keeldu",
+    "accept": "Nõustu",
+    "accepting": "Salvestamine...",
+    "declineInfoTitle": "Teave",
+    "declineInfoMessage": "Rakenduse kasutamiseks pead nõustuma privaatsuspoliitikaga.",
+    "acceptErrorTitle": "Viga",
+    "acceptErrorMessage": "Sinu nõusolekut ei õnnestunud salvestada. Proovi uuesti."
+  },
+  "ageVerification": {
+    "title": "Vanuse kontroll",
+    "urlMissing": "Kontrolli URL puudub",
+    "startError": "Vanuse kontrolli ei õnnestunud alustada. Proovi uuesti.",
+    "retry": "Proovi uuesti",
+    "declinedTitle": "Kontroll tagasi lükatud",
+    "declinedMessage": "Meil ei õnnestunud kinnitada, et oled üle 18-aastane. Võid uuesti proovida."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Keel",
+      "systemDefault": "Telefoni keel"
+    }
+  },
+  "forgotPassword": {
+    "title": "Unustasid parooli",
+    "resetTitle": "Lähtestamine",
+    "instructions": "Sisesta oma e-posti aadress lähtestamislingi saamiseks.",
+    "emailPlaceholder": "E-post",
+    "submit": "Saada link",
+    "successTitle": "E-kiri saadetud",
+    "successMessage": "Kui konto on olemas, on e-kiri saadetud.",
+    "errorTitle": "Viga",
+    "errorFallback": "Palun proovi uuesti"
+  },
+  "dataManagement": {
+    "title": "Privaatsus",
+    "export": {
+      "title": "Ekspordi minu andmed",
+      "desc": "Laadi alla koopia oma teabest (profiil, sotsiaalvõrgustikud, seaded).",
+      "button": "Ekspordi",
+      "buttonWorking": "Palun oota...",
+      "successTitle": "Andmete eksport",
+      "successMessage": "Sinu eksport on loodud ja kuvatud konsoolis.",
+      "errorTitle": "Viga",
+      "errorMessage": "Sinu andmeid ei õnnestunud praegu eksportida. Proovi uuesti."
+    },
+    "delete": {
+      "title": "Kustuta minu konto",
+      "desc": "Kustutab jäädavalt sinu konto ja kõik sellega seotud andmed.",
+      "passwordPlaceholder": "Kinnita oma parooliga",
+      "button": "Kustuta jäädavalt",
+      "passwordRequiredTitle": "Parool on nõutav",
+      "passwordRequiredMessage": "Palun sisesta oma parool.",
+      "confirmTitle": "Kinnitus",
+      "confirmMessage": "Seda toimingut ei saa tagasi võtta. Kas soovid tõesti oma konto kustutada?",
+      "cancel": "Tühista",
+      "confirm": "Kustuta",
+      "successTitle": "Konto kustutatud",
+      "successMessage": "Sinu konto ja andmed on kustutatud.",
+      "errorTitle": "Viga",
+      "errorMessage": "Kustutamine ebaõnnestus. Vale parool või serveri probleem."
+    }
+  },
+  "editProfile": {
+    "title": "Muuda profiili",
+    "subtitle": "Puuduta välja, et seda muuta",
+    "notSet": "Määramata",
+    "backLabel": "Tagasi",
+    "fields": {
+      "firstName": "Eesnimi",
+      "lastName": "Perekonnanimi",
+      "customName": "Kohandatud nimi",
+      "bio": "Bio",
+      "birthdate": "Sünnikuupäev",
+      "gender": "Sugu"
+    },
+    "gender": {
+      "male": "Poiss",
+      "female": "Tüdruk",
+      "preferNotToSay": "Eelistan mitte öelda"
+    },
+    "photo": {
+      "notSupportedTitle": "Ei toetata",
+      "notSupportedMessage": "Kaamera pole veebis saadaval.",
+      "cameraPermissionTitle": "Vajalik luba",
+      "cameraPermissionMessage": "Rakendus vajab foto tegemiseks juurdepääsu kaamerale.",
+      "galleryPermissionMessage": "Rakendus vajab pildi valimiseks juurdepääsu sinu fotodele.",
+      "errorTitle": "Viga",
+      "uploadErrorMessage": "Pilti ei õnnestunud üles laadida",
+      "cameraOpenError": "Kaamerat ei õnnestunud avada.",
+      "galleryOpenError": "Galeriid ei õnnestunud avada.",
+      "deleteErrorMessage": "Profiilipilti ei õnnestunud kustutada",
+      "deleteConfirmTitle": "Kustutada profiilipilt?",
+      "deleteConfirmMessage": "See toiming on lõplik.",
+      "cancel": "Tühista",
+      "delete": "Kustuta",
+      "modalTitle": "Profiilipilt",
+      "takePhoto": "📸 Tee foto",
+      "sending": "Üleslaadimine...",
+      "chooseGallery": "🖼️ Vali galeriist",
+      "deletePhoto": "🗑️ Kustuta foto",
+      "deleting": "Kustutamine..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Vigane eesnimi",
+      "firstNameInvalidMessage": "Eesnimi peab algama suure tähega ja võib sisaldada tähti (rõhumärgid lubatud), tühikuid, ülakomasid või sidekriipse.",
+      "lastNameInvalidTitle": "Vigane perekonnanimi",
+      "lastNameInvalidMessage": "Perekonnanimi peab algama suure tähega ja võib sisaldada tähti (rõhumärgid lubatud), tühikuid, ülakomasid või sidekriipse.",
+      "incompleteIdentityTitle": "Puudulik identiteet",
+      "incompleteIdentityMessage": "Sisesta Kohandatud nimi VÕI Eesnimi JA Perekonnanimi.",
+      "customNameRequiredTitle": "Vajalik kohandatud nimi",
+      "customNameRequiredMessage": "Kohandatud nime ei saa eemaldada, kui eesnimi või perekonnanimi on tühi.",
+      "invalidDateTitle": "Vigane kuupäev",
+      "invalidDateMessage": "Palun vali kehtiv sünnikuupäev.",
+      "minAgeTitle": "Vajalik minimaalne vanus",
+      "minAgeMessage": "Pead olema vähemalt 18-aastane.",
+      "updateErrorMessage": "Sinu profiili ei õnnestunud uuendada"
+    },
+    "modal": {
+      "editPrefix": "Muuda",
+      "editGeneric": "Muuda",
+      "selectDate": "Vali kuupäev",
+      "cancel": "Tühista",
+      "save": "Salvesta",
+      "placeholders": {
+        "firstName": "Sinu eesnimi",
+        "lastName": "Sinu perekonnanimi",
+        "customName": "Sinu kohandatud nimi",
+        "bio": "Räägi meile endast...",
+        "default": "Sinu tekst"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Nähtamatu režiim aktiivne",
+      "subtitle": "Sa ei näe enda ümber olevaid kohti, kuni nähtamatu režiim on sisse lülitatud. Lülita see välja kohtade sirvimiseks.",
+      "disableButton": "Lülita nähtamatu režiim välja"
+    },
+    "error": {
+      "title": "Asukoht pole saadaval",
+      "subtitle": "Luba asukohateenused seadme sätetes, et näha enda ümber olevaid kohti.",
+      "retry": "Proovi uuesti"
+    },
+    "empty": {
+      "title": "Praegu rahulik ala",
+      "subtitle": "Sinu ümbrusest ei leitud ühtegi aktiivset kohta. Laienda raadiust või soovita uut kohta.",
+      "expandRadius": "Laienda raadiust",
+      "suggestLocation": "Soovita seda kohta"
+    },
+    "footer": {
+      "loadingMore": "Laadin rohkem kohti…",
+      "loadMoreError": "Rohkemate kohtade laadimine ebaõnnestus. Kontrolli oma ühendust.",
+      "retry": "Proovi uuesti",
+      "reachedEnd": "Oled uurinud kõiki läheduses olevaid aktiivseid kohti. Liigu ringi või otsi rohkemate nägemiseks."
+    },
+    "leaveModal": {
+      "defaultName": "See koht",
+      "subtitle": "Oled hetkel siia sisse registreeritud. Kas soovid sellest kohast lahkuda?",
+      "confirm": "Ma pole enam siin",
+      "cancel": "Tühista"
+    },
+    "sections": {
+      "moreLocations": "Rohkem kohti sinu jaoks",
+      "sponsored": "Esiletõstetud",
+      "trending": "Toimub praegu"
+    },
+    "filters": {
+      "all": "Kõik"
+    },
+    "card": {
+      "visitors_one": "{{count}} külastaja",
+      "visitors_other": "{{count}} külastajat",
+      "sponsored": "SPONSOREERITUD",
+      "imHere": "Ma olen siin",
+      "editLocation": "Muuda minu asukohta"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Käsitsi sisseregistreerimine sees",
+    "checkinModeAutoOn": "Automaatne sisseregistreerimine sees",
+    "checkinModeErrorTitle": "Viga",
+    "checkinModeErrorMessage": "Sisseregistreerimise režiimi ei õnnestunud praegu muuta.",
+    "checkedInToast": "Sa oled nüüd kohas {{name}}!",
+    "checkinErrorMessage": "Sinu kohalolekut ei õnnestunud praegu kinnitada.",
+    "leftLocationToast": "Sa lahkusid sellest kohast.",
+    "boostActiveTitle": "Kiirendus aktiivne",
+    "boostActiveLeaveMessage": "Sa ei saa sellest kohast lahkuda, kuni su kiirendus kestab.",
+    "leaveErrorMessage": "Sind ei õnnestunud praegu sellest kohast välja registreerida.",
+    "boostInProgressTitle": "Kiirendus käib",
+    "boostInProgressMessage": "Su kiirendus on aktiivne: oota selle lõppu enne koha vahetamist.",
+    "refreshErrorToast": "Ei õnnestunud praegu värskendada.",
+    "disableInvisibleErrorMessage": "Nähtamatut režiimi ei õnnestunud praegu välja lülitada.",
+    "switchToManualLabel": "Lülitu käsitsi sisseregistreerimisele",
+    "switchToAutoLabel": "Lülitu automaatsele sisseregistreerimisele",
+    "entryAuto": "Auto. sisenemine",
+    "entryManual": "Käsitsi sisenemine",
+    "showMapLabel": "Näita kaarti",
+    "showListLabel": "Näita loendit",
+    "mapButton": "Kaart",
+    "listButton": "Loend"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Viga",
+    "checkinErrorMessage": "Sinu kohalolekut ei õnnestunud praegu kinnitada.",
+    "boostActiveHereTitle": "Kiirendus käib",
+    "boostActiveHereMessage": "Sinu kiirendus on siin aktiivne: oota selle lõppu, enne kui lahkud sellest kohast.",
+    "boostActiveMessage": "Sinu kiirendus on aktiivne: oota selle lõppu.",
+    "notFound": "Kohta ei leitud",
+    "back": "Tagasi",
+    "popularityVeryPopular": "Väga populaarne",
+    "popularityPopular": "Populaarne",
+    "popularityActive": "Aktiivne",
+    "popularityCalm": "Rahulik",
+    "checkinConfirmed": "Kinnitatud!",
+    "imHere": "Ma olen siin",
+    "viewPdf": "Vaata PDF-i",
+    "pdfLoadError": "Seda PDF-i ei saa kuvada.",
+    "openInBrowser": "Ava brauseris",
+    "profilesHere": "Profiilid siin",
+    "recentlyCrossed": "Hiljuti kohatud",
+    "seeMore": "Vaata rohkem",
+    "boosted": "Kiirendatud",
+    "boostProfileHere": "Kiirenda minu profiili siin",
+    "boostLockedAfterCheckins": "Kiirendus 🔓 pärast 2 sisseregistreerimist"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Jaga",
+      "shareLabel": "Jaga minu profiili",
+      "qrCode": "QR-kood",
+      "qrLabel": "Näita minu QR-koodi",
+      "stats": "Statistika",
+      "statsLabel": "Vaata minu statistikat"
+    },
+    "qr": {
+      "title": "Skanni, et näha minu profiili",
+      "hint": "Kui rakendust pole installitud, suunatakse sind poodi ({{store}})."
+    },
+    "status": {
+      "title": "Sinu staatus",
+      "close": "Sulge",
+      "public": "Avalik profiil",
+      "private": "Privaatne profiil",
+      "incognito": "Incognito",
+      "pickLabel": "Vali minu staatus"
+    },
+    "warnings": {
+      "title": "Hoiatused",
+      "message_one": "Sul on {{count}} hoiatus.",
+      "message_other": "Sul on {{count}} hoiatust.",
+      "tapForDetails": "Puuduta üksikasjade nägemiseks"
+    },
+    "referral": {
+      "invite": "Kutsu oma sõbrad",
+      "label": "Soovitus: kutsu oma sõbrad"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Jaga oma asukohta",
+      "message": "Luba oma praeguse asukoha jagamine, et teised läheduses olevad kasutajad leiaksid sind lihtsamini.",
+      "activate": "Aktiveeri",
+      "noThanks": "Ei, aitäh"
+    },
+    "social": {
+      "addTitle": "Lisa võrgustik",
+      "usernamePlaceholder": "@kasutajanimi või {{platform}} ID",
+      "selectPlaceholder": "Vali võrgustik",
+      "snapchatHint": "Märkus: Snapchat ei luba otselinke, sisesta lihtsalt oma kasutajanimi.",
+      "save": "Salvesta",
+      "saveLabel": "Salvesta",
+      "editTitle": "Muuda {{platform}}",
+      "usernamePlaceholderSimple": "Kasutajanimi",
+      "delete": "Kustuta",
+      "heading": "Sotsiaalvõrgustikud",
+      "addLabel": "Lisa sotsiaalvõrgustik"
+    },
+    "rewards": {
+      "heading": "Auhinnad",
+      "superlikes": "Superlikes",
+      "boosts": "Kiirendused",
+      "buy": "Osta",
+      "buyLabel": "Osta superlikes'e või kiirendusi",
+      "premiumCta": "👑 Hangi Premium",
+      "premiumLabel": "Hangi Premium",
+      "superlikeHistoryLabel_one": "Vaata superlike'ide ajalugu, {{count}} jäänud",
+      "superlikeHistoryLabel_other": "Vaata superlike'ide ajalugu, {{count}} jäänud"
+    },
+    "currentlyAt": "Praegu kohas {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Lisa lause, et end tutvustada."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Sinu profiilipilt",
+      "photoDesc": "Muuda oma profiilipilti seadetest (ikoon paremal üleval).",
+      "bioTitle": "Sinu bio",
+      "bioDesc": "Sinu bio muudetakse seadetest. See on esimene asi, mida teised näevad.",
+      "socialTitle": "Sinu sotsiaalvõrgustikud",
+      "socialDesc": "Puuduta ➕, et lisada võrgustik. Hoia ikoonil, et seda muuta või kustutada.",
+      "statusTitle": "Sinu staatus",
+      "statusDesc": "Avalik profiil = kõigile nähtav · Privaatne profiil = võrgustikud peidetud · Incognito = nähtamatu. Puuduta muutmiseks."
+    },
+    "errorTitle": "Viga",
+    "shareLocationUpdateError": "Sinu praeguse asukoha jagamist ei õnnestunud uuendada",
+    "comingSoonTitle": "Peagi saadaval 🚀",
+    "comingSoonStats": "Statistika tuleb väga varsti! Näed, kes külastab su profiili ja sotsiaalvõrgustikke.",
+    "shareTitle": "Jaga",
+    "shareError": "Jagamine ebaõnnestus.",
+    "boostClaimedToast": "Kiirendus saadud 🚀",
+    "superlikeClaimedToast": "Superlike saadud ⭐️",
+    "claimRewardError": "Auhinda ei õnnestunud saada",
+    "statusVisible": "Oled nähtavas režiimis. Kõik näevad su sotsiaalvõrgustikke. Naudid rakendust täielikult.",
+    "statusRestricted": "Oled piiratud nähtavas režiimis. Keegi ei näe su sotsiaalvõrgustikke.",
+    "statusInvisible": "Oled nähtamatus režiimis. Nüüdsest ei näe sind keegi.",
+    "statusUpdateError": "Staatust ei õnnestunud uuendada",
+    "unsupportedPlatform": "Toetamata platvorm",
+    "handleRequired": "Palun sisesta identifikaator",
+    "invalidInstagramHandle": "Vigane Instagrami kasutajanimi. Näide: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Vigane TikToki kasutajanimi. Näide: https://www.tiktok.com/@username",
+    "addSocialError": "Sotsiaalvõrgustikku ei õnnestunud lisada",
+    "invalidLinkTitle": "Vigane link",
+    "invalidInstagramHandleShort": "Vigane Instagrami kasutajanimi",
+    "invalidTiktokHandleShort": "Vigane TikToki kasutajanimi",
+    "cannotOpenInstagramTitle": "Instagrami ei õnnestunud avada",
+    "cannotOpenTiktokTitle": "TikToki ei õnnestunud avada",
+    "tryAgainLater": "Palun proovi hiljem uuesti.",
+    "editSocialError": "Sotsiaalvõrgustikku ei õnnestunud muuta",
+    "deleteSocialError": "Sotsiaalvõrgustikku ei õnnestunud kustutada",
+    "backLabel": "Tagasi",
+    "settingsLabel": "Seaded",
+    "streakTitle": "Sinu seeria 🔥",
+    "streakMessage": "Logi iga päev sisse, et oma seeriat kasvatada. 7. päeval saad superlike'i. 14. päeval saad kiirenduse — seejärel algab sinu seeria uuesti 0-st."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Avasta, kes on sinu lähedal väljas",
+        "desc": "Vaata reaalajas elavaid kohti enda ümber ja seal olevaid inimesi — just praegu."
+      },
+      "checkin": {
+        "title": "Automaatne sisseregistreerimine, päeval või öösel",
+        "desc": "Niipea kui astud kohta sisse, ilmud sinna automaatselt — ja näed, kes seal on. Rakendus vahetab sinu tuju järgi Päevarežiimi (kohvikud, pargid, sport…) ja Öörežiimi (baarid, restoranid, klubid…) vahel."
+      },
+      "profile": {
+        "title": "Sinu profiil, elavad kohad",
+        "desc": "Lisa oma sotsiaalvõrgustikud, et inimesed sind leiaksid, vaata profiile enda ümber. Iga koht näitab ka 1 kuni 3 tärni tegeliku külastatavuse alusel — mida elavam, seda rohkem see särab."
+      },
+      "referral": {
+        "title": "Kutsus sõber sind?",
+        "desc": "Sisesta tema soovituskood (valikuline) — see aitab tal avada tasuta Premium-kuu."
+      }
+    },
+    "referralPlaceholder": "Soovituskood",
+    "next": "Edasi",
+    "start": "Alustame 🚀",
+    "skip": "Jäta vahele"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Vaata, kes su profiili vaatab",
+      "Nähtavuse kiirendused (1 tasuta pakett)",
+      "Superlikes (3/nädal tasuta)",
+      "Nähtamatu režiim",
+      "Otsingu raadius kuni 2 km",
+      "Täiustatud statistika",
+      "Täiendatud teavitused"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kes sind külastab?",
+        "desc": "Vaata reaalajas, kes sinu profiili vaatab."
+      },
+      "boosts": {
+        "title": "Nähtavuse kiirendused",
+        "desc": "Hüppa 30 minutiks nimekirja tippu oma kohas."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Näita erilist huvi kellegi vastu, keda märkad."
+      },
+      "invisible": {
+        "title": "Nähtamatu režiim",
+        "desc": "Kao lähedal olevate kasutajate nimekirjast, millal iganes soovid."
+      },
+      "radius": {
+        "title": "Laiendatud raadius",
+        "desc": "Uuri kuni 2 km enda ümber (500 m tasuta versioonis)."
+      },
+      "stats": {
+        "title": "Täiustatud statistika",
+        "desc": "Jälgi vaatamisi ja klikke kõigil oma sotsiaalvõrgustikel."
+      }
+    },
+    "trialError": "Tasuta prooviperioodi ei õnnestunud alustada.",
+    "errorTitle": "Viga",
+    "offersUnavailableTitle": "Pakkumised pole saadaval",
+    "offersUnavailableMessage": "Tellimuspakkumised pole veel laaditud. Proovi hetke pärast uuesti.",
+    "purchaseError": "Ostu ei õnnestunud lõpetada.",
+    "restoredTitle": "✅ Ostud taastatud",
+    "restoredMessage": "Sinu Premium-tellimus on aktiivne.",
+    "noRestoreTitle": "Ostu ei leitud",
+    "noRestoreMessage": "Ühtegi aktiivset tellimust ei õnnestunud taastada.",
+    "restoreError": "Oste ei õnnestunud taastada.",
+    "closeLabel": "Sulge",
+    "title": "👑 Premium",
+    "subtitle": "Ava kõik funktsioonid",
+    "debugBanner": "⚠️ Maksed keelatud (silumisrežiim)",
+    "monthly": "Kuine",
+    "perMonth": "/kuu",
+    "annual": "Aastane",
+    "perYear": "/aasta",
+    "mostChosen": "KÕIGE POPULAARSEM",
+    "allIncluded": "KÕIK SISALDUB",
+    "ctaSimulate": "Simuleeri Premium-tellimust",
+    "ctaTrial": "Alusta minu 7-päevast tasuta prooviperioodi",
+    "ctaLoading": "Pakkumiste laadimine…",
+    "ctaSubscribe": "Telli",
+    "thenAnnual": "Seejärel {{price}}/aasta · Igal ajal tühistatav",
+    "thenMonthly": "Seejärel {{price}}/kuu · Igal ajal tühistatav",
+    "restorePurchases": "Taasta minu ostud",
+    "legalText": "Tellimus uueneb automaatselt, kui seda ei tühistata enne praeguse perioodi lõppu. Halda oma tellimusi App Store / Google Play seadetes. ",
+    "privacyPolicy": "Privaatsuspoliitika",
+    "terms": "Tingimused"
+  },
+  "premiumWelcome": {
+    "header": "👑 Tere tulemast Premiumisse",
+    "finalTitle": "Alustame!",
+    "finalDesc": "Naudi kohe kõiki oma uusi Premium-eeliseid.",
+    "discover": "Avasta",
+    "next": "Edasi",
+    "skip": "Jäta vahele"
+  },
+  "referralScreen": {
+    "loadError": "Sinu soovitusandmeid ei õnnestunud laadida.",
+    "errorTitle": "Viga",
+    "shareMessage": "Liitu minuga LoocateMe's 👋\n\n{{url}}",
+    "shareTitle": "Kutsu sõber LoocateMe'sse",
+    "shareErrorTitle": "Jaga",
+    "shareError": "Jagamine ebaõnnestus.",
+    "codeSavedTitle": "Soovitus",
+    "codeSaved": "Soovituskood salvestatud!",
+    "selfReferralError": "Sa ei saa kasutada oma koodi.",
+    "alreadyReferredError": "Oled juba kasutanud soovituskoodi.",
+    "invalidCodeError": "See soovituskood on kehtetu.",
+    "genericCodeError": "Seda koodi ei õnnestunud kinnitada.",
+    "title": "Soovitus",
+    "infoText": "Kutsu sel kuul 5 sõpra (igaüks peab minema välja ja tegema oma 1. kinnitatud sisseregistreerimise) ning teeni 1 tasuta Premium-kuu 🎉",
+    "confirmCode": "Kas kinnitada soovituskood „{{code}}“?",
+    "validate": "Kinnita",
+    "rewardActive": "💎 Sinu tasuta Premium-kuu on aktiivne",
+    "rewardActiveUntil": " kuni {{date}}",
+    "yourCode": "Sinu soovituskood",
+    "shareButton": "📤 Jaga oma koodi",
+    "shareLabel": "Jaga oma koodi",
+    "progressLabel": "{{count}} / {{target}} soovitust sel kuul",
+    "invitedFriends": "Kutsutud sõbrad",
+    "noInvites": "Veel pole sõpru kutsutud.",
+    "defaultUser": "Kasutaja",
+    "statusValidated": "Kinnitatud",
+    "statusVoid": "Tühistatud",
+    "statusPending": "Ootel"
+  },
+  "searchView": {
+    "closeLabel": "Sulge otsing",
+    "title": "Otsing",
+    "placeholder": "Kasutajanimi, koht...",
+    "clearLabel": "Tühjenda otsing",
+    "filterUsers": "Kasutajad",
+    "filterLocations": "Kohad",
+    "searching": "Otsimine…",
+    "typeToSearch": "Sisesta otsingu alustamiseks vähemalt 2 tähte",
+    "noResults": "Selle otsingu jaoks ei leitud tulemusi.",
+    "checkFilters": "Kontrolli filtreid või proovi teist märksõna.",
+    "resultsCount_one": "{{count}} tulemus",
+    "resultsCount_other": "{{count}} tulemust",
+    "noLongerHere": "Enam pole siin"
+  },
+  "settingsScreen": {
+    "title": "Seaded",
+    "tabProfile": "Profiil",
+    "tabSettings": "Seaded",
+    "sectionIdentity": "IDENTITEET",
+    "firstName": "Eesnimi",
+    "lastName": "Perekonnanimi",
+    "customNameLabel": "Kohandatud nimi",
+    "bioLabel": "Bio",
+    "sectionSubscription": "TELLIMUS",
+    "premiumMonthly": "· Igakuine",
+    "premiumAnnual": "· Iga-aastane",
+    "statusLoading": "Oleku laadimine…",
+    "grantedOutsideStore": "Antud väljaspool App Store'i/Play Store'i tellimust (tasuta prooviperiood või eripakkumine)",
+    "renewsOn": "Uueneb {{date}}",
+    "expiresOn": "Aegub {{date}}",
+    "opening": "Avamine…",
+    "manageSubscription": "Halda minu tellimust",
+    "goPremium": "👑 Hangi Premium",
+    "manageSubError": "Tellimuse haldust ei õnnestunud avada.",
+    "sectionGeneral": "ÜLDINE",
+    "displayMode": "Kuvamisrežiim",
+    "fullNameMode": "Eesnimi Perekonnanimi",
+    "classicMode": "Klassikaline",
+    "customMode": "Kohandatud",
+    "sectionReferral": "SOOVITUS",
+    "alreadyReferred": "Sind on juba soovitatud.",
+    "referralHint": "Kas sõber jagas sinuga koodi? Sisesta see siia.",
+    "referralPlaceholder": "Soovituskood",
+    "validate": "Kinnita",
+    "sectionNotifications": "TEAVITUSED",
+    "notifKinds": {
+      "superlike": "Saadud superlike'id",
+      "superlikeAccepted": "Aktsepteeritud superlike'id",
+      "eventBoost": "Ürituste kiirendused",
+      "streakExpiring": "Seeria meeldetuletused",
+      "profileView": "Profiilivaatamised",
+      "socialClick": "Sinu sotsiaalvõrgustike vaatamised",
+      "inactiveProfileViews": "Sinu äraoleku ajal saadud vaatamised",
+      "referralValidated": "Soovitus kinnitatud",
+      "referralRewardGranted": "Soovitustasu",
+      "nightModeActivated": "Öörežiimi aktiveerimine",
+      "atRiskReactivation": "Taasaktiveerimise meeldetuletused",
+      "weeklyDigest": "Iganädalane kokkuvõte"
+    },
+    "notifCategories": {
+      "social": "Sotsiaalne tegevus",
+      "rewards": "Seeriad ja auhinnad",
+      "system": "Süsteem ja kokkuvõtted"
+    },
+    "sectionPrivacy": "PRIVAATSUS JA GDPR",
+    "privacyPolicyLink": "Privaatsuspoliitika",
+    "consent": "Nõusolek",
+    "analyticsLabel": "Analüütika",
+    "dataSaleTitle": "Andmete müük (CCPA)",
+    "dataSaleDesc": "Me ei müü ega jaga sinu isikuandmeid kolmandate osapooltega reklaami eesmärgil.",
+    "invisibleModeTitle": "Nähtamatu režiim",
+    "invisibleModeDesc": "Oled kohtades teistele kasutajatele nähtamatu, kuid ei saa vaadata kaarti ega kohtade nimekirja, kuni see režiim on aktiivne.",
+    "shareLocationTitle": "Jaga minu praegust asukohta",
+    "shareLocationDesc": "Näitab teistele kasutajatele täpset kohta, kus sa praegu asud, lisaks sinu linnale. Vaikimisi väljas, et kaitsta sinu privaatsust ja vältida jälitamise riski.",
+    "policyLoadError": "Privaatsuspoliitikat ei õnnestunud laadida.",
+    "savePrivacyPrefsError": "Sinu privaatsuseelistusi ei õnnestunud salvestada",
+    "shareLocationUpdateError": "Sinu praeguse asukoha jagamist ei õnnestunud uuendada",
+    "invisibleModeUpdateError": "Nähtamatut režiimi ei õnnestunud uuendada",
+    "notifPrefUpdateError": "Seda teavituseelistust ei õnnestunud uuendada",
+    "consentSavedTitle": "Õnnestus",
+    "consentSaved": "Nõusolek salvestatud.",
+    "consentRevoked": "Nõusolek tühistatud.",
+    "consentSaveError": "Sinu nõusolekut ei õnnestunud salvestada",
+    "revokeConsentTitle": "Nõusoleku tühistamine",
+    "revokeConsentMessage": "Sinu nõusoleku tühistamine toob kaasa sinu konto ja kõigi sinu andmete jäädava kustutamise. Kas soovid jätkata?",
+    "cancel": "Tühista",
+    "continueLabel": "Jätka",
+    "currentPasswordRequired": "Palun sisesta oma praegune parool.",
+    "passwordTooShort": "Uus parool peab olema vähemalt 6 tähemärki pikk.",
+    "passwordConfirmMismatch": "Kinnitus ei ühti uue parooliga.",
+    "passwordChangedTitle": "Parool muudetud",
+    "passwordChangedMessage": "Sinu parool on uuendatud.",
+    "currentPasswordInvalid": "Vale praegune parool või serveri viga.",
+    "invalidEmail": "Palun sisesta kehtiv e-posti aadress.",
+    "passwordRequiredConfirm": "Palun sisesta oma parool kinnitamiseks.",
+    "checkInboxTitle": "Kontrolli oma postkasti",
+    "checkInboxMessage": "Kinnituskiri on saadetud aadressile {{email}}. Klõpsa lingil, et muudatust kinnitada.",
+    "emailChangeError": "Muudatust ei õnnestunud alustada. Vale parool või serveri viga.",
+    "exportReadyTitle": "Eksport valmis",
+    "exportReadyMessage": "Sinu andmed on eksporditud ({{size}} tähemärki).",
+    "exportError": "Sinu andmeid ei õnnestunud eksportida",
+    "deleteAccountConfirmTitle": "Kustuta konto",
+    "deleteAccountConfirmMessage": "Kustutamine on lõplik. Kas kinnitad oma konto kustutamise?",
+    "profileUpdatedTitle": "Profiil",
+    "profileUpdatedMessage": "Sinu profiil on uuendatud.",
+    "loadBlockedError": "Blokeeritud kontosid ei õnnestunud laadida",
+    "unblockError": "Selle kasutaja blokeeringu eemaldamine ebaõnnestus",
+    "sectionAccount": "KONTO",
+    "emailLabel": "E-post",
+    "notProvided": "Määramata",
+    "change": "Muuda",
+    "passwordLabel": "Parool",
+    "blockedAccounts": "Blokeeritud kontod",
+    "helpAndPrivacy": "Abi ja privaatsus",
+    "terms": "Kasutustingimused",
+    "sectionModeration": "MODEREERIMINE",
+    "moderatorSpace": "Moderaatori ala",
+    "debugConsole": "Silumiskonsool",
+    "exportData": "Ekspordi minu andmed",
+    "deleteAccount": "Kustuta minu konto",
+    "logout": "Logi välja",
+    "save": "Salvesta",
+    "close": "Sulge",
+    "privacyModalTitle": "Privaatsus",
+    "deleteAccountTitle": "Konto kustutamine",
+    "deleteAccountDesc": "Kinnitamiseks sisesta oma parool. Seda toimingut ei saa tagasi võtta.",
+    "deleting": "Kustutamine...",
+    "changePasswordTitle": "Muuda parooli",
+    "currentPasswordPlaceholder": "Praegune parool",
+    "newPasswordPlaceholder": "Uus parool (min 6 tähemärki)",
+    "confirmPasswordPlaceholder": "Kinnita uus parool",
+    "changeEmailTitle": "Muuda e-posti",
+    "currentEmailLabel": "Praegune e-post: {{email}}",
+    "newEmailPlaceholder": "Uus e-post",
+    "noBlockedAccounts": "Blokeeritud kontosid pole.",
+    "unblock": "Eemalda blokeering"
+  },
+  "statisticsScreen": {
+    "loadError": "Statistikat ei õnnestunud hankida",
+    "loadVisitorsError": "Külastajate loendit ei õnnestunud hankida",
+    "justNow": "Just praegu",
+    "minutesAgo": "{{count}} min tagasi",
+    "hoursAgo": "{{count}}h tagasi",
+    "yesterday": "Eile",
+    "daysAgo": "{{count}} p tagasi",
+    "title": "Statistika",
+    "comingSoonTitle": "Peagi saadaval 🚀",
+    "comingSoonDesc": "Statistika tuleb väga varsti! Näed, kes külastab su profiili ja sotsiaalvõrgustikke.",
+    "whoStalksTitle": "Kes sind jälitab? 👀",
+    "whoStalksDesc": "Hangi Premium, et näha, kes külastab su profiili ja sotsiaalvõrgustikke!",
+    "discoverVisitors": "Avasta oma külastajad",
+    "later": "Hiljem",
+    "profileViews": "Profiilivaatamised",
+    "views": "vaatamist",
+    "last30Days": "viimase 30 päeva jooksul",
+    "clicksByNetwork": "Klikid võrgustiku kaupa",
+    "lastVisits": "Hiljutised külastused",
+    "noVisitorsTitle": "Keegi pole veel su profiili külastanud",
+    "noVisitorsDesc": "Jätka kohtade uurimist, et sind avastataks!",
+    "defaultUser": "Kasutaja",
+    "hiddenVisits_one": "{{count}} peidetud külastus",
+    "hiddenVisits_other": "{{count}} peidetud külastust",
+    "goPremiumToSeeAll": "Hangi Premium, et näha kõike",
+    "showMore": "Näita rohkem"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Ahistamine",
+      "spam": "Rämpspost",
+      "inappropriate": "Sobimatu sisu",
+      "impersonation": "Identiteedivargus",
+      "scam": "Pettus",
+      "other": "Muu"
+    },
+    "statusAvailable": "Saadaval",
+    "statusRestricted": "Piiratud nähtavus",
+    "statusInvisible": "Nähtamatu",
+    "noUserSelected": "Kasutajat ei ole valitud.",
+    "backToList": "Tagasi loendi juurde",
+    "superlikeLockedTitle": "Peagi saadaval",
+    "superlikeLockedMessage": "Superlikeid saab kasutada pärast esimest check-in'i.",
+    "superlikeSentTitle": "⭐ Superlike saadetud!",
+    "superlikeSentMessage": "{{name}} sai teate, et sa märkasid teda.",
+    "errorTitle": "Viga",
+    "superlikeSendError": "Superlikei ei õnnestunud saata.",
+    "blockConfirmTitle": "Kas blokeerida see kasutaja?",
+    "blockConfirmMessage": "Sa ei näe enam seda kasutajat ja tema ei saa enam sinuga ühendust võtta.",
+    "cancel": "Tühista",
+    "block": "Blokeeri",
+    "userBlockedTitle": "Kasutaja blokeeritud",
+    "userBlockedMessage": "See kasutaja on blokeeritud.",
+    "blockError": "Seda kasutajat ei õnnestunud blokeerida.",
+    "reasonRequiredTitle": "Põhjus on vajalik",
+    "reasonRequiredMessage": "Palun sisesta põhjus.",
+    "reportSentTitle": "Teavitus saadetud",
+    "reportSentMessage": "Täname teavituse eest.",
+    "reportSendError": "Teavitust ei õnnestunud saata.",
+    "backA11y": "Tagasi",
+    "moreOptionsA11y": "Rohkem valikuid",
+    "sendSuperlikeA11y": "Saada superlike",
+    "superlikeLockedA11y": "Superlike lukustatud, avaneb pärast esimest check-in'i",
+    "currentlyAt": "Praegu asukohas {{place}}",
+    "mutualConnectionBanner": "See inimene soovib sinuga ühendust võtta",
+    "socialsHidden": "See kasutaja ei jaga oma sotsiaalmeediat",
+    "noBio": "Bio pole veel lisatud.",
+    "noSocials": "Sotsiaalmeediat pole",
+    "actionsTitle": "Toimingud",
+    "report": "Teavita",
+    "reportUserTitle": "Teavita kasutajast",
+    "reportWarning": "Väärkasutatud teavitused võivad kaasa tuua sanktsioone. Palun ole aus.",
+    "categoryLabel": "Kategooria",
+    "reasonLabel": "Põhjus",
+    "reasonPlaceholder": "Selgita põhjust lühidalt",
+    "descriptionLabel": "Kirjeldus (valikuline)",
+    "descriptionPlaceholder": "Lisainfo",
+    "sending": "Saatmine...",
+    "sendReport": "Saada teavitus",
+    "justNow": "Just praegu",
+    "minutesAgo_one": "{{count}} min tagasi",
+    "minutesAgo_other": "{{count}} min tagasi",
+    "hoursAgo_one": "{{count}} tund tagasi",
+    "hoursAgo_other": "{{count}} tundi tagasi",
+    "yesterday": "Eile",
+    "daysAgo_one": "{{count}} päev tagasi",
+    "daysAgo_other": "{{count}} päeva tagasi"
+  },
+  "warningsScreen": {
+    "title": "Hoiatused",
+    "banAlert": "Selline käitumine võib kaasa tuua ajutise või püsiva keelu rakenduses.",
+    "empty": "Hoiatusi pole.",
+    "typeLabel": "Hoiatuse tüüp",
+    "notSpecified": "Täpsustamata",
+    "notSpecifiedFem": "Täpsustamata",
+    "reasonLabel": "Põhjus"
+  },
+  "common": {
+    "close": "Sulge",
+    "errorTitle": "Viga"
+  },
+  "streakCard": {
+    "hintReady": "Sinu preemia on valmis!",
+    "hintGrow": "Logi iga päev sisse, et see kasvaks.",
+    "claimBoost": "Nõua oma boost",
+    "claimSuperlike": "Nõua oma superlike"
+  },
+  "coteCard": {
+    "messageTop": "Tipus! Logi homme sisse, et see säilitada.",
+    "messageZero": "Logi täna sisse, et see uuesti käivitada."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Ole tipus 30 min",
+    "boostPack5Desc": "Parim hinna ja kvaliteedi suhe",
+    "superlikePack3Desc": "Näita oma huvi unikaalsel viisil",
+    "superlikePack10Desc": "Tõelistele ühendajatele",
+    "badgePopular": "Populaarne",
+    "badgeBestOffer": "Parim pakkumine",
+    "notAvailableTitle": "Pole saadaval",
+    "notAvailableMessage": "See pakett pole veel poes saadaval.",
+    "purchaseErrorMessage": "Ostu ei õnnestunud lõpetada.",
+    "simulate": "Simuleeri"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Otsi neist kohtadest",
+    "categoryBars": "Baarid",
+    "categoryClubs": "Klubid",
+    "categoryRestos": "Restoranid",
+    "categoryPubs": "Pubid",
+    "categoryGyms": "Jõusaalid",
+    "categoryCafes": "Kohvikud",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Raamatukogud"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonüümne"
+  },
+  "locationMapView": {
+    "loadError": "Kaarti ei õnnestunud laadida",
+    "renderError": "Viga kaardi laadimisel"
+  },
+  "churnSurveyModal": {
+    "title": "Üks minut enne lahkumist?",
+    "subtitle": "Aita meil mõista, miks.",
+    "reasonTooManyNotifications": "Liiga palju teavitusi",
+    "reasonPrivacyConcern": "Ma ei tunne end jagamisega mugavalt",
+    "reasonNotUseful": "See pole mulle enam kasulik",
+    "reasonOther": "Muu põhjus",
+    "dismiss": "Jäta vahele",
+    "thanks": "Täname tagasiside eest 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Otsi",
+    "tabNearby": "Lähedal asuvad kohad",
+    "tabAccount": "Konto"
+  },
+  "documentViewer": {
+    "openError": "Seda dokumenti ei õnnestunud avada.",
+    "defaultLabel": "Vaata dokumenti"
+  },
+  "vibeFab": {
+    "toDay": "Lülitu päevarežiimile",
+    "toNight": "Lülitu öörežiimile"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Asukoha jagamine aktiivne"
+  }
+}

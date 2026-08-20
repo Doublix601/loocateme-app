@@ -1,9 +1,11 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, Dimensions } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 const WarningsBanner = ({ warningsCount, colors, onPress }) => {
+  const { t } = useTranslation();
   if (!warningsCount || warningsCount <= 0) return null;
   return (
     <TouchableOpacity
@@ -11,11 +13,11 @@ const WarningsBanner = ({ warningsCount, colors, onPress }) => {
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <Text style={[styles.title, { color: colors.accent }]}>Avertissements</Text>
+      <Text style={[styles.title, { color: colors.accent }]}>{t('myAccount.warnings.title')}</Text>
       <Text style={[styles.text, { color: colors.textPrimary }]}>
-        Vous avez {warningsCount} avertissement{warningsCount > 1 ? 's' : ''}.
+        {t('myAccount.warnings.message', { count: warningsCount })}
       </Text>
-      <Text style={[styles.meta, { color: colors.textSecondary }]}>Appuyez pour voir le détail</Text>
+      <Text style={[styles.meta, { color: colors.textSecondary }]}>{t('myAccount.warnings.tapForDetails')}</Text>
     </TouchableOpacity>
   );
 };

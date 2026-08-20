@@ -1,4 +1,5 @@
 import { useState, useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   TextInput,
   TouchableOpacity,
@@ -31,6 +32,7 @@ const GENDER_OPTIONS = [
 ];
 
 const SignupScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -51,7 +53,6 @@ const SignupScreen = () => {
   const [policyLoading, setPolicyLoading] = useState(false);
   const [policyText, setPolicyText] = useState('');
   const [prefAnalytics, setPrefAnalytics] = useState(false);
-  const [prefMarketing, setPrefMarketing] = useState(false);
   const [processing, setProcessing] = useState(false);
 
   const { updateUser } = useContext(UserContext);
@@ -62,19 +63,19 @@ const SignupScreen = () => {
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
-      setErrorMessage('Les mots de passe ne correspondent pas.');
+      setErrorMessage(t('auth.signup.passwordMismatch'));
       return;
     }
     if (!email || !password) {
-      setErrorMessage('Tous les champs doivent être remplis.');
+      setErrorMessage(t('auth.signup.requiredFields'));
       return;
     }
     if (!birthdate) {
-      setErrorMessage('La date de naissance est obligatoire.');
+      setErrorMessage(t('auth.signup.birthdateRequired'));
       return;
     }
     if (!isAtLeast18(birthdate)) {
-      setErrorMessage('Vous devez avoir au moins 18 ans pour vous inscrire.');
+      setErrorMessage(t('auth.signup.under18'));
       return;
     }
     // Start GDPR flow: show policy then preferences, then perform signup + consent update
@@ -89,7 +90,7 @@ const SignupScreen = () => {
       const text = typeof res === 'string' ? res : res?.policy || res?.text || JSON.stringify(res, null, 2);
       setPolicyText(text);
     } catch (e) {
-      setPolicyText('Impossible de charger la politique de confidentialité. Vous pourrez réessayer.');
+      setPolicyText(t('auth.signup.policyLoadError'));
     } finally {
       setPolicyLoading(false);
     }
@@ -122,7 +123,6 @@ const SignupScreen = () => {
           accepted: true,
           version: 'v1',
           analytics: prefAnalytics,
-          marketing: prefMarketing,
         });
         if (consentRes?.user) updatedUser = consentRes.user;
       } catch (e) {
@@ -353,22 +353,13 @@ const SignupScreen = () => {
             <View style={{ flex: 1, marginTop: 20 }}>
               <View style={[styles.gdprContent, { paddingHorizontal: 20 }]}>
                 <View style={styles.gdprPrefsCard}>
-                  <View style={styles.gdprToggleRow}>
+                  <View style={[styles.gdprToggleRow, { borderBottomWidth: 0 }]}>
                     <ThemedText style={styles.gdprLabel}>Partage analytics</ThemedText>
                     <Switch
                       value={prefAnalytics}
                       onValueChange={setPrefAnalytics}
                       trackColor={{ false: '#ccc', true: colors.accent }}
                       thumbColor={prefAnalytics ? colors.accent : '#f4f3f4'}
-                    />
-                  </View>
-                  <View style={[styles.gdprToggleRow, { borderBottomWidth: 0 }]}>
-                    <ThemedText style={styles.gdprLabel}>Communication marketing</ThemedText>
-                    <Switch
-                      value={prefMarketing}
-                      onValueChange={setPrefMarketing}
-                      trackColor={{ false: '#ccc', true: colors.accent }}
-                      thumbColor={prefMarketing ? colors.accent : '#f4f3f4'}
                     />
                   </View>
                 </View>

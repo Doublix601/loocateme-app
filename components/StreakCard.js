@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const MAX_DAYS = 14;
 const SUPERVISE_DAY = 7;
@@ -21,6 +22,7 @@ const StreakCard = ({
   onPress,
   onClaim,
 }) => {
+  const { t } = useTranslation();
   const safeCount = Math.max(0, Math.min(MAX_DAYS, count || 0));
   const displayCount = Math.max(1, safeCount);
   const scale = useRef(new Animated.Value(1)).current;
@@ -47,7 +49,7 @@ const StreakCard = ({
     Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30 }).start();
   };
 
-  const claimLabel = boostPendingClaim ? 'Réclamer ton boost' : supervisePendingClaim ? 'Réclamer ton superlike' : null;
+  const claimLabel = boostPendingClaim ? t('streakCard.claimBoost') : supervisePendingClaim ? t('streakCard.claimSuperlike') : null;
 
   return (
     <Animated.View style={{ transform: [{ scale: pulse }] }}>
@@ -96,8 +98,8 @@ const StreakCard = ({
           numberOfLines={2}
         >
           {canClaim
-            ? 'Ta récompense est prête !'
-            : 'Connecte-toi chaque jour pour la faire grimper.'}
+            ? t('streakCard.hintReady')
+            : t('streakCard.hintGrow')}
         </Text>
 
         {canClaim ? (

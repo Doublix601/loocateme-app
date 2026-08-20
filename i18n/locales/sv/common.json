@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Logga in",
+      "welcomeBack": "Välkommen tillbaka!",
+      "subtitle": "Logga in för att fortsätta",
+      "emailPlaceholder": "E-post",
+      "passwordPlaceholder": "Lösenord",
+      "submit": "Logga in",
+      "forgotPassword": "Glömt lösenordet?",
+      "noAccount": "Har du inget konto än?",
+      "createAccount": "Skapa ett konto",
+      "emailNotVerifiedTitle": "E-post ej verifierad",
+      "emailNotVerifiedMessage": "Din e-postadress har inte verifierats än. Vi har precis skickat ett nytt bekräftelsemail. Klicka på länken för att aktivera ditt konto och försök igen.",
+      "authFailedTitle": "Inloggning misslyckades",
+      "authFailedMessage": "Vi kunde inte logga in dig. Kontrollera dina uppgifter och försök igen."
+    },
+    "signup": {
+      "passwordMismatch": "Lösenorden matchar inte.",
+      "requiredFields": "Alla fält måste fyllas i.",
+      "birthdateRequired": "Födelsedatum krävs.",
+      "under18": "Du måste vara minst 18 år för att registrera dig.",
+      "policyLoadError": "Integritetspolicyn kunde inte laddas. Du kan försöka igen."
+    }
+  },
+  "consent": {
+    "title": "Integritet",
+    "changelogTitle": "Vad som har ändrats",
+    "decline": "Avvisa",
+    "accept": "Acceptera",
+    "accepting": "Sparar...",
+    "declineInfoTitle": "Information",
+    "declineInfoMessage": "Du måste acceptera integritetspolicyn för att använda appen.",
+    "acceptErrorTitle": "Fel",
+    "acceptErrorMessage": "Ditt samtycke kunde inte sparas. Försök igen."
+  },
+  "ageVerification": {
+    "title": "Åldersverifiering",
+    "urlMissing": "Verifierings-URL saknas",
+    "startError": "Åldersverifieringen kunde inte startas. Försök igen.",
+    "retry": "Försök igen",
+    "declinedTitle": "Verifiering avvisad",
+    "declinedMessage": "Vi kunde inte bekräfta att du är över 18 år. Du kan försöka igen."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Språk",
+      "systemDefault": "Telefonens språk"
+    }
+  },
+  "forgotPassword": {
+    "title": "Glömt lösenord",
+    "resetTitle": "Återställ",
+    "instructions": "Ange din e-postadress för att få en återställningslänk.",
+    "emailPlaceholder": "E-post",
+    "submit": "Skicka länk",
+    "successTitle": "E-post skickat",
+    "successMessage": "Om ett konto finns har ett e-postmeddelande skickats.",
+    "errorTitle": "Fel",
+    "errorFallback": "Försök igen"
+  },
+  "dataManagement": {
+    "title": "Integritet",
+    "export": {
+      "title": "Exportera min data",
+      "desc": "Ladda ner en kopia av din information (profil, sociala nätverk, inställningar).",
+      "button": "Exportera",
+      "buttonWorking": "Vänligen vänta...",
+      "successTitle": "Dataexport",
+      "successMessage": "Din export har genererats och visats i konsolen.",
+      "errorTitle": "Fel",
+      "errorMessage": "Det gick inte att exportera din data just nu. Försök igen."
+    },
+    "delete": {
+      "title": "Ta bort mitt konto",
+      "desc": "Tar bort ditt konto och all tillhörande data permanent.",
+      "passwordPlaceholder": "Bekräfta med ditt lösenord",
+      "button": "Ta bort permanent",
+      "passwordRequiredTitle": "Lösenord krävs",
+      "passwordRequiredMessage": "Ange ditt lösenord.",
+      "confirmTitle": "Bekräftelse",
+      "confirmMessage": "Denna åtgärd är oåterkallelig. Vill du verkligen ta bort ditt konto?",
+      "cancel": "Avbryt",
+      "confirm": "Ta bort",
+      "successTitle": "Konto borttaget",
+      "successMessage": "Ditt konto och din data har tagits bort.",
+      "errorTitle": "Fel",
+      "errorMessage": "Borttagning misslyckades. Ogiltigt lösenord eller serverproblem."
+    }
+  },
+  "editProfile": {
+    "title": "Redigera min profil",
+    "subtitle": "Tryck på ett fält för att redigera det",
+    "notSet": "Ej angivet",
+    "backLabel": "Tillbaka",
+    "fields": {
+      "firstName": "Förnamn",
+      "lastName": "Efternamn",
+      "customName": "Anpassat namn",
+      "bio": "Bio",
+      "birthdate": "Födelsedatum",
+      "gender": "Kön"
+    },
+    "gender": {
+      "male": "Kille",
+      "female": "Tjej",
+      "preferNotToSay": "Vill inte säga"
+    },
+    "photo": {
+      "notSupportedTitle": "Stöds inte",
+      "notSupportedMessage": "Kameran är inte tillgänglig på webben.",
+      "cameraPermissionTitle": "Behörighet krävs",
+      "cameraPermissionMessage": "Appen behöver kameraåtkomst för att ta en bild.",
+      "galleryPermissionMessage": "Appen behöver åtkomst till dina bilder för att välja en bild.",
+      "errorTitle": "Fel",
+      "uploadErrorMessage": "Bilden kunde inte laddas upp",
+      "cameraOpenError": "Kameran kunde inte öppnas.",
+      "galleryOpenError": "Galleriet kunde inte öppnas.",
+      "deleteErrorMessage": "Profilbilden kunde inte tas bort",
+      "deleteConfirmTitle": "Ta bort profilbild?",
+      "deleteConfirmMessage": "Denna åtgärd är permanent.",
+      "cancel": "Avbryt",
+      "delete": "Ta bort",
+      "modalTitle": "Profilbild",
+      "takePhoto": "📸 Ta ett foto",
+      "sending": "Laddar upp...",
+      "chooseGallery": "🖼️ Välj från galleri",
+      "deletePhoto": "🗑️ Ta bort foto",
+      "deleting": "Tar bort..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Ogiltigt förnamn",
+      "firstNameInvalidMessage": "Förnamnet måste börja med stor bokstav och får innehålla bokstäver (accenter tillåtna), mellanslag, apostrofer eller bindestreck.",
+      "lastNameInvalidTitle": "Ogiltigt efternamn",
+      "lastNameInvalidMessage": "Efternamnet måste börja med stor bokstav och får innehålla bokstäver (accenter tillåtna), mellanslag, apostrofer eller bindestreck.",
+      "incompleteIdentityTitle": "Ofullständig identitet",
+      "incompleteIdentityMessage": "Ange ett Anpassat namn ELLER ett Förnamn OCH ett Efternamn.",
+      "customNameRequiredTitle": "Anpassat namn krävs",
+      "customNameRequiredMessage": "Du kan inte ta bort det anpassade namnet medan för- eller efternamn är tomt.",
+      "invalidDateTitle": "Ogiltigt datum",
+      "invalidDateMessage": "Välj ett giltigt födelsedatum.",
+      "minAgeTitle": "Minimiålder krävs",
+      "minAgeMessage": "Du måste vara minst 18 år.",
+      "updateErrorMessage": "Din profil kunde inte uppdateras"
+    },
+    "modal": {
+      "editPrefix": "Redigera",
+      "editGeneric": "Redigera",
+      "selectDate": "Välj ett datum",
+      "cancel": "Avbryt",
+      "save": "Spara",
+      "placeholders": {
+        "firstName": "Ditt förnamn",
+        "lastName": "Ditt efternamn",
+        "customName": "Ditt anpassade namn",
+        "bio": "Berätta lite om dig själv...",
+        "default": "Din text"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Osynligt läge aktivt",
+      "subtitle": "Du kan inte se platser runt omkring dig så länge osynligt läge är aktiverat. Stäng av det för att bläddra bland platser.",
+      "disableButton": "Stäng av osynligt läge"
+    },
+    "error": {
+      "title": "Plats ej tillgänglig",
+      "subtitle": "Aktivera platstjänster i enhetens inställningar för att se platser runt omkring dig.",
+      "retry": "Försök igen"
+    },
+    "empty": {
+      "title": "Lugn zon för tillfället",
+      "subtitle": "Ingen aktiv plats hittades runt omkring dig. Utöka radien eller föreslå en ny plats.",
+      "expandRadius": "Utöka radien",
+      "suggestLocation": "Föreslå denna plats"
+    },
+    "footer": {
+      "loadingMore": "Laddar fler platser…",
+      "loadMoreError": "Kunde inte ladda fler platser. Kontrollera din anslutning.",
+      "retry": "Försök igen",
+      "reachedEnd": "Du har utforskat alla aktiva platser i närheten. Flytta dig eller sök för att se fler."
+    },
+    "leaveModal": {
+      "defaultName": "Denna plats",
+      "subtitle": "Du är för närvarande incheckad här. Vill du lämna denna plats?",
+      "confirm": "Jag är inte här längre",
+      "cancel": "Avbryt"
+    },
+    "sections": {
+      "moreLocations": "Fler platser för dig",
+      "sponsored": "I fokus",
+      "trending": "Händer nu"
+    },
+    "filters": {
+      "all": "Alla"
+    },
+    "card": {
+      "visitors_one": "{{count}} besökare",
+      "visitors_other": "{{count}} besökare",
+      "sponsored": "SPONSRAD",
+      "imHere": "Jag är här",
+      "editLocation": "Redigera min plats"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Manuell incheckning aktiverad",
+    "checkinModeAutoOn": "Automatisk incheckning aktiverad",
+    "checkinModeErrorTitle": "Fel",
+    "checkinModeErrorMessage": "Kunde inte ändra incheckningsläget just nu.",
+    "checkedInToast": "Du är nu på {{name}}!",
+    "checkinErrorMessage": "Kunde inte bekräfta din närvaro just nu.",
+    "leftLocationToast": "Du har lämnat den här platsen.",
+    "boostActiveTitle": "Boost aktiv",
+    "boostActiveLeaveMessage": "Du kan inte lämna denna plats medan din boost pågår.",
+    "leaveErrorMessage": "Kunde inte checka ut dig från denna plats just nu.",
+    "boostInProgressTitle": "Boost pågår",
+    "boostInProgressMessage": "Din boost är aktiv: vänta tills den är klar innan du byter plats.",
+    "refreshErrorToast": "Kunde inte uppdatera just nu.",
+    "disableInvisibleErrorMessage": "Kunde inte inaktivera osynligt läge just nu.",
+    "switchToManualLabel": "Byt till manuell incheckning",
+    "switchToAutoLabel": "Byt till automatisk incheckning",
+    "entryAuto": "Auto. incheckning",
+    "entryManual": "Manuell incheckning",
+    "showMapLabel": "Visa karta",
+    "showListLabel": "Visa lista",
+    "mapButton": "Karta",
+    "listButton": "Lista"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Fel",
+    "checkinErrorMessage": "Kunde inte bekräfta din närvaro just nu.",
+    "boostActiveHereTitle": "Boost pågår",
+    "boostActiveHereMessage": "Din boost är aktiv här: vänta tills den är klar innan du lämnar denna plats.",
+    "boostActiveMessage": "Din boost är aktiv: vänta tills den är klar.",
+    "notFound": "Platsen hittades inte",
+    "back": "Tillbaka",
+    "popularityVeryPopular": "Mycket populär",
+    "popularityPopular": "Populär",
+    "popularityActive": "Aktiv",
+    "popularityCalm": "Lugn",
+    "checkinConfirmed": "Bekräftat!",
+    "imHere": "Jag är här",
+    "viewPdf": "Visa PDF",
+    "pdfLoadError": "Denna PDF kan inte visas.",
+    "openInBrowser": "Öppna i webbläsare",
+    "profilesHere": "Profiler här",
+    "recentlyCrossed": "Nyligen korsade vägar",
+    "seeMore": "Se mer",
+    "boosted": "Boostad",
+    "boostProfileHere": "Boosta min profil här",
+    "boostLockedAfterCheckins": "Boost 🔓 efter 2 incheckningar"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Dela",
+      "shareLabel": "Dela min profil",
+      "qrCode": "QR-kod",
+      "qrLabel": "Visa min QR-kod",
+      "stats": "Statistik",
+      "statsLabel": "Visa min statistik"
+    },
+    "qr": {
+      "title": "Skanna för att se min profil",
+      "hint": "Om appen inte är installerad omdirigeras du till butiken ({{store}})."
+    },
+    "status": {
+      "title": "Din status",
+      "close": "Stäng",
+      "public": "Offentlig profil",
+      "private": "Privat profil",
+      "incognito": "Inkognito",
+      "pickLabel": "Välj min status"
+    },
+    "warnings": {
+      "title": "Varningar",
+      "message_one": "Du har {{count}} varning.",
+      "message_other": "Du har {{count}} varningar.",
+      "tapForDetails": "Tryck för mer information"
+    },
+    "referral": {
+      "invite": "Bjud in dina vänner",
+      "label": "Rekommendation: bjud in dina vänner"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Dela din plats",
+      "message": "Aktivera delning av din nuvarande plats för att lättare hittas av andra användare i närheten.",
+      "activate": "Aktivera",
+      "noThanks": "Nej tack"
+    },
+    "social": {
+      "addTitle": "Lägg till ett nätverk",
+      "usernamePlaceholder": "@användarnamn eller {{platform}}-ID",
+      "selectPlaceholder": "Välj ett nätverk",
+      "snapchatHint": "Obs: Snapchat tillåter inte direktlänkar, ange bara ditt användarnamn.",
+      "save": "Spara",
+      "saveLabel": "Spara",
+      "editTitle": "Redigera {{platform}}",
+      "usernamePlaceholderSimple": "Användarnamn",
+      "delete": "Ta bort",
+      "heading": "Sociala nätverk",
+      "addLabel": "Lägg till ett socialt nätverk"
+    },
+    "rewards": {
+      "heading": "Belöningar",
+      "superlikes": "Superlikes",
+      "boosts": "Boosts",
+      "buy": "Köp",
+      "buyLabel": "Köp superlikes eller boosts",
+      "premiumCta": "👑 Bli Premium",
+      "premiumLabel": "Bli Premium",
+      "superlikeHistoryLabel_one": "Visa superlike-historik, {{count}} kvar",
+      "superlikeHistoryLabel_other": "Visa superlike-historik, {{count}} kvar"
+    },
+    "currentlyAt": "För närvarande på {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Lägg till en mening för att presentera dig."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Din profilbild",
+      "photoDesc": "Ändra din profilbild från inställningarna (ikon uppe till höger).",
+      "bioTitle": "Din bio",
+      "bioDesc": "Din bio redigeras från inställningarna. Det är det första andra ser.",
+      "socialTitle": "Dina sociala nätverk",
+      "socialDesc": "Tryck på ➕ för att lägga till ett nätverk. Håll ner en ikon för att redigera eller ta bort den.",
+      "statusTitle": "Din status",
+      "statusDesc": "Offentlig profil = synlig för alla · Privat profil = nätverk dolda · Inkognito = osynlig. Tryck för att ändra."
+    },
+    "errorTitle": "Fel",
+    "shareLocationUpdateError": "Kunde inte uppdatera delningen av din aktuella plats",
+    "comingSoonTitle": "Kommer snart 🚀",
+    "comingSoonStats": "Statistik kommer mycket snart! Du kommer att kunna se vem som besöker din profil och dina sociala nätverk.",
+    "shareTitle": "Dela",
+    "shareError": "Kunde inte dela.",
+    "boostClaimedToast": "Boost hämtad 🚀",
+    "superlikeClaimedToast": "Superlike hämtad ⭐️",
+    "claimRewardError": "Kunde inte hämta belöningen",
+    "statusVisible": "Du är i synligt läge. Alla kan se dina sociala nätverk. Du utnyttjar appen fullt ut.",
+    "statusRestricted": "Du är i begränsat synligt läge. Ingen kan se dina sociala nätverk.",
+    "statusInvisible": "Du är i osynligt läge. Ingen kommer att se dig från och med nu.",
+    "statusUpdateError": "Kunde inte uppdatera status",
+    "unsupportedPlatform": "Plattformen stöds inte",
+    "handleRequired": "Ange ett användarnamn",
+    "invalidInstagramHandle": "Ogiltigt Instagram-användarnamn. Exempel: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Ogiltigt TikTok-användarnamn. Exempel: https://www.tiktok.com/@username",
+    "addSocialError": "Kunde inte lägga till det sociala nätverket",
+    "invalidLinkTitle": "Ogiltig länk",
+    "invalidInstagramHandleShort": "Ogiltigt Instagram-användarnamn",
+    "invalidTiktokHandleShort": "Ogiltigt TikTok-användarnamn",
+    "cannotOpenInstagramTitle": "Kunde inte öppna Instagram",
+    "cannotOpenTiktokTitle": "Kunde inte öppna TikTok",
+    "tryAgainLater": "Försök igen senare.",
+    "editSocialError": "Kunde inte redigera det sociala nätverket",
+    "deleteSocialError": "Kunde inte ta bort det sociala nätverket",
+    "backLabel": "Tillbaka",
+    "settingsLabel": "Inställningar",
+    "streakTitle": "Din streak 🔥",
+    "streakMessage": "Logga in varje dag för att öka din streak. På dag 7, hämta en superlike. På dag 14, hämta en boost — din streak börjar sedan om från 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Upptäck vem som är ute nära dig",
+        "desc": "Se i realtid livliga platser runt omkring dig och människorna som är där — just nu."
+      },
+      "checkin": {
+        "title": "Automatisk incheckning, dag eller natt",
+        "desc": "Så snart du kommer till en plats visas du där automatiskt — och du ser vem som är där. Appen växlar mellan dagläge (kaféer, parker, sport…) och nattläge (barer, restauranger, klubbar…) som du vill."
+      },
+      "profile": {
+        "title": "Din profil, platserna som lever",
+        "desc": "Lägg till dina sociala nätverk så att folk hittar dig, kolla profiler runt omkring dig. Varje plats visar också 1 till 3 stjärnor baserat på verklig aktivitet — ju livligare, desto mer lyser den."
+      },
+      "referral": {
+        "title": "Har en vän bjudit in dig?",
+        "desc": "Ange dennes rekommendationskod (valfritt) — det hjälper personen att låsa upp en gratis Premium-månad."
+      }
+    },
+    "referralPlaceholder": "Rekommendationskod",
+    "next": "Nästa",
+    "start": "Nu kör vi 🚀",
+    "skip": "Hoppa över"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Se vem som visar din profil",
+      "Synlighetsboosts (1 gratis paket)",
+      "Superlikes (3/vecka gratis)",
+      "Osynligt läge",
+      "Sökradie upp till 2 km",
+      "Avancerad statistik",
+      "Förbättrade aviseringar"
+    ],
+    "slides": {
+      "views": {
+        "title": "Vem besöker dig?",
+        "desc": "Se i realtid vem som tittar på din profil."
+      },
+      "boosts": {
+        "title": "Synlighetsboosts",
+        "desc": "Hamna högst upp på listan i 30 min på din plats."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Visa särskilt intresse för någon du lägger märke till."
+      },
+      "invisible": {
+        "title": "Osynligt läge",
+        "desc": "Försvinn från listan över närliggande användare när du vill."
+      },
+      "radius": {
+        "title": "Utökad radie",
+        "desc": "Utforska upp till 2 km runt dig (500 m i gratisversionen)."
+      },
+      "stats": {
+        "title": "Avancerad statistik",
+        "desc": "Följ visningar och klick på alla dina sociala nätverk."
+      }
+    },
+    "trialError": "Kunde inte starta den gratis provperioden.",
+    "errorTitle": "Fel",
+    "offersUnavailableTitle": "Erbjudanden ej tillgängliga",
+    "offersUnavailableMessage": "Prenumerationserbjudanden är inte laddade ännu. Försök igen om en stund.",
+    "purchaseError": "Köpet kunde inte slutföras.",
+    "restoredTitle": "✅ Köp återställda",
+    "restoredMessage": "Din Premium-prenumeration är aktiv.",
+    "noRestoreTitle": "Inget köp hittades",
+    "noRestoreMessage": "Ingen aktiv prenumeration kunde återställas.",
+    "restoreError": "Köpen kunde inte återställas.",
+    "closeLabel": "Stäng",
+    "title": "👑 Premium",
+    "subtitle": "Lås upp alla funktioner",
+    "debugBanner": "⚠️ Betalningar inaktiverade (debugläge)",
+    "monthly": "Månadsvis",
+    "perMonth": "/månad",
+    "annual": "Årsvis",
+    "perYear": "/år",
+    "mostChosen": "MEST VALDA",
+    "allIncluded": "ALLT INGÅR",
+    "ctaSimulate": "Simulera en Premium-prenumeration",
+    "ctaTrial": "Starta min 7-dagars gratis provperiod",
+    "ctaLoading": "Laddar erbjudanden…",
+    "ctaSubscribe": "Prenumerera",
+    "thenAnnual": "Sedan {{price}}/år · Kan avslutas när som helst",
+    "thenMonthly": "Sedan {{price}}/månad · Kan avslutas när som helst",
+    "restorePurchases": "Återställ mina köp",
+    "legalText": "Prenumerationen förnyas automatiskt om den inte avslutas före slutet av den aktuella perioden. Hantera dina prenumerationer i inställningarna för App Store / Google Play. ",
+    "privacyPolicy": "Integritetspolicy",
+    "terms": "Villkor"
+  },
+  "premiumWelcome": {
+    "header": "👑 Välkommen till Premium",
+    "finalTitle": "Nu kör vi!",
+    "finalDesc": "Njut av alla dina nya Premium-fördelar direkt.",
+    "discover": "Upptäck",
+    "next": "Nästa",
+    "skip": "Hoppa över"
+  },
+  "referralScreen": {
+    "loadError": "Din rekommendationsinformation kunde inte laddas.",
+    "errorTitle": "Fel",
+    "shareMessage": "Gå med mig på LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Bjud in en vän till LoocateMe",
+    "shareErrorTitle": "Dela",
+    "shareError": "Kunde inte dela.",
+    "codeSavedTitle": "Rekommendation",
+    "codeSaved": "Rekommendationskod sparad!",
+    "selfReferralError": "Du kan inte använda din egen kod.",
+    "alreadyReferredError": "Du har redan använt en rekommendationskod.",
+    "invalidCodeError": "Denna rekommendationskod är ogiltig.",
+    "genericCodeError": "Denna kod kunde inte valideras.",
+    "title": "Rekommendation",
+    "infoText": "Bjud in 5 vänner den här månaden (var och en måste gå ut och göra sin 1:a verifierade incheckning) och tjäna 1 gratis Premium-månad 🎉",
+    "confirmCode": "Bekräfta rekommendationskoden \"{{code}}\"?",
+    "validate": "Bekräfta",
+    "rewardActive": "💎 Din gratis Premium-månad är aktiv",
+    "rewardActiveUntil": " till {{date}}",
+    "yourCode": "Din rekommendationskod",
+    "shareButton": "📤 Dela min kod",
+    "shareLabel": "Dela min kod",
+    "progressLabel": "{{count}} / {{target}} rekommendationer denna månad",
+    "invitedFriends": "Inbjudna vänner",
+    "noInvites": "Inga vänner inbjudna än.",
+    "defaultUser": "Användare",
+    "statusValidated": "Validerad",
+    "statusVoid": "Annullerad",
+    "statusPending": "Väntande"
+  },
+  "searchView": {
+    "closeLabel": "Stäng sökning",
+    "title": "Sök",
+    "placeholder": "Användarnamn, plats...",
+    "clearLabel": "Rensa sökning",
+    "filterUsers": "Användare",
+    "filterLocations": "Platser",
+    "searching": "Söker…",
+    "typeToSearch": "Skriv minst 2 bokstäver för att starta sökningen",
+    "noResults": "Inga resultat hittades för denna sökning.",
+    "checkFilters": "Kontrollera filtren eller prova ett annat sökord.",
+    "resultsCount_one": "{{count}} resultat",
+    "resultsCount_other": "{{count}} resultat",
+    "noLongerHere": "Inte längre här"
+  },
+  "settingsScreen": {
+    "title": "Inställningar",
+    "tabProfile": "Profil",
+    "tabSettings": "Inställningar",
+    "sectionIdentity": "IDENTITET",
+    "firstName": "Förnamn",
+    "lastName": "Efternamn",
+    "customNameLabel": "Anpassat namn",
+    "bioLabel": "Bio",
+    "sectionSubscription": "PRENUMERATION",
+    "premiumMonthly": "· Månadsvis",
+    "premiumAnnual": "· Årsvis",
+    "statusLoading": "Laddar status…",
+    "grantedOutsideStore": "Beviljad utanför App Store/Play Store-prenumeration (gratis provperiod eller specialerbjudande)",
+    "renewsOn": "Förnyas {{date}}",
+    "expiresOn": "Upphör {{date}}",
+    "opening": "Öppnar…",
+    "manageSubscription": "Hantera min prenumeration",
+    "goPremium": "👑 Bli Premium",
+    "manageSubError": "Kunde inte öppna prenumerationshantering.",
+    "sectionGeneral": "ALLMÄNT",
+    "displayMode": "Visningsläge",
+    "fullNameMode": "Förnamn Efternamn",
+    "classicMode": "Klassisk",
+    "customMode": "Anpassad",
+    "sectionReferral": "REKOMMENDATION",
+    "alreadyReferred": "Du har redan blivit rekommenderad.",
+    "referralHint": "Har en vän delat en kod med dig? Ange den här.",
+    "referralPlaceholder": "Rekommendationskod",
+    "validate": "Bekräfta",
+    "sectionNotifications": "AVISERINGAR",
+    "notifKinds": {
+      "superlike": "Mottagna superlikes",
+      "superlikeAccepted": "Accepterade superlikes",
+      "eventBoost": "Evenemangsboosts",
+      "streakExpiring": "Streak-påminnelser",
+      "profileView": "Profilvisningar",
+      "socialClick": "Visningar av dina sociala nätverk",
+      "inactiveProfileViews": "Visningar mottagna medan du var borta",
+      "referralValidated": "Rekommendation validerad",
+      "referralRewardGranted": "Rekommendationsbelöning",
+      "nightModeActivated": "Nattläge aktiverat",
+      "atRiskReactivation": "Återaktiveringspåminnelser",
+      "weeklyDigest": "Veckosammanfattning"
+    },
+    "notifCategories": {
+      "social": "Social aktivitet",
+      "rewards": "Streaks & belöningar",
+      "system": "System & sammanfattningar"
+    },
+    "sectionPrivacy": "INTEGRITET & GDPR",
+    "privacyPolicyLink": "Integritetspolicy",
+    "consent": "Samtycke",
+    "analyticsLabel": "Analys",
+    "dataSaleTitle": "Försäljning av data (CCPA)",
+    "dataSaleDesc": "Vi säljer eller delar inte dina personuppgifter med tredje part i reklamsyfte.",
+    "invisibleModeTitle": "Osynligt läge",
+    "invisibleModeDesc": "Du kommer att vara osynlig för andra användare på platser, men du kan inte längre se kartan eller platslistan så länge detta läge är aktivt.",
+    "shareLocationTitle": "Dela min nuvarande plats",
+    "shareLocationDesc": "Visar andra användare den exakta platsen där du befinner dig just nu, utöver din stad. Avstängt som standard för att skydda din integritet och undvika risk för stalkning.",
+    "policyLoadError": "Integritetspolicyn kunde inte laddas.",
+    "savePrivacyPrefsError": "Dina sekretessinställningar kunde inte sparas",
+    "shareLocationUpdateError": "Delningen av din aktuella plats kunde inte uppdateras",
+    "invisibleModeUpdateError": "Det osynliga läget kunde inte uppdateras",
+    "notifPrefUpdateError": "Denna aviseringsinställning kunde inte uppdateras",
+    "consentSavedTitle": "Lyckades",
+    "consentSaved": "Samtycke sparat.",
+    "consentRevoked": "Samtycke återkallat.",
+    "consentSaveError": "Ditt samtycke kunde inte sparas",
+    "revokeConsentTitle": "Återkalla samtycke",
+    "revokeConsentMessage": "Att återkalla ditt samtycke leder till permanent radering av ditt konto och all din data. Vill du fortsätta?",
+    "cancel": "Avbryt",
+    "continueLabel": "Fortsätt",
+    "currentPasswordRequired": "Ange ditt nuvarande lösenord.",
+    "passwordTooShort": "Det nya lösenordet måste innehålla minst 6 tecken.",
+    "passwordConfirmMismatch": "Bekräftelsen matchar inte det nya lösenordet.",
+    "passwordChangedTitle": "Lösenord ändrat",
+    "passwordChangedMessage": "Ditt lösenord har uppdaterats.",
+    "currentPasswordInvalid": "Ogiltigt nuvarande lösenord eller serverfel.",
+    "invalidEmail": "Ange en giltig e-postadress.",
+    "passwordRequiredConfirm": "Ange ditt lösenord för att bekräfta.",
+    "checkInboxTitle": "Kontrollera din inkorg",
+    "checkInboxMessage": "Ett bekräftelsemail har skickats till {{email}}. Klicka på länken för att bekräfta ändringen.",
+    "emailChangeError": "Kunde inte starta ändringen. Ogiltigt lösenord eller serverfel.",
+    "exportReadyTitle": "Export klar",
+    "exportReadyMessage": "Din data har exporterats ({{size}} tecken).",
+    "exportError": "Din data kunde inte exporteras",
+    "deleteAccountConfirmTitle": "Radera konto",
+    "deleteAccountConfirmMessage": "Raderingen är permanent. Bekräftar du raderingen av ditt konto?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Din profil har uppdaterats.",
+    "loadBlockedError": "Blockerade konton kunde inte laddas",
+    "unblockError": "Kunde inte avblockera denna användare",
+    "sectionAccount": "KONTO",
+    "emailLabel": "E-post",
+    "notProvided": "Ej angivet",
+    "change": "Ändra",
+    "passwordLabel": "Lösenord",
+    "blockedAccounts": "Blockerade konton",
+    "helpAndPrivacy": "Hjälp & integritet",
+    "terms": "Användarvillkor",
+    "sectionModeration": "MODERERING",
+    "moderatorSpace": "Moderatorutrymme",
+    "debugConsole": "Felsökningskonsol",
+    "exportData": "Exportera min data",
+    "deleteAccount": "Radera mitt konto",
+    "logout": "Logga ut",
+    "save": "Spara",
+    "close": "Stäng",
+    "privacyModalTitle": "Integritet",
+    "deleteAccountTitle": "Kontoradering",
+    "deleteAccountDesc": "Ange ditt lösenord för att bekräfta. Denna åtgärd är oåterkallelig.",
+    "deleting": "Raderar...",
+    "changePasswordTitle": "Ändra lösenord",
+    "currentPasswordPlaceholder": "Nuvarande lösenord",
+    "newPasswordPlaceholder": "Nytt lösenord (min. 6 tecken)",
+    "confirmPasswordPlaceholder": "Bekräfta nytt lösenord",
+    "changeEmailTitle": "Ändra e-post",
+    "currentEmailLabel": "Nuvarande e-post: {{email}}",
+    "newEmailPlaceholder": "Ny e-post",
+    "noBlockedAccounts": "Inga blockerade konton.",
+    "unblock": "Avblockera"
+  },
+  "statisticsScreen": {
+    "loadError": "Statistiken kunde inte hämtas",
+    "loadVisitorsError": "Besökarlistan kunde inte hämtas",
+    "justNow": "Just nu",
+    "minutesAgo": "{{count}} min sedan",
+    "hoursAgo": "{{count}}h sedan",
+    "yesterday": "Igår",
+    "daysAgo": "{{count}} d sedan",
+    "title": "Statistik",
+    "comingSoonTitle": "Kommer snart 🚀",
+    "comingSoonDesc": "Statistik kommer mycket snart! Du kommer att kunna se vem som besöker din profil och dina sociala nätverk.",
+    "whoStalksTitle": "Vem stalkar dig? 👀",
+    "whoStalksDesc": "Bli Premium för att upptäcka vem som besöker din profil och dina sociala nätverk!",
+    "discoverVisitors": "Upptäck mina besökare",
+    "later": "Senare",
+    "profileViews": "Profilvisningar",
+    "views": "visningar",
+    "last30Days": "under de senaste 30 dagarna",
+    "clicksByNetwork": "Klick per nätverk",
+    "lastVisits": "Senaste besök",
+    "noVisitorsTitle": "Ingen har besökt din profil ännu",
+    "noVisitorsDesc": "Fortsätt utforska platser för att bli upptäckt!",
+    "defaultUser": "Användare",
+    "hiddenVisits_one": "{{count}} dolt besök",
+    "hiddenVisits_other": "{{count}} dolda besök",
+    "goPremiumToSeeAll": "Bli Premium för att se allt",
+    "showMore": "Visa mer"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Trakasserier",
+      "spam": "Skräppost",
+      "inappropriate": "Olämpligt innehåll",
+      "impersonation": "Identitetsstöld",
+      "scam": "Bedrägeri",
+      "other": "Annat"
+    },
+    "statusAvailable": "Tillgänglig",
+    "statusRestricted": "Begränsad synlighet",
+    "statusInvisible": "Osynlig",
+    "noUserSelected": "Ingen användare vald.",
+    "backToList": "Tillbaka till listan",
+    "superlikeLockedTitle": "Kommer snart",
+    "superlikeLockedMessage": "Superlikes låses upp efter din första incheckning.",
+    "superlikeSentTitle": "⭐ Superlike skickad!",
+    "superlikeSentMessage": "{{name}} har meddelats om att du lagt märke till hen.",
+    "errorTitle": "Fel",
+    "superlikeSendError": "Superlike kunde inte skickas.",
+    "blockConfirmTitle": "Blockera denna användare?",
+    "blockConfirmMessage": "Du kommer inte längre se den här användaren och hen kan inte längre kontakta dig.",
+    "cancel": "Avbryt",
+    "block": "Blockera",
+    "userBlockedTitle": "Användare blockerad",
+    "userBlockedMessage": "Den här användaren har blockerats.",
+    "blockError": "Kunde inte blockera den här användaren.",
+    "reasonRequiredTitle": "Anledning krävs",
+    "reasonRequiredMessage": "Ange en anledning.",
+    "reportSentTitle": "Anmälan skickad",
+    "reportSentMessage": "Tack för din anmälan.",
+    "reportSendError": "Anmälan kunde inte skickas.",
+    "backA11y": "Tillbaka",
+    "moreOptionsA11y": "Fler alternativ",
+    "sendSuperlikeA11y": "Skicka en superlike",
+    "superlikeLockedA11y": "Superlike låst, låses upp efter din första incheckning",
+    "currentlyAt": "Just nu på {{place}}",
+    "mutualConnectionBanner": "Den här personen vill komma i kontakt",
+    "socialsHidden": "Den här användaren delar inte sina sociala medier",
+    "noBio": "Ingen bio tillagd än.",
+    "noSocials": "Inga sociala medier",
+    "actionsTitle": "Åtgärder",
+    "report": "Anmäl",
+    "reportUserTitle": "Anmäl en användare",
+    "reportWarning": "Missbruk av anmälningar kan leda till sanktioner. Var ärlig.",
+    "categoryLabel": "Kategori",
+    "reasonLabel": "Anledning",
+    "reasonPlaceholder": "Förklara kort anledningen",
+    "descriptionLabel": "Beskrivning (valfritt)",
+    "descriptionPlaceholder": "Ytterligare detaljer",
+    "sending": "Skickar...",
+    "sendReport": "Skicka anmälan",
+    "justNow": "Just nu",
+    "minutesAgo_one": "{{count}} min sedan",
+    "minutesAgo_other": "{{count}} min sedan",
+    "hoursAgo_one": "{{count}} timme sedan",
+    "hoursAgo_other": "{{count}} timmar sedan",
+    "yesterday": "Igår",
+    "daysAgo_one": "{{count}} dag sedan",
+    "daysAgo_other": "{{count}} dagar sedan"
+  },
+  "warningsScreen": {
+    "title": "Varningar",
+    "banAlert": "Detta beteende kan leda till en tillfällig eller permanent avstängning från appen.",
+    "empty": "Inga varningar.",
+    "typeLabel": "Varningstyp",
+    "notSpecified": "Ej angivet",
+    "notSpecifiedFem": "Ej angivet",
+    "reasonLabel": "Anledning"
+  },
+  "common": {
+    "close": "Stäng",
+    "errorTitle": "Fel"
+  },
+  "streakCard": {
+    "hintReady": "Din belöning är klar!",
+    "hintGrow": "Logga in varje dag för att öka den.",
+    "claimBoost": "Hämta din boost",
+    "claimSuperlike": "Hämta din superlike"
+  },
+  "coteCard": {
+    "messageTop": "På topp! Logga in imorgon för att behålla den.",
+    "messageZero": "Logga in idag för att sätta fart på den igen."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Hamna högst upp i 30 min",
+    "boostPack5Desc": "Bäst valuta för pengarna",
+    "superlikePack3Desc": "Visa ditt intresse på ett unikt sätt",
+    "superlikePack10Desc": "För riktiga kontaktskapare",
+    "badgePopular": "Populär",
+    "badgeBestOffer": "Bästa erbjudandet",
+    "notAvailableTitle": "Inte tillgängligt",
+    "notAvailableMessage": "Det här paketet är inte tillgängligt i butiken ännu.",
+    "purchaseErrorMessage": "Kunde inte slutföra köpet.",
+    "simulate": "Simulera"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Sök på dessa platser",
+    "categoryBars": "Barer",
+    "categoryClubs": "Klubbar",
+    "categoryRestos": "Restauranger",
+    "categoryPubs": "Pubar",
+    "categoryGyms": "Gym",
+    "categoryCafes": "Kaféer",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Bibliotek"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonym"
+  },
+  "locationMapView": {
+    "loadError": "Kunde inte läsa in kartan",
+    "renderError": "Fel vid inläsning av kartan"
+  },
+  "churnSurveyModal": {
+    "title": "En minut innan du går?",
+    "subtitle": "Hjälp oss förstå varför.",
+    "reasonTooManyNotifications": "För många aviseringar",
+    "reasonPrivacyConcern": "Jag känner mig inte bekväm med delningen",
+    "reasonNotUseful": "Det är inte längre användbart för mig",
+    "reasonOther": "Annan anledning",
+    "dismiss": "Hoppa över",
+    "thanks": "Tack för din feedback 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Sök",
+    "tabNearby": "Platser i närheten",
+    "tabAccount": "Konto"
+  },
+  "documentViewer": {
+    "openError": "Det gick inte att öppna det här dokumentet.",
+    "defaultLabel": "Visa dokument"
+  },
+  "vibeFab": {
+    "toDay": "Byt till dagläge",
+    "toNight": "Byt till nattläge"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Platsdelning aktiv"
+  }
+}

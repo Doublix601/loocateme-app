@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Zaloguj się",
+      "welcomeBack": "Witaj ponownie!",
+      "subtitle": "Zaloguj się, aby kontynuować",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Hasło",
+      "submit": "Zaloguj się",
+      "forgotPassword": "Nie pamiętasz hasła?",
+      "noAccount": "Nie masz jeszcze konta?",
+      "createAccount": "Utwórz konto",
+      "emailNotVerifiedTitle": "E-mail niezweryfikowany",
+      "emailNotVerifiedMessage": "Twój adres e-mail nie został jeszcze zweryfikowany. Właśnie wysłaliśmy Ci nowy e-mail potwierdzający. Kliknij link, aby aktywować konto, a następnie spróbuj ponownie.",
+      "authFailedTitle": "Uwierzytelnianie nie powiodło się",
+      "authFailedMessage": "Nie udało się zalogować. Sprawdź swoje dane i spróbuj ponownie."
+    },
+    "signup": {
+      "passwordMismatch": "Hasła nie są zgodne.",
+      "requiredFields": "Wszystkie pola muszą być wypełnione.",
+      "birthdateRequired": "Data urodzenia jest wymagana.",
+      "under18": "Musisz mieć co najmniej 18 lat, aby się zarejestrować.",
+      "policyLoadError": "Nie udało się wczytać polityki prywatności. Możesz spróbować ponownie."
+    }
+  },
+  "consent": {
+    "title": "Prywatność",
+    "changelogTitle": "Co się zmieniło",
+    "decline": "Odrzuć",
+    "accept": "Akceptuj",
+    "accepting": "Zapisywanie...",
+    "declineInfoTitle": "Informacja",
+    "declineInfoMessage": "Musisz zaakceptować politykę prywatności, aby korzystać z aplikacji.",
+    "acceptErrorTitle": "Błąd",
+    "acceptErrorMessage": "Nie udało się zapisać Twojej zgody. Spróbuj ponownie."
+  },
+  "ageVerification": {
+    "title": "Weryfikacja wieku",
+    "urlMissing": "Brak adresu URL weryfikacji",
+    "startError": "Nie udało się rozpocząć weryfikacji wieku. Spróbuj ponownie.",
+    "retry": "Spróbuj ponownie",
+    "declinedTitle": "Weryfikacja odrzucona",
+    "declinedMessage": "Nie mogliśmy potwierdzić, że masz ukończone 18 lat. Możesz spróbować ponownie."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Język",
+      "systemDefault": "Język telefonu"
+    }
+  },
+  "forgotPassword": {
+    "title": "Nie pamiętam hasła",
+    "resetTitle": "Resetowanie",
+    "instructions": "Podaj swój adres e-mail, aby otrzymać link do resetowania.",
+    "emailPlaceholder": "E-mail",
+    "submit": "Wyślij link",
+    "successTitle": "E-mail wysłany",
+    "successMessage": "Jeśli konto istnieje, e-mail został wysłany.",
+    "errorTitle": "Błąd",
+    "errorFallback": "Spróbuj ponownie"
+  },
+  "dataManagement": {
+    "title": "Prywatność",
+    "export": {
+      "title": "Eksportuj moje dane",
+      "desc": "Pobierz kopię swoich informacji (profil, sieci społecznościowe, ustawienia).",
+      "button": "Eksportuj",
+      "buttonWorking": "Proszę czekać...",
+      "successTitle": "Eksport danych",
+      "successMessage": "Twój eksport został wygenerowany i wyświetlony w konsoli.",
+      "errorTitle": "Błąd",
+      "errorMessage": "Nie można teraz wyeksportować danych. Spróbuj ponownie."
+    },
+    "delete": {
+      "title": "Usuń moje konto",
+      "desc": "Trwale usuwa Twoje konto i wszystkie powiązane dane.",
+      "passwordPlaceholder": "Potwierdź swoim hasłem",
+      "button": "Usuń trwale",
+      "passwordRequiredTitle": "Wymagane hasło",
+      "passwordRequiredMessage": "Podaj swoje hasło.",
+      "confirmTitle": "Potwierdzenie",
+      "confirmMessage": "Ta czynność jest nieodwracalna. Czy na pewno chcesz usunąć swoje konto?",
+      "cancel": "Anuluj",
+      "confirm": "Usuń",
+      "successTitle": "Konto usunięte",
+      "successMessage": "Twoje konto i dane zostały usunięte.",
+      "errorTitle": "Błąd",
+      "errorMessage": "Usunięcie nie powiodło się. Nieprawidłowe hasło lub problem serwera."
+    }
+  },
+  "editProfile": {
+    "title": "Edytuj mój profil",
+    "subtitle": "Dotknij pola, aby je edytować",
+    "notSet": "Nie podano",
+    "backLabel": "Wstecz",
+    "fields": {
+      "firstName": "Imię",
+      "lastName": "Nazwisko",
+      "customName": "Niestandardowa nazwa",
+      "bio": "Bio",
+      "birthdate": "Data urodzenia",
+      "gender": "Płeć"
+    },
+    "gender": {
+      "male": "Chłopak",
+      "female": "Dziewczyna",
+      "preferNotToSay": "Wolę nie mówić"
+    },
+    "photo": {
+      "notSupportedTitle": "Nieobsługiwane",
+      "notSupportedMessage": "Aparat nie jest dostępny w wersji internetowej.",
+      "cameraPermissionTitle": "Wymagane uprawnienie",
+      "cameraPermissionMessage": "Aplikacja potrzebuje dostępu do aparatu, aby zrobić zdjęcie.",
+      "galleryPermissionMessage": "Aplikacja potrzebuje dostępu do zdjęć, aby wybrać obraz.",
+      "errorTitle": "Błąd",
+      "uploadErrorMessage": "Nie udało się przesłać obrazu",
+      "cameraOpenError": "Nie udało się otworzyć aparatu.",
+      "galleryOpenError": "Nie udało się otworzyć galerii.",
+      "deleteErrorMessage": "Nie udało się usunąć zdjęcia profilowego",
+      "deleteConfirmTitle": "Usunąć zdjęcie profilowe?",
+      "deleteConfirmMessage": "Ta czynność jest ostateczna.",
+      "cancel": "Anuluj",
+      "delete": "Usuń",
+      "modalTitle": "Zdjęcie profilowe",
+      "takePhoto": "📸 Zrób zdjęcie",
+      "sending": "Przesyłanie...",
+      "chooseGallery": "🖼️ Wybierz z galerii",
+      "deletePhoto": "🗑️ Usuń zdjęcie",
+      "deleting": "Usuwanie..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Nieprawidłowe imię",
+      "firstNameInvalidMessage": "Imię musi zaczynać się wielką literą i może zawierać litery (dozwolone akcenty), spacje, apostrofy lub myślniki.",
+      "lastNameInvalidTitle": "Nieprawidłowe nazwisko",
+      "lastNameInvalidMessage": "Nazwisko musi zaczynać się wielką literą i może zawierać litery (dozwolone akcenty), spacje, apostrofy lub myślniki.",
+      "incompleteIdentityTitle": "Niepełna tożsamość",
+      "incompleteIdentityMessage": "Podaj Niestandardową nazwę LUB Imię I Nazwisko.",
+      "customNameRequiredTitle": "Wymagana niestandardowa nazwa",
+      "customNameRequiredMessage": "Nie można usunąć niestandardowej nazwy, gdy imię lub nazwisko jest puste.",
+      "invalidDateTitle": "Nieprawidłowa data",
+      "invalidDateMessage": "Wybierz prawidłową datę urodzenia.",
+      "minAgeTitle": "Wymagany minimalny wiek",
+      "minAgeMessage": "Musisz mieć co najmniej 18 lat.",
+      "updateErrorMessage": "Nie udało się zaktualizować profilu"
+    },
+    "modal": {
+      "editPrefix": "Edytuj",
+      "editGeneric": "Edytuj",
+      "selectDate": "Wybierz datę",
+      "cancel": "Anuluj",
+      "save": "Zapisz",
+      "placeholders": {
+        "firstName": "Twoje imię",
+        "lastName": "Twoje nazwisko",
+        "customName": "Twoja niestandardowa nazwa",
+        "bio": "Opowiedz nam trochę o sobie...",
+        "default": "Twój tekst"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Tryb niewidzialny aktywny",
+      "subtitle": "Nie widzisz miejsc wokół siebie, dopóki tryb niewidzialny jest włączony. Wyłącz go, aby przeglądać miejsca.",
+      "disableButton": "Wyłącz tryb niewidzialny"
+    },
+    "error": {
+      "title": "Lokalizacja niedostępna",
+      "subtitle": "Włącz usługi lokalizacji w ustawieniach urządzenia, aby zobaczyć miejsca wokół siebie.",
+      "retry": "Spróbuj ponownie"
+    },
+    "empty": {
+      "title": "Na razie spokojna strefa",
+      "subtitle": "Nie znaleziono żadnego aktywnego miejsca w pobliżu. Zwiększ promień lub zaproponuj nowe miejsce.",
+      "expandRadius": "Zwiększ promień",
+      "suggestLocation": "Zaproponuj to miejsce"
+    },
+    "footer": {
+      "loadingMore": "Ładowanie kolejnych miejsc…",
+      "loadMoreError": "Nie udało się załadować więcej miejsc. Sprawdź swoje połączenie.",
+      "retry": "Spróbuj ponownie",
+      "reachedEnd": "Przejrzałeś wszystkie aktywne miejsca w pobliżu. Przemieść się lub wyszukaj, aby zobaczyć więcej."
+    },
+    "leaveModal": {
+      "defaultName": "To miejsce",
+      "subtitle": "Jesteś obecnie zameldowany tutaj. Czy chcesz opuścić to miejsce?",
+      "confirm": "Nie jestem już tutaj",
+      "cancel": "Anuluj"
+    },
+    "sections": {
+      "moreLocations": "Więcej miejsc dla Ciebie",
+      "sponsored": "Polecane",
+      "trending": "Dzieje się teraz"
+    },
+    "filters": {
+      "all": "Wszystkie"
+    },
+    "card": {
+      "visitors_one": "{{count}} odwiedzający",
+      "visitors_other": "{{count}} odwiedzających",
+      "sponsored": "SPONSOROWANE",
+      "imHere": "Jestem tutaj",
+      "editLocation": "Edytuj moją lokalizację"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Ręczny check-in włączony",
+    "checkinModeAutoOn": "Automatyczny check-in włączony",
+    "checkinModeErrorTitle": "Błąd",
+    "checkinModeErrorMessage": "Nie udało się teraz zmienić trybu meldowania.",
+    "checkedInToast": "Jesteś teraz w {{name}}!",
+    "checkinErrorMessage": "Nie udało się teraz potwierdzić Twojej obecności.",
+    "leftLocationToast": "Opuściłeś to miejsce.",
+    "boostActiveTitle": "Boost aktywny",
+    "boostActiveLeaveMessage": "Nie możesz opuścić tego miejsca, dopóki trwa Twój boost.",
+    "leaveErrorMessage": "Nie udało się teraz wymeldować Cię z tego miejsca.",
+    "boostInProgressTitle": "Boost w trakcie",
+    "boostInProgressMessage": "Twój boost jest aktywny: poczekaj, aż się zakończy, zanim zmienisz miejsce.",
+    "refreshErrorToast": "Nie udało się teraz odświeżyć.",
+    "disableInvisibleErrorMessage": "Nie udało się teraz wyłączyć trybu niewidzialnego.",
+    "switchToManualLabel": "Przełącz na ręczny check-in",
+    "switchToAutoLabel": "Przełącz na automatyczny check-in",
+    "entryAuto": "Wejście auto.",
+    "entryManual": "Wejście ręczne",
+    "showMapLabel": "Pokaż mapę",
+    "showListLabel": "Pokaż listę",
+    "mapButton": "Mapa",
+    "listButton": "Lista"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Błąd",
+    "checkinErrorMessage": "Nie udało się teraz potwierdzić Twojej obecności.",
+    "boostActiveHereTitle": "Boost w trakcie",
+    "boostActiveHereMessage": "Twój boost jest tutaj aktywny: poczekaj, aż się zakończy, zanim opuścisz to miejsce.",
+    "boostActiveMessage": "Twój boost jest aktywny: poczekaj, aż się zakończy.",
+    "notFound": "Nie znaleziono miejsca",
+    "back": "Wstecz",
+    "popularityVeryPopular": "Bardzo popularne",
+    "popularityPopular": "Popularne",
+    "popularityActive": "Aktywne",
+    "popularityCalm": "Spokojne",
+    "checkinConfirmed": "Potwierdzone!",
+    "imHere": "Jestem tutaj",
+    "viewPdf": "Zobacz PDF",
+    "pdfLoadError": "Nie można wyświetlić tego PDF.",
+    "openInBrowser": "Otwórz w przeglądarce",
+    "profilesHere": "Profile tutaj",
+    "recentlyCrossed": "Ostatnio spotkani",
+    "seeMore": "Zobacz więcej",
+    "boosted": "Wzmocniony",
+    "boostProfileHere": "Wzmocnij mój profil tutaj",
+    "boostLockedAfterCheckins": "Boost 🔓 po 2 check-inach"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Udostępnij",
+      "shareLabel": "Udostępnij mój profil",
+      "qrCode": "Kod QR",
+      "qrLabel": "Pokaż mój kod QR",
+      "stats": "Statystyki",
+      "statsLabel": "Zobacz moje statystyki"
+    },
+    "qr": {
+      "title": "Zeskanuj, aby zobaczyć mój profil",
+      "hint": "Jeśli aplikacja nie jest zainstalowana, zostaniesz przekierowany do sklepu ({{store}})."
+    },
+    "status": {
+      "title": "Twój status",
+      "close": "Zamknij",
+      "public": "Profil publiczny",
+      "private": "Profil prywatny",
+      "incognito": "Incognito",
+      "pickLabel": "Wybierz mój status"
+    },
+    "warnings": {
+      "title": "Ostrzeżenia",
+      "message_one": "Masz {{count}} ostrzeżenie.",
+      "message_other": "Masz {{count}} ostrzeżeń.",
+      "tapForDetails": "Dotknij, aby zobaczyć szczegóły"
+    },
+    "referral": {
+      "invite": "Zaproś znajomych",
+      "label": "Polecenie: zaproś znajomych"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Udostępnij swoją lokalizację",
+      "message": "Włącz udostępnianie swojego bieżącego miejsca, aby inni użytkownicy w pobliżu mogli cię łatwiej znaleźć.",
+      "activate": "Aktywuj",
+      "noThanks": "Nie, dziękuję"
+    },
+    "social": {
+      "addTitle": "Dodaj sieć",
+      "usernamePlaceholder": "@username lub ID {{platform}}",
+      "selectPlaceholder": "Wybierz sieć",
+      "snapchatHint": "Uwaga: Snapchat nie zezwala na bezpośrednie linki, wpisz po prostu swoją nazwę użytkownika.",
+      "save": "Zapisz",
+      "saveLabel": "Zapisz",
+      "editTitle": "Edytuj {{platform}}",
+      "usernamePlaceholderSimple": "Nazwa użytkownika",
+      "delete": "Usuń",
+      "heading": "Sieci społecznościowe",
+      "addLabel": "Dodaj sieć społecznościową"
+    },
+    "rewards": {
+      "heading": "Nagrody",
+      "superlikes": "Superlikes",
+      "boosts": "Boosty",
+      "buy": "Kup",
+      "buyLabel": "Kup superlikes lub boosty",
+      "premiumCta": "👑 Przejdź na Premium",
+      "premiumLabel": "Przejdź na Premium",
+      "superlikeHistoryLabel_one": "Zobacz historię superlikes, {{count}} pozostało",
+      "superlikeHistoryLabel_other": "Zobacz historię superlikes, {{count}} pozostało"
+    },
+    "currentlyAt": "Obecnie w {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Dodaj zdanie, aby się przedstawić."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Twoje zdjęcie profilowe",
+      "photoDesc": "Zmień zdjęcie profilowe w ustawieniach (ikona w prawym górnym rogu).",
+      "bioTitle": "Twoje bio",
+      "bioDesc": "Twoje bio edytujesz w ustawieniach. To pierwsza rzecz, którą widzą inni.",
+      "socialTitle": "Twoje sieci społecznościowe",
+      "socialDesc": "Dotknij ➕, aby dodać sieć. Przytrzymaj ikonę, aby ją edytować lub usunąć.",
+      "statusTitle": "Twój status",
+      "statusDesc": "Profil publiczny = widoczny dla wszystkich · Profil prywatny = sieci ukryte · Incognito = niewidoczny. Dotknij, aby zmienić."
+    },
+    "errorTitle": "Błąd",
+    "shareLocationUpdateError": "Nie udało się zaktualizować udostępniania bieżącej lokalizacji",
+    "comingSoonTitle": "Już wkrótce 🚀",
+    "comingSoonStats": "Statystyki pojawią się już wkrótce! Zobaczysz, kto odwiedza Twój profil i sieci społecznościowe.",
+    "shareTitle": "Udostępnij",
+    "shareError": "Nie można udostępnić.",
+    "boostClaimedToast": "Boost odebrany 🚀",
+    "superlikeClaimedToast": "Superlike odebrany ⭐️",
+    "claimRewardError": "Nie udało się odebrać nagrody",
+    "statusVisible": "Jesteś w trybie widocznym. Wszyscy mogą widzieć Twoje sieci społecznościowe. W pełni korzystasz z aplikacji.",
+    "statusRestricted": "Jesteś w trybie ograniczonej widoczności. Nikt nie może widzieć Twoich sieci społecznościowych.",
+    "statusInvisible": "Jesteś w trybie niewidzialnym. Od teraz nikt Cię nie zobaczy.",
+    "statusUpdateError": "Nie udało się zaktualizować statusu",
+    "unsupportedPlatform": "Nieobsługiwana platforma",
+    "handleRequired": "Podaj identyfikator",
+    "invalidInstagramHandle": "Nieprawidłowa nazwa użytkownika Instagram. Przykład: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Nieprawidłowa nazwa użytkownika TikTok. Przykład: https://www.tiktok.com/@username",
+    "addSocialError": "Nie udało się dodać sieci społecznościowej",
+    "invalidLinkTitle": "Nieprawidłowy link",
+    "invalidInstagramHandleShort": "Nieprawidłowa nazwa użytkownika Instagram",
+    "invalidTiktokHandleShort": "Nieprawidłowa nazwa użytkownika TikTok",
+    "cannotOpenInstagramTitle": "Nie można otworzyć Instagrama",
+    "cannotOpenTiktokTitle": "Nie można otworzyć TikToka",
+    "tryAgainLater": "Spróbuj ponownie później.",
+    "editSocialError": "Nie udało się edytować sieci społecznościowej",
+    "deleteSocialError": "Nie udało się usunąć sieci społecznościowej",
+    "backLabel": "Wstecz",
+    "settingsLabel": "Ustawienia",
+    "streakTitle": "Twoja seria 🔥",
+    "streakMessage": "Loguj się codziennie, aby zwiększyć swoją serię. W dniu 7 odbierz superlike. W dniu 14 odbierz boost — Twoja seria zaczyna się wtedy od nowa."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Odkryj, kto jest w pobliżu",
+        "desc": "Zobacz w czasie rzeczywistym tętniące życiem miejsca wokół siebie i osoby, które tam są — właśnie teraz."
+      },
+      "checkin": {
+        "title": "Automatyczne zameldowanie, dzień czy noc",
+        "desc": "Gdy tylko wejdziesz w jakieś miejsce, pojawiasz się tam automatycznie — i widzisz, kto tam jest. Aplikacja przełącza się między trybem Dzień (kawiarnie, parki, sport…) a trybem Noc (bary, restauracje, kluby…) w zależności od Twojego nastroju."
+      },
+      "profile": {
+        "title": "Twój profil, miejsca pełne życia",
+        "desc": "Dodaj swoje sieci społecznościowe, aby ludzie mogli Cię znaleźć, przeglądaj profile wokół siebie. Każde miejsce pokazuje też od 1 do 3 gwiazdek w zależności od rzeczywistej frekwencji — im więcej ruchu, tym mocniej błyszczy."
+      },
+      "referral": {
+        "title": "Zaprosił Cię znajomy?",
+        "desc": "Wpisz jego kod polecający (opcjonalnie) — pomaga mu to odblokować darmowy miesiąc Premium."
+      }
+    },
+    "referralPlaceholder": "Kod polecający",
+    "next": "Dalej",
+    "start": "Zaczynamy 🚀",
+    "skip": "Pomiń"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Zobacz, kto ogląda Twój profil",
+      "Boosty widoczności (1 darmowy pakiet)",
+      "Superlikes (3/tydzień gratis)",
+      "Tryb niewidzialny",
+      "Promień wyszukiwania do 2 km",
+      "Zaawansowane statystyki",
+      "Rozszerzone powiadomienia"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kto Cię odwiedza?",
+        "desc": "Dowiedz się w czasie rzeczywistym, kto ogląda Twój profil."
+      },
+      "boosts": {
+        "title": "Boosty widoczności",
+        "desc": "Wskocz na szczyt listy na 30 min w swoim lokalu."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Okaż szczególne zainteresowanie osobą, którą zauważysz."
+      },
+      "invisible": {
+        "title": "Tryb niewidzialny",
+        "desc": "Znikaj z listy pobliskich użytkowników, kiedy tylko chcesz."
+      },
+      "radius": {
+        "title": "Rozszerzony promień",
+        "desc": "Eksploruj do 2 km wokół siebie (500 m w wersji darmowej)."
+      },
+      "stats": {
+        "title": "Zaawansowane statystyki",
+        "desc": "Śledź wyświetlenia i kliknięcia na wszystkich swoich sieciach społecznościowych."
+      }
+    },
+    "trialError": "Nie udało się rozpocząć bezpłatnego okresu próbnego.",
+    "errorTitle": "Błąd",
+    "offersUnavailableTitle": "Oferty niedostępne",
+    "offersUnavailableMessage": "Oferty subskrypcji nie zostały jeszcze załadowane. Spróbuj ponownie za chwilę.",
+    "purchaseError": "Nie udało się sfinalizować zakupu.",
+    "restoredTitle": "✅ Zakupy przywrócone",
+    "restoredMessage": "Twoja subskrypcja Premium jest aktywna.",
+    "noRestoreTitle": "Nie znaleziono zakupu",
+    "noRestoreMessage": "Nie udało się przywrócić żadnej aktywnej subskrypcji.",
+    "restoreError": "Nie udało się przywrócić zakupów.",
+    "closeLabel": "Zamknij",
+    "title": "👑 Premium",
+    "subtitle": "Odblokuj wszystkie funkcje",
+    "debugBanner": "⚠️ Płatności wyłączone (tryb debugowania)",
+    "monthly": "Miesięcznie",
+    "perMonth": "/miesiąc",
+    "annual": "Rocznie",
+    "perYear": "/rok",
+    "mostChosen": "NAJCZĘŚCIEJ WYBIERANE",
+    "allIncluded": "WSZYSTKO W CENIE",
+    "ctaSimulate": "Symuluj subskrypcję Premium",
+    "ctaTrial": "Rozpocznij 7-dniowy bezpłatny okres próbny",
+    "ctaLoading": "Ładowanie ofert…",
+    "ctaSubscribe": "Subskrybuj",
+    "thenAnnual": "Następnie {{price}}/rok · Można anulować w dowolnym momencie",
+    "thenMonthly": "Następnie {{price}}/miesiąc · Można anulować w dowolnym momencie",
+    "restorePurchases": "Przywróć moje zakupy",
+    "legalText": "Subskrypcja odnawia się automatycznie, chyba że zostanie anulowana przed końcem bieżącego okresu. Zarządzaj subskrypcjami w ustawieniach App Store / Google Play. ",
+    "privacyPolicy": "Polityka prywatności",
+    "terms": "Regulamin"
+  },
+  "premiumWelcome": {
+    "header": "👑 Witamy w Premium",
+    "finalTitle": "Zaczynamy!",
+    "finalDesc": "Ciesz się już teraz wszystkimi swoimi nowymi korzyściami Premium.",
+    "discover": "Odkryj",
+    "next": "Dalej",
+    "skip": "Pomiń"
+  },
+  "referralScreen": {
+    "loadError": "Nie udało się załadować informacji o poleceniach.",
+    "errorTitle": "Błąd",
+    "shareMessage": "Dołącz do mnie w LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Zaproś znajomego do LoocateMe",
+    "shareErrorTitle": "Udostępnij",
+    "shareError": "Nie można udostępnić.",
+    "codeSavedTitle": "Polecenie",
+    "codeSaved": "Kod polecający zapisany!",
+    "selfReferralError": "Nie możesz użyć własnego kodu.",
+    "alreadyReferredError": "Już użyłeś kodu polecającego.",
+    "invalidCodeError": "Ten kod polecający jest nieprawidłowy.",
+    "genericCodeError": "Nie udało się zweryfikować tego kodu.",
+    "title": "Polecenie",
+    "infoText": "Zaproś 5 znajomych w tym miesiącu (każdy musi wyjść i wykonać swoje 1. zweryfikowane zameldowanie) i zdobądź 1 darmowy miesiąc Premium 🎉",
+    "confirmCode": "Potwierdzić kod polecający „{{code}}”?",
+    "validate": "Potwierdź",
+    "rewardActive": "💎 Twój darmowy miesiąc Premium jest aktywny",
+    "rewardActiveUntil": " do {{date}}",
+    "yourCode": "Twój kod polecający",
+    "shareButton": "📤 Udostępnij mój kod",
+    "shareLabel": "Udostępnij mój kod",
+    "progressLabel": "{{count}} / {{target}} poleceń w tym miesiącu",
+    "invitedFriends": "Zaproszeni znajomi",
+    "noInvites": "Nie zaproszono jeszcze żadnych znajomych.",
+    "defaultUser": "Użytkownik",
+    "statusValidated": "Zweryfikowano",
+    "statusVoid": "Anulowano",
+    "statusPending": "Oczekujące"
+  },
+  "searchView": {
+    "closeLabel": "Zamknij wyszukiwanie",
+    "title": "Wyszukiwanie",
+    "placeholder": "Nazwa użytkownika, miejsce...",
+    "clearLabel": "Wyczyść wyszukiwanie",
+    "filterUsers": "Użytkownicy",
+    "filterLocations": "Miejsca",
+    "searching": "Wyszukiwanie…",
+    "typeToSearch": "Wpisz co najmniej 2 litery, aby rozpocząć wyszukiwanie",
+    "noResults": "Nie znaleziono wyników dla tego wyszukiwania.",
+    "checkFilters": "Sprawdź filtry lub spróbuj innego słowa kluczowego.",
+    "resultsCount_one": "{{count}} wynik",
+    "resultsCount_other": "{{count}} wyników",
+    "noLongerHere": "Już go tu nie ma"
+  },
+  "settingsScreen": {
+    "title": "Ustawienia",
+    "tabProfile": "Profil",
+    "tabSettings": "Ustawienia",
+    "sectionIdentity": "TOŻSAMOŚĆ",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "customNameLabel": "Niestandardowa nazwa",
+    "bioLabel": "Bio",
+    "sectionSubscription": "SUBSKRYPCJA",
+    "premiumMonthly": "· Miesięczna",
+    "premiumAnnual": "· Roczna",
+    "statusLoading": "Ładowanie statusu…",
+    "grantedOutsideStore": "Przyznane poza subskrypcją App Store/Play Store (bezpłatny okres próbny lub oferta specjalna)",
+    "renewsOn": "Odnawia się {{date}}",
+    "expiresOn": "Wygasa {{date}}",
+    "opening": "Otwieranie…",
+    "manageSubscription": "Zarządzaj moją subskrypcją",
+    "goPremium": "👑 Przejdź na Premium",
+    "manageSubError": "Nie udało się otworzyć zarządzania subskrypcją.",
+    "sectionGeneral": "OGÓLNE",
+    "displayMode": "Tryb wyświetlania",
+    "fullNameMode": "Imię Nazwisko",
+    "classicMode": "Klasyczny",
+    "customMode": "Niestandardowy",
+    "sectionReferral": "POLECENIE",
+    "alreadyReferred": "Zostałeś już polecony.",
+    "referralHint": "Znajomy podzielił się z Tobą kodem? Wpisz go tutaj.",
+    "referralPlaceholder": "Kod polecający",
+    "validate": "Potwierdź",
+    "sectionNotifications": "POWIADOMIENIA",
+    "notifKinds": {
+      "superlike": "Otrzymane superlikes",
+      "superlikeAccepted": "Zaakceptowane superlikes",
+      "eventBoost": "Boosty wydarzeń",
+      "streakExpiring": "Przypomnienia o serii",
+      "profileView": "Wyświetlenia profilu",
+      "socialClick": "Wyświetlenia Twoich sieci społecznościowych",
+      "inactiveProfileViews": "Wyświetlenia otrzymane podczas nieobecności",
+      "referralValidated": "Polecenie zweryfikowane",
+      "referralRewardGranted": "Nagroda za polecenie",
+      "nightModeActivated": "Aktywacja trybu nocnego",
+      "atRiskReactivation": "Przypomnienia o reaktywacji",
+      "weeklyDigest": "Cotygodniowe podsumowanie"
+    },
+    "notifCategories": {
+      "social": "Aktywność społeczna",
+      "rewards": "Serie i nagrody",
+      "system": "System i podsumowania"
+    },
+    "sectionPrivacy": "PRYWATNOŚĆ I RODO",
+    "privacyPolicyLink": "Polityka prywatności",
+    "consent": "Zgoda",
+    "analyticsLabel": "Analityka",
+    "dataSaleTitle": "Sprzedaż danych (CCPA)",
+    "dataSaleDesc": "Nie sprzedajemy ani nie udostępniamy Twoich danych osobowych stronom trzecim w celach reklamowych.",
+    "invisibleModeTitle": "Tryb niewidzialny",
+    "invisibleModeDesc": "Będziesz niewidoczny dla innych użytkowników w miejscach, ale nie będziesz mógł przeglądać mapy ani listy miejsc, dopóki ten tryb jest aktywny.",
+    "shareLocationTitle": "Udostępnij moją bieżącą lokalizację",
+    "shareLocationDesc": "Pokazuje innym użytkownikom dokładne miejsce, w którym się aktualnie znajdujesz, oprócz Twojego miasta. Domyślnie wyłączone, aby chronić Twoją prywatność i uniknąć ryzyka stalkingu.",
+    "policyLoadError": "Nie udało się załadować polityki prywatności.",
+    "savePrivacyPrefsError": "Nie udało się zapisać Twoich preferencji prywatności",
+    "shareLocationUpdateError": "Nie udało się zaktualizować udostępniania bieżącej lokalizacji",
+    "invisibleModeUpdateError": "Nie udało się zaktualizować trybu niewidzialnego",
+    "notifPrefUpdateError": "Nie udało się zaktualizować tej preferencji powiadomień",
+    "consentSavedTitle": "Sukces",
+    "consentSaved": "Zgoda zapisana.",
+    "consentRevoked": "Zgoda cofnięta.",
+    "consentSaveError": "Nie udało się zapisać Twojej zgody",
+    "revokeConsentTitle": "Cofnięcie zgody",
+    "revokeConsentMessage": "Cofnięcie zgody spowoduje trwałe usunięcie Twojego konta i wszystkich danych. Czy chcesz kontynuować?",
+    "cancel": "Anuluj",
+    "continueLabel": "Kontynuuj",
+    "currentPasswordRequired": "Podaj swoje obecne hasło.",
+    "passwordTooShort": "Nowe hasło musi mieć co najmniej 6 znaków.",
+    "passwordConfirmMismatch": "Potwierdzenie nie zgadza się z nowym hasłem.",
+    "passwordChangedTitle": "Hasło zmienione",
+    "passwordChangedMessage": "Twoje hasło zostało zaktualizowane.",
+    "currentPasswordInvalid": "Nieprawidłowe obecne hasło lub błąd serwera.",
+    "invalidEmail": "Podaj prawidłowy adres e-mail.",
+    "passwordRequiredConfirm": "Podaj hasło, aby potwierdzić.",
+    "checkInboxTitle": "Sprawdź swoją skrzynkę",
+    "checkInboxMessage": "Email potwierdzający został wysłany na {{email}}. Kliknij link, aby zatwierdzić zmianę.",
+    "emailChangeError": "Nie udało się rozpocząć zmiany. Nieprawidłowe hasło lub błąd serwera.",
+    "exportReadyTitle": "Eksport gotowy",
+    "exportReadyMessage": "Twoje dane zostały wyeksportowane ({{size}} znaków).",
+    "exportError": "Nie udało się wyeksportować Twoich danych",
+    "deleteAccountConfirmTitle": "Usuń konto",
+    "deleteAccountConfirmMessage": "Usunięcie jest trwałe. Czy potwierdzasz usunięcie swojego konta?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Twój profil został zaktualizowany.",
+    "loadBlockedError": "Nie udało się załadować zablokowanych kont",
+    "unblockError": "Nie udało się odblokować tego użytkownika",
+    "sectionAccount": "KONTO",
+    "emailLabel": "E-mail",
+    "notProvided": "Nie podano",
+    "change": "Zmień",
+    "passwordLabel": "Hasło",
+    "blockedAccounts": "Zablokowane konta",
+    "helpAndPrivacy": "Pomoc i prywatność",
+    "terms": "Warunki użytkowania",
+    "sectionModeration": "MODERACJA",
+    "moderatorSpace": "Panel moderatora",
+    "debugConsole": "Konsola debugowania",
+    "exportData": "Eksportuj moje dane",
+    "deleteAccount": "Usuń moje konto",
+    "logout": "Wyloguj się",
+    "save": "Zapisz",
+    "close": "Zamknij",
+    "privacyModalTitle": "Prywatność",
+    "deleteAccountTitle": "Usunięcie konta",
+    "deleteAccountDesc": "Aby potwierdzić, wpisz swoje hasło. Ta czynność jest nieodwracalna.",
+    "deleting": "Usuwanie...",
+    "changePasswordTitle": "Zmień hasło",
+    "currentPasswordPlaceholder": "Obecne hasło",
+    "newPasswordPlaceholder": "Nowe hasło (min. 6 znaków)",
+    "confirmPasswordPlaceholder": "Potwierdź nowe hasło",
+    "changeEmailTitle": "Zmień e-mail",
+    "currentEmailLabel": "Obecny e-mail: {{email}}",
+    "newEmailPlaceholder": "Nowy e-mail",
+    "noBlockedAccounts": "Brak zablokowanych kont.",
+    "unblock": "Odblokuj"
+  },
+  "statisticsScreen": {
+    "loadError": "Nie udało się pobrać statystyk",
+    "loadVisitorsError": "Nie udało się pobrać listy odwiedzających",
+    "justNow": "Przed chwilą",
+    "minutesAgo": "{{count}} min temu",
+    "hoursAgo": "{{count}}h temu",
+    "yesterday": "Wczoraj",
+    "daysAgo": "{{count}} dni temu",
+    "title": "Statystyki",
+    "comingSoonTitle": "Już wkrótce 🚀",
+    "comingSoonDesc": "Statystyki pojawią się już wkrótce! Zobaczysz, kto odwiedza Twój profil i sieci społecznościowe.",
+    "whoStalksTitle": "Kto Cię śledzi? 👀",
+    "whoStalksDesc": "Przejdź na Premium, aby odkryć, kto odwiedza Twój profil i sieci społecznościowe!",
+    "discoverVisitors": "Odkryj moich odwiedzających",
+    "later": "Później",
+    "profileViews": "Wyświetlenia profilu",
+    "views": "wyświetleń",
+    "last30Days": "w ciągu ostatnich 30 dni",
+    "clicksByNetwork": "Kliknięcia według sieci",
+    "lastVisits": "Ostatnie wizyty",
+    "noVisitorsTitle": "Nikt jeszcze nie odwiedził Twojego profilu",
+    "noVisitorsDesc": "Kontynuuj eksplorację miejsc, aby zostać odkrytym!",
+    "defaultUser": "Użytkownik",
+    "hiddenVisits_one": "{{count}} ukryta wizyta",
+    "hiddenVisits_other": "{{count}} ukrytych wizyt",
+    "goPremiumToSeeAll": "Przejdź na Premium, aby zobaczyć wszystko",
+    "showMore": "Pokaż więcej"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Nękanie",
+      "spam": "Spam",
+      "inappropriate": "Niestosowna treść",
+      "impersonation": "Podszywanie się pod inną osobę",
+      "scam": "Oszustwo",
+      "other": "Inne"
+    },
+    "statusAvailable": "Dostępny/a",
+    "statusRestricted": "Ograniczona widoczność",
+    "statusInvisible": "Niewidoczny/a",
+    "noUserSelected": "Nie wybrano użytkownika.",
+    "backToList": "Wróć do listy",
+    "superlikeLockedTitle": "Już wkrótce",
+    "superlikeLockedMessage": "Superlike'i odblokowują się po pierwszym check-inie.",
+    "superlikeSentTitle": "⭐ Superlike wysłany!",
+    "superlikeSentMessage": "{{name}} został(a) powiadomiony/a, że zwróciłeś/aś na niego/nią uwagę.",
+    "errorTitle": "Błąd",
+    "superlikeSendError": "Nie udało się wysłać superlike'a.",
+    "blockConfirmTitle": "Zablokować tego użytkownika?",
+    "blockConfirmMessage": "Nie będziesz już widzieć tego użytkownika, a on nie będzie mógł się z Tobą kontaktować.",
+    "cancel": "Anuluj",
+    "block": "Zablokuj",
+    "userBlockedTitle": "Użytkownik zablokowany",
+    "userBlockedMessage": "Ten użytkownik został zablokowany.",
+    "blockError": "Nie udało się zablokować tego użytkownika.",
+    "reasonRequiredTitle": "Powód wymagany",
+    "reasonRequiredMessage": "Podaj proszę powód.",
+    "reportSentTitle": "Zgłoszenie wysłane",
+    "reportSentMessage": "Dziękujemy za zgłoszenie.",
+    "reportSendError": "Nie udało się wysłać zgłoszenia.",
+    "backA11y": "Wstecz",
+    "moreOptionsA11y": "Więcej opcji",
+    "sendSuperlikeA11y": "Wyślij superlike",
+    "superlikeLockedA11y": "Superlike zablokowany, odblokowuje się po pierwszym check-inie",
+    "currentlyAt": "Obecnie w {{place}}",
+    "mutualConnectionBanner": "Ta osoba chce nawiązać kontakt",
+    "socialsHidden": "Ten użytkownik nie udostępnia swoich sieci społecznościowych",
+    "noBio": "Brak opisu.",
+    "noSocials": "Brak sieci społecznościowych",
+    "actionsTitle": "Działania",
+    "report": "Zgłoś",
+    "reportUserTitle": "Zgłoś użytkownika",
+    "reportWarning": "Nadużywanie zgłoszeń może prowadzić do sankcji. Bądź szczery/a.",
+    "categoryLabel": "Kategoria",
+    "reasonLabel": "Powód",
+    "reasonPlaceholder": "Krótko wyjaśnij powód",
+    "descriptionLabel": "Opis (opcjonalnie)",
+    "descriptionPlaceholder": "Dodatkowe szczegóły",
+    "sending": "Wysyłanie...",
+    "sendReport": "Wyślij zgłoszenie",
+    "justNow": "Przed chwilą",
+    "minutesAgo_one": "{{count}} min temu",
+    "minutesAgo_other": "{{count}} min temu",
+    "hoursAgo_one": "{{count}} godz. temu",
+    "hoursAgo_other": "{{count}} godz. temu",
+    "yesterday": "Wczoraj",
+    "daysAgo_one": "{{count}} dzień temu",
+    "daysAgo_other": "{{count}} dni temu"
+  },
+  "warningsScreen": {
+    "title": "Ostrzeżenia",
+    "banAlert": "Takie zachowanie może skutkować tymczasowym lub trwałym zbanowaniem w aplikacji.",
+    "empty": "Brak ostrzeżeń.",
+    "typeLabel": "Rodzaj ostrzeżenia",
+    "notSpecified": "Nie określono",
+    "notSpecifiedFem": "Nie określono",
+    "reasonLabel": "Powód"
+  },
+  "common": {
+    "close": "Zamknij",
+    "errorTitle": "Błąd"
+  },
+  "streakCard": {
+    "hintReady": "Twoja nagroda jest gotowa!",
+    "hintGrow": "Loguj się codziennie, aby ją zwiększać.",
+    "claimBoost": "Odbierz swój boost",
+    "claimSuperlike": "Odbierz swój superlike"
+  },
+  "coteCard": {
+    "messageTop": "Na szczycie! Zaloguj się jutro, aby to utrzymać.",
+    "messageZero": "Zaloguj się dziś, aby ją ożywić."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Bądź na górze przez 30 min",
+    "boostPack5Desc": "Najlepszy stosunek jakości do ceny",
+    "superlikePack3Desc": "Pokaż swoje zainteresowanie w wyjątkowy sposób",
+    "superlikePack10Desc": "Dla prawdziwych łączników",
+    "badgePopular": "Popularne",
+    "badgeBestOffer": "Najlepsza oferta",
+    "notAvailableTitle": "Niedostępne",
+    "notAvailableMessage": "Ten pakiet nie jest jeszcze dostępny w sklepie.",
+    "purchaseErrorMessage": "Nie udało się dokończyć zakupu.",
+    "simulate": "Symuluj"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Szukaj w tych miejscach",
+    "categoryBars": "Bary",
+    "categoryClubs": "Kluby",
+    "categoryRestos": "Restauracje",
+    "categoryPubs": "Puby",
+    "categoryGyms": "Siłownie",
+    "categoryCafes": "Kawiarnie",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Biblioteki"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonimowy"
+  },
+  "locationMapView": {
+    "loadError": "Nie udało się załadować mapy",
+    "renderError": "Błąd podczas ładowania mapy"
+  },
+  "churnSurveyModal": {
+    "title": "Minutka zanim wyjdziesz?",
+    "subtitle": "Pomóż nam zrozumieć dlaczego.",
+    "reasonTooManyNotifications": "Zbyt wiele powiadomień",
+    "reasonPrivacyConcern": "Nie czuję się komfortowo z udostępnianiem",
+    "reasonNotUseful": "Nie jest już dla mnie przydatne",
+    "reasonOther": "Inny powód",
+    "dismiss": "Pomiń",
+    "thanks": "Dziękujemy za opinię 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Szukaj",
+    "tabNearby": "Miejsca w pobliżu",
+    "tabAccount": "Konto"
+  },
+  "documentViewer": {
+    "openError": "Nie można otworzyć tego dokumentu.",
+    "defaultLabel": "Zobacz dokument"
+  },
+  "vibeFab": {
+    "toDay": "Przełącz na tryb dzienny",
+    "toNight": "Przełącz na tryb nocny"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Udostępnianie lokalizacji aktywne"
+  }
+}

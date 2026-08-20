@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import ImageWithPlaceholder from '../../components/ImageWithPlaceholder';
 import AnimatedGradientBorder from '../../components/AnimatedGradientBorder';
 import { formatLocationType } from '../../components/LocationUtils';
@@ -41,6 +42,7 @@ const LocationCard = React.memo(function LocationCard({
   onManualCheckIn,
   onLongPressHere,
 }) {
+  const { t } = useTranslation();
   const isUserHere = item._id === currentUserPoiId;
   const canManualCheckIn =
     checkInMode === 'manual' &&
@@ -113,13 +115,13 @@ const LocationCard = React.memo(function LocationCard({
           )}
           {item.isSponsored && (
             <View style={styles.sponsoredBadge}>
-              <Text style={styles.sponsoredText}>SPONSORISÉ</Text>
+              <Text style={styles.sponsoredText}>{t('locationList.card.sponsored')}</Text>
             </View>
           )}
         </View>
         <View style={styles.activeUsersContainer}>
           <Text style={[styles.usersCountText, { color: colors.textSecondary }]}>
-            {item.userCount || 0} visiteur{(item.userCount || 0) > 1 ? 's' : ''}
+            {t('locationList.card.visitors', { count: item.userCount || 0 })}
           </Text>
           <View style={styles.avatarStack}>
             {(item.activeUsers || []).map((u, avatarIndex) => {
@@ -179,7 +181,7 @@ const LocationCard = React.memo(function LocationCard({
               ) : (
                 <>
                   <Ionicons name="checkmark-circle-outline" size={16} color="#fff" />
-                  <Text style={styles.manualCheckinButtonText}>Je suis là</Text>
+                  <Text style={styles.manualCheckinButtonText}>{t('locationList.card.imHere')}</Text>
                 </>
               )}
             </LinearGradient>
@@ -199,7 +201,7 @@ const LocationCard = React.memo(function LocationCard({
           style={[styles.editLocationButton, { opacity: isBoosted ? 0.4 : 1 }]}
         >
           <Ionicons name="pencil" size={14} color={colors.accent} />
-          <Text style={[styles.editLocationButtonText, { color: colors.accent }]}>Modifier mon emplacement</Text>
+          <Text style={[styles.editLocationButtonText, { color: colors.accent }]}>{t('locationList.card.editLocation')}</Text>
         </TouchableOpacity>
       )}
     </TouchableOpacity>

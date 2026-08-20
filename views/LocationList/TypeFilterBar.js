@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, ScrollView, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 
 // Barre de filtres par type de lieu (chips horizontales scrollables) :
 // "Tous" + les types réellement présents dans les lieux chargés (déjà
@@ -10,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 const ALL_KEY = '__all__';
 
 const TypeFilterBar = ({ types, selectedType, onSelect, colors, isDark, isMoon, lockSwiper, unlockSwiper }) => {
+  const { t } = useTranslation();
   if (!types || types.length === 0) return null;
 
   const chipBg = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.55)';
@@ -39,7 +41,7 @@ const TypeFilterBar = ({ types, selectedType, onSelect, colors, isDark, isMoon, 
         onContentSizeChange={(w) => setContentWidth(w)}
       >
         <Chip
-          label="Tous"
+          label={t('locationList.filters.all')}
           active={selectedType === ALL_KEY}
           onPress={() => onSelect(ALL_KEY)}
           colors={colors}

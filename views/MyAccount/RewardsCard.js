@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import StreakCard from '../../components/StreakCard';
 
 /**
@@ -28,6 +29,7 @@ const RewardsCard = ({
   isPremium,
   onOpenPaywall,
 }) => {
+  const { t } = useTranslation();
   return (
     <View style={styles.wrapper}>
       <LinearGradient
@@ -37,7 +39,7 @@ const RewardsCard = ({
         style={styles.borderGradient}
       >
         <View style={[styles.inner, { backgroundColor: colors.surfaceAlt }]}>
-          <Text style={[styles.heading, { color: isDark ? '#fff' : colors.textPrimary }]}>Récompenses</Text>
+          <Text style={[styles.heading, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.rewards.heading')}</Text>
 
           <StreakCard
             count={streak?.count ?? 0}
@@ -54,12 +56,12 @@ const RewardsCard = ({
             <TouchableOpacity
               style={styles.stat}
               onPress={onOpenSuperlikeHistory}
-              accessibilityLabel={`Voir l'historique des superlikes, ${superlikeBalance} restant${superlikeBalance !== 1 ? 's' : ''}`}
+              accessibilityLabel={t('myAccount.rewards.superlikeHistoryLabel', { count: superlikeBalance })}
             >
               <Animated.View style={{ transform: [{ scale: superlikePulse }] }}>
                 <Ionicons name="star" size={18} color="#FFB800" />
               </Animated.View>
-              <Text style={[styles.statLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>Superlikes</Text>
+              <Text style={[styles.statLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.rewards.superlikes')}</Text>
               <Text style={[styles.statValue, { color: isDark ? '#fff' : colors.textPrimary }]}>
                 {superlikeBalance}
               </Text>
@@ -69,15 +71,15 @@ const RewardsCard = ({
               <Animated.View style={{ transform: [{ scale: boostPulse }] }}>
                 <Ionicons name="flash" size={18} color={colors.accent} />
               </Animated.View>
-              <Text style={[styles.statLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>Boosts</Text>
+              <Text style={[styles.statLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.rewards.boosts')}</Text>
               <Text style={[styles.statValue, { color: isDark ? '#fff' : colors.textPrimary }]}>{boostBalance}</Text>
             </View>
             <TouchableOpacity
               style={[styles.buyButton, { backgroundColor: colors.accent }]}
               onPress={onOpenConsumablesShop}
-              accessibilityLabel="Acheter des superlikes ou boosters"
+              accessibilityLabel={t('myAccount.rewards.buyLabel')}
             >
-              <Text style={styles.buyButtonText}>Acheter</Text>
+              <Text style={styles.buyButtonText}>{t('myAccount.rewards.buy')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -85,9 +87,9 @@ const RewardsCard = ({
             <TouchableOpacity
               style={styles.premiumCta}
               onPress={onOpenPaywall}
-              accessibilityLabel="Passer au Premium"
+              accessibilityLabel={t('myAccount.rewards.premiumLabel')}
             >
-              <Text style={styles.premiumCtaText}>👑 Passer au Premium</Text>
+              <Text style={styles.premiumCtaText}>{t('myAccount.rewards.premiumCta')}</Text>
             </TouchableOpacity>
           )}
         </View>

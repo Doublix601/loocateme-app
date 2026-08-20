@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import socialMediaIcons from '../../constants/socialMediaIcons';
 import DraggableSocialTile from './DraggableSocialTile';
 
@@ -41,6 +42,7 @@ const SocialGrid = ({
   onDragStart,
   onDragEnd,
 }) => {
+  const { t } = useTranslation();
   const [order, setOrder] = useState(() =>
     (socialLinks || []).filter((s) => s?.platform && socialMediaIcons[s.platform]),
   );
@@ -102,11 +104,11 @@ const SocialGrid = ({
   return (
     <View>
       <View style={styles.headingRow}>
-        <Text style={[styles.heading, { color: isDark ? '#fff' : colors.textPrimary }]}>Réseaux sociaux</Text>
+        <Text style={[styles.heading, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.social.heading')}</Text>
         <TouchableOpacity
           onPress={onAddPress}
           style={[styles.addButton, { backgroundColor: colors.accent }]}
-          accessibilityLabel="Ajouter un réseau social"
+          accessibilityLabel={t('myAccount.social.addLabel')}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="add" size={20} color="#fff" />

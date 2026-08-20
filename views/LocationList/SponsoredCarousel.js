@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import LocationCard from './LocationCard';
 
 // Section "Mis en avant" (lieux `isSponsored`) — épinglée juste sous le
@@ -20,6 +21,7 @@ const SponsoredCarousel = ({
   unlockSwiper,
   cardProps,
 }) => {
+  const { t } = useTranslation();
   const listRef = useRef(null);
   const scrollIndexRef = useRef(0);
   const touchActiveRef = useRef(false);
@@ -74,7 +76,7 @@ const SponsoredCarousel = ({
         { backgroundColor: isDark ? 'rgba(0,0,0,0.28)' : 'rgba(0,0,0,0.16)' },
       ]}
     >
-      <Text style={[styles.title, { color: sectionTitleColor }]}>Mis en avant</Text>
+      <Text style={[styles.title, { color: sectionTitleColor }]}>{t('locationList.sections.sponsored')}</Text>
       {items.length === 1 ? (
         // Un seul item dans un FlatList horizontal de 280px laisse un grand
         // vide à droite (l'écran ne fait presque jamais 280px de large) : on

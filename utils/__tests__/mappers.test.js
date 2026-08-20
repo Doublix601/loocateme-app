@@ -58,7 +58,6 @@ describe('mapBackendUser', () => {
   it('defaults privacyPreferences', () => {
     expect(mapBackendUser({}).privacyPreferences).toEqual({
       analytics: false,
-      marketing: false,
     });
   });
 

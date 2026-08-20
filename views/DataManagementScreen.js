@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { logger } from '../utils/logger';
 import {
   View,
@@ -20,6 +21,7 @@ import { useTheme } from '../components/contexts/ThemeContext';
 const { width, height } = Dimensions.get('window');
 
 export default function DataManagementScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [password, setPassword] = useState('');
   const [working, setWorking] = useState(false);
@@ -31,9 +33,9 @@ export default function DataManagementScreen() {
       const data = await exportMyData();
       // For simplicity in RN, just show a success and log the JSON in console.
       logger.log('My data export:', data);
-      Alert.alert('Export des données', 'Votre export a été généré. Il a été affiché dans la console.');
+      Alert.alert(t('dataManagement.export.successTitle'), t('dataManagement.export.successMessage'));
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'exporter vos données maintenant. Réessayez.");
+      Alert.alert(t('dataManagement.export.errorTitle'), t('dataManagement.export.errorMessage'));
     } finally {
       setWorking(false);
     }
@@ -41,26 +43,26 @@ export default function DataManagementScreen() {
 
   const handleDelete = async () => {
     if (!password || password.length < 6) {
-      Alert.alert('Mot de passe requis', 'Merci de saisir votre mot de passe.');
+      Alert.alert(t('dataManagement.delete.passwordRequiredTitle'), t('dataManagement.delete.passwordRequiredMessage'));
       return;
     }
-    Alert.alert('Confirmation', 'Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?', [
-      { text: 'Annuler', style: 'cancel' },
+    Alert.alert(t('dataManagement.delete.confirmTitle'), t('dataManagement.delete.confirmMessage'), [
+      { text: t('dataManagement.delete.cancel'), style: 'cancel' },
       {
-        text: 'Supprimer',
+        text: t('dataManagement.delete.confirm'),
         style: 'destructive',
         onPress: async () => {
           try {
             setWorking(true);
             await deleteMyAccount({ password });
             await logout();
-            Alert.alert('Compte supprimé', 'Votre compte et vos données ont été supprimés.');
+            Alert.alert(t('dataManagement.delete.successTitle'), t('dataManagement.delete.successMessage'));
             try {
               clearApiCache();
             } catch (_) {}
             navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
           } catch (e) {
-            Alert.alert('Erreur', 'Suppression impossible. Mot de passe invalide ou problème serveur.');
+            Alert.alert(t('dataManagement.delete.errorTitle'), t('dataManagement.delete.errorMessage'));
           } finally {
             setWorking(false);
           }
@@ -81,31 +83,31 @@ export default function DataManagementScreen() {
             style={[styles.backIcon, { tintColor: '#00c2cb' }]}
           />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('dataManagement.title')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Exporter mes données</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t('dataManagement.export.title')}</Text>
           <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>
-            Téléchargez une copie de vos informations (profil, réseaux sociaux, paramètres).
+            {t('dataManagement.export.desc')}
           </Text>
           <TouchableOpacity style={styles.primary} disabled={working} onPress={handleExport}>
-            <Text style={styles.primaryText}>{working ? 'Veuillez patienter...' : 'Exporter'}</Text>
+            <Text style={styles.primaryText}>{working ? t('dataManagement.export.buttonWorking') : t('dataManagement.export.button')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Supprimer mon compte</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t('dataManagement.delete.title')}</Text>
           <Text style={[styles.cardDesc, { color: colors.textSecondary, opacity: 0.7 }]}>
-            Supprime définitivement votre compte et toutes les données associées.
+            {t('dataManagement.delete.desc')}
           </Text>
           <TextInput
             secureTextEntry
             value={password}
             onChangeText={setPassword}
-            placeholder="Confirmez avec votre mot de passe"
+            placeholder={t('dataManagement.delete.passwordPlaceholder')}
             placeholderTextColor={isDark ? '#888' : '#999'}
             style={[
               styles.input,
@@ -117,7 +119,7 @@ export default function DataManagementScreen() {
             ]}
           />
           <TouchableOpacity style={styles.danger} disabled={working} onPress={handleDelete}>
-            <Text style={styles.dangerText}>Supprimer définitivement</Text>
+            <Text style={styles.dangerText}>{t('dataManagement.delete.button')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

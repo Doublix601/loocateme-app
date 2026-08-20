@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 const ActionsFooter = ({ colors, isDark, onShare, onShowQr, onOpenStats }) => {
+  const { t } = useTranslation();
   return (
     <View
       style={[
@@ -12,23 +14,23 @@ const ActionsFooter = ({ colors, isDark, onShare, onShowQr, onOpenStats }) => {
         { backgroundColor: isDark ? 'rgba(0, 194, 203, 0.1)' : 'rgba(0, 194, 203, 0.05)' },
       ]}
     >
-      <TouchableOpacity style={styles.item} onPress={onShare} accessibilityLabel="Partager mon profil">
+      <TouchableOpacity style={styles.item} onPress={onShare} accessibilityLabel={t('myAccount.actions.shareLabel')}>
         <View style={[styles.btn, { backgroundColor: colors.accent }]}>
           <Ionicons name="share-social-outline" size={20} color="#fff" />
         </View>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Partager</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('myAccount.actions.share')}</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.item} onPress={onShowQr} accessibilityLabel="Afficher mon QR code">
+      <TouchableOpacity style={styles.item} onPress={onShowQr} accessibilityLabel={t('myAccount.actions.qrLabel')}>
         <View style={[styles.btn, { backgroundColor: colors.accent }]}>
           <Ionicons name="qr-code-outline" size={20} color="#fff" />
         </View>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>QR code</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('myAccount.actions.qrCode')}</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.item} onPress={onOpenStats} accessibilityLabel="Voir mes statistiques">
+      <TouchableOpacity style={styles.item} onPress={onOpenStats} accessibilityLabel={t('myAccount.actions.statsLabel')}>
         <View style={[styles.btn, { backgroundColor: colors.accent }]}>
           <Ionicons name="stats-chart-outline" size={20} color="#fff" />
         </View>
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Stats</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]}>{t('myAccount.actions.stats')}</Text>
       </TouchableOpacity>
     </View>
   );

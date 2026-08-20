@@ -1,11 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Modal } from 'react-native';
 import { useTheme } from './contexts/ThemeContext';
-import { PREMIUM_SLIDES } from '../constants/premiumFeatures';
+import { useTranslation } from 'react-i18next';
+import { getPremiumSlides } from '../constants/premiumFeatures';
 
 const { width } = Dimensions.get('window');
-
-const STEPS = [...PREMIUM_SLIDES, { emoji: '🎉', title: "C'est parti !", desc: 'Profite de tous tes nouveaux avantages Premium dès maintenant.' }];
 
 // Carrousel de bienvenue affiché juste après le passage au Premium (achat ou
 // essai gratuit) — un slide par avantage débloqué, puis un slide de clôture.
@@ -13,6 +12,8 @@ const STEPS = [...PREMIUM_SLIDES, { emoji: '🎉', title: "C'est parti !", desc:
 // (ScrollView horizontal pagingEnabled + dots).
 const PremiumWelcomeOnboarding = ({ visible, onClose }) => {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
+  const STEPS = [...getPremiumSlides(t), { emoji: '🎉', title: t('premiumWelcome.finalTitle'), desc: t('premiumWelcome.finalDesc') }];
   const [stepIdx, setStepIdx] = useState(0);
   const carouselRef = useRef(null);
 
@@ -36,7 +37,7 @@ const PremiumWelcomeOnboarding = ({ visible, onClose }) => {
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: bg }]}>
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: text }]}>👑 Bienvenue dans Premium</Text>
+          <Text style={[styles.headerTitle, { color: text }]}>{t('premiumWelcome.header')}</Text>
         </View>
 
         <ScrollView
@@ -74,12 +75,12 @@ const PremiumWelcomeOnboarding = ({ visible, onClose }) => {
         </View>
 
         <TouchableOpacity onPress={goNext} activeOpacity={0.85} style={styles.cta}>
-          <Text style={styles.ctaText}>{isLastStep ? 'Découvrir' : 'Suivant'}</Text>
+          <Text style={styles.ctaText}>{isLastStep ? t('premiumWelcome.discover') : t('premiumWelcome.next')}</Text>
         </TouchableOpacity>
 
         {!isLastStep && (
           <TouchableOpacity onPress={onClose} style={styles.skipBtn}>
-            <Text style={[styles.skipTxt, { color: sub }]}>Passer</Text>
+            <Text style={[styles.skipTxt, { color: sub }]}>{t('premiumWelcome.skip')}</Text>
           </TouchableOpacity>
         )}
       </View>

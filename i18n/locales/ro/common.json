@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Conectare",
+      "welcomeBack": "Bine ai revenit!",
+      "subtitle": "Conectează-te pentru a continua",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Parolă",
+      "submit": "Conectare",
+      "forgotPassword": "Ai uitat parola?",
+      "noAccount": "Nu ai încă un cont?",
+      "createAccount": "Creează un cont",
+      "emailNotVerifiedTitle": "Email neverificat",
+      "emailNotVerifiedMessage": "Adresa ta de email nu a fost încă verificată. Tocmai ți-am retrimis un email de confirmare. Te rugăm să dai clic pe link pentru a-ți activa contul, apoi încearcă din nou.",
+      "authFailedTitle": "Autentificare eșuată",
+      "authFailedMessage": "Nu am putut să te conectăm. Verifică datele de conectare și încearcă din nou."
+    },
+    "signup": {
+      "passwordMismatch": "Parolele nu coincid.",
+      "requiredFields": "Toate câmpurile trebuie completate.",
+      "birthdateRequired": "Data nașterii este obligatorie.",
+      "under18": "Trebuie să ai cel puțin 18 ani pentru a te înregistra.",
+      "policyLoadError": "Politica de confidențialitate nu a putut fi încărcată. Poți încerca din nou."
+    }
+  },
+  "consent": {
+    "title": "Confidențialitate",
+    "changelogTitle": "Ce s-a schimbat",
+    "decline": "Refuz",
+    "accept": "Accept",
+    "accepting": "Se salvează...",
+    "declineInfoTitle": "Informație",
+    "declineInfoMessage": "Trebuie să accepți politica de confidențialitate pentru a folosi aplicația.",
+    "acceptErrorTitle": "Eroare",
+    "acceptErrorMessage": "Consimțământul tău nu a putut fi salvat. Încearcă din nou."
+  },
+  "ageVerification": {
+    "title": "Verificarea vârstei",
+    "urlMissing": "URL de verificare lipsă",
+    "startError": "Verificarea vârstei nu a putut fi începută. Încearcă din nou.",
+    "retry": "Încearcă din nou",
+    "declinedTitle": "Verificare refuzată",
+    "declinedMessage": "Nu am putut confirma că ai peste 18 ani. Poți încerca din nou."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Limbă",
+      "systemDefault": "Limba telefonului"
+    }
+  },
+  "forgotPassword": {
+    "title": "Ai uitat parola",
+    "resetTitle": "Resetare",
+    "instructions": "Introdu adresa ta de email pentru a primi un link de resetare.",
+    "emailPlaceholder": "Email",
+    "submit": "Trimite link",
+    "successTitle": "Email trimis",
+    "successMessage": "Dacă există un cont, a fost trimis un email.",
+    "errorTitle": "Eroare",
+    "errorFallback": "Te rugăm să încerci din nou"
+  },
+  "dataManagement": {
+    "title": "Confidențialitate",
+    "export": {
+      "title": "Exportă datele mele",
+      "desc": "Descarcă o copie a informațiilor tale (profil, rețele sociale, setări).",
+      "button": "Exportă",
+      "buttonWorking": "Te rugăm să aștepți...",
+      "successTitle": "Export de date",
+      "successMessage": "Exportul tău a fost generat și afișat în consolă.",
+      "errorTitle": "Eroare",
+      "errorMessage": "Datele tale nu au putut fi exportate acum. Încearcă din nou."
+    },
+    "delete": {
+      "title": "Șterge-mi contul",
+      "desc": "Șterge definitiv contul tău și toate datele asociate.",
+      "passwordPlaceholder": "Confirmă cu parola ta",
+      "button": "Șterge definitiv",
+      "passwordRequiredTitle": "Parolă necesară",
+      "passwordRequiredMessage": "Te rugăm să introduci parola.",
+      "confirmTitle": "Confirmare",
+      "confirmMessage": "Această acțiune este ireversibilă. Chiar vrei să îți ștergi contul?",
+      "cancel": "Anulează",
+      "confirm": "Șterge",
+      "successTitle": "Cont șters",
+      "successMessage": "Contul și datele tale au fost șterse.",
+      "errorTitle": "Eroare",
+      "errorMessage": "Ștergerea a eșuat. Parolă invalidă sau problemă de server."
+    }
+  },
+  "editProfile": {
+    "title": "Editează-mi profilul",
+    "subtitle": "Atinge un câmp pentru a-l edita",
+    "notSet": "Nespecificat",
+    "backLabel": "Înapoi",
+    "fields": {
+      "firstName": "Prenume",
+      "lastName": "Nume",
+      "customName": "Nume personalizat",
+      "bio": "Bio",
+      "birthdate": "Data nașterii",
+      "gender": "Sex"
+    },
+    "gender": {
+      "male": "Băiat",
+      "female": "Fată",
+      "preferNotToSay": "Prefer să nu spun"
+    },
+    "photo": {
+      "notSupportedTitle": "Neacceptat",
+      "notSupportedMessage": "Camera nu este disponibilă pe web.",
+      "cameraPermissionTitle": "Permisiune necesară",
+      "cameraPermissionMessage": "Aplicația are nevoie de acces la cameră pentru a face o fotografie.",
+      "galleryPermissionMessage": "Aplicația are nevoie de acces la fotografiile tale pentru a selecta o imagine.",
+      "errorTitle": "Eroare",
+      "uploadErrorMessage": "Imaginea nu a putut fi încărcată",
+      "cameraOpenError": "Camera nu a putut fi deschisă.",
+      "galleryOpenError": "Galeria nu a putut fi deschisă.",
+      "deleteErrorMessage": "Fotografia de profil nu a putut fi ștearsă",
+      "deleteConfirmTitle": "Ștergi fotografia de profil?",
+      "deleteConfirmMessage": "Această acțiune este definitivă.",
+      "cancel": "Anulează",
+      "delete": "Șterge",
+      "modalTitle": "Fotografie de profil",
+      "takePhoto": "📸 Fă o fotografie",
+      "sending": "Se încarcă...",
+      "chooseGallery": "🖼️ Alege din galerie",
+      "deletePhoto": "🗑️ Șterge fotografia",
+      "deleting": "Se șterge..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Prenume invalid",
+      "firstNameInvalidMessage": "Prenumele trebuie să înceapă cu majusculă și poate conține litere (accente permise), spații, apostrofuri sau cratime.",
+      "lastNameInvalidTitle": "Nume invalid",
+      "lastNameInvalidMessage": "Numele trebuie să înceapă cu majusculă și poate conține litere (accente permise), spații, apostrofuri sau cratime.",
+      "incompleteIdentityTitle": "Identitate incompletă",
+      "incompleteIdentityMessage": "Introdu un Nume personalizat SAU un Prenume ȘI un Nume.",
+      "customNameRequiredTitle": "Nume personalizat necesar",
+      "customNameRequiredMessage": "Nu poți elimina numele personalizat cât timp prenumele sau numele sunt goale.",
+      "invalidDateTitle": "Dată invalidă",
+      "invalidDateMessage": "Te rugăm să selectezi o dată de naștere validă.",
+      "minAgeTitle": "Vârstă minimă necesară",
+      "minAgeMessage": "Trebuie să ai cel puțin 18 ani.",
+      "updateErrorMessage": "Profilul tău nu a putut fi actualizat"
+    },
+    "modal": {
+      "editPrefix": "Editează",
+      "editGeneric": "Editează",
+      "selectDate": "Selectează o dată",
+      "cancel": "Anulează",
+      "save": "Salvează",
+      "placeholders": {
+        "firstName": "Prenumele tău",
+        "lastName": "Numele tău",
+        "customName": "Numele tău personalizat",
+        "bio": "Spune-ne puțin despre tine...",
+        "default": "Textul tău"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Mod invizibil activ",
+      "subtitle": "Nu poți vedea locurile din jurul tău cât timp modul invizibil este activat. Dezactivează-l pentru a explora locuri.",
+      "disableButton": "Dezactivează modul invizibil"
+    },
+    "error": {
+      "title": "Locație indisponibilă",
+      "subtitle": "Activează serviciile de localizare din setările dispozitivului pentru a vedea locurile din jurul tău.",
+      "retry": "Încearcă din nou"
+    },
+    "empty": {
+      "title": "Zonă liniștită deocamdată",
+      "subtitle": "Nu a fost găsit niciun loc activ în jurul tău. Extinde raza sau sugerează un loc nou.",
+      "expandRadius": "Extinde raza",
+      "suggestLocation": "Sugerează acest loc"
+    },
+    "footer": {
+      "loadingMore": "Se încarcă mai multe locuri…",
+      "loadMoreError": "Nu s-au putut încărca mai multe locuri. Verifică-ți conexiunea.",
+      "retry": "Încearcă din nou",
+      "reachedEnd": "Ai explorat toate locurile active din apropiere. Deplasează-te sau caută pentru a vedea mai multe."
+    },
+    "leaveModal": {
+      "defaultName": "Acest loc",
+      "subtitle": "Ești în prezent înregistrat aici. Vrei să părăsești acest loc?",
+      "confirm": "Nu mai sunt aici",
+      "cancel": "Anulează"
+    },
+    "sections": {
+      "moreLocations": "Mai multe locuri pentru tine",
+      "sponsored": "Recomandate",
+      "trending": "Se întâmplă acum"
+    },
+    "filters": {
+      "all": "Toate"
+    },
+    "card": {
+      "visitors_one": "{{count}} vizitator",
+      "visitors_other": "{{count}} vizitatori",
+      "sponsored": "SPONSORIZAT",
+      "imHere": "Sunt aici",
+      "editLocation": "Editează-mi locația"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Check-in manual activat",
+    "checkinModeAutoOn": "Check-in automat activat",
+    "checkinModeErrorTitle": "Eroare",
+    "checkinModeErrorMessage": "Nu s-a putut schimba acum modul de check-in.",
+    "checkedInToast": "Acum ești la {{name}}!",
+    "checkinErrorMessage": "Nu ți s-a putut confirma prezența acum.",
+    "leftLocationToast": "Ai părăsit acest loc.",
+    "boostActiveTitle": "Boost activ",
+    "boostActiveLeaveMessage": "Nu poți părăsi acest loc cât timp boost-ul tău este activ.",
+    "leaveErrorMessage": "Nu ai putut fi scos acum din acest loc.",
+    "boostInProgressTitle": "Boost în curs",
+    "boostInProgressMessage": "Boost-ul tău este activ: așteaptă să se termine înainte de a schimba locul.",
+    "refreshErrorToast": "Nu s-a putut reîmprospăta acum.",
+    "disableInvisibleErrorMessage": "Modul invizibil nu a putut fi dezactivat acum.",
+    "switchToManualLabel": "Comută la check-in manual",
+    "switchToAutoLabel": "Comută la check-in automat",
+    "entryAuto": "Intrare auto.",
+    "entryManual": "Intrare manuală",
+    "showMapLabel": "Arată harta",
+    "showListLabel": "Arată lista",
+    "mapButton": "Hartă",
+    "listButton": "Listă"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Eroare",
+    "checkinErrorMessage": "Nu ți s-a putut confirma prezența acum.",
+    "boostActiveHereTitle": "Boost în curs",
+    "boostActiveHereMessage": "Boost-ul tău este activ aici: așteaptă să se termine înainte de a părăsi acest loc.",
+    "boostActiveMessage": "Boost-ul tău este activ: așteaptă să se termine.",
+    "notFound": "Loc negăsit",
+    "back": "Înapoi",
+    "popularityVeryPopular": "Foarte popular",
+    "popularityPopular": "Popular",
+    "popularityActive": "Activ",
+    "popularityCalm": "Liniștit",
+    "checkinConfirmed": "Confirmat!",
+    "imHere": "Sunt aici",
+    "viewPdf": "Vezi PDF",
+    "pdfLoadError": "Acest PDF nu poate fi afișat.",
+    "openInBrowser": "Deschide în browser",
+    "profilesHere": "Profiluri aici",
+    "recentlyCrossed": "Întâlniți recent",
+    "seeMore": "Vezi mai mult",
+    "boosted": "Impulsionat",
+    "boostProfileHere": "Impulsionează-mi profilul aici",
+    "boostLockedAfterCheckins": "Boost 🔓 după 2 check-in-uri"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Distribuie",
+      "shareLabel": "Distribuie profilul meu",
+      "qrCode": "Cod QR",
+      "qrLabel": "Arată codul meu QR",
+      "stats": "Statistici",
+      "statsLabel": "Vezi statisticile mele"
+    },
+    "qr": {
+      "title": "Scanează pentru a vedea profilul meu",
+      "hint": "Dacă aplicația nu este instalată, vei fi redirecționat către magazin ({{store}})."
+    },
+    "status": {
+      "title": "Statutul tău",
+      "close": "Închide",
+      "public": "Profil public",
+      "private": "Profil privat",
+      "incognito": "Incognito",
+      "pickLabel": "Alege statutul meu"
+    },
+    "warnings": {
+      "title": "Avertismente",
+      "message_one": "Ai {{count}} avertisment.",
+      "message_other": "Ai {{count}} avertismente.",
+      "tapForDetails": "Atinge pentru detalii"
+    },
+    "referral": {
+      "invite": "Invită-ți prietenii",
+      "label": "Recomandare: invită-ți prietenii"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Distribuie-ți locația",
+      "message": "Activează partajarea locului tău actual pentru a fi mai ușor de găsit de alți utilizatori din apropiere.",
+      "activate": "Activează",
+      "noThanks": "Nu, mulțumesc"
+    },
+    "social": {
+      "addTitle": "Adaugă o rețea",
+      "usernamePlaceholder": "@utilizator sau ID {{platform}}",
+      "selectPlaceholder": "Selectează o rețea",
+      "snapchatHint": "Notă: Snapchat nu permite linkuri directe, introdu doar numele tău de utilizator.",
+      "save": "Salvează",
+      "saveLabel": "Salvează",
+      "editTitle": "Editează {{platform}}",
+      "usernamePlaceholderSimple": "Nume de utilizator",
+      "delete": "Șterge",
+      "heading": "Rețele sociale",
+      "addLabel": "Adaugă o rețea socială"
+    },
+    "rewards": {
+      "heading": "Recompense",
+      "superlikes": "Superlikes",
+      "boosts": "Boost-uri",
+      "buy": "Cumpără",
+      "buyLabel": "Cumpără superlikes sau boost-uri",
+      "premiumCta": "👑 Treci la Premium",
+      "premiumLabel": "Treci la Premium",
+      "superlikeHistoryLabel_one": "Vezi istoricul superlikes, {{count}} rămas",
+      "superlikeHistoryLabel_other": "Vezi istoricul superlikes, {{count}} rămase"
+    },
+    "currentlyAt": "În prezent la {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Adaugă o propoziție pentru a te prezenta."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Fotografia ta de profil",
+      "photoDesc": "Schimbă-ți fotografia de profil din setări (pictograma din dreapta sus).",
+      "bioTitle": "Bio-ul tău",
+      "bioDesc": "Bio-ul tău se editează din setări. Este primul lucru pe care îl văd ceilalți.",
+      "socialTitle": "Rețelele tale sociale",
+      "socialDesc": "Atinge ➕ pentru a adăuga o rețea. Ține apăsată o pictogramă pentru a o edita sau șterge.",
+      "statusTitle": "Statutul tău",
+      "statusDesc": "Profil public = vizibil pentru toți · Profil privat = rețele ascunse · Incognito = invizibil. Atinge pentru a schimba."
+    },
+    "errorTitle": "Eroare",
+    "shareLocationUpdateError": "Nu s-a putut actualiza partajarea locației tale curente",
+    "comingSoonTitle": "În curând disponibil 🚀",
+    "comingSoonStats": "Statisticile vin foarte curând! Vei putea vedea cine îți vizitează profilul și rețelele sociale.",
+    "shareTitle": "Distribuie",
+    "shareError": "Nu s-a putut distribui.",
+    "boostClaimedToast": "Boost revendicat 🚀",
+    "superlikeClaimedToast": "Superlike revendicat ⭐️",
+    "claimRewardError": "Nu s-a putut revendica recompensa",
+    "statusVisible": "Ești în modul vizibil. Toată lumea îți poate vedea rețelele sociale. Beneficiezi pe deplin de aplicație.",
+    "statusRestricted": "Ești în modul vizibil restricționat. Nimeni nu îți poate vedea rețelele sociale.",
+    "statusInvisible": "Ești în modul invizibil. Nimeni nu te va mai vedea de acum.",
+    "statusUpdateError": "Nu s-a putut actualiza statutul",
+    "unsupportedPlatform": "Platformă neacceptată",
+    "handleRequired": "Te rugăm să introduci un identificator",
+    "invalidInstagramHandle": "Nume de utilizator Instagram invalid. Exemplu: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Nume de utilizator TikTok invalid. Exemplu: https://www.tiktok.com/@username",
+    "addSocialError": "Nu s-a putut adăuga rețeaua socială",
+    "invalidLinkTitle": "Link invalid",
+    "invalidInstagramHandleShort": "Nume de utilizator Instagram invalid",
+    "invalidTiktokHandleShort": "Nume de utilizator TikTok invalid",
+    "cannotOpenInstagramTitle": "Nu s-a putut deschide Instagram",
+    "cannotOpenTiktokTitle": "Nu s-a putut deschide TikTok",
+    "tryAgainLater": "Te rugăm să încerci din nou mai târziu.",
+    "editSocialError": "Nu s-a putut edita rețeaua socială",
+    "deleteSocialError": "Nu s-a putut șterge rețeaua socială",
+    "backLabel": "Înapoi",
+    "settingsLabel": "Setări",
+    "streakTitle": "Seria ta 🔥",
+    "streakMessage": "Conectează-te în fiecare zi pentru a-ți crește seria. În ziua 7, revendică un superlike. În ziua 14, revendică un boost — seria ta repornește apoi de la 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Descoperă cine iese lângă tine",
+        "desc": "Vezi în timp real locurile animate din jurul tău și persoanele aflate acolo — chiar acum."
+      },
+      "checkin": {
+        "title": "Check-in automat, zi sau noapte",
+        "desc": "De îndată ce intri într-un loc, apari acolo automat — și vezi cine este acolo. Aplicația comută între modul Zi (cafenele, parcuri, sport…) și modul Noapte (baruri, restaurante, cluburi…) după cum dorești."
+      },
+      "profile": {
+        "title": "Profilul tău, locurile care mișcă",
+        "desc": "Adaugă-ți rețelele sociale ca lumea să te găsească, consultă profilurile din jurul tău. Fiecare loc afișează și 1 până la 3 stele în funcție de afluența reală — cu cât e mai animat, cu atât strălucește mai mult."
+      },
+      "referral": {
+        "title": "Te-a invitat un prieten?",
+        "desc": "Introdu codul lui de recomandare (opțional) — îl ajută să deblocheze o lună Premium gratuită."
+      }
+    },
+    "referralPlaceholder": "Cod de recomandare",
+    "next": "Următor",
+    "start": "Să începem 🚀",
+    "skip": "Sari peste"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Vezi cine îți vizitează profilul",
+      "Boost-uri de vizibilitate (1 pachet gratuit)",
+      "Superlikes (3/săptămână gratuite)",
+      "Mod invizibil",
+      "Rază de căutare de până la 2 km",
+      "Statistici avansate",
+      "Notificări îmbunătățite"
+    ],
+    "slides": {
+      "views": {
+        "title": "Cine te vizitează?",
+        "desc": "Află în timp real cine îți consultă profilul."
+      },
+      "boosts": {
+        "title": "Boost-uri de vizibilitate",
+        "desc": "Urcă în fruntea listei timp de 30 min în locația ta."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Arată un interes deosebit față de cineva pe care îl remarci."
+      },
+      "invisible": {
+        "title": "Mod invizibil",
+        "desc": "Dispari din lista utilizatorilor din apropiere oricând dorești."
+      },
+      "radius": {
+        "title": "Rază extinsă",
+        "desc": "Explorează până la 2 km în jurul tău (500 m în versiunea gratuită)."
+      },
+      "stats": {
+        "title": "Statistici avansate",
+        "desc": "Urmărește vizualizările și clicurile pe toate rețelele tale sociale."
+      }
+    },
+    "trialError": "Nu s-a putut începe perioada de probă gratuită.",
+    "errorTitle": "Eroare",
+    "offersUnavailableTitle": "Oferte indisponibile",
+    "offersUnavailableMessage": "Ofertele de abonament nu sunt încă încărcate. Încearcă din nou peste câteva momente.",
+    "purchaseError": "Nu s-a putut finaliza achiziția.",
+    "restoredTitle": "✅ Achiziții restaurate",
+    "restoredMessage": "Abonamentul tău Premium este activ.",
+    "noRestoreTitle": "Nicio achiziție găsită",
+    "noRestoreMessage": "Niciun abonament activ nu a putut fi restaurat.",
+    "restoreError": "Nu s-au putut restaura achizițiile.",
+    "closeLabel": "Închide",
+    "title": "👑 Premium",
+    "subtitle": "Deblochează toate funcțiile",
+    "debugBanner": "⚠️ Plăți dezactivate (mod debug)",
+    "monthly": "Lunar",
+    "perMonth": "/lună",
+    "annual": "Anual",
+    "perYear": "/an",
+    "mostChosen": "CEL MAI ALES",
+    "allIncluded": "TOTUL INCLUS",
+    "ctaSimulate": "Simulează un abonament Premium",
+    "ctaTrial": "Începe perioada mea de probă gratuită de 7 zile",
+    "ctaLoading": "Se încarcă ofertele…",
+    "ctaSubscribe": "Abonează-te",
+    "thenAnnual": "Apoi {{price}}/an · Poți anula oricând",
+    "thenMonthly": "Apoi {{price}}/lună · Poți anula oricând",
+    "restorePurchases": "Restaurează achizițiile mele",
+    "legalText": "Abonamentul se reînnoiește automat, cu excepția cazului în care este anulat înainte de sfârșitul perioadei curente. Gestionează-ți abonamentele din setările App Store / Google Play. ",
+    "privacyPolicy": "Politica de confidențialitate",
+    "terms": "Termeni"
+  },
+  "premiumWelcome": {
+    "header": "👑 Bun venit în Premium",
+    "finalTitle": "Să începem!",
+    "finalDesc": "Bucură-te acum de toate noile tale avantaje Premium.",
+    "discover": "Descoperă",
+    "next": "Următor",
+    "skip": "Sari peste"
+  },
+  "referralScreen": {
+    "loadError": "Informațiile tale de recomandare nu au putut fi încărcate.",
+    "errorTitle": "Eroare",
+    "shareMessage": "Alătură-te mie pe LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Invită un prieten pe LoocateMe",
+    "shareErrorTitle": "Distribuie",
+    "shareError": "Nu s-a putut distribui.",
+    "codeSavedTitle": "Recomandare",
+    "codeSaved": "Cod de recomandare salvat!",
+    "selfReferralError": "Nu îți poți folosi propriul cod.",
+    "alreadyReferredError": "Ai folosit deja un cod de recomandare.",
+    "invalidCodeError": "Acest cod de recomandare este invalid.",
+    "genericCodeError": "Acest cod nu a putut fi validat.",
+    "title": "Recomandare",
+    "infoText": "Invită 5 prieteni luna aceasta (fiecare trebuie să iasă și să facă primul check-in verificat) și câștigă 1 lună Premium gratuită 🎉",
+    "confirmCode": "Confirmi codul de recomandare „{{code}}”?",
+    "validate": "Confirmă",
+    "rewardActive": "💎 Luna ta Premium gratuită este activă",
+    "rewardActiveUntil": " până la {{date}}",
+    "yourCode": "Codul tău de recomandare",
+    "shareButton": "📤 Distribuie codul meu",
+    "shareLabel": "Distribuie codul meu",
+    "progressLabel": "{{count}} / {{target}} recomandări luna aceasta",
+    "invitedFriends": "Prieteni invitați",
+    "noInvites": "Niciun prieten invitat încă.",
+    "defaultUser": "Utilizator",
+    "statusValidated": "Validat",
+    "statusVoid": "Anulat",
+    "statusPending": "În așteptare"
+  },
+  "searchView": {
+    "closeLabel": "Închide căutarea",
+    "title": "Căutare",
+    "placeholder": "Nume de utilizator, loc...",
+    "clearLabel": "Șterge căutarea",
+    "filterUsers": "Utilizatori",
+    "filterLocations": "Locuri",
+    "searching": "Se caută…",
+    "typeToSearch": "Introdu cel puțin 2 litere pentru a începe căutarea",
+    "noResults": "Niciun rezultat găsit pentru această căutare.",
+    "checkFilters": "Verifică filtrele sau încearcă un alt cuvânt cheie.",
+    "resultsCount_one": "{{count}} rezultat",
+    "resultsCount_other": "{{count}} rezultate",
+    "noLongerHere": "Nu mai este aici"
+  },
+  "settingsScreen": {
+    "title": "Setări",
+    "tabProfile": "Profil",
+    "tabSettings": "Setări",
+    "sectionIdentity": "IDENTITATE",
+    "firstName": "Prenume",
+    "lastName": "Nume",
+    "customNameLabel": "Nume personalizat",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ABONAMENT",
+    "premiumMonthly": "· Lunar",
+    "premiumAnnual": "· Anual",
+    "statusLoading": "Se încarcă starea…",
+    "grantedOutsideStore": "Acordat în afara abonamentului App Store/Play Store (probă gratuită sau ofertă specială)",
+    "renewsOn": "Se reînnoiește pe {{date}}",
+    "expiresOn": "Expiră pe {{date}}",
+    "opening": "Se deschide…",
+    "manageSubscription": "Gestionează-mi abonamentul",
+    "goPremium": "👑 Treci la Premium",
+    "manageSubError": "Nu s-a putut deschide gestionarea abonamentului.",
+    "sectionGeneral": "GENERAL",
+    "displayMode": "Mod de afișare",
+    "fullNameMode": "Prenume Nume",
+    "classicMode": "Clasic",
+    "customMode": "Personalizat",
+    "sectionReferral": "RECOMANDARE",
+    "alreadyReferred": "Ai fost deja recomandat.",
+    "referralHint": "Un prieten ți-a trimis un cod? Introdu-l aici.",
+    "referralPlaceholder": "Cod de recomandare",
+    "validate": "Confirmă",
+    "sectionNotifications": "NOTIFICĂRI",
+    "notifKinds": {
+      "superlike": "Superlikes primite",
+      "superlikeAccepted": "Superlikes acceptate",
+      "eventBoost": "Boost-uri de evenimente",
+      "streakExpiring": "Memento-uri serie",
+      "profileView": "Vizualizări de profil",
+      "socialClick": "Vizualizări ale rețelelor tale sociale",
+      "inactiveProfileViews": "Vizualizări primite în timpul absenței",
+      "referralValidated": "Recomandare validată",
+      "referralRewardGranted": "Recompensă de recomandare",
+      "nightModeActivated": "Activare mod noapte",
+      "atRiskReactivation": "Memento-uri de reactivare",
+      "weeklyDigest": "Rezumat săptămânal"
+    },
+    "notifCategories": {
+      "social": "Activitate socială",
+      "rewards": "Serii și recompense",
+      "system": "Sistem și rezumate"
+    },
+    "sectionPrivacy": "CONFIDENȚIALITATE ȘI GDPR",
+    "privacyPolicyLink": "Politica de confidențialitate",
+    "consent": "Consimțământ",
+    "analyticsLabel": "Analytics",
+    "dataSaleTitle": "Vânzare de date (CCPA)",
+    "dataSaleDesc": "Nu vindem și nu partajăm datele tale personale cu terți în scopuri publicitare.",
+    "invisibleModeTitle": "Mod invizibil",
+    "invisibleModeDesc": "Vei fi invizibil pentru ceilalți utilizatori din locuri, dar nu vei mai putea consulta harta sau lista de locuri cât timp acest mod este activ.",
+    "shareLocationTitle": "Distribuie locația mea curentă",
+    "shareLocationDesc": "Afișează celorlalți utilizatori locul precis în care te afli în prezent, pe lângă orașul tău. Dezactivat implicit pentru a-ți proteja confidențialitatea și a evita orice risc de urmărire.",
+    "policyLoadError": "Politica de confidențialitate nu a putut fi încărcată.",
+    "savePrivacyPrefsError": "Preferințele tale de confidențialitate nu au putut fi salvate",
+    "shareLocationUpdateError": "Partajarea locației tale curente nu a putut fi actualizată",
+    "invisibleModeUpdateError": "Modul invizibil nu a putut fi actualizat",
+    "notifPrefUpdateError": "Această preferință de notificare nu a putut fi actualizată",
+    "consentSavedTitle": "Succes",
+    "consentSaved": "Consimțământ salvat.",
+    "consentRevoked": "Consimțământ revocat.",
+    "consentSaveError": "Consimțământul tău nu a putut fi salvat",
+    "revokeConsentTitle": "Revocarea consimțământului",
+    "revokeConsentMessage": "Revocarea consimțământului tău va duce la ștergerea definitivă a contului și a tuturor datelor tale. Vrei să continui?",
+    "cancel": "Anulează",
+    "continueLabel": "Continuă",
+    "currentPasswordRequired": "Te rugăm să introduci parola curentă.",
+    "passwordTooShort": "Noua parolă trebuie să conțină cel puțin 6 caractere.",
+    "passwordConfirmMismatch": "Confirmarea nu corespunde cu noua parolă.",
+    "passwordChangedTitle": "Parolă modificată",
+    "passwordChangedMessage": "Parola ta a fost actualizată.",
+    "currentPasswordInvalid": "Parolă curentă invalidă sau eroare de server.",
+    "invalidEmail": "Te rugăm să introduci o adresă de email validă.",
+    "passwordRequiredConfirm": "Te rugăm să introduci parola pentru a confirma.",
+    "checkInboxTitle": "Verifică-ți căsuța poștală",
+    "checkInboxMessage": "Un email de confirmare a fost trimis la {{email}}. Fă clic pe link pentru a valida modificarea.",
+    "emailChangeError": "Modificarea nu a putut fi începută. Parolă invalidă sau eroare de server.",
+    "exportReadyTitle": "Export pregătit",
+    "exportReadyMessage": "Datele tale au fost exportate ({{size}} caractere).",
+    "exportError": "Datele tale nu au putut fi exportate",
+    "deleteAccountConfirmTitle": "Șterge contul",
+    "deleteAccountConfirmMessage": "Ștergerea este definitivă. Confirmi ștergerea contului tău?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Profilul tău a fost actualizat.",
+    "loadBlockedError": "Conturile blocate nu au putut fi încărcate",
+    "unblockError": "Acest utilizator nu a putut fi deblocat",
+    "sectionAccount": "CONT",
+    "emailLabel": "Email",
+    "notProvided": "Nespecificat",
+    "change": "Schimbă",
+    "passwordLabel": "Parolă",
+    "blockedAccounts": "Conturi blocate",
+    "helpAndPrivacy": "Ajutor și confidențialitate",
+    "terms": "Condiții de utilizare",
+    "sectionModeration": "MODERARE",
+    "moderatorSpace": "Spațiu moderator",
+    "debugConsole": "Consolă de depanare",
+    "exportData": "Exportă-mi datele",
+    "deleteAccount": "Șterge-mi contul",
+    "logout": "Deconectare",
+    "save": "Salvează",
+    "close": "Închide",
+    "privacyModalTitle": "Confidențialitate",
+    "deleteAccountTitle": "Ștergerea contului",
+    "deleteAccountDesc": "Pentru a confirma, introdu parola. Această acțiune este ireversibilă.",
+    "deleting": "Se șterge...",
+    "changePasswordTitle": "Schimbă parola",
+    "currentPasswordPlaceholder": "Parola curentă",
+    "newPasswordPlaceholder": "Parolă nouă (min. 6 caractere)",
+    "confirmPasswordPlaceholder": "Confirmă parola nouă",
+    "changeEmailTitle": "Schimbă email",
+    "currentEmailLabel": "Email curent: {{email}}",
+    "newEmailPlaceholder": "Email nou",
+    "noBlockedAccounts": "Niciun cont blocat.",
+    "unblock": "Deblochează"
+  },
+  "statisticsScreen": {
+    "loadError": "Statisticile nu au putut fi obținute",
+    "loadVisitorsError": "Lista vizitatorilor nu a putut fi obținută",
+    "justNow": "Chiar acum",
+    "minutesAgo": "acum {{count}} min",
+    "hoursAgo": "acum {{count}}h",
+    "yesterday": "Ieri",
+    "daysAgo": "acum {{count}} z",
+    "title": "Statistici",
+    "comingSoonTitle": "În curând disponibil 🚀",
+    "comingSoonDesc": "Statisticile vin foarte curând! Vei putea vedea cine îți vizitează profilul și rețelele sociale.",
+    "whoStalksTitle": "Cine te urmărește? 👀",
+    "whoStalksDesc": "Treci la Premium pentru a descoperi cine îți vizitează profilul și rețelele sociale!",
+    "discoverVisitors": "Descoperă-mi vizitatorii",
+    "later": "Mai târziu",
+    "profileViews": "Vizualizări de profil",
+    "views": "vizualizări",
+    "last30Days": "în ultimele 30 de zile",
+    "clicksByNetwork": "Clicuri pe rețea",
+    "lastVisits": "Vizite recente",
+    "noVisitorsTitle": "Nimeni nu ți-a vizitat încă profilul",
+    "noVisitorsDesc": "Continuă să explorezi locuri pentru a fi descoperit!",
+    "defaultUser": "Utilizator",
+    "hiddenVisits_one": "{{count}} vizită ascunsă",
+    "hiddenVisits_other": "{{count}} vizite ascunse",
+    "goPremiumToSeeAll": "Treci la Premium pentru a vedea tot",
+    "showMore": "Arată mai mult"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Hărțuire",
+      "spam": "Spam",
+      "inappropriate": "Conținut nepotrivit",
+      "impersonation": "Uzurpare de identitate",
+      "scam": "Escrocherie",
+      "other": "Altele"
+    },
+    "statusAvailable": "Disponibil(ă)",
+    "statusRestricted": "Vizibilitate restricționată",
+    "statusInvisible": "Invizibil(ă)",
+    "noUserSelected": "Niciun utilizator selectat.",
+    "backToList": "Înapoi la listă",
+    "superlikeLockedTitle": "În curând",
+    "superlikeLockedMessage": "Superlike-urile se deblochează după primul tău check-in.",
+    "superlikeSentTitle": "⭐ Superlike trimis!",
+    "superlikeSentMessage": "{{name}} a fost anunțat(ă) că l-ai/ai observat.",
+    "errorTitle": "Eroare",
+    "superlikeSendError": "Superlike-ul nu a putut fi trimis.",
+    "blockConfirmTitle": "Blochezi acest utilizator?",
+    "blockConfirmMessage": "Nu vei mai vedea acest utilizator, iar el nu te va mai putea contacta.",
+    "cancel": "Anulează",
+    "block": "Blochează",
+    "userBlockedTitle": "Utilizator blocat",
+    "userBlockedMessage": "Acest utilizator a fost blocat.",
+    "blockError": "Acest utilizator nu a putut fi blocat.",
+    "reasonRequiredTitle": "Motiv necesar",
+    "reasonRequiredMessage": "Te rugăm să indici un motiv.",
+    "reportSentTitle": "Raportare trimisă",
+    "reportSentMessage": "Mulțumim pentru raportare.",
+    "reportSendError": "Raportarea nu a putut fi trimisă.",
+    "backA11y": "Înapoi",
+    "moreOptionsA11y": "Mai multe opțiuni",
+    "sendSuperlikeA11y": "Trimite un superlike",
+    "superlikeLockedA11y": "Superlike blocat, se deblochează după primul tău check-in",
+    "currentlyAt": "În prezent la {{place}}",
+    "mutualConnectionBanner": "Această persoană vrea să intre în contact",
+    "socialsHidden": "Acest utilizator nu își distribuie rețelele sociale",
+    "noBio": "Nicio bio adăugată încă.",
+    "noSocials": "Nicio rețea socială",
+    "actionsTitle": "Acțiuni",
+    "report": "Raportează",
+    "reportUserTitle": "Raportează un utilizator",
+    "reportWarning": "Raportările abuzive pot duce la sancțiuni. Te rugăm să fii sincer(ă).",
+    "categoryLabel": "Categorie",
+    "reasonLabel": "Motiv",
+    "reasonPlaceholder": "Explică pe scurt motivul",
+    "descriptionLabel": "Descriere (opțională)",
+    "descriptionPlaceholder": "Detalii suplimentare",
+    "sending": "Se trimite...",
+    "sendReport": "Trimite raportarea",
+    "justNow": "Chiar acum",
+    "minutesAgo_one": "Acum {{count}} min",
+    "minutesAgo_other": "Acum {{count}} min",
+    "hoursAgo_one": "Acum {{count}} h",
+    "hoursAgo_other": "Acum {{count}} h",
+    "yesterday": "Ieri",
+    "daysAgo_one": "Acum {{count}} zi",
+    "daysAgo_other": "Acum {{count}} zile"
+  },
+  "warningsScreen": {
+    "title": "Avertismente",
+    "banAlert": "Acest comportament poate duce la o interdicție temporară sau permanentă a aplicației.",
+    "empty": "Niciun avertisment.",
+    "typeLabel": "Tip de avertisment",
+    "notSpecified": "Nespecificat",
+    "notSpecifiedFem": "Nespecificat",
+    "reasonLabel": "Motiv"
+  },
+  "common": {
+    "close": "Închide",
+    "errorTitle": "Eroare"
+  },
+  "streakCard": {
+    "hintReady": "Recompensa ta este gata!",
+    "hintGrow": "Conectează-te în fiecare zi pentru a o crește.",
+    "claimBoost": "Revendică-ți boost-ul",
+    "claimSuperlike": "Revendică-ți superlike-ul"
+  },
+  "coteCard": {
+    "messageTop": "Excelent! Conectează-te mâine ca să o păstrezi.",
+    "messageZero": "Conectează-te azi pentru a o relansa."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Urcă în frunte timp de 30 min",
+    "boostPack5Desc": "Cel mai bun raport calitate/preț",
+    "superlikePack3Desc": "Arată-ți interesul într-un mod unic",
+    "superlikePack10Desc": "Pentru adevărații conectori",
+    "badgePopular": "Popular",
+    "badgeBestOffer": "Cea mai bună ofertă",
+    "notAvailableTitle": "Indisponibil",
+    "notAvailableMessage": "Acest pachet nu este încă disponibil în magazin.",
+    "purchaseErrorMessage": "Achiziția nu a putut fi finalizată.",
+    "simulate": "Simulează"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Caută în aceste locuri",
+    "categoryBars": "Baruri",
+    "categoryClubs": "Cluburi",
+    "categoryRestos": "Restaurante",
+    "categoryPubs": "Pub-uri",
+    "categoryGyms": "Săli de sport",
+    "categoryCafes": "Cafenele",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Biblioteci"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonim"
+  },
+  "locationMapView": {
+    "loadError": "Harta nu a putut fi încărcată",
+    "renderError": "Eroare la încărcarea hărții"
+  },
+  "churnSurveyModal": {
+    "title": "Un minut înainte să pleci?",
+    "subtitle": "Ajută-ne să înțelegem de ce.",
+    "reasonTooManyNotifications": "Prea multe notificări",
+    "reasonPrivacyConcern": "Nu mă simt confortabil cu partajarea",
+    "reasonNotUseful": "Nu-mi mai este util",
+    "reasonOther": "Alt motiv",
+    "dismiss": "Omite",
+    "thanks": "Mulțumim pentru feedback 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Căutare",
+    "tabNearby": "Locuri din apropiere",
+    "tabAccount": "Cont"
+  },
+  "documentViewer": {
+    "openError": "Acest document nu a putut fi deschis.",
+    "defaultLabel": "Vezi documentul"
+  },
+  "vibeFab": {
+    "toDay": "Comută la modul zi",
+    "toNight": "Comută la modul noapte"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Partajarea locației este activă"
+  }
+}

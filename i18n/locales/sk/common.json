@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Prihlásiť sa",
+      "welcomeBack": "Vitajte späť!",
+      "subtitle": "Prihláste sa a pokračujte",
+      "emailPlaceholder": "E-mail",
+      "passwordPlaceholder": "Heslo",
+      "submit": "Prihlásiť sa",
+      "forgotPassword": "Zabudnuté heslo?",
+      "noAccount": "Ešte nemáte účet?",
+      "createAccount": "Vytvoriť účet",
+      "emailNotVerifiedTitle": "E-mail nie je overený",
+      "emailNotVerifiedMessage": "Vaša e-mailová adresa ešte nebola overená. Práve sme vám znova odoslali potvrdzovací e-mail. Kliknite na odkaz na aktiváciu účtu a skúste to znova.",
+      "authFailedTitle": "Prihlásenie zlyhalo",
+      "authFailedMessage": "Nepodarilo sa vás prihlásiť. Skontrolujte svoje údaje a skúste to znova."
+    },
+    "signup": {
+      "passwordMismatch": "Heslá sa nezhodujú.",
+      "requiredFields": "Všetky polia musia byť vyplnené.",
+      "birthdateRequired": "Dátum narodenia je povinný.",
+      "under18": "Na registráciu musíte mať aspoň 18 rokov.",
+      "policyLoadError": "Zásady ochrany osobných údajov sa nepodarilo načítať. Môžete to skúsiť znova."
+    }
+  },
+  "consent": {
+    "title": "Súkromie",
+    "changelogTitle": "Čo sa zmenilo",
+    "decline": "Odmietnuť",
+    "accept": "Prijať",
+    "accepting": "Ukladá sa...",
+    "declineInfoTitle": "Informácia",
+    "declineInfoMessage": "Na používanie aplikácie musíte prijať zásady ochrany osobných údajov.",
+    "acceptErrorTitle": "Chyba",
+    "acceptErrorMessage": "Váš súhlas sa nepodarilo uložiť. Skúste to znova."
+  },
+  "ageVerification": {
+    "title": "Overenie veku",
+    "urlMissing": "Chýba URL na overenie",
+    "startError": "Overenie veku sa nepodarilo spustiť. Skúste to znova.",
+    "retry": "Skúsiť znova",
+    "declinedTitle": "Overenie zamietnuté",
+    "declinedMessage": "Nepodarilo sa nám potvrdiť, že máte viac ako 18 rokov. Môžete to skúsiť znova."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Jazyk",
+      "systemDefault": "Jazyk telefónu"
+    }
+  },
+  "forgotPassword": {
+    "title": "Zabudnuté heslo",
+    "resetTitle": "Obnovenie hesla",
+    "instructions": "Zadajte svoju e-mailovú adresu na získanie odkazu na obnovenie.",
+    "emailPlaceholder": "E-mail",
+    "submit": "Odoslať odkaz",
+    "successTitle": "E-mail odoslaný",
+    "successMessage": "Ak účet existuje, bol odoslaný e-mail.",
+    "errorTitle": "Chyba",
+    "errorFallback": "Skúste to znova"
+  },
+  "dataManagement": {
+    "title": "Súkromie",
+    "export": {
+      "title": "Exportovať moje údaje",
+      "desc": "Stiahnite si kópiu svojich informácií (profil, sociálne siete, nastavenia).",
+      "button": "Exportovať",
+      "buttonWorking": "Čakajte prosím...",
+      "successTitle": "Export údajov",
+      "successMessage": "Váš export bol vygenerovaný a zobrazený v konzole.",
+      "errorTitle": "Chyba",
+      "errorMessage": "Vaše údaje sa teraz nepodarilo exportovať. Skúste to znova."
+    },
+    "delete": {
+      "title": "Vymazať môj účet",
+      "desc": "Natrvalo vymaže váš účet a všetky súvisiace údaje.",
+      "passwordPlaceholder": "Potvrďte svojím heslom",
+      "button": "Natrvalo vymazať",
+      "passwordRequiredTitle": "Vyžaduje sa heslo",
+      "passwordRequiredMessage": "Zadajte svoje heslo.",
+      "confirmTitle": "Potvrdenie",
+      "confirmMessage": "Táto akcia je nezvratná. Naozaj chcete vymazať svoj účet?",
+      "cancel": "Zrušiť",
+      "confirm": "Vymazať",
+      "successTitle": "Účet vymazaný",
+      "successMessage": "Váš účet a údaje boli vymazané.",
+      "errorTitle": "Chyba",
+      "errorMessage": "Vymazanie zlyhalo. Neplatné heslo alebo problém servera."
+    }
+  },
+  "editProfile": {
+    "title": "Upraviť môj profil",
+    "subtitle": "Klepnutím na pole ho upravíte",
+    "notSet": "Nenastavené",
+    "backLabel": "Späť",
+    "fields": {
+      "firstName": "Meno",
+      "lastName": "Priezvisko",
+      "customName": "Vlastné meno",
+      "bio": "Bio",
+      "birthdate": "Dátum narodenia",
+      "gender": "Pohlavie"
+    },
+    "gender": {
+      "male": "Chlapec",
+      "female": "Dievča",
+      "preferNotToSay": "Nechcem uvádzať"
+    },
+    "photo": {
+      "notSupportedTitle": "Nepodporované",
+      "notSupportedMessage": "Fotoaparát nie je na webe k dispozícii.",
+      "cameraPermissionTitle": "Vyžaduje sa povolenie",
+      "cameraPermissionMessage": "Aplikácia potrebuje prístup k fotoaparátu na odfotenie.",
+      "galleryPermissionMessage": "Aplikácia potrebuje prístup k vašim fotkám na výber obrázka.",
+      "errorTitle": "Chyba",
+      "uploadErrorMessage": "Obrázok sa nepodarilo nahrať",
+      "cameraOpenError": "Fotoaparát sa nepodarilo otvoriť.",
+      "galleryOpenError": "Galériu sa nepodarilo otvoriť.",
+      "deleteErrorMessage": "Profilovú fotku sa nepodarilo odstrániť",
+      "deleteConfirmTitle": "Odstrániť profilovú fotku?",
+      "deleteConfirmMessage": "Táto akcia je konečná.",
+      "cancel": "Zrušiť",
+      "delete": "Odstrániť",
+      "modalTitle": "Profilová fotka",
+      "takePhoto": "📸 Odfotiť",
+      "sending": "Nahrávanie...",
+      "chooseGallery": "🖼️ Vybrať z galérie",
+      "deletePhoto": "🗑️ Odstrániť fotku",
+      "deleting": "Odstraňovanie..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Neplatné meno",
+      "firstNameInvalidMessage": "Meno musí začínať veľkým písmenom a môže obsahovať písmená (diakritika povolená), medzery, apostrofy alebo pomlčky.",
+      "lastNameInvalidTitle": "Neplatné priezvisko",
+      "lastNameInvalidMessage": "Priezvisko musí začínať veľkým písmenom a môže obsahovať písmená (diakritika povolená), medzery, apostrofy alebo pomlčky.",
+      "incompleteIdentityTitle": "Neúplná identita",
+      "incompleteIdentityMessage": "Zadajte Vlastné meno ALEBO Meno A Priezvisko.",
+      "customNameRequiredTitle": "Vyžaduje sa vlastné meno",
+      "customNameRequiredMessage": "Vlastné meno nemožno odstrániť, kým je meno alebo priezvisko prázdne.",
+      "invalidDateTitle": "Neplatný dátum",
+      "invalidDateMessage": "Vyberte platný dátum narodenia.",
+      "minAgeTitle": "Vyžaduje sa minimálny vek",
+      "minAgeMessage": "Musíte mať aspoň 18 rokov.",
+      "updateErrorMessage": "Váš profil sa nepodarilo aktualizovať"
+    },
+    "modal": {
+      "editPrefix": "Upraviť",
+      "editGeneric": "Upraviť",
+      "selectDate": "Vybrať dátum",
+      "cancel": "Zrušiť",
+      "save": "Uložiť",
+      "placeholders": {
+        "firstName": "Vaše meno",
+        "lastName": "Vaše priezvisko",
+        "customName": "Vaše vlastné meno",
+        "bio": "Povedzte nám niečo o sebe...",
+        "default": "Váš text"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Neviditeľný režim aktívny",
+      "subtitle": "Nemôžeš vidieť miesta okolo seba, kým je neviditeľný režim aktívny. Vypni ho na prehliadanie miest.",
+      "disableButton": "Vypnúť neviditeľný režim"
+    },
+    "error": {
+      "title": "Poloha nie je dostupná",
+      "subtitle": "Aktivuj polohové služby v nastaveniach zariadenia, aby si videl miesta okolo seba.",
+      "retry": "Skúsiť znova"
+    },
+    "empty": {
+      "title": "Zatiaľ pokojná zóna",
+      "subtitle": "Okolo teba nebolo nájdené žiadne aktívne miesto. Rozšír okruh alebo navrhni nové miesto.",
+      "expandRadius": "Rozšíriť okruh",
+      "suggestLocation": "Navrhnúť toto miesto"
+    },
+    "footer": {
+      "loadingMore": "Načítavajú sa ďalšie miesta…",
+      "loadMoreError": "Nepodarilo sa načítať ďalšie miesta. Skontroluj svoje pripojenie.",
+      "retry": "Skúsiť znova",
+      "reachedEnd": "Preskúmal si všetky aktívne miesta v okolí. Presuň sa alebo vyhľadaj, aby si videl viac."
+    },
+    "leaveModal": {
+      "defaultName": "Toto miesto",
+      "subtitle": "Aktuálne si tu prihlásený. Chceš opustiť toto miesto?",
+      "confirm": "Už tu nie som",
+      "cancel": "Zrušiť"
+    },
+    "sections": {
+      "moreLocations": "Ďalšie miesta pre teba",
+      "sponsored": "Odporúčané",
+      "trending": "Práve sa deje"
+    },
+    "filters": {
+      "all": "Všetko"
+    },
+    "card": {
+      "visitors_one": "{{count}} návštevník",
+      "visitors_other": "{{count}} návštevníkov",
+      "sponsored": "SPONZOROVANÉ",
+      "imHere": "Som tu",
+      "editLocation": "Upraviť moju polohu"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Ručný check-in aktivovaný",
+    "checkinModeAutoOn": "Automatický check-in aktivovaný",
+    "checkinModeErrorTitle": "Chyba",
+    "checkinModeErrorMessage": "Teraz sa nepodarilo zmeniť režim check-inu.",
+    "checkedInToast": "Teraz si na mieste {{name}}!",
+    "checkinErrorMessage": "Teraz sa nepodarilo potvrdiť tvoju prítomnosť.",
+    "leftLocationToast": "Opustil si toto miesto.",
+    "boostActiveTitle": "Boost aktívny",
+    "boostActiveLeaveMessage": "Nemôžeš opustiť toto miesto, kým beží tvoj boost.",
+    "leaveErrorMessage": "Teraz sa nepodarilo odhlásiť ťa z tohto miesta.",
+    "boostInProgressTitle": "Boost prebieha",
+    "boostInProgressMessage": "Tvoj boost je aktívny: počkaj, kým sa skončí, než zmeníš miesto.",
+    "refreshErrorToast": "Teraz sa nepodarilo obnoviť.",
+    "disableInvisibleErrorMessage": "Teraz sa nepodarilo deaktivovať neviditeľný režim.",
+    "switchToManualLabel": "Prepnúť na ručný check-in",
+    "switchToAutoLabel": "Prepnúť na automatický check-in",
+    "entryAuto": "Auto. vstup",
+    "entryManual": "Ručný vstup",
+    "showMapLabel": "Zobraziť mapu",
+    "showListLabel": "Zobraziť zoznam",
+    "mapButton": "Mapa",
+    "listButton": "Zoznam"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Chyba",
+    "checkinErrorMessage": "Teraz sa nepodarilo potvrdiť tvoju prítomnosť.",
+    "boostActiveHereTitle": "Boost prebieha",
+    "boostActiveHereMessage": "Tvoj boost je tu aktívny: počkaj, kým sa skončí, než toto miesto opustíš.",
+    "boostActiveMessage": "Tvoj boost je aktívny: počkaj, kým sa skončí.",
+    "notFound": "Miesto nenájdené",
+    "back": "Späť",
+    "popularityVeryPopular": "Veľmi obľúbené",
+    "popularityPopular": "Obľúbené",
+    "popularityActive": "Aktívne",
+    "popularityCalm": "Pokojné",
+    "checkinConfirmed": "Potvrdené!",
+    "imHere": "Som tu",
+    "viewPdf": "Zobraziť PDF",
+    "pdfLoadError": "Tento PDF sa nepodarilo zobraziť.",
+    "openInBrowser": "Otvoriť v prehliadači",
+    "profilesHere": "Profily tu",
+    "recentlyCrossed": "Nedávno stretnutí",
+    "seeMore": "Zobraziť viac",
+    "boosted": "Posilnené",
+    "boostProfileHere": "Posilniť môj profil tu",
+    "boostLockedAfterCheckins": "Boost 🔓 po 2 check-inoch"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Zdieľať",
+      "shareLabel": "Zdieľať môj profil",
+      "qrCode": "QR kód",
+      "qrLabel": "Zobraziť môj QR kód",
+      "stats": "Štatistiky",
+      "statsLabel": "Zobraziť moje štatistiky"
+    },
+    "qr": {
+      "title": "Naskenuj a zobraz môj profil",
+      "hint": "Ak aplikácia nie je nainštalovaná, budeš presmerovaný do obchodu ({{store}})."
+    },
+    "status": {
+      "title": "Tvoj stav",
+      "close": "Zavrieť",
+      "public": "Verejný profil",
+      "private": "Súkromný profil",
+      "incognito": "Inkognito",
+      "pickLabel": "Vybrať môj stav"
+    },
+    "warnings": {
+      "title": "Upozornenia",
+      "message_one": "Máš {{count}} upozornenie.",
+      "message_other": "Máš {{count}} upozornení.",
+      "tapForDetails": "Klepnutím zobrazíš detaily"
+    },
+    "referral": {
+      "invite": "Pozvi svojich priateľov",
+      "label": "Odporúčanie: pozvi svojich priateľov"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Zdieľaj svoju polohu",
+      "message": "Aktivuj zdieľanie svojho aktuálneho miesta, aby ťa ostatní používatelia v okolí ľahšie našli.",
+      "activate": "Aktivovať",
+      "noThanks": "Nie, ďakujem"
+    },
+    "social": {
+      "addTitle": "Pridať sieť",
+      "usernamePlaceholder": "@username alebo ID {{platform}}",
+      "selectPlaceholder": "Vyber sieť",
+      "snapchatHint": "Poznámka: Snapchat nepovoľuje priame odkazy, zadaj len svoje používateľské meno.",
+      "save": "Uložiť",
+      "saveLabel": "Uložiť",
+      "editTitle": "Upraviť {{platform}}",
+      "usernamePlaceholderSimple": "Používateľské meno",
+      "delete": "Vymazať",
+      "heading": "Sociálne siete",
+      "addLabel": "Pridať sociálnu sieť"
+    },
+    "rewards": {
+      "heading": "Odmeny",
+      "superlikes": "Superlikes",
+      "boosts": "Boosty",
+      "buy": "Kúpiť",
+      "buyLabel": "Kúpiť superlikes alebo boosty",
+      "premiumCta": "👑 Prejsť na Premium",
+      "premiumLabel": "Prejsť na Premium",
+      "superlikeHistoryLabel_one": "Zobraziť históriu superlikes, zostáva {{count}}",
+      "superlikeHistoryLabel_other": "Zobraziť históriu superlikes, zostáva {{count}}"
+    },
+    "currentlyAt": "Momentálne na {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Pridaj vetu, ktorou sa predstavíš."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Tvoja profilová fotka",
+      "photoDesc": "Zmeň svoju profilovú fotku v nastaveniach (ikona vpravo hore).",
+      "bioTitle": "Tvoje bio",
+      "bioDesc": "Tvoje bio sa upravuje v nastaveniach. Je to prvá vec, ktorú ostatní vidia.",
+      "socialTitle": "Tvoje sociálne siete",
+      "socialDesc": "Klepni na ➕ pre pridanie siete. Podrž ikonu pre jej úpravu alebo vymazanie.",
+      "statusTitle": "Tvoj stav",
+      "statusDesc": "Verejný profil = viditeľný pre všetkých · Súkromný profil = siete skryté · Inkognito = neviditeľný. Klepnutím zmeníš."
+    },
+    "errorTitle": "Chyba",
+    "shareLocationUpdateError": "Zdieľanie tvojej aktuálnej polohy sa nepodarilo aktualizovať",
+    "comingSoonTitle": "Už čoskoro 🚀",
+    "comingSoonStats": "Štatistiky prichádzajú už čoskoro! Budeš vidieť, kto navštevuje tvoj profil a sociálne siete.",
+    "shareTitle": "Zdieľať",
+    "shareError": "Zdieľanie sa nepodarilo.",
+    "boostClaimedToast": "Boost získaný 🚀",
+    "superlikeClaimedToast": "Superlike získaný ⭐️",
+    "claimRewardError": "Odmenu sa nepodarilo získať",
+    "statusVisible": "Si vo viditeľnom režime. Všetci vidia tvoje sociálne siete. Plne využívaš aplikáciu.",
+    "statusRestricted": "Si v obmedzene viditeľnom režime. Nikto nevidí tvoje sociálne siete.",
+    "statusInvisible": "Si v neviditeľnom režime. Od teraz ťa nikto neuvidí.",
+    "statusUpdateError": "Stav sa nepodarilo aktualizovať",
+    "unsupportedPlatform": "Nepodporovaná platforma",
+    "handleRequired": "Zadaj identifikátor",
+    "invalidInstagramHandle": "Neplatné používateľské meno Instagram. Príklad: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Neplatné používateľské meno TikTok. Príklad: https://www.tiktok.com/@username",
+    "addSocialError": "Sociálnu sieť sa nepodarilo pridať",
+    "invalidLinkTitle": "Neplatný odkaz",
+    "invalidInstagramHandleShort": "Neplatné používateľské meno Instagram",
+    "invalidTiktokHandleShort": "Neplatné používateľské meno TikTok",
+    "cannotOpenInstagramTitle": "Instagram sa nepodarilo otvoriť",
+    "cannotOpenTiktokTitle": "TikTok sa nepodarilo otvoriť",
+    "tryAgainLater": "Skús to prosím neskôr znova.",
+    "editSocialError": "Sociálnu sieť sa nepodarilo upraviť",
+    "deleteSocialError": "Sociálnu sieť sa nepodarilo vymazať",
+    "backLabel": "Späť",
+    "settingsLabel": "Nastavenia",
+    "streakTitle": "Tvoja séria 🔥",
+    "streakMessage": "Prihlasuj sa každý deň, aby tvoja séria rástla. V deň 7 získaj superlike. V deň 14 získaj boost — tvoja séria sa potom vráti na 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Zisti, kto je blízko teba",
+        "desc": "Sleduj v reálnom čase rušné miesta okolo seba a ľudí, ktorí tam sú — práve teraz."
+      },
+      "checkin": {
+        "title": "Automatický check-in, vo dne aj v noci",
+        "desc": "Hneď ako vstúpiš na miesto, automaticky sa tam objavíš — a vidíš, kto tam je. Aplikácia prepína medzi Denným režimom (kaviarne, parky, šport…) a Nočným režimom (bary, reštaurácie, kluby…) podľa nálady."
+      },
+      "profile": {
+        "title": "Tvoj profil, miesta v pohybe",
+        "desc": "Pridaj svoje sociálne siete, aby ťa ľudia našli, prezeraj si profily okolo seba. Každé miesto zobrazuje aj 1 až 3 hviezdičky podľa skutočnej návštevnosti — čím živšie, tým viac žiari."
+      },
+      "referral": {
+        "title": "Pozval ťa priateľ?",
+        "desc": "Zadaj jeho odporúčací kód (voliteľné) — pomôže mu to odomknúť mesiac Premium zadarmo."
+      }
+    },
+    "referralPlaceholder": "Odporúčací kód",
+    "next": "Ďalej",
+    "start": "Poďme na to 🚀",
+    "skip": "Preskočiť"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Zisti, kto si pozerá tvoj profil",
+      "Zvýraznenie viditeľnosti (1 balíček zdarma)",
+      "Superlikes (3/týždeň zdarma)",
+      "Neviditeľný režim",
+      "Dosah vyhľadávania až 2 km",
+      "Pokročilé štatistiky",
+      "Rozšírené upozornenia"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kto ťa navštevuje?",
+        "desc": "Zisti v reálnom čase, kto si pozerá tvoj profil."
+      },
+      "boosts": {
+        "title": "Zvýraznenie viditeľnosti",
+        "desc": "Vyskoč na vrchol zoznamu na 30 minút v svojom podniku."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Ukáž osobitný záujem o niekoho, koho si všimneš."
+      },
+      "invisible": {
+        "title": "Neviditeľný režim",
+        "desc": "Zmizni zo zoznamu blízkych používateľov, kedykoľvek chceš."
+      },
+      "radius": {
+        "title": "Rozšírený dosah",
+        "desc": "Preskúmaj až 2 km okolo seba (500 m v bezplatnej verzii)."
+      },
+      "stats": {
+        "title": "Pokročilé štatistiky",
+        "desc": "Sleduj zobrazenia a kliknutia na všetkých svojich sociálnych sieťach."
+      }
+    },
+    "trialError": "Bezplatnú skúšobnú verziu sa nepodarilo spustiť.",
+    "errorTitle": "Chyba",
+    "offersUnavailableTitle": "Ponuky nie sú dostupné",
+    "offersUnavailableMessage": "Ponuky predplatného ešte nie sú načítané. Skús to za chvíľu znova.",
+    "purchaseError": "Nákup sa nepodarilo dokončiť.",
+    "restoredTitle": "✅ Nákupy obnovené",
+    "restoredMessage": "Tvoje Premium predplatné je aktívne.",
+    "noRestoreTitle": "Nebol nájdený žiadny nákup",
+    "noRestoreMessage": "Nepodarilo sa obnoviť žiadne aktívne predplatné.",
+    "restoreError": "Nákupy sa nepodarilo obnoviť.",
+    "closeLabel": "Zavrieť",
+    "title": "👑 Premium",
+    "subtitle": "Odomkni všetky funkcie",
+    "debugBanner": "⚠️ Platby zakázané (režim ladenia)",
+    "monthly": "Mesačne",
+    "perMonth": "/mesiac",
+    "annual": "Ročne",
+    "perYear": "/rok",
+    "mostChosen": "NAJOBĽÚBENEJŠIE",
+    "allIncluded": "VŠETKO ZAHRNUTÉ",
+    "ctaSimulate": "Simulovať Premium predplatné",
+    "ctaTrial": "Začať 7-dňovú bezplatnú skúšobnú verziu",
+    "ctaLoading": "Načítavanie ponúk…",
+    "ctaSubscribe": "Predplatiť",
+    "thenAnnual": "Potom {{price}}/rok · Kedykoľvek zrušiteľné",
+    "thenMonthly": "Potom {{price}}/mesiac · Kedykoľvek zrušiteľné",
+    "restorePurchases": "Obnoviť moje nákupy",
+    "legalText": "Predplatné sa automaticky obnovuje, pokiaľ nie je zrušené pred koncom aktuálneho obdobia. Spravuj svoje predplatné v nastaveniach App Store / Google Play. ",
+    "privacyPolicy": "Zásady ochrany osobných údajov",
+    "terms": "Podmienky"
+  },
+  "premiumWelcome": {
+    "header": "👑 Vitaj v Premium",
+    "finalTitle": "Poďme na to!",
+    "finalDesc": "Uži si hneď všetky svoje nové výhody Premium.",
+    "discover": "Objaviť",
+    "next": "Ďalej",
+    "skip": "Preskočiť"
+  },
+  "referralScreen": {
+    "loadError": "Tvoje informácie o odporúčaní sa nepodarilo načítať.",
+    "errorTitle": "Chyba",
+    "shareMessage": "Pripoj sa ku mne na LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Pozvi priateľa na LoocateMe",
+    "shareErrorTitle": "Zdieľať",
+    "shareError": "Zdieľanie sa nepodarilo.",
+    "codeSavedTitle": "Odporúčanie",
+    "codeSaved": "Odporúčací kód uložený!",
+    "selfReferralError": "Nemôžeš použiť svoj vlastný kód.",
+    "alreadyReferredError": "Odporúčací kód si už použil.",
+    "invalidCodeError": "Tento odporúčací kód je neplatný.",
+    "genericCodeError": "Tento kód sa nepodarilo overiť.",
+    "title": "Odporúčanie",
+    "infoText": "Pozvi tento mesiac 5 priateľov (každý musí ísť von a urobiť svoj 1. overený check-in) a získaj 1 mesiac Premium zadarmo 🎉",
+    "confirmCode": "Potvrdiť odporúčací kód „{{code}}“?",
+    "validate": "Potvrdiť",
+    "rewardActive": "💎 Tvoj zadarmo mesiac Premium je aktívny",
+    "rewardActiveUntil": " do {{date}}",
+    "yourCode": "Tvoj odporúčací kód",
+    "shareButton": "📤 Zdieľať môj kód",
+    "shareLabel": "Zdieľať môj kód",
+    "progressLabel": "{{count}} / {{target}} odporúčaní tento mesiac",
+    "invitedFriends": "Pozvaní priatelia",
+    "noInvites": "Zatiaľ žiadni pozvaní priatelia.",
+    "defaultUser": "Používateľ",
+    "statusValidated": "Overené",
+    "statusVoid": "Zrušené",
+    "statusPending": "Čaká sa"
+  },
+  "searchView": {
+    "closeLabel": "Zavrieť vyhľadávanie",
+    "title": "Vyhľadávanie",
+    "placeholder": "Používateľské meno, miesto...",
+    "clearLabel": "Vymazať vyhľadávanie",
+    "filterUsers": "Používatelia",
+    "filterLocations": "Miesta",
+    "searching": "Vyhľadávanie…",
+    "typeToSearch": "Napíš aspoň 2 písmená na spustenie vyhľadávania",
+    "noResults": "Pre toto vyhľadávanie neboli nájdené žiadne výsledky.",
+    "checkFilters": "Skontroluj filtre alebo skús iné kľúčové slovo.",
+    "resultsCount_one": "{{count}} výsledok",
+    "resultsCount_other": "{{count}} výsledkov",
+    "noLongerHere": "Už tu nie je"
+  },
+  "settingsScreen": {
+    "title": "Nastavenia",
+    "tabProfile": "Profil",
+    "tabSettings": "Nastavenia",
+    "sectionIdentity": "IDENTITA",
+    "firstName": "Meno",
+    "lastName": "Priezvisko",
+    "customNameLabel": "Vlastné meno",
+    "bioLabel": "Bio",
+    "sectionSubscription": "PREDPLATNÉ",
+    "premiumMonthly": "· Mesačné",
+    "premiumAnnual": "· Ročné",
+    "statusLoading": "Načítava sa stav…",
+    "grantedOutsideStore": "Udelené mimo predplatného App Store/Play Store (bezplatná skúšobná verzia alebo špeciálna ponuka)",
+    "renewsOn": "Obnoví sa {{date}}",
+    "expiresOn": "Vyprší {{date}}",
+    "opening": "Otváranie…",
+    "manageSubscription": "Spravovať moje predplatné",
+    "goPremium": "👑 Prejsť na Premium",
+    "manageSubError": "Nepodarilo sa otvoriť správu predplatného.",
+    "sectionGeneral": "VŠEOBECNÉ",
+    "displayMode": "Režim zobrazenia",
+    "fullNameMode": "Meno Priezvisko",
+    "classicMode": "Klasický",
+    "customMode": "Vlastný",
+    "sectionReferral": "ODPORÚČANIE",
+    "alreadyReferred": "Už si bol odporučený.",
+    "referralHint": "Zdieľal s tebou priateľ kód? Zadaj ho tu.",
+    "referralPlaceholder": "Odporúčací kód",
+    "validate": "Potvrdiť",
+    "sectionNotifications": "OZNÁMENIA",
+    "notifKinds": {
+      "superlike": "Prijaté superlikes",
+      "superlikeAccepted": "Prijaté superlikes",
+      "eventBoost": "Boosty udalostí",
+      "streakExpiring": "Pripomienky série",
+      "profileView": "Zobrazenia profilu",
+      "socialClick": "Zobrazenia tvojich sociálnych sietí",
+      "inactiveProfileViews": "Zobrazenia prijaté počas tvojej neprítomnosti",
+      "referralValidated": "Odporúčanie overené",
+      "referralRewardGranted": "Odmena za odporúčanie",
+      "nightModeActivated": "Aktivácia nočného režimu",
+      "atRiskReactivation": "Pripomienky reaktivácie",
+      "weeklyDigest": "Týždenný súhrn"
+    },
+    "notifCategories": {
+      "social": "Sociálna aktivita",
+      "rewards": "Série a odmeny",
+      "system": "Systém a súhrny"
+    },
+    "sectionPrivacy": "SÚKROMIE A GDPR",
+    "privacyPolicyLink": "Zásady ochrany osobných údajov",
+    "consent": "Súhlas",
+    "analyticsLabel": "Analytika",
+    "dataSaleTitle": "Predaj údajov (CCPA)",
+    "dataSaleDesc": "Nepredávame ani nezdieľame tvoje osobné údaje s tretími stranami na reklamné účely.",
+    "invisibleModeTitle": "Neviditeľný režim",
+    "invisibleModeDesc": "Budeš neviditeľný pre ostatných používateľov na miestach, ale nebudeš môcť prezerať mapu ani zoznam miest, kým je tento režim aktívny.",
+    "shareLocationTitle": "Zdieľať moju aktuálnu polohu",
+    "shareLocationDesc": "Zobrazuje ostatným používateľom presné miesto, kde sa aktuálne nachádzaš, okrem tvojho mesta. V predvolenom nastavení vypnuté, aby chránilo tvoje súkromie a predišlo riziku prenasledovania.",
+    "policyLoadError": "Zásady ochrany osobných údajov sa nepodarilo načítať.",
+    "savePrivacyPrefsError": "Tvoje predvoľby ochrany osobných údajov sa nepodarilo uložiť",
+    "shareLocationUpdateError": "Zdieľanie tvojej aktuálnej polohy sa nepodarilo aktualizovať",
+    "invisibleModeUpdateError": "Neviditeľný režim sa nepodarilo aktualizovať",
+    "notifPrefUpdateError": "Túto predvoľbu oznámení sa nepodarilo aktualizovať",
+    "consentSavedTitle": "Úspech",
+    "consentSaved": "Súhlas uložený.",
+    "consentRevoked": "Súhlas odvolaný.",
+    "consentSaveError": "Tvoj súhlas sa nepodarilo uložiť",
+    "revokeConsentTitle": "Odvolanie súhlasu",
+    "revokeConsentMessage": "Odvolanie súhlasu povedie k trvalému vymazaniu tvojho účtu a všetkých tvojich údajov. Chceš pokračovať?",
+    "cancel": "Zrušiť",
+    "continueLabel": "Pokračovať",
+    "currentPasswordRequired": "Zadaj svoje aktuálne heslo.",
+    "passwordTooShort": "Nové heslo musí obsahovať aspoň 6 znakov.",
+    "passwordConfirmMismatch": "Potvrdenie sa nezhoduje s novým heslom.",
+    "passwordChangedTitle": "Heslo zmenené",
+    "passwordChangedMessage": "Tvoje heslo bolo aktualizované.",
+    "currentPasswordInvalid": "Neplatné aktuálne heslo alebo chyba servera.",
+    "invalidEmail": "Zadaj platnú e-mailovú adresu.",
+    "passwordRequiredConfirm": "Zadaj svoje heslo na potvrdenie.",
+    "checkInboxTitle": "Skontroluj svoju schránku",
+    "checkInboxMessage": "Potvrdzovací e-mail bol odoslaný na {{email}}. Klikni na odkaz na potvrdenie zmeny.",
+    "emailChangeError": "Zmenu sa nepodarilo spustiť. Neplatné heslo alebo chyba servera.",
+    "exportReadyTitle": "Export pripravený",
+    "exportReadyMessage": "Tvoje údaje boli exportované ({{size}} znakov).",
+    "exportError": "Tvoje údaje sa nepodarilo exportovať",
+    "deleteAccountConfirmTitle": "Vymazať účet",
+    "deleteAccountConfirmMessage": "Vymazanie je definitívne. Potvrdzuješ vymazanie svojho účtu?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Tvoj profil bol aktualizovaný.",
+    "loadBlockedError": "Blokované účty sa nepodarilo načítať",
+    "unblockError": "Tohto používateľa sa nepodarilo odblokovať",
+    "sectionAccount": "ÚČET",
+    "emailLabel": "E-mail",
+    "notProvided": "Neuvedené",
+    "change": "Zmeniť",
+    "passwordLabel": "Heslo",
+    "blockedAccounts": "Blokované účty",
+    "helpAndPrivacy": "Pomoc a súkromie",
+    "terms": "Podmienky používania",
+    "sectionModeration": "MODEROVANIE",
+    "moderatorSpace": "Priestor moderátora",
+    "debugConsole": "Ladiaca konzola",
+    "exportData": "Exportovať moje údaje",
+    "deleteAccount": "Vymazať môj účet",
+    "logout": "Odhlásiť sa",
+    "save": "Uložiť",
+    "close": "Zavrieť",
+    "privacyModalTitle": "Súkromie",
+    "deleteAccountTitle": "Vymazanie účtu",
+    "deleteAccountDesc": "Na potvrdenie zadaj svoje heslo. Táto akcia je nezvratná.",
+    "deleting": "Vymazávanie...",
+    "changePasswordTitle": "Zmeniť heslo",
+    "currentPasswordPlaceholder": "Aktuálne heslo",
+    "newPasswordPlaceholder": "Nové heslo (min. 6 znakov)",
+    "confirmPasswordPlaceholder": "Potvrdiť nové heslo",
+    "changeEmailTitle": "Zmeniť e-mail",
+    "currentEmailLabel": "Aktuálny e-mail: {{email}}",
+    "newEmailPlaceholder": "Nový e-mail",
+    "noBlockedAccounts": "Žiadne blokované účty.",
+    "unblock": "Odblokovať"
+  },
+  "statisticsScreen": {
+    "loadError": "Štatistiky sa nepodarilo načítať",
+    "loadVisitorsError": "Zoznam návštevníkov sa nepodarilo načítať",
+    "justNow": "Práve teraz",
+    "minutesAgo": "pred {{count}} min",
+    "hoursAgo": "pred {{count}}h",
+    "yesterday": "Včera",
+    "daysAgo": "pred {{count}} d",
+    "title": "Štatistiky",
+    "comingSoonTitle": "Už čoskoro 🚀",
+    "comingSoonDesc": "Štatistiky prichádzajú už čoskoro! Budeš vidieť, kto navštevuje tvoj profil a sociálne siete.",
+    "whoStalksTitle": "Kto ťa sleduje? 👀",
+    "whoStalksDesc": "Prejdi na Premium a zisti, kto navštevuje tvoj profil a sociálne siete!",
+    "discoverVisitors": "Objaviť mojich návštevníkov",
+    "later": "Neskôr",
+    "profileViews": "Zobrazenia profilu",
+    "views": "zobrazení",
+    "last30Days": "za posledných 30 dní",
+    "clicksByNetwork": "Kliknutia podľa siete",
+    "lastVisits": "Posledné návštevy",
+    "noVisitorsTitle": "Zatiaľ nikto nenavštívil tvoj profil",
+    "noVisitorsDesc": "Pokračuj v skúmaní miest, aby si bol objavený!",
+    "defaultUser": "Používateľ",
+    "hiddenVisits_one": "{{count}} skrytá návšteva",
+    "hiddenVisits_other": "{{count}} skrytých návštev",
+    "goPremiumToSeeAll": "Prejdi na Premium a uvidíš všetko",
+    "showMore": "Zobraziť viac"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Obťažovanie",
+      "spam": "Spam",
+      "inappropriate": "Nevhodný obsah",
+      "impersonation": "Krádež identity",
+      "scam": "Podvod",
+      "other": "Iné"
+    },
+    "statusAvailable": "Dostupný/á",
+    "statusRestricted": "Obmedzená viditeľnosť",
+    "statusInvisible": "Neviditeľný/á",
+    "noUserSelected": "Nebol vybraný žiadny používateľ.",
+    "backToList": "Späť na zoznam",
+    "superlikeLockedTitle": "Už čoskoro",
+    "superlikeLockedMessage": "Superlikes sa odomknú po tvojom prvom check-ine.",
+    "superlikeSentTitle": "⭐ Superlike odoslaný!",
+    "superlikeSentMessage": "{{name}} bol(a) upozornený(á), že si si ho/ju všimol(la).",
+    "errorTitle": "Chyba",
+    "superlikeSendError": "Superlike sa nepodarilo odoslať.",
+    "blockConfirmTitle": "Zablokovať tohto používateľa?",
+    "blockConfirmMessage": "Tohto používateľa už neuvidíte a on vás nebude môcť kontaktovať.",
+    "cancel": "Zrušiť",
+    "block": "Zablokovať",
+    "userBlockedTitle": "Používateľ zablokovaný",
+    "userBlockedMessage": "Tento používateľ bol zablokovaný.",
+    "blockError": "Tohto používateľa sa nepodarilo zablokovať.",
+    "reasonRequiredTitle": "Vyžaduje sa dôvod",
+    "reasonRequiredMessage": "Uveďte prosím dôvod.",
+    "reportSentTitle": "Nahlásenie odoslané",
+    "reportSentMessage": "Ďakujeme za vaše nahlásenie.",
+    "reportSendError": "Nahlásenie sa nepodarilo odoslať.",
+    "backA11y": "Späť",
+    "moreOptionsA11y": "Ďalšie možnosti",
+    "sendSuperlikeA11y": "Odoslať superlike",
+    "superlikeLockedA11y": "Superlike uzamknutý, odomkne sa po tvojom prvom check-ine",
+    "currentlyAt": "Momentálne v {{place}}",
+    "mutualConnectionBanner": "Táto osoba chce nadviazať kontakt",
+    "socialsHidden": "Tento používateľ nezdieľa svoje sociálne siete",
+    "noBio": "Zatiaľ žiadne bio.",
+    "noSocials": "Žiadna sociálna sieť",
+    "actionsTitle": "Akcie",
+    "report": "Nahlásiť",
+    "reportUserTitle": "Nahlásiť používateľa",
+    "reportWarning": "Zneužívanie nahlásení môže viesť k sankciám. Buďte prosím úprimní.",
+    "categoryLabel": "Kategória",
+    "reasonLabel": "Dôvod",
+    "reasonPlaceholder": "Stručne vysvetlite dôvod",
+    "descriptionLabel": "Popis (voliteľný)",
+    "descriptionPlaceholder": "Ďalšie podrobnosti",
+    "sending": "Odosielanie...",
+    "sendReport": "Odoslať nahlásenie",
+    "justNow": "Práve teraz",
+    "minutesAgo_one": "Pred {{count}} min",
+    "minutesAgo_other": "Pred {{count}} min",
+    "hoursAgo_one": "Pred {{count}} h",
+    "hoursAgo_other": "Pred {{count}} h",
+    "yesterday": "Včera",
+    "daysAgo_one": "Pred {{count}} dňom",
+    "daysAgo_other": "Pred {{count}} dňami"
+  },
+  "warningsScreen": {
+    "title": "Upozornenia",
+    "banAlert": "Toto správanie môže viesť k dočasnému alebo trvalému zablokovaniu v aplikácii.",
+    "empty": "Žiadne upozornenia.",
+    "typeLabel": "Typ upozornenia",
+    "notSpecified": "Neuvedené",
+    "notSpecifiedFem": "Neuvedené",
+    "reasonLabel": "Dôvod"
+  },
+  "common": {
+    "close": "Zavrieť",
+    "errorTitle": "Chyba"
+  },
+  "streakCard": {
+    "hintReady": "Tvoja odmena je pripravená!",
+    "hintGrow": "Prihlasuj sa každý deň, aby rástla.",
+    "claimBoost": "Vyzdvihnúť boost",
+    "claimSuperlike": "Vyzdvihnúť superlike"
+  },
+  "coteCard": {
+    "messageTop": "Na vrchole! Prihlás sa zajtra, aby si si to udržal.",
+    "messageZero": "Prihlás sa dnes, aby si ju znovu naštartoval."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Buď na vrchole na 30 min",
+    "boostPack5Desc": "Najlepší pomer ceny a kvality",
+    "superlikePack3Desc": "Ukáž svoj záujem jedinečným spôsobom",
+    "superlikePack10Desc": "Pre skutočných spájačov",
+    "badgePopular": "Obľúbené",
+    "badgeBestOffer": "Najlepšia ponuka",
+    "notAvailableTitle": "Nedostupné",
+    "notAvailableMessage": "Tento balík zatiaľ nie je v obchode dostupný.",
+    "purchaseErrorMessage": "Nákup sa nepodarilo dokončiť.",
+    "simulate": "Simulovať"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Hľadaj na týchto miestach",
+    "categoryBars": "Bary",
+    "categoryClubs": "Kluby",
+    "categoryRestos": "Reštaurácie",
+    "categoryPubs": "Puby",
+    "categoryGyms": "Posilňovne",
+    "categoryCafes": "Kaviarne",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Knižnice"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonym"
+  },
+  "locationMapView": {
+    "loadError": "Mapu sa nepodarilo načítať",
+    "renderError": "Chyba pri načítaní mapy"
+  },
+  "churnSurveyModal": {
+    "title": "Minútku, kým odídeš?",
+    "subtitle": "Pomôž nám pochopiť prečo.",
+    "reasonTooManyNotifications": "Príliš veľa oznámení",
+    "reasonPrivacyConcern": "Necítim sa dobre so zdieľaním",
+    "reasonNotUseful": "Už mi to nie je užitočné",
+    "reasonOther": "Iný dôvod",
+    "dismiss": "Preskočiť",
+    "thanks": "Ďakujeme za tvoju spätnú väzbu 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Hľadať",
+    "tabNearby": "Miesta v okolí",
+    "tabAccount": "Účet"
+  },
+  "documentViewer": {
+    "openError": "Tento dokument sa nepodarilo otvoriť.",
+    "defaultLabel": "Zobraziť dokument"
+  },
+  "vibeFab": {
+    "toDay": "Prepnúť do denného režimu",
+    "toNight": "Prepnúť do nočného režimu"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Zdieľanie polohy aktívne"
+  }
+}

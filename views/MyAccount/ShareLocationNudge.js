@@ -1,15 +1,16 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 const ShareLocationNudge = ({ colors, isDark, activating, onActivate, onDismiss }) => {
+  const { t } = useTranslation();
   return (
     <View style={[styles.card, { backgroundColor: colors.accentSoft, borderColor: colors.accent }]}>
-      <Text style={[styles.title, { color: colors.accent }]}>📍 Partage ta position</Text>
+      <Text style={[styles.title, { color: colors.accent }]}>{t('myAccount.shareLocationNudge.title')}</Text>
       <Text style={[styles.text, { color: colors.textPrimary }]}>
-        Active le partage de ton lieu actuel pour être plus facilement repéré·e par les autres utilisateurs
-        à proximité.
+        {t('myAccount.shareLocationNudge.message')}
       </Text>
       <View style={styles.actions}>
         <TouchableOpacity
@@ -21,11 +22,11 @@ const ShareLocationNudge = ({ colors, isDark, activating, onActivate, onDismiss 
           {activating ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.activateText}>Activer</Text>
+            <Text style={styles.activateText}>{t('myAccount.shareLocationNudge.activate')}</Text>
           )}
         </TouchableOpacity>
         <TouchableOpacity onPress={onDismiss} disabled={activating} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={[styles.dismissText, { color: colors.textSecondary }]}>Non merci</Text>
+          <Text style={[styles.dismissText, { color: colors.textSecondary }]}>{t('myAccount.shareLocationNudge.noThanks')}</Text>
         </TouchableOpacity>
       </View>
     </View>

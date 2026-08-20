@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Prijava",
+      "welcomeBack": "Dobrodošao natrag!",
+      "subtitle": "Prijavi se za nastavak",
+      "emailPlaceholder": "E-pošta",
+      "passwordPlaceholder": "Lozinka",
+      "submit": "Prijava",
+      "forgotPassword": "Zaboravili ste lozinku?",
+      "noAccount": "Nemate još račun?",
+      "createAccount": "Stvori račun",
+      "emailNotVerifiedTitle": "E-pošta nije potvrđena",
+      "emailNotVerifiedMessage": "Vaša adresa e-pošte još nije potvrđena. Upravo smo vam poslali novu potvrdnu poruku. Kliknite na poveznicu da biste aktivirali račun, a zatim pokušajte ponovno.",
+      "authFailedTitle": "Prijava nije uspjela",
+      "authFailedMessage": "Nismo vas mogli prijaviti. Provjerite podatke i pokušajte ponovno."
+    },
+    "signup": {
+      "passwordMismatch": "Lozinke se ne podudaraju.",
+      "requiredFields": "Sva polja moraju biti popunjena.",
+      "birthdateRequired": "Datum rođenja je obavezan.",
+      "under18": "Morate imati najmanje 18 godina za registraciju.",
+      "policyLoadError": "Politiku privatnosti nije bilo moguće učitati. Možete pokušati ponovno."
+    }
+  },
+  "consent": {
+    "title": "Privatnost",
+    "changelogTitle": "Što se promijenilo",
+    "decline": "Odbij",
+    "accept": "Prihvati",
+    "accepting": "Spremanje...",
+    "declineInfoTitle": "Informacija",
+    "declineInfoMessage": "Morate prihvatiti politiku privatnosti za korištenje aplikacije.",
+    "acceptErrorTitle": "Pogreška",
+    "acceptErrorMessage": "Vaš pristanak nije bilo moguće spremiti. Pokušajte ponovno."
+  },
+  "ageVerification": {
+    "title": "Provjera dobi",
+    "urlMissing": "Nedostaje URL za provjeru",
+    "startError": "Provjeru dobi nije bilo moguće pokrenuti. Pokušajte ponovno.",
+    "retry": "Pokušaj ponovno",
+    "declinedTitle": "Provjera odbijena",
+    "declinedMessage": "Nismo mogli potvrditi da imate više od 18 godina. Možete pokušati ponovno."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Jezik",
+      "systemDefault": "Jezik telefona"
+    }
+  },
+  "forgotPassword": {
+    "title": "Zaboravljena lozinka",
+    "resetTitle": "Poništavanje",
+    "instructions": "Unesite svoju adresu e-pošte kako biste primili poveznicu za poništavanje.",
+    "emailPlaceholder": "E-pošta",
+    "submit": "Pošalji poveznicu",
+    "successTitle": "E-pošta poslana",
+    "successMessage": "Ako račun postoji, poslana je e-pošta.",
+    "errorTitle": "Pogreška",
+    "errorFallback": "Pokušajte ponovno"
+  },
+  "dataManagement": {
+    "title": "Privatnost",
+    "export": {
+      "title": "Izvezi moje podatke",
+      "desc": "Preuzmite kopiju svojih informacija (profil, društvene mreže, postavke).",
+      "button": "Izvezi",
+      "buttonWorking": "Pričekajte...",
+      "successTitle": "Izvoz podataka",
+      "successMessage": "Vaš izvoz je generiran i prikazan u konzoli.",
+      "errorTitle": "Pogreška",
+      "errorMessage": "Vaše podatke trenutno nije bilo moguće izvesti. Pokušajte ponovno."
+    },
+    "delete": {
+      "title": "Izbriši moj račun",
+      "desc": "Trajno briše vaš račun i sve povezane podatke.",
+      "passwordPlaceholder": "Potvrdite svojom lozinkom",
+      "button": "Trajno izbriši",
+      "passwordRequiredTitle": "Potrebna lozinka",
+      "passwordRequiredMessage": "Unesite svoju lozinku.",
+      "confirmTitle": "Potvrda",
+      "confirmMessage": "Ova radnja je nepovratna. Zaista želite izbrisati svoj račun?",
+      "cancel": "Odustani",
+      "confirm": "Izbriši",
+      "successTitle": "Račun izbrisan",
+      "successMessage": "Vaš račun i podaci su izbrisani.",
+      "errorTitle": "Pogreška",
+      "errorMessage": "Brisanje nije uspjelo. Nevažeća lozinka ili problem sa serverom."
+    }
+  },
+  "editProfile": {
+    "title": "Uredi moj profil",
+    "subtitle": "Dodirni polje za uređivanje",
+    "notSet": "Nije postavljeno",
+    "backLabel": "Natrag",
+    "fields": {
+      "firstName": "Ime",
+      "lastName": "Prezime",
+      "customName": "Prilagođeno ime",
+      "bio": "Bio",
+      "birthdate": "Datum rođenja",
+      "gender": "Spol"
+    },
+    "gender": {
+      "male": "Dječak",
+      "female": "Djevojka",
+      "preferNotToSay": "Radije ne bih rekao/la"
+    },
+    "photo": {
+      "notSupportedTitle": "Nije podržano",
+      "notSupportedMessage": "Kamera nije dostupna na webu.",
+      "cameraPermissionTitle": "Potrebno je dopuštenje",
+      "cameraPermissionMessage": "Aplikaciji je potreban pristup kameri za snimanje fotografije.",
+      "galleryPermissionMessage": "Aplikaciji je potreban pristup vašim fotografijama za odabir slike.",
+      "errorTitle": "Pogreška",
+      "uploadErrorMessage": "Sliku nije bilo moguće učitati",
+      "cameraOpenError": "Kameru nije bilo moguće otvoriti.",
+      "galleryOpenError": "Galeriju nije bilo moguće otvoriti.",
+      "deleteErrorMessage": "Profilnu fotografiju nije bilo moguće izbrisati",
+      "deleteConfirmTitle": "Izbrisati profilnu fotografiju?",
+      "deleteConfirmMessage": "Ova radnja je konačna.",
+      "cancel": "Odustani",
+      "delete": "Izbriši",
+      "modalTitle": "Profilna fotografija",
+      "takePhoto": "📸 Snimi fotografiju",
+      "sending": "Prijenos...",
+      "chooseGallery": "🖼️ Odaberi iz galerije",
+      "deletePhoto": "🗑️ Izbriši fotografiju",
+      "deleting": "Brisanje..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Nevažeće ime",
+      "firstNameInvalidMessage": "Ime mora počinjati velikim slovom i može sadržavati slova (naglasci dopušteni), razmake, apostrofe ili crtice.",
+      "lastNameInvalidTitle": "Nevažeće prezime",
+      "lastNameInvalidMessage": "Prezime mora počinjati velikim slovom i može sadržavati slova (naglasci dopušteni), razmake, apostrofe ili crtice.",
+      "incompleteIdentityTitle": "Nepotpuni identitet",
+      "incompleteIdentityMessage": "Unesite Prilagođeno ime ILI Ime I Prezime.",
+      "customNameRequiredTitle": "Potrebno prilagođeno ime",
+      "customNameRequiredMessage": "Ne možete ukloniti prilagođeno ime dok su ime ili prezime prazni.",
+      "invalidDateTitle": "Nevažeći datum",
+      "invalidDateMessage": "Odaberite valjani datum rođenja.",
+      "minAgeTitle": "Potrebna minimalna dob",
+      "minAgeMessage": "Morate imati najmanje 18 godina.",
+      "updateErrorMessage": "Vaš profil nije bilo moguće ažurirati"
+    },
+    "modal": {
+      "editPrefix": "Uredi",
+      "editGeneric": "Uredi",
+      "selectDate": "Odaberi datum",
+      "cancel": "Odustani",
+      "save": "Spremi",
+      "placeholders": {
+        "firstName": "Vaše ime",
+        "lastName": "Vaše prezime",
+        "customName": "Vaše prilagođeno ime",
+        "bio": "Recite nam nešto o sebi...",
+        "default": "Vaš tekst"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Nevidljivi način aktivan",
+      "subtitle": "Ne možete vidjeti mjesta oko sebe dok je nevidljivi način aktivan. Isključite ga za pregledavanje mjesta.",
+      "disableButton": "Isključi nevidljivi način"
+    },
+    "error": {
+      "title": "Lokacija nedostupna",
+      "subtitle": "Aktivirajte usluge lokacije u postavkama uređaja da vidite mjesta oko sebe.",
+      "retry": "Pokušaj ponovno"
+    },
+    "empty": {
+      "title": "Mirna zona za sada",
+      "subtitle": "Nije pronađeno nijedno aktivno mjesto oko vas. Proširite radijus ili predložite novo mjesto.",
+      "expandRadius": "Proširi radijus",
+      "suggestLocation": "Predloži ovo mjesto"
+    },
+    "footer": {
+      "loadingMore": "Učitavanje dodatnih mjesta…",
+      "loadMoreError": "Nije bilo moguće učitati dodatna mjesta. Provjerite vezu.",
+      "retry": "Pokušaj ponovno",
+      "reachedEnd": "Istražili ste sva aktivna mjesta u blizini. Pomaknite se ili pretražite za više."
+    },
+    "leaveModal": {
+      "defaultName": "Ovo mjesto",
+      "subtitle": "Trenutno ste prijavljeni ovdje. Želite li napustiti ovo mjesto?",
+      "confirm": "Više nisam ovdje",
+      "cancel": "Odustani"
+    },
+    "sections": {
+      "moreLocations": "Više mjesta za vas",
+      "sponsored": "Istaknuto",
+      "trending": "Događa se sada"
+    },
+    "filters": {
+      "all": "Sve"
+    },
+    "card": {
+      "visitors_one": "{{count}} posjetitelj",
+      "visitors_other": "{{count}} posjetitelja",
+      "sponsored": "SPONZORIRANO",
+      "imHere": "Ovdje sam",
+      "editLocation": "Uredi moju lokaciju"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Ručna prijava aktivirana",
+    "checkinModeAutoOn": "Automatska prijava aktivirana",
+    "checkinModeErrorTitle": "Pogreška",
+    "checkinModeErrorMessage": "Trenutno nije bilo moguće promijeniti način prijave.",
+    "checkedInToast": "Sada ste na {{name}}!",
+    "checkinErrorMessage": "Trenutno nije bilo moguće potvrditi vašu prisutnost.",
+    "leftLocationToast": "Napustili ste ovo mjesto.",
+    "boostActiveTitle": "Boost aktivan",
+    "boostActiveLeaveMessage": "Ne možete napustiti ovo mjesto dok vaš boost traje.",
+    "leaveErrorMessage": "Trenutno vas nije bilo moguće odjaviti s ovog mjesta.",
+    "boostInProgressTitle": "Boost u tijeku",
+    "boostInProgressMessage": "Vaš boost je aktivan: pričekajte da završi prije nego promijenite mjesto.",
+    "refreshErrorToast": "Trenutno nije bilo moguće osvježiti.",
+    "disableInvisibleErrorMessage": "Trenutno nije bilo moguće isključiti nevidljivi način.",
+    "switchToManualLabel": "Prijeđi na ručnu prijavu",
+    "switchToAutoLabel": "Prijeđi na automatsku prijavu",
+    "entryAuto": "Auto. ulaz",
+    "entryManual": "Ručni ulaz",
+    "showMapLabel": "Prikaži kartu",
+    "showListLabel": "Prikaži popis",
+    "mapButton": "Karta",
+    "listButton": "Popis"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Pogreška",
+    "checkinErrorMessage": "Trenutno nije bilo moguće potvrditi vašu prisutnost.",
+    "boostActiveHereTitle": "Boost u tijeku",
+    "boostActiveHereMessage": "Vaš boost je ovdje aktivan: pričekajte da završi prije nego napustite ovo mjesto.",
+    "boostActiveMessage": "Vaš boost je aktivan: pričekajte da završi.",
+    "notFound": "Mjesto nije pronađeno",
+    "back": "Natrag",
+    "popularityVeryPopular": "Vrlo popularno",
+    "popularityPopular": "Popularno",
+    "popularityActive": "Aktivno",
+    "popularityCalm": "Mirno",
+    "checkinConfirmed": "Potvrđeno!",
+    "imHere": "Ovdje sam",
+    "viewPdf": "Pogledaj PDF",
+    "pdfLoadError": "Ovaj PDF nije moguće prikazati.",
+    "openInBrowser": "Otvori u pregledniku",
+    "profilesHere": "Profili ovdje",
+    "recentlyCrossed": "Nedavno susreti",
+    "seeMore": "Vidi više",
+    "boosted": "Pojačano",
+    "boostProfileHere": "Pojačaj moj profil ovdje",
+    "boostLockedAfterCheckins": "Boost 🔓 nakon 2 prijave"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Podijeli",
+      "shareLabel": "Podijeli moj profil",
+      "qrCode": "QR kod",
+      "qrLabel": "Prikaži moj QR kod",
+      "stats": "Statistika",
+      "statsLabel": "Pogledaj moju statistiku"
+    },
+    "qr": {
+      "title": "Skeniraj da vidiš moj profil",
+      "hint": "Ako aplikacija nije instalirana, bit ćete preusmjereni na trgovinu ({{store}})."
+    },
+    "status": {
+      "title": "Tvoj status",
+      "close": "Zatvori",
+      "public": "Javni profil",
+      "private": "Privatni profil",
+      "incognito": "Inkognito",
+      "pickLabel": "Odaberi moj status"
+    },
+    "warnings": {
+      "title": "Upozorenja",
+      "message_one": "Imate {{count}} upozorenje.",
+      "message_other": "Imate {{count}} upozorenja.",
+      "tapForDetails": "Dodirni za detalje"
+    },
+    "referral": {
+      "invite": "Pozovi svoje prijatelje",
+      "label": "Preporuka: pozovi svoje prijatelje"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Podijeli svoju lokaciju",
+      "message": "Aktiviraj dijeljenje svog trenutnog mjesta kako bi te drugi korisnici u blizini lakše pronašli.",
+      "activate": "Aktiviraj",
+      "noThanks": "Ne, hvala"
+    },
+    "social": {
+      "addTitle": "Dodaj mrežu",
+      "usernamePlaceholder": "@korisničko ime ili ID za {{platform}}",
+      "selectPlaceholder": "Odaberi mrežu",
+      "snapchatHint": "Napomena: Snapchat ne dopušta izravne poveznice, unesi samo svoje korisničko ime.",
+      "save": "Spremi",
+      "saveLabel": "Spremi",
+      "editTitle": "Uredi {{platform}}",
+      "usernamePlaceholderSimple": "Korisničko ime",
+      "delete": "Izbriši",
+      "heading": "Društvene mreže",
+      "addLabel": "Dodaj društvenu mrežu"
+    },
+    "rewards": {
+      "heading": "Nagrade",
+      "superlikes": "Superlikes",
+      "boosts": "Boostovi",
+      "buy": "Kupi",
+      "buyLabel": "Kupi superlikes ili boostove",
+      "premiumCta": "👑 Postani Premium",
+      "premiumLabel": "Postani Premium",
+      "superlikeHistoryLabel_one": "Pogledaj povijest superlikes, preostaje {{count}}",
+      "superlikeHistoryLabel_other": "Pogledaj povijest superlikes, preostaje {{count}}"
+    },
+    "currentlyAt": "Trenutno u {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Dodaj rečenicu da se predstaviš."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Tvoja profilna fotografija",
+      "photoDesc": "Promijeni svoju profilnu fotografiju iz postavki (ikona gore desno).",
+      "bioTitle": "Tvoj bio",
+      "bioDesc": "Tvoj bio uređuješ iz postavki. To je prva stvar koju drugi vide.",
+      "socialTitle": "Tvoje društvene mreže",
+      "socialDesc": "Dodirni ➕ za dodavanje mreže. Drži ikonu za uređivanje ili brisanje.",
+      "statusTitle": "Tvoj status",
+      "statusDesc": "Javni profil = vidljiv svima · Privatni profil = mreže skrivene · Inkognito = nevidljiv. Dodirni za promjenu."
+    },
+    "errorTitle": "Pogreška",
+    "shareLocationUpdateError": "Dijeljenje tvoje trenutne lokacije nije bilo moguće ažurirati",
+    "comingSoonTitle": "Uskoro dostupno 🚀",
+    "comingSoonStats": "Statistika stiže vrlo skoro! Moći ćeš vidjeti tko posjećuje tvoj profil i društvene mreže.",
+    "shareTitle": "Podijeli",
+    "shareError": "Dijeljenje nije uspjelo.",
+    "boostClaimedToast": "Boost preuzet 🚀",
+    "superlikeClaimedToast": "Superlike preuzet ⭐️",
+    "claimRewardError": "Nagradu nije bilo moguće preuzeti",
+    "statusVisible": "U vidljivom si načinu rada. Svi mogu vidjeti tvoje društvene mreže. Potpuno koristiš aplikaciju.",
+    "statusRestricted": "U ograničeno vidljivom si načinu rada. Nitko ne može vidjeti tvoje društvene mreže.",
+    "statusInvisible": "U nevidljivom si načinu rada. Od sada te nitko neće vidjeti.",
+    "statusUpdateError": "Status nije bilo moguće ažurirati",
+    "unsupportedPlatform": "Nepodržana platforma",
+    "handleRequired": "Unesite identifikator",
+    "invalidInstagramHandle": "Nevažeće korisničko ime za Instagram. Primjer: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Nevažeće korisničko ime za TikTok. Primjer: https://www.tiktok.com/@username",
+    "addSocialError": "Društvenu mrežu nije bilo moguće dodati",
+    "invalidLinkTitle": "Nevažeća poveznica",
+    "invalidInstagramHandleShort": "Nevažeće korisničko ime za Instagram",
+    "invalidTiktokHandleShort": "Nevažeće korisničko ime za TikTok",
+    "cannotOpenInstagramTitle": "Instagram nije bilo moguće otvoriti",
+    "cannotOpenTiktokTitle": "TikTok nije bilo moguće otvoriti",
+    "tryAgainLater": "Pokušajte ponovno kasnije.",
+    "editSocialError": "Društvenu mrežu nije bilo moguće urediti",
+    "deleteSocialError": "Društvenu mrežu nije bilo moguće izbrisati",
+    "backLabel": "Natrag",
+    "settingsLabel": "Postavke",
+    "streakTitle": "Tvoj niz 🔥",
+    "streakMessage": "Prijavi se svaki dan da povećaš svoj niz. 7. dana preuzmi superlike. 14. dana preuzmi boost — tvoj niz tada počinje ispočetka od 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Otkrij tko izlazi blizu tebe",
+        "desc": "Pogledaj u stvarnom vremenu živahna mjesta oko sebe i ljude koji su tamo — upravo sada."
+      },
+      "checkin": {
+        "title": "Automatska prijava, danju ili noću",
+        "desc": "Čim uđeš u neko mjesto, automatski se pojavljuješ tamo — i vidiš tko je tamo. Aplikacija prebacuje između Dnevnog načina (kafići, parkovi, sport…) i Noćnog načina (barovi, restorani, klubovi…) prema tvojoj želji."
+      },
+      "profile": {
+        "title": "Tvoj profil, mjesta koja žive",
+        "desc": "Dodaj svoje društvene mreže kako bi te ljudi pronašli, pregledavaj profile oko sebe. Svako mjesto također prikazuje 1 do 3 zvjezdice ovisno o stvarnoj posjećenosti — što je živahnije, to više sja."
+      },
+      "referral": {
+        "title": "Pozvao te prijatelj?",
+        "desc": "Unesi njegov pozivni kod (neobavezno) — to mu pomaže otključati besplatan mjesec Premiuma."
+      }
+    },
+    "referralPlaceholder": "Pozivni kod",
+    "next": "Dalje",
+    "start": "Idemo 🚀",
+    "skip": "Preskoči"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Vidi tko pregledava tvoj profil",
+      "Boostovi vidljivosti (1 besplatan paket)",
+      "Superlikes (3/tjedan besplatno)",
+      "Nevidljivi način",
+      "Radijus pretraživanja do 2 km",
+      "Napredna statistika",
+      "Poboljšane obavijesti"
+    ],
+    "slides": {
+      "views": {
+        "title": "Tko te posjećuje?",
+        "desc": "Saznaj u stvarnom vremenu tko pregledava tvoj profil."
+      },
+      "boosts": {
+        "title": "Boostovi vidljivosti",
+        "desc": "Popni se na vrh liste na 30 min u svom lokalu."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Pokaži poseban interes za nekoga koga primijetiš."
+      },
+      "invisible": {
+        "title": "Nevidljivi način",
+        "desc": "Nestani s liste obližnjih korisnika kad god poželiš."
+      },
+      "radius": {
+        "title": "Prošireni radijus",
+        "desc": "Istraži do 2 km oko sebe (500 m u besplatnoj verziji)."
+      },
+      "stats": {
+        "title": "Napredna statistika",
+        "desc": "Prati preglede i klikove na svim svojim društvenim mrežama."
+      }
+    },
+    "trialError": "Besplatno probno razdoblje nije bilo moguće pokrenuti.",
+    "errorTitle": "Pogreška",
+    "offersUnavailableTitle": "Ponude nisu dostupne",
+    "offersUnavailableMessage": "Ponude za pretplatu još nisu učitane. Pokušajte ponovno za trenutak.",
+    "purchaseError": "Kupnju nije bilo moguće dovršiti.",
+    "restoredTitle": "✅ Kupnje vraćene",
+    "restoredMessage": "Vaša Premium pretplata je aktivna.",
+    "noRestoreTitle": "Nije pronađena nijedna kupnja",
+    "noRestoreMessage": "Nijednu aktivnu pretplatu nije bilo moguće vratiti.",
+    "restoreError": "Kupnje nije bilo moguće vratiti.",
+    "closeLabel": "Zatvori",
+    "title": "👑 Premium",
+    "subtitle": "Otključaj sve značajke",
+    "debugBanner": "⚠️ Plaćanja onemogućena (način ispravljanja pogrešaka)",
+    "monthly": "Mjesečno",
+    "perMonth": "/mjesec",
+    "annual": "Godišnje",
+    "perYear": "/godina",
+    "mostChosen": "NAJODABRANIJE",
+    "allIncluded": "SVE UKLJUČENO",
+    "ctaSimulate": "Simuliraj Premium pretplatu",
+    "ctaTrial": "Započni moje 7-dnevno besplatno probno razdoblje",
+    "ctaLoading": "Učitavanje ponuda…",
+    "ctaSubscribe": "Pretplati se",
+    "thenAnnual": "Zatim {{price}}/godina · Može se otkazati u bilo kojem trenutku",
+    "thenMonthly": "Zatim {{price}}/mjesec · Može se otkazati u bilo kojem trenutku",
+    "restorePurchases": "Vrati moje kupnje",
+    "legalText": "Pretplata se automatski obnavlja osim ako se ne otkaže prije kraja trenutnog razdoblja. Upravljajte svojim pretplatama u postavkama App Store / Google Play. ",
+    "privacyPolicy": "Politika privatnosti",
+    "terms": "Uvjeti"
+  },
+  "premiumWelcome": {
+    "header": "👑 Dobrodošao u Premium",
+    "finalTitle": "Idemo!",
+    "finalDesc": "Uživaj sada u svim svojim novim Premium prednostima.",
+    "discover": "Otkrij",
+    "next": "Dalje",
+    "skip": "Preskoči"
+  },
+  "referralScreen": {
+    "loadError": "Vaše informacije o preporuci nije bilo moguće učitati.",
+    "errorTitle": "Pogreška",
+    "shareMessage": "Pridruži mi se na LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Pozovi prijatelja na LoocateMe",
+    "shareErrorTitle": "Dijeli",
+    "shareError": "Dijeljenje nije uspjelo.",
+    "codeSavedTitle": "Preporuka",
+    "codeSaved": "Preporučeni kod spremljen!",
+    "selfReferralError": "Ne možeš koristiti vlastiti kod.",
+    "alreadyReferredError": "Već si iskoristio preporučeni kod.",
+    "invalidCodeError": "Ovaj preporučeni kod nije valjan.",
+    "genericCodeError": "Ovaj kod nije bilo moguće potvrditi.",
+    "title": "Preporuka",
+    "infoText": "Pozovi 5 prijatelja ovaj mjesec (svaki mora izaći i obaviti svoju 1. potvrđenu prijavu) i osvoji 1 besplatan mjesec Premiuma 🎉",
+    "confirmCode": "Potvrditi preporučeni kod „{{code}}”?",
+    "validate": "Potvrdi",
+    "rewardActive": "💎 Tvoj besplatan mjesec Premium je aktivan",
+    "rewardActiveUntil": " do {{date}}",
+    "yourCode": "Tvoj preporučeni kod",
+    "shareButton": "📤 Podijeli moj kod",
+    "shareLabel": "Podijeli moj kod",
+    "progressLabel": "{{count}} / {{target}} preporuka ovaj mjesec",
+    "invitedFriends": "Pozvani prijatelji",
+    "noInvites": "Još nema pozvanih prijatelja.",
+    "defaultUser": "Korisnik",
+    "statusValidated": "Potvrđeno",
+    "statusVoid": "Otkazano",
+    "statusPending": "Na čekanju"
+  },
+  "searchView": {
+    "closeLabel": "Zatvori pretragu",
+    "title": "Pretraga",
+    "placeholder": "Korisničko ime, mjesto...",
+    "clearLabel": "Obriši pretragu",
+    "filterUsers": "Korisnici",
+    "filterLocations": "Mjesta",
+    "searching": "Pretraga u tijeku…",
+    "typeToSearch": "Upiši barem 2 slova za pokretanje pretrage",
+    "noResults": "Nema rezultata za ovu pretragu.",
+    "checkFilters": "Provjeri filtre ili pokušaj drugu ključnu riječ.",
+    "resultsCount_one": "{{count}} rezultat",
+    "resultsCount_other": "{{count}} rezultata",
+    "noLongerHere": "Više nije ovdje"
+  },
+  "settingsScreen": {
+    "title": "Postavke",
+    "tabProfile": "Profil",
+    "tabSettings": "Postavke",
+    "sectionIdentity": "IDENTITET",
+    "firstName": "Ime",
+    "lastName": "Prezime",
+    "customNameLabel": "Prilagođeno ime",
+    "bioLabel": "Bio",
+    "sectionSubscription": "PRETPLATA",
+    "premiumMonthly": "· Mjesečna",
+    "premiumAnnual": "· Godišnja",
+    "statusLoading": "Učitavanje statusa…",
+    "grantedOutsideStore": "Dodijeljeno izvan pretplate na App Store/Play Store (besplatno probno razdoblje ili posebna ponuda)",
+    "renewsOn": "Obnavlja se {{date}}",
+    "expiresOn": "Ističe {{date}}",
+    "opening": "Otvaranje…",
+    "manageSubscription": "Upravljaj mojom pretplatom",
+    "goPremium": "👑 Postani Premium",
+    "manageSubError": "Nije bilo moguće otvoriti upravljanje pretplatom.",
+    "sectionGeneral": "OPĆENITO",
+    "displayMode": "Način prikaza",
+    "fullNameMode": "Ime Prezime",
+    "classicMode": "Klasičan",
+    "customMode": "Prilagođen",
+    "sectionReferral": "PREPORUKA",
+    "alreadyReferred": "Već ste preporučeni.",
+    "referralHint": "Prijatelj vam je podijelio kod? Unesite ga ovdje.",
+    "referralPlaceholder": "Preporučeni kod",
+    "validate": "Potvrdi",
+    "sectionNotifications": "OBAVIJESTI",
+    "notifKinds": {
+      "superlike": "Primljeni superlikes",
+      "superlikeAccepted": "Prihvaćeni superlikes",
+      "eventBoost": "Boostovi događaja",
+      "streakExpiring": "Podsjetnici niza",
+      "profileView": "Pregledi profila",
+      "socialClick": "Pregledi vaših društvenih mreža",
+      "inactiveProfileViews": "Pregledi primljeni tijekom vaše odsutnosti",
+      "referralValidated": "Preporuka potvrđena",
+      "referralRewardGranted": "Nagrada za preporuku",
+      "nightModeActivated": "Aktivacija noćnog načina",
+      "atRiskReactivation": "Podsjetnici za reaktivaciju",
+      "weeklyDigest": "Tjedni sažetak"
+    },
+    "notifCategories": {
+      "social": "Društvena aktivnost",
+      "rewards": "Nizovi i nagrade",
+      "system": "Sustav i sažeci"
+    },
+    "sectionPrivacy": "PRIVATNOST I GDPR",
+    "privacyPolicyLink": "Politika privatnosti",
+    "consent": "Privola",
+    "analyticsLabel": "Analitika",
+    "dataSaleTitle": "Prodaja podataka (CCPA)",
+    "dataSaleDesc": "Ne prodajemo niti dijelimo vaše osobne podatke s trećim stranama u reklamne svrhe.",
+    "invisibleModeTitle": "Nevidljivi način",
+    "invisibleModeDesc": "Bit ćete nevidljivi drugim korisnicima na mjestima, ali nećete moći pregledavati kartu ni popis mjesta dok je ovaj način aktivan.",
+    "shareLocationTitle": "Podijeli moju trenutnu lokaciju",
+    "shareLocationDesc": "Prikazuje drugim korisnicima točno mjesto na kojem se trenutno nalazite, osim vašeg grada. Zadano isključeno radi zaštite vaše privatnosti i izbjegavanja rizika od uhođenja.",
+    "policyLoadError": "Politiku privatnosti nije bilo moguće učitati.",
+    "savePrivacyPrefsError": "Vaše postavke privatnosti nije bilo moguće spremiti",
+    "shareLocationUpdateError": "Dijeljenje vaše trenutne lokacije nije bilo moguće ažurirati",
+    "invisibleModeUpdateError": "Nevidljivi način nije bilo moguće ažurirati",
+    "notifPrefUpdateError": "Ovu postavku obavijesti nije bilo moguće ažurirati",
+    "consentSavedTitle": "Uspjeh",
+    "consentSaved": "Privola spremljena.",
+    "consentRevoked": "Privola opozvana.",
+    "consentSaveError": "Vašu privolu nije bilo moguće spremiti",
+    "revokeConsentTitle": "Opoziv privole",
+    "revokeConsentMessage": "Opoziv privole dovest će do trajnog brisanja vašeg računa i svih vaših podataka. Želite li nastaviti?",
+    "cancel": "Odustani",
+    "continueLabel": "Nastavi",
+    "currentPasswordRequired": "Unesite svoju trenutnu lozinku.",
+    "passwordTooShort": "Nova lozinka mora sadržavati najmanje 6 znakova.",
+    "passwordConfirmMismatch": "Potvrda se ne podudara s novom lozinkom.",
+    "passwordChangedTitle": "Lozinka promijenjena",
+    "passwordChangedMessage": "Vaša lozinka je ažurirana.",
+    "currentPasswordInvalid": "Nevažeća trenutna lozinka ili greška poslužitelja.",
+    "invalidEmail": "Unesite valjanu adresu e-pošte.",
+    "passwordRequiredConfirm": "Unesite lozinku za potvrdu.",
+    "checkInboxTitle": "Provjerite svoju poštu",
+    "checkInboxMessage": "E-poruka za potvrdu poslana je na {{email}}. Kliknite na poveznicu da biste potvrdili promjenu.",
+    "emailChangeError": "Promjenu nije bilo moguće pokrenuti. Nevažeća lozinka ili greška poslužitelja.",
+    "exportReadyTitle": "Izvoz spreman",
+    "exportReadyMessage": "Vaši podaci su izvezeni ({{size}} znakova).",
+    "exportError": "Vaše podatke nije bilo moguće izvesti",
+    "deleteAccountConfirmTitle": "Izbriši račun",
+    "deleteAccountConfirmMessage": "Brisanje je konačno. Potvrđujete li brisanje svog računa?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Vaš profil je ažuriran.",
+    "loadBlockedError": "Blokirane račune nije bilo moguće učitati",
+    "unblockError": "Ovog korisnika nije bilo moguće odblokirati",
+    "sectionAccount": "RAČUN",
+    "emailLabel": "E-pošta",
+    "notProvided": "Nije navedeno",
+    "change": "Promijeni",
+    "passwordLabel": "Lozinka",
+    "blockedAccounts": "Blokirani računi",
+    "helpAndPrivacy": "Pomoć i privatnost",
+    "terms": "Uvjeti korištenja",
+    "sectionModeration": "MODERACIJA",
+    "moderatorSpace": "Prostor za moderatore",
+    "debugConsole": "Konzola za otklanjanje pogrešaka",
+    "exportData": "Izvezi moje podatke",
+    "deleteAccount": "Izbriši moj račun",
+    "logout": "Odjava",
+    "save": "Spremi",
+    "close": "Zatvori",
+    "privacyModalTitle": "Privatnost",
+    "deleteAccountTitle": "Brisanje računa",
+    "deleteAccountDesc": "Za potvrdu unesite svoju lozinku. Ova radnja je nepovratna.",
+    "deleting": "Brisanje...",
+    "changePasswordTitle": "Promijeni lozinku",
+    "currentPasswordPlaceholder": "Trenutna lozinka",
+    "newPasswordPlaceholder": "Nova lozinka (min. 6 znakova)",
+    "confirmPasswordPlaceholder": "Potvrdi novu lozinku",
+    "changeEmailTitle": "Promijeni e-poštu",
+    "currentEmailLabel": "Trenutna e-pošta: {{email}}",
+    "newEmailPlaceholder": "Nova e-pošta",
+    "noBlockedAccounts": "Nema blokiranih računa.",
+    "unblock": "Odblokiraj"
+  },
+  "statisticsScreen": {
+    "loadError": "Statistiku nije bilo moguće dohvatiti",
+    "loadVisitorsError": "Popis posjetitelja nije bilo moguće dohvatiti",
+    "justNow": "Upravo sada",
+    "minutesAgo": "prije {{count}} min",
+    "hoursAgo": "prije {{count}}h",
+    "yesterday": "Jučer",
+    "daysAgo": "prije {{count}} d",
+    "title": "Statistika",
+    "comingSoonTitle": "Uskoro dostupno 🚀",
+    "comingSoonDesc": "Statistika stiže vrlo skoro! Moći ćeš vidjeti tko posjećuje tvoj profil i društvene mreže.",
+    "whoStalksTitle": "Tko te prati? 👀",
+    "whoStalksDesc": "Postani Premium da otkriješ tko posjećuje tvoj profil i društvene mreže!",
+    "discoverVisitors": "Otkrij moje posjetitelje",
+    "later": "Kasnije",
+    "profileViews": "Pregledi profila",
+    "views": "pregleda",
+    "last30Days": "u posljednjih 30 dana",
+    "clicksByNetwork": "Klikovi po mreži",
+    "lastVisits": "Nedavni posjeti",
+    "noVisitorsTitle": "Nitko još nije posjetio tvoj profil",
+    "noVisitorsDesc": "Nastavi istraživati mjesta da bi te otkrili!",
+    "defaultUser": "Korisnik",
+    "hiddenVisits_one": "{{count}} skriveni posjet",
+    "hiddenVisits_other": "{{count}} skrivenih posjeta",
+    "goPremiumToSeeAll": "Postani Premium da vidiš sve",
+    "showMore": "Prikaži više"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Uznemiravanje",
+      "spam": "Neželjena pošta",
+      "inappropriate": "Neprimjeren sadržaj",
+      "impersonation": "Krađa identiteta",
+      "scam": "Prijevara",
+      "other": "Ostalo"
+    },
+    "statusAvailable": "Dostupan/na",
+    "statusRestricted": "Ograničena vidljivost",
+    "statusInvisible": "Nevidljiv/a",
+    "noUserSelected": "Nije odabran korisnik.",
+    "backToList": "Natrag na popis",
+    "superlikeLockedTitle": "Uskoro dostupno",
+    "superlikeLockedMessage": "Superlikeovi se otključavaju nakon tvoje prve prijave lokacije.",
+    "superlikeSentTitle": "⭐ Superlike poslan!",
+    "superlikeSentMessage": "{{name}} je obaviješten/a da si ga/ju primijetio/la.",
+    "errorTitle": "Greška",
+    "superlikeSendError": "Superlike nije bilo moguće poslati.",
+    "blockConfirmTitle": "Blokirati ovog korisnika?",
+    "blockConfirmMessage": "Više nećete vidjeti ovog korisnika i on vas više neće moći kontaktirati.",
+    "cancel": "Odustani",
+    "block": "Blokiraj",
+    "userBlockedTitle": "Korisnik blokiran",
+    "userBlockedMessage": "Ovaj korisnik je blokiran.",
+    "blockError": "Ovog korisnika nije bilo moguće blokirati.",
+    "reasonRequiredTitle": "Potreban je razlog",
+    "reasonRequiredMessage": "Molimo navedite razlog.",
+    "reportSentTitle": "Prijava poslana",
+    "reportSentMessage": "Hvala na prijavi.",
+    "reportSendError": "Prijavu nije bilo moguće poslati.",
+    "backA11y": "Natrag",
+    "moreOptionsA11y": "Više opcija",
+    "sendSuperlikeA11y": "Pošalji superlike",
+    "superlikeLockedA11y": "Superlike zaključan, otključava se nakon tvoje prve prijave lokacije",
+    "currentlyAt": "Trenutno na {{place}}",
+    "mutualConnectionBanner": "Ova osoba želi stupiti u kontakt",
+    "socialsHidden": "Ovaj korisnik ne dijeli svoje društvene mreže",
+    "noBio": "Još nema unesenog opisa.",
+    "noSocials": "Nema društvenih mreža",
+    "actionsTitle": "Radnje",
+    "report": "Prijavi",
+    "reportUserTitle": "Prijavi korisnika",
+    "reportWarning": "Zlouporaba prijava može dovesti do sankcija. Molimo budite iskreni.",
+    "categoryLabel": "Kategorija",
+    "reasonLabel": "Razlog",
+    "reasonPlaceholder": "Ukratko objasnite razlog",
+    "descriptionLabel": "Opis (neobavezno)",
+    "descriptionPlaceholder": "Dodatni detalji",
+    "sending": "Slanje...",
+    "sendReport": "Pošalji prijavu",
+    "justNow": "Upravo sada",
+    "minutesAgo_one": "Prije {{count}} min",
+    "minutesAgo_other": "Prije {{count}} min",
+    "hoursAgo_one": "Prije {{count}} h",
+    "hoursAgo_other": "Prije {{count}} h",
+    "yesterday": "Jučer",
+    "daysAgo_one": "Prije {{count}} dan",
+    "daysAgo_other": "Prije {{count}} dana"
+  },
+  "warningsScreen": {
+    "title": "Upozorenja",
+    "banAlert": "Ovo ponašanje može dovesti do privremenog ili trajnog isključenja iz aplikacije.",
+    "empty": "Nema upozorenja.",
+    "typeLabel": "Vrsta upozorenja",
+    "notSpecified": "Nije navedeno",
+    "notSpecifiedFem": "Nije navedeno",
+    "reasonLabel": "Razlog"
+  },
+  "common": {
+    "close": "Zatvori",
+    "errorTitle": "Pogreška"
+  },
+  "streakCard": {
+    "hintReady": "Tvoja nagrada je spremna!",
+    "hintGrow": "Prijavljuj se svaki dan kako bi rasla.",
+    "claimBoost": "Preuzmi svoj boost",
+    "claimSuperlike": "Preuzmi svoj superlike"
+  },
+  "coteCard": {
+    "messageTop": "Na vrhu! Prijavi se sutra da je zadržiš.",
+    "messageZero": "Prijavi se danas da je ponovno pokreneš."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Budi na vrhu 30 min",
+    "boostPack5Desc": "Najbolji omjer cijene i kvalitete",
+    "superlikePack3Desc": "Pokaži svoj interes na jedinstven način",
+    "superlikePack10Desc": "Za prave povezivače",
+    "badgePopular": "Popularno",
+    "badgeBestOffer": "Najbolja ponuda",
+    "notAvailableTitle": "Nije dostupno",
+    "notAvailableMessage": "Ovaj paket još nije dostupan u trgovini.",
+    "purchaseErrorMessage": "Kupnju nije bilo moguće dovršiti.",
+    "simulate": "Simuliraj"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Traži na ovim mjestima",
+    "categoryBars": "Barovi",
+    "categoryClubs": "Klubovi",
+    "categoryRestos": "Restorani",
+    "categoryPubs": "Pubovi",
+    "categoryGyms": "Teretane",
+    "categoryCafes": "Kafići",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Knjižnice"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anoniman"
+  },
+  "locationMapView": {
+    "loadError": "Kartu nije bilo moguće učitati",
+    "renderError": "Pogreška pri učitavanju karte"
+  },
+  "churnSurveyModal": {
+    "title": "Minuta prije nego odeš?",
+    "subtitle": "Pomozi nam razumjeti zašto.",
+    "reasonTooManyNotifications": "Previše obavijesti",
+    "reasonPrivacyConcern": "Ne osjećam se ugodno s dijeljenjem",
+    "reasonNotUseful": "Više mi nije korisno",
+    "reasonOther": "Drugi razlog",
+    "dismiss": "Preskoči",
+    "thanks": "Hvala na povratnoj informaciji 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Pretraga",
+    "tabNearby": "Mjesta u blizini",
+    "tabAccount": "Račun"
+  },
+  "documentViewer": {
+    "openError": "Ovaj dokument nije bilo moguće otvoriti.",
+    "defaultLabel": "Prikaži dokument"
+  },
+  "vibeFab": {
+    "toDay": "Prijeđi na dnevni način",
+    "toNight": "Prijeđi na noćni način"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Dijeljenje lokacije aktivno"
+  }
+}

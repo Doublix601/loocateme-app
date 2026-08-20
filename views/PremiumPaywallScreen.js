@@ -20,23 +20,17 @@ import PremiumService from '../services/PremiumService';
 import { DEBUG_CONFIG } from '../services/DebugConfig';
 import ScreenHeader from '../components/ScreenHeader';
 import PremiumWelcomeOnboarding from '../components/PremiumWelcomeOnboarding';
-import { PREMIUM_SLIDES as SLIDES } from '../constants/premiumFeatures';
+import { getPremiumSlides } from '../constants/premiumFeatures';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
-
-const FEATURES = [
-  'Voir qui consulte ton profil',
-  'Boosts de visibilité (1 pack offert)',
-  'Superlikes (3/semaine offerts)',
-  'Mode invisible',
-  "Rayon de recherche jusqu'à 2 km",
-  'Statistiques avancées',
-  'Notifications enrichies',
-];
 
 const FALLBACK = { monthly: '4,99 €', annual: '39,99 €', savings: 33 };
 
 export default function PremiumPaywallScreen() {
+  const { t } = useTranslation();
+  const SLIDES = getPremiumSlides(t);
+  const FEATURES = t('premiumPaywall.features', { returnObjects: true });
   const navigation = useNavigation();
   const route = useRoute();
   const routeParams = route.params ?? {};
@@ -155,7 +149,7 @@ export default function PremiumPaywallScreen() {
       if (res?.user && updateUser) updateUser({ ...user, isPremium: !!res.user.isPremium, premiumTrialStart: res.user.premiumTrialStart, premiumTrialEnd: res.user.premiumTrialEnd });
       setOnboardingVisible(true);
     } catch (e) {
-      Alert.alert('Erreur', e.message || "Impossible de démarrer l'essai gratuit.");
+      Alert.alert(t('premiumPaywall.errorTitle'), e.message || t('premiumPaywall.trialError'));
     } finally {
       setPurchasing(false);
     }
@@ -165,8 +159,8 @@ export default function PremiumPaywallScreen() {
     if (purchasing) return;
     if (!selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) {
       Alert.alert(
-        'Offres indisponibles',
-        "Les offres d'abonnement ne sont pas encore chargées. Réessayez dans quelques instants.",
+        t('premiumPaywall.offersUnavailableTitle'),
+        t('premiumPaywall.offersUnavailableMessage'),
       );
       return;
     }
@@ -187,7 +181,7 @@ export default function PremiumPaywallScreen() {
         setOnboardingVisible(true);
       }
     } catch (e) {
-      if (!e.userCancelled) Alert.alert('Erreur', e.message || "Impossible de finaliser l'achat.");
+      if (!e.userCancelled) Alert.alert(t('premiumPaywall.errorTitle'), e.message || t('premiumPaywall.purchaseError'));
     } finally {
       setPurchasing(false);
     }
@@ -203,14 +197,14 @@ export default function PremiumPaywallScreen() {
         const res = await getMyUser();
         if (res?.user && updateUser) updateUser({ ...user, isPremium: !!res.user.isPremium });
         if (res?.user?.isPremium) {
-          Alert.alert('✅ Achats restaurés', 'Votre abonnement Premium est actif.');
+          Alert.alert(t('premiumPaywall.restoredTitle'), t('premiumPaywall.restoredMessage'));
           onAlreadyPremium ? onAlreadyPremium() : onBack?.();
         } else {
-          Alert.alert('Aucun achat trouvé', "Aucun abonnement actif n'a pu être restauré.");
+          Alert.alert(t('premiumPaywall.noRestoreTitle'), t('premiumPaywall.noRestoreMessage'));
         }
       }
     } catch (e) {
-      Alert.alert('Erreur', e.message || 'Impossible de restaurer les achats.');
+      Alert.alert(t('premiumPaywall.errorTitle'), e.message || t('premiumPaywall.restoreError'));
     } finally {
       setRestoring(false);
     }
@@ -225,15 +219,15 @@ export default function PremiumPaywallScreen() {
     <View style={[styles.container, { backgroundColor: bg }]}>
       {/* Header */}
       <ScreenHeader
-        left={{ icon: 'close', onPress: onBack, accessibilityLabel: 'Fermer' }}
-        title="👑 Premium"
-        subtitle="Débloquez toutes les fonctionnalités"
+        left={{ icon: 'close', onPress: onBack, accessibilityLabel: t('premiumPaywall.closeLabel') }}
+        title={t('premiumPaywall.title')}
+        subtitle={t('premiumPaywall.subtitle')}
       />
 
       {/* Debug banner */}
       {DEBUG_CONFIG.IAP_DISABLED && (
         <View style={styles.debugBanner}>
-          <Text style={styles.debugBannerText}>⚠️ Paiements désactivés (mode debug)</Text>
+          <Text style={styles.debugBannerText}>{t('premiumPaywall.debugBanner')}</Text>
         </View>
       )}
 
@@ -285,10 +279,10 @@ export default function PremiumPaywallScreen() {
             onPress={() => setPeriod('monthly')}
             style={[styles.toggleBtn, period === 'monthly' && styles.toggleBtnActive]}
           >
-            <Text style={[styles.toggleLabel, { color: period === 'monthly' ? '#fff' : sub }]}>Mensuel</Text>
+            <Text style={[styles.toggleLabel, { color: period === 'monthly' ? '#fff' : sub }]}>{t('premiumPaywall.monthly')}</Text>
             <Text style={[styles.togglePrice, { color: period === 'monthly' ? '#fff' : text }]}>
               {monthlyPrice}
-              <Text style={{ fontSize: 12, fontWeight: '600' }}>/mois</Text>
+              <Text style={{ fontSize: 12, fontWeight: '600' }}>{t('premiumPaywall.perMonth')}</Text>
             </Text>
           </TouchableOpacity>
 
@@ -301,10 +295,10 @@ export default function PremiumPaywallScreen() {
             ]}
           >
             <View style={styles.recommendedRibbon}>
-              <Text style={styles.recommendedRibbonTxt}>LE PLUS CHOISI</Text>
+              <Text style={styles.recommendedRibbonTxt}>{t('premiumPaywall.mostChosen')}</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-              <Text style={[styles.toggleLabel, { color: period === 'annual' ? '#fff' : sub }]}>Annuel</Text>
+              <Text style={[styles.toggleLabel, { color: period === 'annual' ? '#fff' : sub }]}>{t('premiumPaywall.annual')}</Text>
               <View
                 style={[
                   styles.savingsBadge,
@@ -316,14 +310,14 @@ export default function PremiumPaywallScreen() {
             </View>
             <Text style={[styles.togglePrice, { color: period === 'annual' ? '#fff' : text }]}>
               {annualPrice}
-              <Text style={{ fontSize: 12, fontWeight: '600' }}>/an</Text>
+              <Text style={{ fontSize: 12, fontWeight: '600' }}>{t('premiumPaywall.perYear')}</Text>
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Features */}
         <View style={[styles.featuresCard, { backgroundColor: cardBg }]}>
-          <Text style={[styles.featuresTitle, { color: sub }]}>TOUT EST INCLUS</Text>
+          <Text style={[styles.featuresTitle, { color: sub }]}>{t('premiumPaywall.allIncluded')}</Text>
           {FEATURES.map((f, i) => (
             <View key={i} style={[styles.featureRow, i === FEATURES.length - 1 && { marginBottom: 0 }]}>
               <View style={styles.checkMarkCircle}>
@@ -350,12 +344,12 @@ export default function PremiumPaywallScreen() {
           ) : (
             <Text style={styles.ctaText}>
               {DEBUG_CONFIG.IAP_DISABLED
-                ? 'Simuler un abonnement Premium'
+                ? t('premiumPaywall.ctaSimulate')
                 : trialEligible
-                  ? 'Commencer mon essai gratuit 7 jours'
+                  ? t('premiumPaywall.ctaTrial')
                   : !selectedPkg
-                    ? 'Chargement des offres…'
-                    : "S'abonner"}
+                    ? t('premiumPaywall.ctaLoading')
+                    : t('premiumPaywall.ctaSubscribe')}
             </Text>
           )}
         </TouchableOpacity>
@@ -364,8 +358,8 @@ export default function PremiumPaywallScreen() {
           <Text style={[styles.trialSub, { color: sub }]}>
             🔒{' '}
             {period === 'annual'
-              ? `Puis ${annualPrice}/an · Résiliable à tout moment`
-              : `Puis ${monthlyPrice}/mois · Résiliable à tout moment`}
+              ? t('premiumPaywall.thenAnnual', { price: annualPrice })
+              : t('premiumPaywall.thenMonthly', { price: monthlyPrice })}
           </Text>
         )}
 
@@ -374,20 +368,19 @@ export default function PremiumPaywallScreen() {
           {restoring ? (
             <ActivityIndicator size="small" color="#00c2cb" />
           ) : (
-            <Text style={[styles.restoreTxt, { color: '#00c2cb' }]}>Restaurer mes achats</Text>
+            <Text style={[styles.restoreTxt, { color: '#00c2cb' }]}>{t('premiumPaywall.restorePurchases')}</Text>
           )}
         </TouchableOpacity>
 
         {/* Legal */}
         <Text style={[styles.legal, { color: sub }]}>
-          {"L'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. " +
-            "Gérez vos abonnements dans les réglages de l'App Store / Google Play. "}
+          {t('premiumPaywall.legalText')}
           <Text
             style={{ textDecorationLine: 'underline' }}
             onPress={() => Linking.openURL('https://loocateme.com/privacy')}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
-            Politique de confidentialité
+            {t('premiumPaywall.privacyPolicy')}
           </Text>
           {' · '}
           <Text
@@ -395,7 +388,7 @@ export default function PremiumPaywallScreen() {
             onPress={() => Linking.openURL('https://loocateme.com/terms')}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
-            CGU
+            {t('premiumPaywall.terms')}
           </Text>
         </Text>
       </ScrollView>

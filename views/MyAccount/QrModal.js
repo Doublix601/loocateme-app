@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, Modal, TouchableOpacity, Image, StyleSheet, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const QrModal = ({ visible, onClose, colors, isDark, qrImageUri, qrUrl, qrSize, onImageError }) => {
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={[styles.backdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.5)' }]}>
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.title, { color: colors.accent }]}>Scanne pour voir mon profil</Text>
+          <Text style={[styles.title, { color: colors.accent }]}>{t('myAccount.qr.title')}</Text>
           {qrImageUri ? (
             <Image
               source={{ uri: qrImageUri }}
@@ -16,8 +18,7 @@ const QrModal = ({ visible, onClose, colors, isDark, qrImageUri, qrUrl, qrSize, 
             />
           ) : null}
           <Text style={[styles.hint, { color: colors.textSecondary }]}>
-            Si l'app n'est pas installée, tu seras redirigé(e) vers le store (
-            {Platform.OS === 'ios' ? 'App Store' : 'Google Play'}).
+            {t('myAccount.qr.hint', { store: Platform.OS === 'ios' ? 'App Store' : 'Google Play' })}
           </Text>
           <TouchableOpacity
             onPress={onClose}

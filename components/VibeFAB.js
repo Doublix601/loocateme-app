@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useVibe } from './contexts/VibeContext';
 import { useTheme } from './contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   Easing,
   runOnJS,
@@ -20,6 +21,7 @@ const SPIN_DURATION_MS = VIBE_SPIN_DURATION_MS;
 const LOADING_DURATION_MS = VIBE_TRANSITION_DURATION_MS;
 
 export default function VibeFAB() {
+  const { t } = useTranslation();
   const { isMoon, beginVibeTransition } = useVibe();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -113,7 +115,7 @@ export default function VibeFAB() {
     <View pointerEvents="box-none" style={[styles.container, { bottom: TAB_BAR_HEIGHT + insets.bottom + 4 }]}>
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel={isMoon ? 'Passer en mode jour' : 'Passer en mode nuit'}
+        accessibilityLabel={isMoon ? t('vibeFab.toDay') : t('vibeFab.toNight')}
         onPress={onPress}
         activeOpacity={0.85}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}

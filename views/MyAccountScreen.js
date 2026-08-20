@@ -16,6 +16,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { UserContext } from '../components/contexts/UserContext';
@@ -67,6 +68,7 @@ const { width, height } = Dimensions.get('window');
 const H = height;
 
 const MyAccountScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { goToPage, currentPage, lockSwiper, unlockSwiper } = useMainSwiper();
   const { colors, isDark } = useTheme();
@@ -138,27 +140,26 @@ const MyAccountScreen = () => {
     {
       ref: photoRef,
       borderRadius: 24,
-      title: 'Ta photo de profil',
-      description: 'Modifie ta photo de profil depuis les réglages (icône en haut à droite).',
+      title: t('myAccountScreen.spot.photoTitle'),
+      description: t('myAccountScreen.spot.photoDesc'),
     },
     {
       ref: bioRef,
       borderRadius: 16,
-      title: 'Ta bio',
-      description: "Ta bio se modifie depuis les réglages. C'est la première chose que les autres voient.",
+      title: t('myAccountScreen.spot.bioTitle'),
+      description: t('myAccountScreen.spot.bioDesc'),
     },
     {
       ref: socialRef,
       borderRadius: 16,
-      title: 'Tes réseaux sociaux',
-      description: 'Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône pour la modifier ou supprimer.',
+      title: t('myAccountScreen.spot.socialTitle'),
+      description: t('myAccountScreen.spot.socialDesc'),
     },
     {
       ref: statusRef,
       borderRadius: 16,
-      title: 'Ton statut',
-      description:
-        'Profil public = visible par tous · Profil privé = réseaux masqués · Incognito = invisible. Appuie pour changer.',
+      title: t('myAccountScreen.spot.statusTitle'),
+      description: t('myAccountScreen.spot.statusDesc'),
     },
   ];
 
@@ -252,7 +253,7 @@ const MyAccountScreen = () => {
       setShareLocationNudgeVisible(false);
       await recordShareLocationNudgeDismissedForever();
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le partage du lieu actuel');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('myAccountScreen.shareLocationUpdateError'));
     } finally {
       setActivatingShareLocation(false);
     }
@@ -338,7 +339,7 @@ const MyAccountScreen = () => {
             premiumTrialEnd: me.premiumTrialEnd || null,
             consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
             privacyPreferences: me.privacyPreferences ||
-              user?.privacyPreferences || { analytics: false, marketing: false },
+              user?.privacyPreferences || { analytics: false },
             moderation: me.moderation ||
               user?.moderation || {
                 warningsCount: 0,
@@ -372,8 +373,8 @@ const MyAccountScreen = () => {
   const handleOpenStats = async () => {
     if (!effectiveStatisticsEnabled) {
       Alert.alert(
-        'Bientôt disponible 🚀',
-        'Les statistiques arrivent très bientôt ! Tu pourras voir qui visite ton profil et tes réseaux sociaux.',
+        t('myAccountScreen.comingSoonTitle'),
+        t('myAccountScreen.comingSoonStats'),
       );
       return;
     }
@@ -409,7 +410,7 @@ const MyAccountScreen = () => {
           premiumTrialEnd: me.premiumTrialEnd || null,
           consent: me.consent || user?.consent || { accepted: false, version: '', consentAt: null },
           privacyPreferences: me.privacyPreferences ||
-            user?.privacyPreferences || { analytics: false, marketing: false },
+            user?.privacyPreferences || { analytics: false },
         });
       }
       if (freshHasStatsAccess) {
@@ -448,7 +449,7 @@ const MyAccountScreen = () => {
     try {
       await Share.share({ message, url: deepLink, title: 'Mon profil LoocateMe' });
     } catch (e) {
-      Alert.alert('Partage', e?.message || 'Impossible de partager.');
+      Alert.alert(t('myAccountScreen.shareTitle'), e?.message || t('myAccountScreen.shareError'));
     }
   };
 
@@ -542,7 +543,7 @@ const MyAccountScreen = () => {
         role: me.role || user?.role || 'user',
         premiumTrialEnd: me.premiumTrialEnd || null,
         consent: me.consent || user.consent || { accepted: false, version: '', consentAt: null },
-        privacyPreferences: me.privacyPreferences || user.privacyPreferences || { analytics: false, marketing: false },
+        privacyPreferences: me.privacyPreferences || user.privacyPreferences || { analytics: false },
         moderation: me.moderation ||
           user.moderation || {
             warningsCount: 0,
@@ -563,10 +564,10 @@ const MyAccountScreen = () => {
     try {
       if (user?.streak?.boostPendingClaim) {
         await apiClaimBoost();
-        setToastMessage('Boost récupéré 🚀');
+        setToastMessage(t('myAccountScreen.boostClaimedToast'));
       } else if (user?.streak?.supervisePendingClaim) {
         await apiClaimSupervise();
-        setToastMessage('Superlike récupéré ⭐️');
+        setToastMessage(t('myAccountScreen.superlikeClaimedToast'));
       } else {
         return;
       }
@@ -574,7 +575,7 @@ const MyAccountScreen = () => {
       await refreshMyProfile();
       refreshConsumableCounts();
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de réclamer la récompense');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('myAccountScreen.claimRewardError'));
     } finally {
       setStreakClaiming(false);
     }
@@ -605,11 +606,11 @@ const MyAccountScreen = () => {
         let message = '';
         if (status === 'green') {
           message =
-            "Vous êtes en mode visible. Tout le monde peut voir vos réseaux sociaux. Vous profitez pleinement de l'app.";
+            t('myAccountScreen.statusVisible');
         } else if (status === 'orange') {
-          message = 'Vous êtes en mode visible restreint. On ne peut pas voir vos réseaux sociaux.';
+          message = t('myAccountScreen.statusRestricted');
         } else if (status === 'red') {
-          message = 'Vous êtes en mode invisible. Personne ne vous verra désormais.';
+          message = t('myAccountScreen.statusInvisible');
         }
 
         if (message) {
@@ -619,7 +620,7 @@ const MyAccountScreen = () => {
       }
     } catch (e) {
       console.error('[MyAccount] Update status error', e);
-      Alert.alert('Erreur', 'Impossible de mettre à jour le statut');
+      Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.statusUpdateError'));
     }
   };
 
@@ -628,23 +629,23 @@ const MyAccountScreen = () => {
       const platform = String(selectedSocialPlatform || '').toLowerCase();
       let handle = String(newValue || '').trim();
       if (!ALLOWED_PLATFORMS.includes(platform)) {
-        Alert.alert('Erreur', 'Plateforme non supportée');
+        Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.unsupportedPlatform'));
         return;
       }
       if (!handle) {
-        Alert.alert('Erreur', 'Veuillez saisir un identifiant');
+        Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.handleRequired'));
         return;
       }
       if (platform === 'instagram') {
         handle = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(handle)) {
-          Alert.alert('Erreur', "Nom d'utilisateur Instagram invalide. Exemple: https://www.instagram.com/username/");
+          Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.invalidInstagramHandle'));
           return;
         }
       } else if (platform === 'tiktok') {
         handle = extractTikTokUsername(handle);
         if (!TIKTOK_USERNAME_REGEX.test(handle)) {
-          Alert.alert('Erreur', "Nom d'utilisateur TikTok invalide. Exemple: https://www.tiktok.com/@username");
+          Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.invalidTiktokHandle'));
           return;
         }
       }
@@ -665,7 +666,7 @@ const MyAccountScreen = () => {
         details: e?.details,
         response: e?.response,
       });
-      Alert.alert('Erreur', e?.message || "Impossible d'ajouter le réseau social");
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('myAccountScreen.addSocialError'));
     }
   };
 
@@ -683,7 +684,7 @@ const MyAccountScreen = () => {
       if (platform === 'instagram') {
         const username = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(username)) {
-          Alert.alert('Lien invalide', "Nom d'utilisateur Instagram invalide");
+          Alert.alert(t('myAccountScreen.invalidLinkTitle'), t('myAccountScreen.invalidInstagramHandleShort'));
           return;
         }
         const appUrl = `instagram://user?username=${encodeURIComponent(username)}`;
@@ -696,14 +697,14 @@ const MyAccountScreen = () => {
             await Linking.openURL(webUrl);
             return;
           } catch (_e2) {
-            Alert.alert("Impossible d'ouvrir Instagram", 'Veuillez réessayer plus tard.');
+            Alert.alert(t('myAccountScreen.cannotOpenInstagramTitle'), t('myAccountScreen.tryAgainLater'));
             return;
           }
         }
       } else if (platform === 'tiktok') {
         const username = extractTikTokUsername(handle);
         if (!TIKTOK_USERNAME_REGEX.test(username)) {
-          Alert.alert('Lien invalide', "Nom d'utilisateur TikTok invalide");
+          Alert.alert(t('myAccountScreen.invalidLinkTitle'), t('myAccountScreen.invalidTiktokHandleShort'));
           return;
         }
         const webUrl = `https://www.tiktok.com/@${encodeURIComponent(username)}`;
@@ -733,7 +734,7 @@ const MyAccountScreen = () => {
           await Linking.openURL(webUrl);
           return;
         } catch (_e2) {
-          Alert.alert("Impossible d'ouvrir TikTok", 'Veuillez réessayer plus tard.');
+          Alert.alert(t('myAccountScreen.cannotOpenTiktokTitle'), t('myAccountScreen.tryAgainLater'));
           return;
         }
       }
@@ -760,23 +761,23 @@ const MyAccountScreen = () => {
       const platform = selectedSocialLink?.platform;
       let handle = String(newValue || '').trim();
       if (!platform || !ALLOWED_PLATFORMS.includes(platform)) {
-        Alert.alert('Erreur', 'Plateforme non supportée');
+        Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.unsupportedPlatform'));
         return;
       }
       if (!handle) {
-        Alert.alert('Erreur', 'Veuillez saisir un identifiant');
+        Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.handleRequired'));
         return;
       }
       if (platform === 'instagram') {
         handle = extractInstagramUsername(handle);
         if (!INSTAGRAM_USERNAME_REGEX.test(handle)) {
-          Alert.alert('Erreur', "Nom d'utilisateur Instagram invalide. Exemple: https://www.instagram.com/username/");
+          Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.invalidInstagramHandle'));
           return;
         }
       } else if (platform === 'tiktok') {
         handle = extractTikTokUsername(handle);
         if (!TIKTOK_USERNAME_REGEX.test(handle)) {
-          Alert.alert('Erreur', "Nom d'utilisateur TikTok invalide. Exemple: https://www.tiktok.com/@username");
+          Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.invalidTiktokHandle'));
           return;
         }
       }
@@ -795,7 +796,7 @@ const MyAccountScreen = () => {
         details: e?.details,
         response: e?.response,
       });
-      Alert.alert('Erreur', e?.message || 'Impossible de modifier le réseau social');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('myAccountScreen.editSocialError'));
     }
   };
 
@@ -803,7 +804,7 @@ const MyAccountScreen = () => {
     try {
       const platform = selectedSocialLink?.platform;
       if (!platform || !ALLOWED_PLATFORMS.includes(platform)) {
-        Alert.alert('Erreur', 'Plateforme non supportée');
+        Alert.alert(t('myAccountScreen.errorTitle'), t('myAccountScreen.unsupportedPlatform'));
         return;
       }
       const res = await apiRemoveSocial(platform);
@@ -821,7 +822,7 @@ const MyAccountScreen = () => {
         details: e?.details,
         response: e?.response,
       });
-      Alert.alert('Erreur', e?.message || 'Impossible de supprimer le réseau social');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('myAccountScreen.deleteSocialError'));
     }
   };
 
@@ -848,7 +849,7 @@ const MyAccountScreen = () => {
             ]}
             onPress={() => goToPage(1)}
             hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-            accessibilityLabel="Retour"
+            accessibilityLabel={t('myAccountScreen.backLabel')}
           >
             <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backButtonImage} />
           </TouchableOpacity>
@@ -860,7 +861,7 @@ const MyAccountScreen = () => {
             ]}
             onPress={() => navigation.navigate('Settings')}
             hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
-            accessibilityLabel="Réglages"
+            accessibilityLabel={t('myAccountScreen.settingsLabel')}
           >
             <Ionicons name="settings-outline" size={22} color={colors.accent} />
           </TouchableOpacity>
@@ -923,8 +924,8 @@ const MyAccountScreen = () => {
               onClaimStreak={handleClaimStreakReward}
               onStreakInfoPress={() =>
                 Alert.alert(
-                  'Ta série 🔥',
-                  "Connecte-toi chaque jour pour faire grimper ta série. À J7, réclame un superlike. À J14, réclame un boost — ta série repart alors à 0.",
+                  t('myAccountScreen.streakTitle'),
+                  t('myAccountScreen.streakMessage'),
                 )
               }
               superlikeBalance={superlikeBalance}

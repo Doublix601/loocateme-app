@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Вход",
+      "welcomeBack": "Добре дошъл отново!",
+      "subtitle": "Влез, за да продължиш",
+      "emailPlaceholder": "Имейл",
+      "passwordPlaceholder": "Парола",
+      "submit": "Вход",
+      "forgotPassword": "Забравена парола?",
+      "noAccount": "Нямаш акаунт?",
+      "createAccount": "Създай акаунт",
+      "emailNotVerifiedTitle": "Имейлът не е потвърден",
+      "emailNotVerifiedMessage": "Имейл адресът ти все още не е потвърден. Току-що ти изпратихме нов имейл за потвърждение. Кликни върху връзката, за да активираш акаунта си, и опитай отново.",
+      "authFailedTitle": "Неуспешно удостоверяване",
+      "authFailedMessage": "Не успяхме да те впишем. Провери данните си и опитай отново."
+    },
+    "signup": {
+      "passwordMismatch": "Паролите не съвпадат.",
+      "requiredFields": "Всички полета трябва да бъдат попълнени.",
+      "birthdateRequired": "Датата на раждане е задължителна.",
+      "under18": "Трябва да си поне на 18 години, за да се регистрираш.",
+      "policyLoadError": "Политиката за поверителност не можа да бъде заредена. Можеш да опиташ отново."
+    }
+  },
+  "consent": {
+    "title": "Поверителност",
+    "changelogTitle": "Какво се промени",
+    "decline": "Отказ",
+    "accept": "Приемам",
+    "accepting": "Запазване...",
+    "declineInfoTitle": "Информация",
+    "declineInfoMessage": "Трябва да приемеш политиката за поверителност, за да използваш приложението.",
+    "acceptErrorTitle": "Грешка",
+    "acceptErrorMessage": "Съгласието ти не можа да бъде запазено. Опитай отново."
+  },
+  "ageVerification": {
+    "title": "Проверка на възрастта",
+    "urlMissing": "Липсва URL за проверка",
+    "startError": "Проверката на възрастта не можа да започне. Опитай отново.",
+    "retry": "Опитай отново",
+    "declinedTitle": "Проверката е отказана",
+    "declinedMessage": "Не успяхме да потвърдим, че си на повече от 18 години. Можеш да опиташ отново."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Език",
+      "systemDefault": "Език на телефона"
+    }
+  },
+  "forgotPassword": {
+    "title": "Забравена парола",
+    "resetTitle": "Нулиране",
+    "instructions": "Въведи имейл адреса си, за да получиш връзка за нулиране.",
+    "emailPlaceholder": "Имейл",
+    "submit": "Изпрати връзка",
+    "successTitle": "Имейлът е изпратен",
+    "successMessage": "Ако акаунт съществува, е изпратен имейл.",
+    "errorTitle": "Грешка",
+    "errorFallback": "Моля, опитай отново"
+  },
+  "dataManagement": {
+    "title": "Поверителност",
+    "export": {
+      "title": "Изнеси моите данни",
+      "desc": "Изтегли копие на информацията си (профил, социални мрежи, настройки).",
+      "button": "Изнеси",
+      "buttonWorking": "Моля, изчакай...",
+      "successTitle": "Изнасяне на данни",
+      "successMessage": "Изнасянето е генерирано и показано в конзолата.",
+      "errorTitle": "Грешка",
+      "errorMessage": "Данните не можаха да се изнесат сега. Опитай отново."
+    },
+    "delete": {
+      "title": "Изтрий акаунта ми",
+      "desc": "Изтрива завинаги акаунта ти и всички свързани данни.",
+      "passwordPlaceholder": "Потвърди с паролата си",
+      "button": "Изтрий завинаги",
+      "passwordRequiredTitle": "Изисква се парола",
+      "passwordRequiredMessage": "Моля, въведи паролата си.",
+      "confirmTitle": "Потвърждение",
+      "confirmMessage": "Това действие е необратимо. Наистина ли искаш да изтриеш акаунта си?",
+      "cancel": "Отказ",
+      "confirm": "Изтрий",
+      "successTitle": "Акаунтът е изтрит",
+      "successMessage": "Акаунтът и данните ти бяха изтрити.",
+      "errorTitle": "Грешка",
+      "errorMessage": "Изтриването не бе успешно. Невалидна парола или проблем със сървъра."
+    }
+  },
+  "editProfile": {
+    "title": "Редактирай моя профил",
+    "subtitle": "Докосни поле, за да го редактираш",
+    "notSet": "Не е зададено",
+    "backLabel": "Назад",
+    "fields": {
+      "firstName": "Име",
+      "lastName": "Фамилия",
+      "customName": "Персонализирано име",
+      "bio": "Био",
+      "birthdate": "Дата на раждане",
+      "gender": "Пол"
+    },
+    "gender": {
+      "male": "Момче",
+      "female": "Момиче",
+      "preferNotToSay": "Предпочитам да не казвам"
+    },
+    "photo": {
+      "notSupportedTitle": "Не се поддържа",
+      "notSupportedMessage": "Камерата не е налична в уеб версията.",
+      "cameraPermissionTitle": "Изисква се разрешение",
+      "cameraPermissionMessage": "Приложението се нуждае от достъп до камерата, за да направи снимка.",
+      "galleryPermissionMessage": "Приложението се нуждае от достъп до снимките ти, за да избере изображение.",
+      "errorTitle": "Грешка",
+      "uploadErrorMessage": "Изображението не можа да се качи",
+      "cameraOpenError": "Камерата не можа да се отвори.",
+      "galleryOpenError": "Галерията не можа да се отвори.",
+      "deleteErrorMessage": "Профилната снимка не можа да се изтрие",
+      "deleteConfirmTitle": "Да се изтрие ли профилната снимка?",
+      "deleteConfirmMessage": "Това действие е окончателно.",
+      "cancel": "Отказ",
+      "delete": "Изтрий",
+      "modalTitle": "Профилна снимка",
+      "takePhoto": "📸 Направи снимка",
+      "sending": "Качване...",
+      "chooseGallery": "🖼️ Избери от галерията",
+      "deletePhoto": "🗑️ Изтрий снимката",
+      "deleting": "Изтриване..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Невалидно име",
+      "firstNameInvalidMessage": "Името трябва да започва с главна буква и може да съдържа букви (ударения разрешени), интервали, апострофи или тирета.",
+      "lastNameInvalidTitle": "Невалидна фамилия",
+      "lastNameInvalidMessage": "Фамилията трябва да започва с главна буква и може да съдържа букви (ударения разрешени), интервали, апострофи или тирета.",
+      "incompleteIdentityTitle": "Непълна самоличност",
+      "incompleteIdentityMessage": "Въведи Персонализирано име ИЛИ Име И Фамилия.",
+      "customNameRequiredTitle": "Изисква се персонализирано име",
+      "customNameRequiredMessage": "Не можеш да премахнеш персонализираното име, докато името или фамилията са празни.",
+      "invalidDateTitle": "Невалидна дата",
+      "invalidDateMessage": "Моля, избери валидна дата на раждане.",
+      "minAgeTitle": "Изисква се минимална възраст",
+      "minAgeMessage": "Трябва да си на поне 18 години.",
+      "updateErrorMessage": "Профилът ти не можа да се актуализира"
+    },
+    "modal": {
+      "editPrefix": "Редактирай",
+      "editGeneric": "Редактирай",
+      "selectDate": "Избери дата",
+      "cancel": "Отказ",
+      "save": "Запази",
+      "placeholders": {
+        "firstName": "Твоето име",
+        "lastName": "Твоята фамилия",
+        "customName": "Твоето персонализирано име",
+        "bio": "Разкажи ни малко за себе си...",
+        "default": "Твоят текст"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Невидим режим активен",
+      "subtitle": "Не можеш да виждаш местата около теб, докато невидимият режим е активен. Изключи го, за да разглеждаш места.",
+      "disableButton": "Изключи невидимия режим"
+    },
+    "error": {
+      "title": "Местоположението не е налично",
+      "subtitle": "Активирай услугите за местоположение в настройките на устройството си, за да виждаш местата около теб.",
+      "retry": "Опитай отново"
+    },
+    "empty": {
+      "title": "Спокойна зона засега",
+      "subtitle": "Не беше открито активно място около теб. Разшири радиуса или предложи ново място.",
+      "expandRadius": "Разшири радиуса",
+      "suggestLocation": "Предложи това място"
+    },
+    "footer": {
+      "loadingMore": "Зареждане на още места…",
+      "loadMoreError": "Не можаха да се заредят още места. Провери връзката си.",
+      "retry": "Опитай отново",
+      "reachedEnd": "Разгледа всички активни места наблизо. Премести се или потърси, за да видиш още."
+    },
+    "leaveModal": {
+      "defaultName": "Това място",
+      "subtitle": "В момента си регистриран тук. Искаш ли да напуснеш това място?",
+      "confirm": "Вече не съм тук",
+      "cancel": "Отказ"
+    },
+    "sections": {
+      "moreLocations": "Още места за теб",
+      "sponsored": "Препоръчани",
+      "trending": "Случва се сега"
+    },
+    "filters": {
+      "all": "Всички"
+    },
+    "card": {
+      "visitors_one": "{{count}} посетител",
+      "visitors_other": "{{count}} посетители",
+      "sponsored": "СПОНСОРИРАНО",
+      "imHere": "Тук съм",
+      "editLocation": "Редактирай местоположението ми"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Ръчното регистриране е активирано",
+    "checkinModeAutoOn": "Автоматичното регистриране е активирано",
+    "checkinModeErrorTitle": "Грешка",
+    "checkinModeErrorMessage": "Режимът на регистриране не можа да се промени сега.",
+    "checkedInToast": "Сега си в {{name}}!",
+    "checkinErrorMessage": "Присъствието ти не можа да се потвърди сега.",
+    "leftLocationToast": "Напусна това място.",
+    "boostActiveTitle": "Активен буст",
+    "boostActiveLeaveMessage": "Не можеш да напуснеш това място, докато бустът ти работи.",
+    "leaveErrorMessage": "Не можа да бъдеш отписан от това място сега.",
+    "boostInProgressTitle": "Буст в ход",
+    "boostInProgressMessage": "Бустът ти е активен: изчакай да приключи, преди да смениш мястото.",
+    "refreshErrorToast": "Не можа да се обнови сега.",
+    "disableInvisibleErrorMessage": "Невидимият режим не можа да се изключи сега.",
+    "switchToManualLabel": "Превключи на ръчно регистриране",
+    "switchToAutoLabel": "Превключи на автоматично регистриране",
+    "entryAuto": "Авто. вход",
+    "entryManual": "Ръчен вход",
+    "showMapLabel": "Покажи картата",
+    "showListLabel": "Покажи списъка",
+    "mapButton": "Карта",
+    "listButton": "Списък"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Грешка",
+    "checkinErrorMessage": "Присъствието ти не можа да се потвърди сега.",
+    "boostActiveHereTitle": "Буст в ход",
+    "boostActiveHereMessage": "Бустът ти е активен тук: изчакай да приключи, преди да напуснеш това място.",
+    "boostActiveMessage": "Бустът ти е активен: изчакай да приключи.",
+    "notFound": "Мястото не е намерено",
+    "back": "Назад",
+    "popularityVeryPopular": "Много популярно",
+    "popularityPopular": "Популярно",
+    "popularityActive": "Активно",
+    "popularityCalm": "Спокойно",
+    "checkinConfirmed": "Потвърдено!",
+    "imHere": "Тук съм",
+    "viewPdf": "Виж PDF",
+    "pdfLoadError": "Този PDF не може да се покаже.",
+    "openInBrowser": "Отвори в браузъра",
+    "profilesHere": "Профили тук",
+    "recentlyCrossed": "Наскоро срещнати",
+    "seeMore": "Виж повече",
+    "boosted": "Подсилен",
+    "boostProfileHere": "Подсили профила ми тук",
+    "boostLockedAfterCheckins": "Буст 🔓 след 2 регистрации"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Сподели",
+      "shareLabel": "Сподели профила ми",
+      "qrCode": "QR код",
+      "qrLabel": "Покажи моя QR код",
+      "stats": "Статистика",
+      "statsLabel": "Виж моята статистика"
+    },
+    "qr": {
+      "title": "Сканирай, за да видиш профила ми",
+      "hint": "Ако приложението не е инсталирано, ще бъдеш пренасочен към магазина ({{store}})."
+    },
+    "status": {
+      "title": "Твоят статус",
+      "close": "Затвори",
+      "public": "Публичен профил",
+      "private": "Частен профил",
+      "incognito": "Инкогнито",
+      "pickLabel": "Избери моя статус"
+    },
+    "warnings": {
+      "title": "Предупреждения",
+      "message_one": "Имаш {{count}} предупреждение.",
+      "message_other": "Имаш {{count}} предупреждения.",
+      "tapForDetails": "Докосни за детайли"
+    },
+    "referral": {
+      "invite": "Покани приятелите си",
+      "label": "Препоръка: покани приятелите си"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Сподели местоположението си",
+      "message": "Активирай споделянето на текущото си място, за да те откриват по-лесно други потребители наблизо.",
+      "activate": "Активирай",
+      "noThanks": "Не, благодаря"
+    },
+    "social": {
+      "addTitle": "Добави мрежа",
+      "usernamePlaceholder": "@потребител или ID на {{platform}}",
+      "selectPlaceholder": "Избери мрежа",
+      "snapchatHint": "Забележка: Snapchat не позволява преки връзки, просто въведи потребителското си име.",
+      "save": "Запази",
+      "saveLabel": "Запази",
+      "editTitle": "Редактирай {{platform}}",
+      "usernamePlaceholderSimple": "Потребителско име",
+      "delete": "Изтрий",
+      "heading": "Социални мрежи",
+      "addLabel": "Добави социална мрежа"
+    },
+    "rewards": {
+      "heading": "Награди",
+      "superlikes": "Superlikes",
+      "boosts": "Бустове",
+      "buy": "Купи",
+      "buyLabel": "Купи superlikes или бустове",
+      "premiumCta": "👑 Стани Premium",
+      "premiumLabel": "Стани Premium",
+      "superlikeHistoryLabel_one": "Виж историята на superlikes, {{count}} остава",
+      "superlikeHistoryLabel_other": "Виж историята на superlikes, {{count}} остават"
+    },
+    "currentlyAt": "В момента в {{place}}",
+    "bio": {
+      "label": "Био",
+      "placeholder": "Добави изречение, за да се представиш."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Твоята профилна снимка",
+      "photoDesc": "Промени профилната си снимка от настройките (икона горе вдясно).",
+      "bioTitle": "Твоето био",
+      "bioDesc": "Твоето био се редактира от настройките. Това е първото нещо, което виждат другите.",
+      "socialTitle": "Твоите социални мрежи",
+      "socialDesc": "Докосни ➕, за да добавиш мрежа. Задръж икона, за да я редактираш или изтриеш.",
+      "statusTitle": "Твоят статус",
+      "statusDesc": "Публичен профил = видим за всички · Частен профил = мрежи скрити · Инкогнито = невидим. Докосни за смяна."
+    },
+    "errorTitle": "Грешка",
+    "shareLocationUpdateError": "Споделянето на текущото ти местоположение не можа да се актуализира",
+    "comingSoonTitle": "Очаквайте скоро 🚀",
+    "comingSoonStats": "Статистиките идват съвсем скоро! Ще можеш да видиш кой посещава профила и социалните ти мрежи.",
+    "shareTitle": "Сподели",
+    "shareError": "Споделянето не бе успешно.",
+    "boostClaimedToast": "Бустът е получен 🚀",
+    "superlikeClaimedToast": "Superlike-ът е получен ⭐️",
+    "claimRewardError": "Наградата не можа да се получи",
+    "statusVisible": "Ти си във видим режим. Всички могат да виждат социалните ти мрежи. Използваш пълноценно приложението.",
+    "statusRestricted": "Ти си в ограничено видим режим. Никой не може да вижда социалните ти мрежи.",
+    "statusInvisible": "Ти си в невидим режим. Отсега нататък никой няма да те вижда.",
+    "statusUpdateError": "Статусът не можа да се актуализира",
+    "unsupportedPlatform": "Неподдържана платформа",
+    "handleRequired": "Моля, въведи идентификатор",
+    "invalidInstagramHandle": "Невалидно потребителско име в Instagram. Пример: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Невалидно потребителско име в TikTok. Пример: https://www.tiktok.com/@username",
+    "addSocialError": "Социалната мрежа не можа да се добави",
+    "invalidLinkTitle": "Невалидна връзка",
+    "invalidInstagramHandleShort": "Невалидно потребителско име в Instagram",
+    "invalidTiktokHandleShort": "Невалидно потребителско име в TikTok",
+    "cannotOpenInstagramTitle": "Instagram не можа да се отвори",
+    "cannotOpenTiktokTitle": "TikTok не можа да се отвори",
+    "tryAgainLater": "Моля, опитай отново по-късно.",
+    "editSocialError": "Социалната мрежа не можа да се редактира",
+    "deleteSocialError": "Социалната мрежа не можа да се изтрие",
+    "backLabel": "Назад",
+    "settingsLabel": "Настройки",
+    "streakTitle": "Твоята серия 🔥",
+    "streakMessage": "Влизай всеки ден, за да увеличиш серията си. На 7-ия ден получи superlike. На 14-ия ден получи буст — серията ти тогава започва отново от 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Открий кой излиза близо до теб",
+        "desc": "Виж в реално време оживените места около теб и хората, които са там — точно сега."
+      },
+      "checkin": {
+        "title": "Автоматично регистриране, ден или нощ",
+        "desc": "Щом влезеш в дадено място, появяваш се там автоматично — и виждаш кой е там. Приложението превключва между дневен режим (кафенета, паркове, спорт…) и нощен режим (барове, ресторанти, клубове…) според настроението ти."
+      },
+      "profile": {
+        "title": "Твоят профил, местата, които оживяват",
+        "desc": "Добави социалните си мрежи, за да те намират хората, разгледай профилите около теб. Всяко място показва и от 1 до 3 звезди според реалната посещаемост — колкото по-оживено, толкова по-ярко блести."
+      },
+      "referral": {
+        "title": "Приятел те покани?",
+        "desc": "Въведи неговия реферален код (по избор) — това му помага да отключи безплатен месец Premium."
+      }
+    },
+    "referralPlaceholder": "Реферален код",
+    "next": "Напред",
+    "start": "Да започваме 🚀",
+    "skip": "Пропусни"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Виж кой преглежда профила ти",
+      "Бустове за видимост (1 безплатен пакет)",
+      "Superlikes (3/седмица безплатно)",
+      "Невидим режим",
+      "Радиус на търсене до 2 км",
+      "Разширена статистика",
+      "Обогатени известия"
+    ],
+    "slides": {
+      "views": {
+        "title": "Кой те посещава?",
+        "desc": "Разбери в реално време кой преглежда профила ти."
+      },
+      "boosts": {
+        "title": "Бустове за видимост",
+        "desc": "Изкачи се на върха на списъка за 30 мин. в заведението си."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Покажи специален интерес към някого, когото забелязваш."
+      },
+      "invisible": {
+        "title": "Невидим режим",
+        "desc": "Изчезвай от списъка с потребители наблизо, когато пожелаеш."
+      },
+      "radius": {
+        "title": "Разширен радиус",
+        "desc": "Разгледай до 2 км около теб (500 м в безплатната версия)."
+      },
+      "stats": {
+        "title": "Разширена статистика",
+        "desc": "Проследявай преглеждания и кликвания във всичките си социални мрежи."
+      }
+    },
+    "trialError": "Безплатният пробен период не можа да се стартира.",
+    "errorTitle": "Грешка",
+    "offersUnavailableTitle": "Офертите не са налични",
+    "offersUnavailableMessage": "Офертите за абонамент все още не са заредени. Опитай отново след малко.",
+    "purchaseError": "Покупката не можа да се завърши.",
+    "restoredTitle": "✅ Покупките са възстановени",
+    "restoredMessage": "Твоят Premium абонамент е активен.",
+    "noRestoreTitle": "Не е намерена покупка",
+    "noRestoreMessage": "Не можа да се възстанови нито един активен абонамент.",
+    "restoreError": "Покупките не можаха да се възстановят.",
+    "closeLabel": "Затвори",
+    "title": "👑 Premium",
+    "subtitle": "Отключи всички функции",
+    "debugBanner": "⚠️ Плащанията са деактивирани (режим за отстраняване на грешки)",
+    "monthly": "Месечно",
+    "perMonth": "/месец",
+    "annual": "Годишно",
+    "perYear": "/година",
+    "mostChosen": "НАЙ-ИЗБИРАН",
+    "allIncluded": "ВСИЧКО Е ВКЛЮЧЕНО",
+    "ctaSimulate": "Симулирай Premium абонамент",
+    "ctaTrial": "Започни 7-дневния безплатен пробен период",
+    "ctaLoading": "Зареждане на оферти…",
+    "ctaSubscribe": "Абонирай се",
+    "thenAnnual": "След това {{price}}/година · Отменяемо по всяко време",
+    "thenMonthly": "След това {{price}}/месец · Отменяемо по всяко време",
+    "restorePurchases": "Възстанови покупките ми",
+    "legalText": "Абонаментът се подновява автоматично, освен ако не бъде отменен преди края на текущия период. Управлявай абонаментите си в настройките на App Store / Google Play. ",
+    "privacyPolicy": "Политика за поверителност",
+    "terms": "Условия"
+  },
+  "premiumWelcome": {
+    "header": "👑 Добре дошъл в Premium",
+    "finalTitle": "Да започваме!",
+    "finalDesc": "Наслади се на всичките си нови предимства Premium още сега.",
+    "discover": "Открий",
+    "next": "Напред",
+    "skip": "Пропусни"
+  },
+  "referralScreen": {
+    "loadError": "Информацията ти за препоръки не можа да се зареди.",
+    "errorTitle": "Грешка",
+    "shareMessage": "Присъедини се към мен в LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Покани приятел в LoocateMe",
+    "shareErrorTitle": "Сподели",
+    "shareError": "Споделянето не бе успешно.",
+    "codeSavedTitle": "Препоръка",
+    "codeSaved": "Реферален код запазен!",
+    "selfReferralError": "Не можеш да използваш собствения си код.",
+    "alreadyReferredError": "Вече си използвал реферален код.",
+    "invalidCodeError": "Този реферален код е невалиден.",
+    "genericCodeError": "Този код не можа да се валидира.",
+    "title": "Препоръка",
+    "infoText": "Покани 5 приятели този месец (всеки трябва да излезе и да направи 1-вото си потвърдено регистриране) и спечели 1 безплатен месец Premium 🎉",
+    "confirmCode": "Потвърждаваш ли реферален код „{{code}}“?",
+    "validate": "Потвърди",
+    "rewardActive": "💎 Безплатният ти месец Premium е активен",
+    "rewardActiveUntil": " до {{date}}",
+    "yourCode": "Твоят реферален код",
+    "shareButton": "📤 Сподели кода ми",
+    "shareLabel": "Сподели кода ми",
+    "progressLabel": "{{count}} / {{target}} препоръки този месец",
+    "invitedFriends": "Поканени приятели",
+    "noInvites": "Все още няма поканени приятели.",
+    "defaultUser": "Потребител",
+    "statusValidated": "Потвърден",
+    "statusVoid": "Анулиран",
+    "statusPending": "В очакване"
+  },
+  "searchView": {
+    "closeLabel": "Затвори търсенето",
+    "title": "Търсене",
+    "placeholder": "Потребителско име, място...",
+    "clearLabel": "Изчисти търсенето",
+    "filterUsers": "Потребители",
+    "filterLocations": "Места",
+    "searching": "Търсене…",
+    "typeToSearch": "Въведи поне 2 букви, за да започнеш търсенето",
+    "noResults": "Не са намерени резултати за това търсене.",
+    "checkFilters": "Провери филтрите или опитай друга ключова дума.",
+    "resultsCount_one": "{{count}} резултат",
+    "resultsCount_other": "{{count}} резултата",
+    "noLongerHere": "Вече не е тук"
+  },
+  "settingsScreen": {
+    "title": "Настройки",
+    "tabProfile": "Профил",
+    "tabSettings": "Настройки",
+    "sectionIdentity": "САМОЛИЧНОСТ",
+    "firstName": "Име",
+    "lastName": "Фамилия",
+    "customNameLabel": "Персонализирано име",
+    "bioLabel": "Био",
+    "sectionSubscription": "АБОНАМЕНТ",
+    "premiumMonthly": "· Месечен",
+    "premiumAnnual": "· Годишен",
+    "statusLoading": "Зареждане на статус…",
+    "grantedOutsideStore": "Предоставено извън абонамента на App Store/Play Store (безплатен пробен период или специална оферта)",
+    "renewsOn": "Подновява се на {{date}}",
+    "expiresOn": "Изтича на {{date}}",
+    "opening": "Отваряне…",
+    "manageSubscription": "Управление на абонамента ми",
+    "goPremium": "👑 Стани Premium",
+    "manageSubError": "Не можа да се отвори управлението на абонамента.",
+    "sectionGeneral": "ОБЩИ",
+    "displayMode": "Режим на показване",
+    "fullNameMode": "Име Фамилия",
+    "classicMode": "Класически",
+    "customMode": "Персонализиран",
+    "sectionReferral": "ПРЕПОРЪКА",
+    "alreadyReferred": "Вече си бил препоръчан.",
+    "referralHint": "Приятел ти сподели код? Въведи го тук.",
+    "referralPlaceholder": "Реферален код",
+    "validate": "Потвърди",
+    "sectionNotifications": "УВЕДОМЛЕНИЯ",
+    "notifKinds": {
+      "superlike": "Получени superlikes",
+      "superlikeAccepted": "Приети superlikes",
+      "eventBoost": "Бустове за събития",
+      "streakExpiring": "Напомняния за серия",
+      "profileView": "Прегледи на профила",
+      "socialClick": "Прегледи на социалните ти мрежи",
+      "inactiveProfileViews": "Прегледи, получени по време на отсъствието ти",
+      "referralValidated": "Препоръка потвърдена",
+      "referralRewardGranted": "Награда за препоръка",
+      "nightModeActivated": "Активиране на нощен режим",
+      "atRiskReactivation": "Напомняния за реактивиране",
+      "weeklyDigest": "Седмично резюме"
+    },
+    "notifCategories": {
+      "social": "Социална активност",
+      "rewards": "Серии и награди",
+      "system": "Система и резюмета"
+    },
+    "sectionPrivacy": "ПОВЕРИТЕЛНОСТ И GDPR",
+    "privacyPolicyLink": "Политика за поверителност",
+    "consent": "Съгласие",
+    "analyticsLabel": "Анализи",
+    "dataSaleTitle": "Продажба на данни (CCPA)",
+    "dataSaleDesc": "Не продаваме и не споделяме личните ти данни с трети страни за рекламни цели.",
+    "invisibleModeTitle": "Невидим режим",
+    "invisibleModeDesc": "Ще бъдеш невидим за другите потребители на местата, но няма да можеш да разглеждаш картата или списъка с места, докато този режим е активен.",
+    "shareLocationTitle": "Сподели текущото ми местоположение",
+    "shareLocationDesc": "Показва на другите потребители точното място, където се намираш в момента, освен града ти. Изключено по подразбиране, за да защити поверителността ти и да избегне риск от преследване.",
+    "policyLoadError": "Политиката за поверителност не можа да се зареди.",
+    "savePrivacyPrefsError": "Твоите настройки за поверителност не можаха да се запазят",
+    "shareLocationUpdateError": "Споделянето на текущото ти местоположение не можа да се актуализира",
+    "invisibleModeUpdateError": "Невидимият режим не можа да се актуализира",
+    "notifPrefUpdateError": "Тази настройка за известия не можа да се актуализира",
+    "consentSavedTitle": "Успех",
+    "consentSaved": "Съгласието е запазено.",
+    "consentRevoked": "Съгласието е оттеглено.",
+    "consentSaveError": "Съгласието ти не можа да се запази",
+    "revokeConsentTitle": "Оттегляне на съгласието",
+    "revokeConsentMessage": "Оттеглянето на съгласието ти ще доведе до окончателно изтриване на акаунта ти и всичките ти данни. Искаш ли да продължиш?",
+    "cancel": "Отказ",
+    "continueLabel": "Продължи",
+    "currentPasswordRequired": "Моля, въведи текущата си парола.",
+    "passwordTooShort": "Новата парола трябва да съдържа поне 6 символа.",
+    "passwordConfirmMismatch": "Потвърждението не съвпада с новата парола.",
+    "passwordChangedTitle": "Паролата е променена",
+    "passwordChangedMessage": "Паролата ти беше актуализирана.",
+    "currentPasswordInvalid": "Невалидна текуща парола или грешка на сървъра.",
+    "invalidEmail": "Моля, въведи валиден имейл адрес.",
+    "passwordRequiredConfirm": "Моля, въведи паролата си за потвърждение.",
+    "checkInboxTitle": "Провери пощата си",
+    "checkInboxMessage": "Изпратен е потвърждаващ имейл до {{email}}. Кликни върху връзката, за да потвърдиш промяната.",
+    "emailChangeError": "Промяната не можа да се стартира. Невалидна парола или грешка на сървъра.",
+    "exportReadyTitle": "Износът е готов",
+    "exportReadyMessage": "Данните ти бяха изнесени ({{size}} символа).",
+    "exportError": "Данните ти не можаха да се изнесат",
+    "deleteAccountConfirmTitle": "Изтрий акаунта",
+    "deleteAccountConfirmMessage": "Изтриването е окончателно. Потвърждаваш ли изтриването на акаунта си?",
+    "profileUpdatedTitle": "Профил",
+    "profileUpdatedMessage": "Профилът ти беше актуализиран.",
+    "loadBlockedError": "Блокираните акаунти не можаха да се заредят",
+    "unblockError": "Не можа да се отблокира този потребител",
+    "sectionAccount": "АКАУНТ",
+    "emailLabel": "Имейл",
+    "notProvided": "Не е посочено",
+    "change": "Промени",
+    "passwordLabel": "Парола",
+    "blockedAccounts": "Блокирани акаунти",
+    "helpAndPrivacy": "Помощ и поверителност",
+    "terms": "Условия за ползване",
+    "sectionModeration": "МОДЕРАЦИЯ",
+    "moderatorSpace": "Пространство за модератори",
+    "debugConsole": "Конзола за отстраняване на грешки",
+    "exportData": "Изнеси данните ми",
+    "deleteAccount": "Изтрий акаунта ми",
+    "logout": "Изход",
+    "save": "Запази",
+    "close": "Затвори",
+    "privacyModalTitle": "Поверителност",
+    "deleteAccountTitle": "Изтриване на акаунта",
+    "deleteAccountDesc": "За потвърждение въведи паролата си. Това действие е необратимо.",
+    "deleting": "Изтриване...",
+    "changePasswordTitle": "Промени парола",
+    "currentPasswordPlaceholder": "Текуща парола",
+    "newPasswordPlaceholder": "Нова парола (мин. 6 символа)",
+    "confirmPasswordPlaceholder": "Потвърди новата парола",
+    "changeEmailTitle": "Промени имейл",
+    "currentEmailLabel": "Текущ имейл: {{email}}",
+    "newEmailPlaceholder": "Нов имейл",
+    "noBlockedAccounts": "Няма блокирани акаунти.",
+    "unblock": "Отблокирай"
+  },
+  "statisticsScreen": {
+    "loadError": "Статистиките не можаха да се извлекат",
+    "loadVisitorsError": "Списъкът с посетители не можа да се извлече",
+    "justNow": "Току-що",
+    "minutesAgo": "преди {{count}} мин",
+    "hoursAgo": "преди {{count}}ч",
+    "yesterday": "Вчера",
+    "daysAgo": "преди {{count}} д",
+    "title": "Статистики",
+    "comingSoonTitle": "Очаквайте скоро 🚀",
+    "comingSoonDesc": "Статистиките идват съвсем скоро! Ще можеш да видиш кой посещава профила и социалните ти мрежи.",
+    "whoStalksTitle": "Кой те следи? 👀",
+    "whoStalksDesc": "Стани Premium, за да откриеш кой посещава профила и социалните ти мрежи!",
+    "discoverVisitors": "Открий посетителите ми",
+    "later": "По-късно",
+    "profileViews": "Прегледи на профила",
+    "views": "прегледа",
+    "last30Days": "през последните 30 дни",
+    "clicksByNetwork": "Кликвания по мрежа",
+    "lastVisits": "Последни посещения",
+    "noVisitorsTitle": "Все още никой не е посетил профила ти",
+    "noVisitorsDesc": "Продължи да разглеждаш места, за да бъдеш открит!",
+    "defaultUser": "Потребител",
+    "hiddenVisits_one": "{{count}} скрито посещение",
+    "hiddenVisits_other": "{{count}} скрити посещения",
+    "goPremiumToSeeAll": "Стани Premium, за да видиш всичко",
+    "showMore": "Покажи повече"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Тормоз",
+      "spam": "Спам",
+      "inappropriate": "Неподходящо съдържание",
+      "impersonation": "Присвояване на самоличност",
+      "scam": "Измама",
+      "other": "Друго"
+    },
+    "statusAvailable": "Наличен/а",
+    "statusRestricted": "Ограничена видимост",
+    "statusInvisible": "Невидим/а",
+    "noUserSelected": "Не е избран потребител.",
+    "backToList": "Обратно към списъка",
+    "superlikeLockedTitle": "Очаквайте скоро",
+    "superlikeLockedMessage": "Суперлайковете се отключват след първото ти регистриране на място.",
+    "superlikeSentTitle": "⭐ Суперлайк изпратен!",
+    "superlikeSentMessage": "{{name}} беше уведомен(а), че си го/я забелязал(а).",
+    "errorTitle": "Грешка",
+    "superlikeSendError": "Суперлайкът не можа да бъде изпратен.",
+    "blockConfirmTitle": "Да блокирам ли този потребител?",
+    "blockConfirmMessage": "Вече няма да виждаш този потребител и той няма да може да се свърже с теб.",
+    "cancel": "Отказ",
+    "block": "Блокирай",
+    "userBlockedTitle": "Потребителят е блокиран",
+    "userBlockedMessage": "Този потребител беше блокиран.",
+    "blockError": "Този потребител не можа да бъде блокиран.",
+    "reasonRequiredTitle": "Изисква се причина",
+    "reasonRequiredMessage": "Моля, посочи причина.",
+    "reportSentTitle": "Сигналът е изпратен",
+    "reportSentMessage": "Благодарим за сигнала.",
+    "reportSendError": "Сигналът не можа да бъде изпратен.",
+    "backA11y": "Назад",
+    "moreOptionsA11y": "Още опции",
+    "sendSuperlikeA11y": "Изпрати суперлайк",
+    "superlikeLockedA11y": "Суперлайкът е заключен, отключва се след първото ти регистриране на място",
+    "currentlyAt": "В момента в {{place}}",
+    "mutualConnectionBanner": "Този човек иска да се свърже с теб",
+    "socialsHidden": "Този потребител не споделя социалните си мрежи",
+    "noBio": "Все още няма добавена биография.",
+    "noSocials": "Няма социални мрежи",
+    "actionsTitle": "Действия",
+    "report": "Сигнализирай",
+    "reportUserTitle": "Сигнализирай за потребител",
+    "reportWarning": "Злоупотребата със сигнали може да доведе до санкции. Моля, бъди честен/а.",
+    "categoryLabel": "Категория",
+    "reasonLabel": "Причина",
+    "reasonPlaceholder": "Обясни накратко причината",
+    "descriptionLabel": "Описание (по избор)",
+    "descriptionPlaceholder": "Допълнителни подробности",
+    "sending": "Изпращане...",
+    "sendReport": "Изпрати сигнала",
+    "justNow": "Току-що",
+    "minutesAgo_one": "Преди {{count}} мин",
+    "minutesAgo_other": "Преди {{count}} мин",
+    "hoursAgo_one": "Преди {{count}} ч",
+    "hoursAgo_other": "Преди {{count}} ч",
+    "yesterday": "Вчера",
+    "daysAgo_one": "Преди {{count}} ден",
+    "daysAgo_other": "Преди {{count}} дни"
+  },
+  "warningsScreen": {
+    "title": "Предупреждения",
+    "banAlert": "Това поведение може да доведе до временно или постоянно блокиране от приложението.",
+    "empty": "Няма предупреждения.",
+    "typeLabel": "Вид предупреждение",
+    "notSpecified": "Не е посочено",
+    "notSpecifiedFem": "Не е посочена",
+    "reasonLabel": "Причина"
+  },
+  "common": {
+    "close": "Затвори",
+    "errorTitle": "Грешка"
+  },
+  "streakCard": {
+    "hintReady": "Наградата ти е готова!",
+    "hintGrow": "Влизай всеки ден, за да я увеличаваш.",
+    "claimBoost": "Вземи своя boost",
+    "claimSuperlike": "Вземи своя superlike"
+  },
+  "coteCard": {
+    "messageTop": "На върха си! Влез утре, за да я запазиш.",
+    "messageZero": "Влез днес, за да я подновиш."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Бъди на върха за 30 мин",
+    "boostPack5Desc": "Най-доброто съотношение цена/качество",
+    "superlikePack3Desc": "Покажи интереса си по уникален начин",
+    "superlikePack10Desc": "За истинските свързващи",
+    "badgePopular": "Популярно",
+    "badgeBestOffer": "Най-добра оферта",
+    "notAvailableTitle": "Не е налично",
+    "notAvailableMessage": "Този пакет все още не е наличен в магазина.",
+    "purchaseErrorMessage": "Покупката не можа да бъде завършена.",
+    "simulate": "Симулирай"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Търси на тези места",
+    "categoryBars": "Барове",
+    "categoryClubs": "Клубове",
+    "categoryRestos": "Ресторанти",
+    "categoryPubs": "Пъбове",
+    "categoryGyms": "Фитнес зали",
+    "categoryCafes": "Кафенета",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Библиотеки"
+  },
+  "profileCard": {
+    "anonymousFallback": "Анонимен"
+  },
+  "locationMapView": {
+    "loadError": "Картата не можа да се зареди",
+    "renderError": "Грешка при зареждане на картата"
+  },
+  "churnSurveyModal": {
+    "title": "Една минута преди да тръгнеш?",
+    "subtitle": "Помогни ни да разберем защо.",
+    "reasonTooManyNotifications": "Твърде много известия",
+    "reasonPrivacyConcern": "Не се чувствам комфортно със споделянето",
+    "reasonNotUseful": "Вече не ми е полезно",
+    "reasonOther": "Друга причина",
+    "dismiss": "Пропусни",
+    "thanks": "Благодарим за обратната връзка 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Търсене",
+    "tabNearby": "Близки места",
+    "tabAccount": "Акаунт"
+  },
+  "documentViewer": {
+    "openError": "Този документ не можа да бъде отворен.",
+    "defaultLabel": "Преглед на документа"
+  },
+  "vibeFab": {
+    "toDay": "Превключи на дневен режим",
+    "toNight": "Превключи на нощен режим"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Споделянето на местоположение е активно"
+  }
+}

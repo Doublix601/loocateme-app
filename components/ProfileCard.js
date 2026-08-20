@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import SocialPulseAvatar from './SocialPulseAvatar';
 
 /**
@@ -21,6 +22,7 @@ const ProfileCard = ({
   subtitle,
   onPress,
 }) => {
+  const { t } = useTranslation();
   const isBoosted = user?.boostUntil && new Date(user.boostUntil) > new Date();
 
   // Normalise la liste des réseaux sociaux du user.
@@ -68,7 +70,7 @@ const ProfileCard = ({
       <View style={{ flex: 1, marginLeft: spacing.md }}>
         <View style={styles.row}>
           <Text style={[styles.name, { color: palette.text }]} numberOfLines={1}>
-            {user?.customName || user?.username || 'Anonyme'}
+            {user?.customName || user?.username || t('profileCard.anonymousFallback')}
           </Text>
           {isBoosted && <Text style={[styles.boostBadge, { color: '#FFD700' }]}>⚡</Text>}
           {isGhost && <Text style={[styles.boostBadge, { color: palette.textFaint }]}>👻</Text>}

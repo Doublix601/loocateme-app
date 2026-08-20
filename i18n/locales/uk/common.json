@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Увійти",
+      "welcomeBack": "З поверненням!",
+      "subtitle": "Увійдіть, щоб продовжити",
+      "emailPlaceholder": "Електронна пошта",
+      "passwordPlaceholder": "Пароль",
+      "submit": "Увійти",
+      "forgotPassword": "Забули пароль?",
+      "noAccount": "Ще немає облікового запису?",
+      "createAccount": "Створити обліковий запис",
+      "emailNotVerifiedTitle": "Електронну пошту не підтверджено",
+      "emailNotVerifiedMessage": "Вашу адресу електронної пошти ще не підтверджено. Ми щойно надіслали вам новий лист із підтвердженням. Натисніть на посилання, щоб активувати обліковий запис, і спробуйте ще раз.",
+      "authFailedTitle": "Не вдалося увійти",
+      "authFailedMessage": "Не вдалося увійти. Перевірте свої дані та спробуйте ще раз."
+    },
+    "signup": {
+      "passwordMismatch": "Паролі не збігаються.",
+      "requiredFields": "Усі поля мають бути заповнені.",
+      "birthdateRequired": "Дата народження є обов'язковою.",
+      "under18": "Вам має бути щонайменше 18 років, щоб зареєструватися.",
+      "policyLoadError": "Не вдалося завантажити політику конфіденційності. Ви можете спробувати ще раз."
+    }
+  },
+  "consent": {
+    "title": "Конфіденційність",
+    "changelogTitle": "Що змінилося",
+    "decline": "Відхилити",
+    "accept": "Прийняти",
+    "accepting": "Збереження...",
+    "declineInfoTitle": "Інформація",
+    "declineInfoMessage": "Щоб користуватися застосунком, ви маєте прийняти політику конфіденційності.",
+    "acceptErrorTitle": "Помилка",
+    "acceptErrorMessage": "Не вдалося зберегти вашу згоду. Спробуйте ще раз."
+  },
+  "ageVerification": {
+    "title": "Перевірка віку",
+    "urlMissing": "Відсутнє посилання для перевірки",
+    "startError": "Не вдалося розпочати перевірку віку. Спробуйте ще раз.",
+    "retry": "Спробувати ще раз",
+    "declinedTitle": "Перевірку відхилено",
+    "declinedMessage": "Ми не змогли підтвердити, що вам більше 18 років. Ви можете спробувати ще раз."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Мова",
+      "systemDefault": "Мова телефону"
+    }
+  },
+  "forgotPassword": {
+    "title": "Забули пароль",
+    "resetTitle": "Скидання пароля",
+    "instructions": "Введіть свою електронну адресу, щоб отримати посилання для скидання.",
+    "emailPlaceholder": "Електронна пошта",
+    "submit": "Надіслати посилання",
+    "successTitle": "Лист надіслано",
+    "successMessage": "Якщо обліковий запис існує, лист надіслано.",
+    "errorTitle": "Помилка",
+    "errorFallback": "Спробуйте ще раз"
+  },
+  "dataManagement": {
+    "title": "Конфіденційність",
+    "export": {
+      "title": "Експортувати мої дані",
+      "desc": "Завантажте копію своєї інформації (профіль, соціальні мережі, налаштування).",
+      "button": "Експортувати",
+      "buttonWorking": "Зачекайте, будь ласка...",
+      "successTitle": "Експорт даних",
+      "successMessage": "Ваш експорт створено та показано в консолі.",
+      "errorTitle": "Помилка",
+      "errorMessage": "Наразі не вдалося експортувати ваші дані. Спробуйте ще раз."
+    },
+    "delete": {
+      "title": "Видалити мій обліковий запис",
+      "desc": "Остаточно видаляє ваш обліковий запис і всі пов'язані дані.",
+      "passwordPlaceholder": "Підтвердьте своїм паролем",
+      "button": "Видалити остаточно",
+      "passwordRequiredTitle": "Потрібен пароль",
+      "passwordRequiredMessage": "Будь ласка, введіть свій пароль.",
+      "confirmTitle": "Підтвердження",
+      "confirmMessage": "Цю дію неможливо скасувати. Ви дійсно хочете видалити свій обліковий запис?",
+      "cancel": "Скасувати",
+      "confirm": "Видалити",
+      "successTitle": "Обліковий запис видалено",
+      "successMessage": "Ваш обліковий запис і дані видалено.",
+      "errorTitle": "Помилка",
+      "errorMessage": "Не вдалося видалити. Невірний пароль або проблема сервера."
+    }
+  },
+  "editProfile": {
+    "title": "Редагувати мій профіль",
+    "subtitle": "Торкніться поля, щоб редагувати",
+    "notSet": "Не вказано",
+    "backLabel": "Назад",
+    "fields": {
+      "firstName": "Ім'я",
+      "lastName": "Прізвище",
+      "customName": "Власна назва",
+      "bio": "Біо",
+      "birthdate": "Дата народження",
+      "gender": "Стать"
+    },
+    "gender": {
+      "male": "Хлопець",
+      "female": "Дівчина",
+      "preferNotToSay": "Не хочу вказувати"
+    },
+    "photo": {
+      "notSupportedTitle": "Не підтримується",
+      "notSupportedMessage": "Камера недоступна у веб-версії.",
+      "cameraPermissionTitle": "Потрібен дозвіл",
+      "cameraPermissionMessage": "Застосунку потрібен доступ до камери, щоб зробити фото.",
+      "galleryPermissionMessage": "Застосунку потрібен доступ до ваших фото, щоб вибрати зображення.",
+      "errorTitle": "Помилка",
+      "uploadErrorMessage": "Не вдалося завантажити зображення",
+      "cameraOpenError": "Не вдалося відкрити камеру.",
+      "galleryOpenError": "Не вдалося відкрити галерею.",
+      "deleteErrorMessage": "Не вдалося видалити фото профілю",
+      "deleteConfirmTitle": "Видалити фото профілю?",
+      "deleteConfirmMessage": "Ця дія остаточна.",
+      "cancel": "Скасувати",
+      "delete": "Видалити",
+      "modalTitle": "Фото профілю",
+      "takePhoto": "📸 Зробити фото",
+      "sending": "Завантаження...",
+      "chooseGallery": "🖼️ Вибрати з галереї",
+      "deletePhoto": "🗑️ Видалити фото",
+      "deleting": "Видалення..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Недійсне ім'я",
+      "firstNameInvalidMessage": "Ім'я має починатися з великої літери і може містити літери (діакритика дозволена), пробіли, апострофи або дефіси.",
+      "lastNameInvalidTitle": "Недійсне прізвище",
+      "lastNameInvalidMessage": "Прізвище має починатися з великої літери і може містити літери (діакритика дозволена), пробіли, апострофи або дефіси.",
+      "incompleteIdentityTitle": "Неповна ідентичність",
+      "incompleteIdentityMessage": "Вкажіть Власну назву АБО Ім'я ТА Прізвище.",
+      "customNameRequiredTitle": "Потрібна власна назва",
+      "customNameRequiredMessage": "Ви не можете видалити власну назву, поки ім'я або прізвище порожні.",
+      "invalidDateTitle": "Недійсна дата",
+      "invalidDateMessage": "Виберіть дійсну дату народження.",
+      "minAgeTitle": "Потрібен мінімальний вік",
+      "minAgeMessage": "Вам має бути щонайменше 18 років.",
+      "updateErrorMessage": "Не вдалося оновити ваш профіль"
+    },
+    "modal": {
+      "editPrefix": "Редагувати",
+      "editGeneric": "Редагувати",
+      "selectDate": "Виберіть дату",
+      "cancel": "Скасувати",
+      "save": "Зберегти",
+      "placeholders": {
+        "firstName": "Ваше ім'я",
+        "lastName": "Ваше прізвище",
+        "customName": "Ваша власна назва",
+        "bio": "Розкажіть трохи про себе...",
+        "default": "Ваш текст"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Невидимий режим активний",
+      "subtitle": "Ви не бачите місця навколо себе, поки невидимий режим увімкнено. Вимкніть його, щоб переглядати місця.",
+      "disableButton": "Вимкнути невидимий режим"
+    },
+    "error": {
+      "title": "Місцезнаходження недоступне",
+      "subtitle": "Увімкніть служби геолокації в налаштуваннях пристрою, щоб бачити місця навколо себе.",
+      "retry": "Спробувати ще раз"
+    },
+    "empty": {
+      "title": "Наразі спокійна зона",
+      "subtitle": "Навколо вас не знайдено жодного активного місця. Розширте радіус або запропонуйте нове місце.",
+      "expandRadius": "Розширити радіус",
+      "suggestLocation": "Запропонувати це місце"
+    },
+    "footer": {
+      "loadingMore": "Завантаження додаткових місць…",
+      "loadMoreError": "Не вдалося завантажити більше місць. Перевірте з'єднання.",
+      "retry": "Спробувати ще раз",
+      "reachedEnd": "Ви дослідили всі активні місця поблизу. Пересуньтеся або скористайтеся пошуком, щоб побачити більше."
+    },
+    "leaveModal": {
+      "defaultName": "Це місце",
+      "subtitle": "Наразі ви зареєстровані тут. Бажаєте покинути це місце?",
+      "confirm": "Мене тут більше немає",
+      "cancel": "Скасувати"
+    },
+    "sections": {
+      "moreLocations": "Більше місць для вас",
+      "sponsored": "Рекомендовані",
+      "trending": "Відбувається зараз"
+    },
+    "filters": {
+      "all": "Усі"
+    },
+    "card": {
+      "visitors_one": "{{count}} відвідувач",
+      "visitors_other": "{{count}} відвідувачів",
+      "sponsored": "СПОНСОРОВАНО",
+      "imHere": "Я тут",
+      "editLocation": "Редагувати моє місцезнаходження"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Ручну реєстрацію увімкнено",
+    "checkinModeAutoOn": "Автоматичну реєстрацію увімкнено",
+    "checkinModeErrorTitle": "Помилка",
+    "checkinModeErrorMessage": "Наразі не вдалося змінити режим реєстрації.",
+    "checkedInToast": "Тепер ти в {{name}}!",
+    "checkinErrorMessage": "Наразі не вдалося підтвердити твою присутність.",
+    "leftLocationToast": "Ти покинув це місце.",
+    "boostActiveTitle": "Прискорення активне",
+    "boostActiveLeaveMessage": "Ти не можеш покинути це місце, поки триває твоє прискорення.",
+    "leaveErrorMessage": "Наразі не вдалося виписати тебе з цього місця.",
+    "boostInProgressTitle": "Прискорення триває",
+    "boostInProgressMessage": "Твоє прискорення активне: зачекай, поки воно закінчиться, перш ніж змінювати місце.",
+    "refreshErrorToast": "Наразі не вдалося оновити.",
+    "disableInvisibleErrorMessage": "Наразі не вдалося вимкнути невидимий режим.",
+    "switchToManualLabel": "Перемкнутися на ручну реєстрацію",
+    "switchToAutoLabel": "Перемкнутися на автоматичну реєстрацію",
+    "entryAuto": "Авто. вхід",
+    "entryManual": "Ручний вхід",
+    "showMapLabel": "Показати карту",
+    "showListLabel": "Показати список",
+    "mapButton": "Карта",
+    "listButton": "Список"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Помилка",
+    "checkinErrorMessage": "Наразі не вдалося підтвердити твою присутність.",
+    "boostActiveHereTitle": "Прискорення триває",
+    "boostActiveHereMessage": "Твоє прискорення активне тут: зачекай, поки воно закінчиться, перш ніж покинути це місце.",
+    "boostActiveMessage": "Твоє прискорення активне: зачекай, поки воно закінчиться.",
+    "notFound": "Місце не знайдено",
+    "back": "Назад",
+    "popularityVeryPopular": "Дуже популярне",
+    "popularityPopular": "Популярне",
+    "popularityActive": "Активне",
+    "popularityCalm": "Спокійне",
+    "checkinConfirmed": "Підтверджено!",
+    "imHere": "Я тут",
+    "viewPdf": "Переглянути PDF",
+    "pdfLoadError": "Цей PDF неможливо відобразити.",
+    "openInBrowser": "Відкрити в браузері",
+    "profilesHere": "Профілі тут",
+    "recentlyCrossed": "Нещодавні перетини",
+    "seeMore": "Показати більше",
+    "boosted": "Прискорено",
+    "boostProfileHere": "Прискорити мій профіль тут",
+    "boostLockedAfterCheckins": "Прискорення 🔓 після 2 реєстрацій"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Поділитися",
+      "shareLabel": "Поділитися моїм профілем",
+      "qrCode": "QR-код",
+      "qrLabel": "Показати мій QR-код",
+      "stats": "Статистика",
+      "statsLabel": "Переглянути мою статистику"
+    },
+    "qr": {
+      "title": "Скануй, щоб побачити мій профіль",
+      "hint": "Якщо застосунок не встановлено, тебе перенаправлять до магазину ({{store}})."
+    },
+    "status": {
+      "title": "Твій статус",
+      "close": "Закрити",
+      "public": "Публічний профіль",
+      "private": "Приватний профіль",
+      "incognito": "Інкогніто",
+      "pickLabel": "Обрати мій статус"
+    },
+    "warnings": {
+      "title": "Попередження",
+      "message_one": "У тебе {{count}} попередження.",
+      "message_other": "У тебе {{count}} попереджень.",
+      "tapForDetails": "Торкнись, щоб побачити деталі"
+    },
+    "referral": {
+      "invite": "Запроси своїх друзів",
+      "label": "Рекомендація: запроси своїх друзів"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Поділись своїм місцезнаходженням",
+      "message": "Увімкни надання доступу до свого поточного місця, щоб інші користувачі поблизу могли легше тебе знайти.",
+      "activate": "Активувати",
+      "noThanks": "Ні, дякую"
+    },
+    "social": {
+      "addTitle": "Додати мережу",
+      "usernamePlaceholder": "@username або ID {{platform}}",
+      "selectPlaceholder": "Вибери мережу",
+      "snapchatHint": "Примітка: Snapchat не дозволяє прямі посилання, просто введи своє ім'я користувача.",
+      "save": "Зберегти",
+      "saveLabel": "Зберегти",
+      "editTitle": "Редагувати {{platform}}",
+      "usernamePlaceholderSimple": "Ім'я користувача",
+      "delete": "Видалити",
+      "heading": "Соціальні мережі",
+      "addLabel": "Додати соціальну мережу"
+    },
+    "rewards": {
+      "heading": "Винагороди",
+      "superlikes": "Superlikes",
+      "boosts": "Прискорення",
+      "buy": "Купити",
+      "buyLabel": "Купити superlikes або прискорення",
+      "premiumCta": "👑 Перейти на Premium",
+      "premiumLabel": "Перейти на Premium",
+      "superlikeHistoryLabel_one": "Переглянути історію superlikes, залишилось {{count}}",
+      "superlikeHistoryLabel_other": "Переглянути історію superlikes, залишилось {{count}}"
+    },
+    "currentlyAt": "Наразі в {{place}}",
+    "bio": {
+      "label": "Біо",
+      "placeholder": "Додай речення, щоб представитися."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Твоє фото профілю",
+      "photoDesc": "Зміни фото профілю в налаштуваннях (іконка вгорі праворуч).",
+      "bioTitle": "Твоє біо",
+      "bioDesc": "Твоє біо редагується в налаштуваннях. Це перше, що бачать інші.",
+      "socialTitle": "Твої соціальні мережі",
+      "socialDesc": "Торкнись ➕, щоб додати мережу. Утримуй іконку, щоб редагувати або видалити.",
+      "statusTitle": "Твій статус",
+      "statusDesc": "Публічний профіль = видимий для всіх · Приватний профіль = мережі приховані · Інкогніто = невидимий. Торкнись, щоб змінити."
+    },
+    "errorTitle": "Помилка",
+    "shareLocationUpdateError": "Не вдалося оновити надання доступу до твого поточного місцезнаходження",
+    "comingSoonTitle": "Скоро з'явиться 🚀",
+    "comingSoonStats": "Статистика з'явиться дуже скоро! Ти зможеш побачити, хто відвідує твій профіль і соціальні мережі.",
+    "shareTitle": "Поділитися",
+    "shareError": "Не вдалося поділитися.",
+    "boostClaimedToast": "Прискорення отримано 🚀",
+    "superlikeClaimedToast": "Superlike отримано ⭐️",
+    "claimRewardError": "Не вдалося отримати нагороду",
+    "statusVisible": "Ти у видимому режимі. Всі можуть бачити твої соціальні мережі. Ти отримуєш повний досвід від застосунку.",
+    "statusRestricted": "Ти в обмежено видимому режимі. Ніхто не може бачити твої соціальні мережі.",
+    "statusInvisible": "Ти в невидимому режимі. Відтепер тебе ніхто не побачить.",
+    "statusUpdateError": "Не вдалося оновити статус",
+    "unsupportedPlatform": "Платформа не підтримується",
+    "handleRequired": "Будь ласка, введи ідентифікатор",
+    "invalidInstagramHandle": "Недійсне ім'я користувача Instagram. Приклад: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Недійсне ім'я користувача TikTok. Приклад: https://www.tiktok.com/@username",
+    "addSocialError": "Не вдалося додати соціальну мережу",
+    "invalidLinkTitle": "Недійсне посилання",
+    "invalidInstagramHandleShort": "Недійсне ім'я користувача Instagram",
+    "invalidTiktokHandleShort": "Недійсне ім'я користувача TikTok",
+    "cannotOpenInstagramTitle": "Не вдалося відкрити Instagram",
+    "cannotOpenTiktokTitle": "Не вдалося відкрити TikTok",
+    "tryAgainLater": "Будь ласка, спробуй пізніше ще раз.",
+    "editSocialError": "Не вдалося редагувати соціальну мережу",
+    "deleteSocialError": "Не вдалося видалити соціальну мережу",
+    "backLabel": "Назад",
+    "settingsLabel": "Налаштування",
+    "streakTitle": "Твоя серія 🔥",
+    "streakMessage": "Заходь щодня, щоб збільшити свою серію. На 7-й день отримай superlike. На 14-й день отримай прискорення — твоя серія тоді починається знову з 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Дізнайся, хто поруч із тобою",
+        "desc": "Дивись у реальному часі на жваві місця навколо себе та людей, які там є — прямо зараз."
+      },
+      "checkin": {
+        "title": "Автоматична реєстрація, вдень чи вночі",
+        "desc": "Щойно ти заходиш у місце, ти автоматично з'являєшся там — і бачиш, хто там є. Застосунок перемикається між денним режимом (кав'ярні, парки, спорт…) і нічним режимом (бари, ресторани, клуби…) за твоїм бажанням."
+      },
+      "profile": {
+        "title": "Твій профіль, місця, що живуть",
+        "desc": "Додай свої соціальні мережі, щоб тебе знаходили, переглядай профілі навколо себе. Кожне місце також показує від 1 до 3 зірок залежно від реальної відвідуваності — що жвавіше, то яскравіше сяє."
+      },
+      "referral": {
+        "title": "Тебе запросив друг?",
+        "desc": "Введи його реферальний код (необов'язково) — це допомагає йому розблокувати безкоштовний місяць Premium."
+      }
+    },
+    "referralPlaceholder": "Реферальний код",
+    "next": "Далі",
+    "start": "Почнемо 🚀",
+    "skip": "Пропустити"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Дивись, хто переглядає твій профіль",
+      "Прискорення видимості (1 безкоштовний пакет)",
+      "Superlikes (3/тиждень безкоштовно)",
+      "Невидимий режим",
+      "Радіус пошуку до 2 км",
+      "Розширена статистика",
+      "Розширені сповіщення"
+    ],
+    "slides": {
+      "views": {
+        "title": "Хто тебе відвідує?",
+        "desc": "Дізнайся в реальному часі, хто переглядає твій профіль."
+      },
+      "boosts": {
+        "title": "Прискорення видимості",
+        "desc": "Піднімися на вершину списку на 30 хв у своєму закладі."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Покажи особливий інтерес до когось, кого помітиш."
+      },
+      "invisible": {
+        "title": "Невидимий режим",
+        "desc": "Зникай зі списку користувачів поруч, коли захочеш."
+      },
+      "radius": {
+        "title": "Розширений радіус",
+        "desc": "Досліджуй до 2 км навколо себе (500 м у безкоштовній версії)."
+      },
+      "stats": {
+        "title": "Розширена статистика",
+        "desc": "Стеж за переглядами та кліками у всіх своїх соціальних мережах."
+      }
+    },
+    "trialError": "Не вдалося розпочати безкоштовний пробний період.",
+    "errorTitle": "Помилка",
+    "offersUnavailableTitle": "Пропозиції недоступні",
+    "offersUnavailableMessage": "Пропозиції підписки ще не завантажені. Спробуй ще раз за мить.",
+    "purchaseError": "Не вдалося завершити покупку.",
+    "restoredTitle": "✅ Покупки відновлено",
+    "restoredMessage": "Твоя Premium-підписка активна.",
+    "noRestoreTitle": "Покупку не знайдено",
+    "noRestoreMessage": "Не вдалося відновити жодну активну підписку.",
+    "restoreError": "Не вдалося відновити покупки.",
+    "closeLabel": "Закрити",
+    "title": "👑 Premium",
+    "subtitle": "Розблокуй усі функції",
+    "debugBanner": "⚠️ Платежі вимкнено (режим налагодження)",
+    "monthly": "Щомісячно",
+    "perMonth": "/міс",
+    "annual": "Щорічно",
+    "perYear": "/рік",
+    "mostChosen": "НАЙПОПУЛЯРНІШЕ",
+    "allIncluded": "УСЕ ВКЛЮЧЕНО",
+    "ctaSimulate": "Симулювати Premium-підписку",
+    "ctaTrial": "Почати мій 7-денний безкоштовний пробний період",
+    "ctaLoading": "Завантаження пропозицій…",
+    "ctaSubscribe": "Підписатися",
+    "thenAnnual": "Потім {{price}}/рік · Скасовується в будь-який час",
+    "thenMonthly": "Потім {{price}}/міс · Скасовується в будь-який час",
+    "restorePurchases": "Відновити мої покупки",
+    "legalText": "Підписка автоматично поновлюється, якщо не скасована до кінця поточного періоду. Керуй своїми підписками в налаштуваннях App Store / Google Play. ",
+    "privacyPolicy": "Політика конфіденційності",
+    "terms": "Умови"
+  },
+  "premiumWelcome": {
+    "header": "👑 Ласкаво просимо до Premium",
+    "finalTitle": "Почнемо!",
+    "finalDesc": "Насолоджуйся всіма своїми новими перевагами Premium прямо зараз.",
+    "discover": "Дізнатися",
+    "next": "Далі",
+    "skip": "Пропустити"
+  },
+  "referralScreen": {
+    "loadError": "Не вдалося завантажити твою інформацію про рефералів.",
+    "errorTitle": "Помилка",
+    "shareMessage": "Приєднуйся до мене в LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Запроси друга до LoocateMe",
+    "shareErrorTitle": "Поділитися",
+    "shareError": "Не вдалося поділитися.",
+    "codeSavedTitle": "Реферал",
+    "codeSaved": "Реферальний код збережено!",
+    "selfReferralError": "Ти не можеш використати власний код.",
+    "alreadyReferredError": "Ти вже використав реферальний код.",
+    "invalidCodeError": "Цей реферальний код недійсний.",
+    "genericCodeError": "Не вдалося перевірити цей код.",
+    "title": "Реферал",
+    "infoText": "Запроси 5 друзів цього місяця (кожен має вийти й зробити свою 1-шу підтверджену реєстрацію) і отримай 1 безкоштовний місяць Premium 🎉",
+    "confirmCode": "Підтвердити реферальний код «{{code}}»?",
+    "validate": "Підтвердити",
+    "rewardActive": "💎 Твій безкоштовний місяць Premium активний",
+    "rewardActiveUntil": " до {{date}}",
+    "yourCode": "Твій реферальний код",
+    "shareButton": "📤 Поділитися своїм кодом",
+    "shareLabel": "Поділитися своїм кодом",
+    "progressLabel": "{{count}} / {{target}} рефералів цього місяця",
+    "invitedFriends": "Запрошені друзі",
+    "noInvites": "Поки що немає запрошених друзів.",
+    "defaultUser": "Користувач",
+    "statusValidated": "Підтверджено",
+    "statusVoid": "Скасовано",
+    "statusPending": "Очікує"
+  },
+  "searchView": {
+    "closeLabel": "Закрити пошук",
+    "title": "Пошук",
+    "placeholder": "Ім'я користувача, місце...",
+    "clearLabel": "Очистити пошук",
+    "filterUsers": "Користувачі",
+    "filterLocations": "Місця",
+    "searching": "Пошук…",
+    "typeToSearch": "Введи щонайменше 2 літери, щоб почати пошук",
+    "noResults": "За цим пошуком нічого не знайдено.",
+    "checkFilters": "Перевір фільтри або спробуй інше ключове слово.",
+    "resultsCount_one": "{{count}} результат",
+    "resultsCount_other": "{{count}} результатів",
+    "noLongerHere": "Вже не тут"
+  },
+  "settingsScreen": {
+    "title": "Налаштування",
+    "tabProfile": "Профіль",
+    "tabSettings": "Налаштування",
+    "sectionIdentity": "ОСОБИСТІ ДАНІ",
+    "firstName": "Ім'я",
+    "lastName": "Прізвище",
+    "customNameLabel": "Власна назва",
+    "bioLabel": "Біо",
+    "sectionSubscription": "ПІДПИСКА",
+    "premiumMonthly": "· Щомісячна",
+    "premiumAnnual": "· Щорічна",
+    "statusLoading": "Завантаження статусу…",
+    "grantedOutsideStore": "Надано поза підпискою App Store/Play Store (безкоштовна пробна версія або спеціальна пропозиція)",
+    "renewsOn": "Поновиться {{date}}",
+    "expiresOn": "Закінчується {{date}}",
+    "opening": "Відкриття…",
+    "manageSubscription": "Керувати моєю підпискою",
+    "goPremium": "👑 Перейти на Premium",
+    "manageSubError": "Не вдалося відкрити керування підпискою.",
+    "sectionGeneral": "ЗАГАЛЬНЕ",
+    "displayMode": "Режим відображення",
+    "fullNameMode": "Ім'я Прізвище",
+    "classicMode": "Класичний",
+    "customMode": "Власний",
+    "sectionReferral": "РЕФЕРАЛ",
+    "alreadyReferred": "Тебе вже було запрошено за рефералом.",
+    "referralHint": "Друг поділився з тобою кодом? Введи його тут.",
+    "referralPlaceholder": "Реферальний код",
+    "validate": "Підтвердити",
+    "sectionNotifications": "СПОВІЩЕННЯ",
+    "notifKinds": {
+      "superlike": "Отримані superlikes",
+      "superlikeAccepted": "Прийняті superlikes",
+      "eventBoost": "Прискорення подій",
+      "streakExpiring": "Нагадування про серію",
+      "profileView": "Перегляди профілю",
+      "socialClick": "Перегляди твоїх соціальних мереж",
+      "inactiveProfileViews": "Перегляди, отримані під час твоєї відсутності",
+      "referralValidated": "Реферал підтверджено",
+      "referralRewardGranted": "Реферальна нагорода",
+      "nightModeActivated": "Активація нічного режиму",
+      "atRiskReactivation": "Нагадування про реактивацію",
+      "weeklyDigest": "Щотижневий дайджест"
+    },
+    "notifCategories": {
+      "social": "Соціальна активність",
+      "rewards": "Серії та нагороди",
+      "system": "Система та дайджести"
+    },
+    "sectionPrivacy": "КОНФІДЕНЦІЙНІСТЬ ТА GDPR",
+    "privacyPolicyLink": "Політика конфіденційності",
+    "consent": "Згода",
+    "analyticsLabel": "Аналітика",
+    "dataSaleTitle": "Продаж даних (CCPA)",
+    "dataSaleDesc": "Ми не продаємо і не передаємо твої особисті дані третім сторонам з рекламною метою.",
+    "invisibleModeTitle": "Невидимий режим",
+    "invisibleModeDesc": "Ти будеш невидимим для інших користувачів у місцях, але не зможеш переглядати карту чи список місць, поки цей режим активний.",
+    "shareLocationTitle": "Поділитися моїм поточним місцезнаходженням",
+    "shareLocationDesc": "Показує іншим користувачам точне місце, де ти зараз перебуваєш, окрім твого міста. Вимкнено за замовчуванням для захисту твоєї приватності та уникнення ризику переслідування.",
+    "policyLoadError": "Не вдалося завантажити політику конфіденційності.",
+    "savePrivacyPrefsError": "Не вдалося зберегти твої налаштування конфіденційності",
+    "shareLocationUpdateError": "Не вдалося оновити надання доступу до твого поточного місцезнаходження",
+    "invisibleModeUpdateError": "Не вдалося оновити невидимий режим",
+    "notifPrefUpdateError": "Не вдалося оновити це налаштування сповіщень",
+    "consentSavedTitle": "Успіх",
+    "consentSaved": "Згоду збережено.",
+    "consentRevoked": "Згоду скасовано.",
+    "consentSaveError": "Не вдалося зберегти твою згоду",
+    "revokeConsentTitle": "Скасування згоди",
+    "revokeConsentMessage": "Скасування твоєї згоди призведе до остаточного видалення твого облікового запису та всіх твоїх даних. Бажаєш продовжити?",
+    "cancel": "Скасувати",
+    "continueLabel": "Продовжити",
+    "currentPasswordRequired": "Будь ласка, введи свій поточний пароль.",
+    "passwordTooShort": "Новий пароль має містити щонайменше 6 символів.",
+    "passwordConfirmMismatch": "Підтвердження не збігається з новим паролем.",
+    "passwordChangedTitle": "Пароль змінено",
+    "passwordChangedMessage": "Твій пароль оновлено.",
+    "currentPasswordInvalid": "Недійсний поточний пароль або помилка сервера.",
+    "invalidEmail": "Будь ласка, введи дійсну електронну адресу.",
+    "passwordRequiredConfirm": "Будь ласка, введи пароль для підтвердження.",
+    "checkInboxTitle": "Перевір свою пошту",
+    "checkInboxMessage": "Лист із підтвердженням надіслано на {{email}}. Натисни на посилання, щоб підтвердити зміну.",
+    "emailChangeError": "Не вдалося розпочати зміну. Недійсний пароль або помилка сервера.",
+    "exportReadyTitle": "Експорт готовий",
+    "exportReadyMessage": "Твої дані експортовано ({{size}} символів).",
+    "exportError": "Не вдалося експортувати твої дані",
+    "deleteAccountConfirmTitle": "Видалити обліковий запис",
+    "deleteAccountConfirmMessage": "Видалення остаточне. Підтверджуєш видалення свого облікового запису?",
+    "profileUpdatedTitle": "Профіль",
+    "profileUpdatedMessage": "Твій профіль оновлено.",
+    "loadBlockedError": "Не вдалося завантажити заблоковані облікові записи",
+    "unblockError": "Не вдалося розблокувати цього користувача",
+    "sectionAccount": "ОБЛІКОВИЙ ЗАПИС",
+    "emailLabel": "Електронна пошта",
+    "notProvided": "Не вказано",
+    "change": "Змінити",
+    "passwordLabel": "Пароль",
+    "blockedAccounts": "Заблоковані облікові записи",
+    "helpAndPrivacy": "Допомога та конфіденційність",
+    "terms": "Умови використання",
+    "sectionModeration": "МОДЕРАЦІЯ",
+    "moderatorSpace": "Простір модератора",
+    "debugConsole": "Консоль налагодження",
+    "exportData": "Експортувати мої дані",
+    "deleteAccount": "Видалити мій обліковий запис",
+    "logout": "Вийти",
+    "save": "Зберегти",
+    "close": "Закрити",
+    "privacyModalTitle": "Конфіденційність",
+    "deleteAccountTitle": "Видалення облікового запису",
+    "deleteAccountDesc": "Для підтвердження введи свій пароль. Цю дію неможливо скасувати.",
+    "deleting": "Видалення...",
+    "changePasswordTitle": "Змінити пароль",
+    "currentPasswordPlaceholder": "Поточний пароль",
+    "newPasswordPlaceholder": "Новий пароль (мін. 6 символів)",
+    "confirmPasswordPlaceholder": "Підтвердити новий пароль",
+    "changeEmailTitle": "Змінити електронну пошту",
+    "currentEmailLabel": "Поточна ел. пошта: {{email}}",
+    "newEmailPlaceholder": "Нова електронна пошта",
+    "noBlockedAccounts": "Немає заблокованих облікових записів.",
+    "unblock": "Розблокувати"
+  },
+  "statisticsScreen": {
+    "loadError": "Не вдалося отримати статистику",
+    "loadVisitorsError": "Не вдалося отримати список відвідувачів",
+    "justNow": "Щойно",
+    "minutesAgo": "{{count}} хв тому",
+    "hoursAgo": "{{count}}год тому",
+    "yesterday": "Вчора",
+    "daysAgo": "{{count}} дн тому",
+    "title": "Статистика",
+    "comingSoonTitle": "Скоро з'явиться 🚀",
+    "comingSoonDesc": "Статистика з'явиться дуже скоро! Ти зможеш побачити, хто відвідує твій профіль і соціальні мережі.",
+    "whoStalksTitle": "Хто за тобою стежить? 👀",
+    "whoStalksDesc": "Перейди на Premium, щоб дізнатися, хто відвідує твій профіль і соціальні мережі!",
+    "discoverVisitors": "Дізнатися про моїх відвідувачів",
+    "later": "Пізніше",
+    "profileViews": "Перегляди профілю",
+    "views": "переглядів",
+    "last30Days": "за останні 30 днів",
+    "clicksByNetwork": "Кліки за мережею",
+    "lastVisits": "Останні візити",
+    "noVisitorsTitle": "Ще ніхто не відвідав твій профіль",
+    "noVisitorsDesc": "Продовжуй досліджувати місця, щоб тебе знайшли!",
+    "defaultUser": "Користувач",
+    "hiddenVisits_one": "{{count}} прихований візит",
+    "hiddenVisits_other": "{{count}} прихованих візитів",
+    "goPremiumToSeeAll": "Перейди на Premium, щоб побачити все",
+    "showMore": "Показати більше"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Переслідування",
+      "spam": "Спам",
+      "inappropriate": "Неприйнятний контент",
+      "impersonation": "Викрадення особистості",
+      "scam": "Шахрайство",
+      "other": "Інше"
+    },
+    "statusAvailable": "Доступний/на",
+    "statusRestricted": "Обмежена видимість",
+    "statusInvisible": "Невидимий/а",
+    "noUserSelected": "Користувача не вибрано.",
+    "backToList": "Назад до списку",
+    "superlikeLockedTitle": "Скоро буде доступно",
+    "superlikeLockedMessage": "Суперлайки розблоковуються після твого першого чекіну.",
+    "superlikeSentTitle": "⭐ Суперлайк надіслано!",
+    "superlikeSentMessage": "{{name}} повідомлено, що ти його/її помітив(ла).",
+    "errorTitle": "Помилка",
+    "superlikeSendError": "Не вдалося надіслати суперлайк.",
+    "blockConfirmTitle": "Заблокувати цього користувача?",
+    "blockConfirmMessage": "Ви більше не побачите цього користувача, і він не зможе з вами зв'язатися.",
+    "cancel": "Скасувати",
+    "block": "Заблокувати",
+    "userBlockedTitle": "Користувача заблоковано",
+    "userBlockedMessage": "Цього користувача заблоковано.",
+    "blockError": "Не вдалося заблокувати цього користувача.",
+    "reasonRequiredTitle": "Потрібна причина",
+    "reasonRequiredMessage": "Будь ласка, вкажіть причину.",
+    "reportSentTitle": "Скаргу надіслано",
+    "reportSentMessage": "Дякуємо за вашу скаргу.",
+    "reportSendError": "Не вдалося надіслати скаргу.",
+    "backA11y": "Назад",
+    "moreOptionsA11y": "Більше опцій",
+    "sendSuperlikeA11y": "Надіслати суперлайк",
+    "superlikeLockedA11y": "Суперлайк заблоковано, розблоковується після твого першого чекіну",
+    "currentlyAt": "Наразі в {{place}}",
+    "mutualConnectionBanner": "Ця людина хоче зв'язатися",
+    "socialsHidden": "Цей користувач не ділиться своїми соціальними мережами",
+    "noBio": "Біографію ще не додано.",
+    "noSocials": "Немає соціальних мереж",
+    "actionsTitle": "Дії",
+    "report": "Поскаржитися",
+    "reportUserTitle": "Поскаржитися на користувача",
+    "reportWarning": "Зловживання скаргами може призвести до санкцій. Будь ласка, будьте чесними.",
+    "categoryLabel": "Категорія",
+    "reasonLabel": "Причина",
+    "reasonPlaceholder": "Коротко поясніть причину",
+    "descriptionLabel": "Опис (необов'язково)",
+    "descriptionPlaceholder": "Додаткові деталі",
+    "sending": "Надсилання...",
+    "sendReport": "Надіслати скаргу",
+    "justNow": "Щойно",
+    "minutesAgo_one": "{{count}} хв тому",
+    "minutesAgo_other": "{{count}} хв тому",
+    "hoursAgo_one": "{{count}} год тому",
+    "hoursAgo_other": "{{count}} год тому",
+    "yesterday": "Вчора",
+    "daysAgo_one": "{{count}} день тому",
+    "daysAgo_other": "{{count}} днів тому"
+  },
+  "warningsScreen": {
+    "title": "Попередження",
+    "banAlert": "Така поведінка може призвести до тимчасового або постійного блокування в застосунку.",
+    "empty": "Немає попереджень.",
+    "typeLabel": "Тип попередження",
+    "notSpecified": "Не вказано",
+    "notSpecifiedFem": "Не вказано",
+    "reasonLabel": "Причина"
+  },
+  "common": {
+    "close": "Закрити",
+    "errorTitle": "Помилка"
+  },
+  "streakCard": {
+    "hintReady": "Твоя нагорода готова!",
+    "hintGrow": "Заходь щодня, щоб вона зростала.",
+    "claimBoost": "Забрати свій boost",
+    "claimSuperlike": "Забрати свій superlike"
+  },
+  "coteCard": {
+    "messageTop": "На вершині! Зайди завтра, щоб зберегти це.",
+    "messageZero": "Зайди сьогодні, щоб відновити це."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Будь на вершині 30 хв",
+    "boostPack5Desc": "Найкраще співвідношення ціни та якості",
+    "superlikePack3Desc": "Покажи свій інтерес унікальним способом",
+    "superlikePack10Desc": "Для справжніх зв'язківців",
+    "badgePopular": "Популярне",
+    "badgeBestOffer": "Найкраща пропозиція",
+    "notAvailableTitle": "Недоступно",
+    "notAvailableMessage": "Цей пакет ще не доступний у магазині.",
+    "purchaseErrorMessage": "Не вдалося завершити покупку.",
+    "simulate": "Симулювати"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Шукай у цих місцях",
+    "categoryBars": "Бари",
+    "categoryClubs": "Клуби",
+    "categoryRestos": "Ресторани",
+    "categoryPubs": "Паби",
+    "categoryGyms": "Спортзали",
+    "categoryCafes": "Кафе",
+    "categoryCoworking": "Коворкінг",
+    "categoryLibraries": "Бібліотеки"
+  },
+  "profileCard": {
+    "anonymousFallback": "Анонім"
+  },
+  "locationMapView": {
+    "loadError": "Не вдалося завантажити карту",
+    "renderError": "Помилка завантаження карти"
+  },
+  "churnSurveyModal": {
+    "title": "Хвилинку, перш ніж підеш?",
+    "subtitle": "Допоможи нам зрозуміти чому.",
+    "reasonTooManyNotifications": "Забагато сповіщень",
+    "reasonPrivacyConcern": "Мені некомфортно з обміном даними",
+    "reasonNotUseful": "Це мені більше не корисно",
+    "reasonOther": "Інша причина",
+    "dismiss": "Пропустити",
+    "thanks": "Дякуємо за твій відгук 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Пошук",
+    "tabNearby": "Місця поруч",
+    "tabAccount": "Обліковий запис"
+  },
+  "documentViewer": {
+    "openError": "Не вдалося відкрити цей документ.",
+    "defaultLabel": "Переглянути документ"
+  },
+  "vibeFab": {
+    "toDay": "Перейти на денний режим",
+    "toNight": "Перейти на нічний режим"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Спільний доступ до місцезнаходження активний"
+  }
+}

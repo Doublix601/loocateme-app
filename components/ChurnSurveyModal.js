@@ -4,17 +4,18 @@
 // joignable pour répondre — contrairement à une enquête post-désinstallation.
 import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { submitChurnSurvey } from '../services/EngagementTrackingService';
 import CloseButton from './CloseButton';
 
-const REASONS = [
-  { id: 'too_many_notifications', label: 'Trop de notifications' },
-  { id: 'privacy_concern', label: 'Je ne suis pas à l\'aise avec le partage' },
-  { id: 'not_useful', label: 'Ça ne me sert plus' },
-  { id: 'other', label: 'Autre raison' },
-];
-
 export default function ChurnSurveyModal({ visible, context, onClose }) {
+  const { t } = useTranslation();
+  const REASONS = [
+    { id: 'too_many_notifications', label: t('churnSurveyModal.reasonTooManyNotifications') },
+    { id: 'privacy_concern', label: t('churnSurveyModal.reasonPrivacyConcern') },
+    { id: 'not_useful', label: t('churnSurveyModal.reasonNotUseful') },
+    { id: 'other', label: t('churnSurveyModal.reasonOther') },
+  ];
   const [submittedId, setSubmittedId] = useState(null);
 
   const handleSelect = async (reasonId) => {
@@ -36,18 +37,18 @@ export default function ChurnSurveyModal({ visible, context, onClose }) {
             iconColor="#333"
           />
           {submittedId ? (
-            <Text style={styles.thanks}>Merci pour ton retour 🙏</Text>
+            <Text style={styles.thanks}>{t('churnSurveyModal.thanks')}</Text>
           ) : (
             <>
-              <Text style={styles.title}>Une minute avant de partir ?</Text>
-              <Text style={styles.subtitle}>Aide-nous à comprendre pourquoi.</Text>
+              <Text style={styles.title}>{t('churnSurveyModal.title')}</Text>
+              <Text style={styles.subtitle}>{t('churnSurveyModal.subtitle')}</Text>
               {REASONS.map((r) => (
                 <TouchableOpacity key={r.id} style={styles.option} onPress={() => handleSelect(r.id)}>
                   <Text style={styles.optionText}>{r.label}</Text>
                 </TouchableOpacity>
               ))}
               <TouchableOpacity style={styles.dismiss} onPress={onClose}>
-                <Text style={styles.dismissText}>Passer</Text>
+                <Text style={styles.dismissText}>{t('churnSurveyModal.dismiss')}</Text>
               </TouchableOpacity>
             </>
           )}

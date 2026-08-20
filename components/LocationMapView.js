@@ -3,6 +3,7 @@ import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'rea
 import { WebView } from 'react-native-webview';
 import { Asset } from 'expo-asset';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { getMapStyleUrl } from '../constants/mapStyles';
 import { useMainSwiper } from './contexts/MainSwiperContext';
 import { useVibeTheme } from '../hooks/useVibeTheme';
@@ -36,6 +37,7 @@ export default function LocationMapView({
   onViewportChange,
   onClusterOpen,
 }) {
+  const { t } = useTranslation();
   const { lockSwiper, unlockSwiper } = useMainSwiper();
   const { palette } = useVibeTheme();
   const webviewRef = useRef(null);
@@ -53,7 +55,7 @@ export default function LocationMapView({
         if (!cancelled) setHtmlUri(asset.localUri || asset.uri);
       })
       .catch(() => {
-        if (!cancelled) setLoadError('Impossible de charger la carte');
+        if (!cancelled) setLoadError(t('locationMapView.loadError'));
       });
     return () => {
       cancelled = true;
@@ -195,7 +197,7 @@ export default function LocationMapView({
     } else if (data.type === 'ready') {
       setIsLoading(false);
     } else if (data.type === 'mapError') {
-      setLoadError(data.message || 'Erreur de chargement de la carte');
+      setLoadError(data.message || t('locationMapView.renderError'));
     } else if (data.type === 'markerPress') {
       const found = locationsRef.current.find(
         (loc) => String(loc._id || loc.osmId) === data.id
@@ -239,7 +241,7 @@ export default function LocationMapView({
           style={styles.map}
           originWhitelist={['*']}
           onMessage={handleWebViewMessage}
-          onError={() => setLoadError('Impossible de charger la carte')}
+          onError={() => setLoadError(t('locationMapView.loadError'))}
           javaScriptEnabled
           domStorageEnabled
           allowFileAccess

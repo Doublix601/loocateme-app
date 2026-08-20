@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Σύνδεση",
+      "welcomeBack": "Καλώς ήρθες ξανά!",
+      "subtitle": "Συνδέσου για να συνεχίσεις",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Κωδικός πρόσβασης",
+      "submit": "Σύνδεση",
+      "forgotPassword": "Ξέχασες τον κωδικό;",
+      "noAccount": "Δεν έχεις ακόμα λογαριασμό;",
+      "createAccount": "Δημιουργία λογαριασμού",
+      "emailNotVerifiedTitle": "Το email δεν έχει επαληθευτεί",
+      "emailNotVerifiedMessage": "Η διεύθυνση email σου δεν έχει επαληθευτεί ακόμα. Μόλις σου στείλαμε ένα νέο email επιβεβαίωσης. Κάνε κλικ στον σύνδεσμο για να ενεργοποιήσεις τον λογαριασμό σου και δοκίμασε ξανά.",
+      "authFailedTitle": "Αποτυχία σύνδεσης",
+      "authFailedMessage": "Δεν ήταν δυνατή η σύνδεση. Έλεγξε τα στοιχεία σου και δοκίμασε ξανά."
+    },
+    "signup": {
+      "passwordMismatch": "Οι κωδικοί πρόσβασης δεν ταιριάζουν.",
+      "requiredFields": "Όλα τα πεδία πρέπει να συμπληρωθούν.",
+      "birthdateRequired": "Η ημερομηνία γέννησης είναι υποχρεωτική.",
+      "under18": "Πρέπει να είσαι τουλάχιστον 18 ετών για να εγγραφείς.",
+      "policyLoadError": "Δεν ήταν δυνατή η φόρτωση της πολιτικής απορρήτου. Μπορείς να δοκιμάσεις ξανά."
+    }
+  },
+  "consent": {
+    "title": "Απόρρητο",
+    "changelogTitle": "Τι άλλαξε",
+    "decline": "Απόρριψη",
+    "accept": "Αποδοχή",
+    "accepting": "Αποθήκευση...",
+    "declineInfoTitle": "Πληροφορία",
+    "declineInfoMessage": "Πρέπει να αποδεχτείς την πολιτική απορρήτου για να χρησιμοποιήσεις την εφαρμογή.",
+    "acceptErrorTitle": "Σφάλμα",
+    "acceptErrorMessage": "Δεν ήταν δυνατή η αποθήκευση της συγκατάθεσής σου. Δοκίμασε ξανά."
+  },
+  "ageVerification": {
+    "title": "Επαλήθευση ηλικίας",
+    "urlMissing": "Λείπει το URL επαλήθευσης",
+    "startError": "Δεν ήταν δυνατή η έναρξη της επαλήθευσης ηλικίας. Δοκίμασε ξανά.",
+    "retry": "Δοκίμασε ξανά",
+    "declinedTitle": "Η επαλήθευση απορρίφθηκε",
+    "declinedMessage": "Δεν μπορέσαμε να επιβεβαιώσουμε ότι είσαι άνω των 18 ετών. Μπορείς να δοκιμάσεις ξανά."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Γλώσσα",
+      "systemDefault": "Γλώσσα τηλεφώνου"
+    }
+  },
+  "forgotPassword": {
+    "title": "Ξέχασα τον κωδικό",
+    "resetTitle": "Επαναφορά",
+    "instructions": "Εισάγετε τη διεύθυνση email σας για να λάβετε έναν σύνδεσμο επαναφοράς.",
+    "emailPlaceholder": "Email",
+    "submit": "Αποστολή συνδέσμου",
+    "successTitle": "Το email στάλθηκε",
+    "successMessage": "Εάν υπάρχει λογαριασμός, έχει σταλεί ένα email.",
+    "errorTitle": "Σφάλμα",
+    "errorFallback": "Παρακαλώ δοκιμάστε ξανά"
+  },
+  "dataManagement": {
+    "title": "Απόρρητο",
+    "export": {
+      "title": "Εξαγωγή των δεδομένων μου",
+      "desc": "Κατέβασε ένα αντίγραφο των πληροφοριών σου (προφίλ, κοινωνικά δίκτυα, ρυθμίσεις).",
+      "button": "Εξαγωγή",
+      "buttonWorking": "Παρακαλώ περιμένετε...",
+      "successTitle": "Εξαγωγή δεδομένων",
+      "successMessage": "Η εξαγωγή σου δημιουργήθηκε και εμφανίστηκε στην κονσόλα.",
+      "errorTitle": "Σφάλμα",
+      "errorMessage": "Δεν ήταν δυνατή η εξαγωγή των δεδομένων σου τώρα. Δοκίμασε ξανά."
+    },
+    "delete": {
+      "title": "Διαγραφή λογαριασμού μου",
+      "desc": "Διαγράφει οριστικά τον λογαριασμό σου και όλα τα σχετικά δεδομένα.",
+      "passwordPlaceholder": "Επιβεβαίωσε με τον κωδικό σου",
+      "button": "Οριστική διαγραφή",
+      "passwordRequiredTitle": "Απαιτείται κωδικός",
+      "passwordRequiredMessage": "Παρακαλώ εισάγετε τον κωδικό σας.",
+      "confirmTitle": "Επιβεβαίωση",
+      "confirmMessage": "Αυτή η ενέργεια είναι μη αναστρέψιμη. Θέλεις πραγματικά να διαγράψεις τον λογαριασμό σου;",
+      "cancel": "Ακύρωση",
+      "confirm": "Διαγραφή",
+      "successTitle": "Ο λογαριασμός διαγράφηκε",
+      "successMessage": "Ο λογαριασμός και τα δεδομένα σου διαγράφηκαν.",
+      "errorTitle": "Σφάλμα",
+      "errorMessage": "Η διαγραφή απέτυχε. Μη έγκυρος κωδικός ή πρόβλημα διακομιστή."
+    }
+  },
+  "editProfile": {
+    "title": "Επεξεργασία προφίλ",
+    "subtitle": "Πάτησε σε ένα πεδίο για να το επεξεργαστείς",
+    "notSet": "Δεν έχει οριστεί",
+    "backLabel": "Πίσω",
+    "fields": {
+      "firstName": "Όνομα",
+      "lastName": "Επώνυμο",
+      "customName": "Προσαρμοσμένο όνομα",
+      "bio": "Βιογραφικό",
+      "birthdate": "Ημερομηνία γέννησης",
+      "gender": "Φύλο"
+    },
+    "gender": {
+      "male": "Αγόρι",
+      "female": "Κορίτσι",
+      "preferNotToSay": "Προτιμώ να μην απαντήσω"
+    },
+    "photo": {
+      "notSupportedTitle": "Δεν υποστηρίζεται",
+      "notSupportedMessage": "Η κάμερα δεν είναι διαθέσιμη στο web.",
+      "cameraPermissionTitle": "Απαιτείται άδεια",
+      "cameraPermissionMessage": "Η εφαρμογή χρειάζεται πρόσβαση στην κάμερα για να τραβήξει φωτογραφία.",
+      "galleryPermissionMessage": "Η εφαρμογή χρειάζεται πρόσβαση στις φωτογραφίες σου για να επιλέξει μια εικόνα.",
+      "errorTitle": "Σφάλμα",
+      "uploadErrorMessage": "Δεν ήταν δυνατή η μεταφόρτωση της εικόνας",
+      "cameraOpenError": "Δεν ήταν δυνατό το άνοιγμα της κάμερας.",
+      "galleryOpenError": "Δεν ήταν δυνατό το άνοιγμα της συλλογής.",
+      "deleteErrorMessage": "Δεν ήταν δυνατή η διαγραφή της φωτογραφίας προφίλ",
+      "deleteConfirmTitle": "Διαγραφή φωτογραφίας προφίλ;",
+      "deleteConfirmMessage": "Αυτή η ενέργεια είναι οριστική.",
+      "cancel": "Ακύρωση",
+      "delete": "Διαγραφή",
+      "modalTitle": "Φωτογραφία προφίλ",
+      "takePhoto": "📸 Τράβα φωτογραφία",
+      "sending": "Μεταφόρτωση...",
+      "chooseGallery": "🖼️ Επιλογή από τη συλλογή",
+      "deletePhoto": "🗑️ Διαγραφή φωτογραφίας",
+      "deleting": "Διαγραφή..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Μη έγκυρο όνομα",
+      "firstNameInvalidMessage": "Το όνομα πρέπει να ξεκινά με κεφαλαίο και μπορεί να περιέχει γράμματα (τόνοι επιτρέπονται), κενά, απόστροφους ή παύλες.",
+      "lastNameInvalidTitle": "Μη έγκυρο επώνυμο",
+      "lastNameInvalidMessage": "Το επώνυμο πρέπει να ξεκινά με κεφαλαίο και μπορεί να περιέχει γράμματα (τόνοι επιτρέπονται), κενά, απόστροφους ή παύλες.",
+      "incompleteIdentityTitle": "Ελλιπής ταυτότητα",
+      "incompleteIdentityMessage": "Συμπλήρωσε ένα Προσαρμοσμένο όνομα Ή Όνομα ΚΑΙ Επώνυμο.",
+      "customNameRequiredTitle": "Απαιτείται προσαρμοσμένο όνομα",
+      "customNameRequiredMessage": "Δεν μπορείς να αφαιρέσεις το προσαρμοσμένο όνομα ενώ το όνομα ή το επώνυμο είναι κενά.",
+      "invalidDateTitle": "Μη έγκυρη ημερομηνία",
+      "invalidDateMessage": "Παρακαλώ επίλεξε έγκυρη ημερομηνία γέννησης.",
+      "minAgeTitle": "Απαιτείται ελάχιστη ηλικία",
+      "minAgeMessage": "Πρέπει να είσαι τουλάχιστον 18 ετών.",
+      "updateErrorMessage": "Δεν ήταν δυνατή η ενημέρωση του προφίλ σου"
+    },
+    "modal": {
+      "editPrefix": "Επεξεργασία",
+      "editGeneric": "Επεξεργασία",
+      "selectDate": "Επίλεξε ημερομηνία",
+      "cancel": "Ακύρωση",
+      "save": "Αποθήκευση",
+      "placeholders": {
+        "firstName": "Το όνομά σου",
+        "lastName": "Το επώνυμό σου",
+        "customName": "Το προσαρμοσμένο όνομά σου",
+        "bio": "Πες μας λίγα λόγια για εσένα...",
+        "default": "Το κείμενό σου"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Λειτουργία αόρατου ενεργή",
+      "subtitle": "Δεν μπορείς να δεις μέρη γύρω σου όσο η λειτουργία αόρατου είναι ενεργή. Απενεργοποίησέ την για να περιηγηθείς σε μέρη.",
+      "disableButton": "Απενεργοποίηση λειτουργίας αόρατου"
+    },
+    "error": {
+      "title": "Η τοποθεσία δεν είναι διαθέσιμη",
+      "subtitle": "Ενεργοποίησε τις υπηρεσίες τοποθεσίας στις ρυθμίσεις της συσκευής σου για να δεις μέρη γύρω σου.",
+      "retry": "Δοκίμασε ξανά"
+    },
+    "empty": {
+      "title": "Ήσυχη ζώνη προς το παρόν",
+      "subtitle": "Δεν εντοπίστηκε κανένα ενεργό μέρος γύρω σου. Διεύρυνε την ακτίνα ή πρότεινε ένα νέο μέρος.",
+      "expandRadius": "Διεύρυνση ακτίνας",
+      "suggestLocation": "Πρότεινε αυτό το μέρος"
+    },
+    "footer": {
+      "loadingMore": "Φόρτωση περισσότερων μερών…",
+      "loadMoreError": "Δεν ήταν δυνατή η φόρτωση περισσότερων μερών. Έλεγξε τη σύνδεσή σου.",
+      "retry": "Δοκίμασε ξανά",
+      "reachedEnd": "Έχεις εξερευνήσει όλα τα ενεργά μέρη κοντά σου. Μετακινήσου ή κάνε αναζήτηση για να δεις περισσότερα."
+    },
+    "leaveModal": {
+      "defaultName": "Αυτό το μέρος",
+      "subtitle": "Είσαι επί του παρόντος καταχωρημένος εδώ. Θέλεις να φύγεις από αυτό το μέρος;",
+      "confirm": "Δεν είμαι πια εδώ",
+      "cancel": "Ακύρωση"
+    },
+    "sections": {
+      "moreLocations": "Περισσότερα μέρη για εσένα",
+      "sponsored": "Προτεινόμενα",
+      "trending": "Συμβαίνει τώρα"
+    },
+    "filters": {
+      "all": "Όλα"
+    },
+    "card": {
+      "visitors_one": "{{count}} επισκέπτης",
+      "visitors_other": "{{count}} επισκέπτες",
+      "sponsored": "ΧΟΡΗΓΙΑ",
+      "imHere": "Είμαι εδώ",
+      "editLocation": "Επεξεργασία της τοποθεσίας μου"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Το χειροκίνητο check-in ενεργοποιήθηκε",
+    "checkinModeAutoOn": "Το αυτόματο check-in ενεργοποιήθηκε",
+    "checkinModeErrorTitle": "Σφάλμα",
+    "checkinModeErrorMessage": "Δεν ήταν δυνατή η αλλαγή της λειτουργίας check-in αυτή τη στιγμή.",
+    "checkedInToast": "Τώρα είσαι στο {{name}}!",
+    "checkinErrorMessage": "Δεν ήταν δυνατή η επιβεβαίωση της παρουσίας σου αυτή τη στιγμή.",
+    "leftLocationToast": "Έφυγες από αυτό το μέρος.",
+    "boostActiveTitle": "Ενεργή ενίσχυση",
+    "boostActiveLeaveMessage": "Δεν μπορείς να φύγεις από αυτό το μέρος όσο η ενίσχυσή σου είναι ενεργή.",
+    "leaveErrorMessage": "Δεν ήταν δυνατή η αποχώρησή σου από αυτό το μέρος αυτή τη στιγμή.",
+    "boostInProgressTitle": "Ενίσχυση σε εξέλιξη",
+    "boostInProgressMessage": "Η ενίσχυσή σου είναι ενεργή: περίμενε να τελειώσει πριν αλλάξεις μέρος.",
+    "refreshErrorToast": "Δεν ήταν δυνατή η ανανέωση αυτή τη στιγμή.",
+    "disableInvisibleErrorMessage": "Δεν ήταν δυνατή η απενεργοποίηση της λειτουργίας αόρατου αυτή τη στιγμή.",
+    "switchToManualLabel": "Μετάβαση σε χειροκίνητο check-in",
+    "switchToAutoLabel": "Μετάβαση σε αυτόματο check-in",
+    "entryAuto": "Αυτόματη είσοδος",
+    "entryManual": "Χειροκίνητη είσοδος",
+    "showMapLabel": "Εμφάνιση χάρτη",
+    "showListLabel": "Εμφάνιση λίστας",
+    "mapButton": "Χάρτης",
+    "listButton": "Λίστα"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Σφάλμα",
+    "checkinErrorMessage": "Δεν ήταν δυνατή η επιβεβαίωση της παρουσίας σου αυτή τη στιγμή.",
+    "boostActiveHereTitle": "Ενίσχυση σε εξέλιξη",
+    "boostActiveHereMessage": "Η ενίσχυσή σου είναι ενεργή εδώ: περίμενε να τελειώσει πριν φύγεις από αυτό το μέρος.",
+    "boostActiveMessage": "Η ενίσχυσή σου είναι ενεργή: περίμενε να τελειώσει.",
+    "notFound": "Το μέρος δεν βρέθηκε",
+    "back": "Πίσω",
+    "popularityVeryPopular": "Πολύ δημοφιλές",
+    "popularityPopular": "Δημοφιλές",
+    "popularityActive": "Ενεργό",
+    "popularityCalm": "Ήσυχο",
+    "checkinConfirmed": "Επιβεβαιώθηκε!",
+    "imHere": "Είμαι εδώ",
+    "viewPdf": "Προβολή PDF",
+    "pdfLoadError": "Δεν είναι δυνατή η προβολή αυτού του PDF.",
+    "openInBrowser": "Άνοιγμα στο πρόγραμμα περιήγησης",
+    "profilesHere": "Προφίλ εδώ",
+    "recentlyCrossed": "Πρόσφατες συναντήσεις",
+    "seeMore": "Δες περισσότερα",
+    "boosted": "Ενισχύθηκε",
+    "boostProfileHere": "Ενίσχυσε το προφίλ μου εδώ",
+    "boostLockedAfterCheckins": "Ενίσχυση 🔓 μετά από 2 check-in"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Κοινοποίηση",
+      "shareLabel": "Κοινοποίησε το προφίλ μου",
+      "qrCode": "Κωδικός QR",
+      "qrLabel": "Εμφάνισε τον κωδικό QR",
+      "stats": "Στατιστικά",
+      "statsLabel": "Δες τα στατιστικά μου"
+    },
+    "qr": {
+      "title": "Σάρωσε για να δεις το προφίλ μου",
+      "hint": "Αν η εφαρμογή δεν είναι εγκατεστημένη, θα ανακατευθυνθείς στο κατάστημα ({{store}})."
+    },
+    "status": {
+      "title": "Η κατάστασή σου",
+      "close": "Κλείσιμο",
+      "public": "Δημόσιο προφίλ",
+      "private": "Ιδιωτικό προφίλ",
+      "incognito": "Ανώνυμος",
+      "pickLabel": "Επίλεξε την κατάστασή μου"
+    },
+    "warnings": {
+      "title": "Προειδοποιήσεις",
+      "message_one": "Έχεις {{count}} προειδοποίηση.",
+      "message_other": "Έχεις {{count}} προειδοποιήσεις.",
+      "tapForDetails": "Πάτησε για λεπτομέρειες"
+    },
+    "referral": {
+      "invite": "Κάλεσε τους φίλους σου",
+      "label": "Παραπομπή: κάλεσε τους φίλους σου"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Μοιράσου την τοποθεσία σου",
+      "message": "Ενεργοποίησε την κοινή χρήση της τρέχουσας τοποθεσίας σου για να σε εντοπίζουν πιο εύκολα οι άλλοι χρήστες κοντά σου.",
+      "activate": "Ενεργοποίηση",
+      "noThanks": "Όχι ευχαριστώ"
+    },
+    "social": {
+      "addTitle": "Προσθήκη δικτύου",
+      "usernamePlaceholder": "@username ή ID {{platform}}",
+      "selectPlaceholder": "Επίλεξε ένα δίκτυο",
+      "snapchatHint": "Σημείωση: Το Snapchat δεν επιτρέπει άμεσους συνδέσμους, εισάγετε απλώς το όνομα χρήστη σας.",
+      "save": "Αποθήκευση",
+      "saveLabel": "Αποθήκευση",
+      "editTitle": "Επεξεργασία {{platform}}",
+      "usernamePlaceholderSimple": "Όνομα χρήστη",
+      "delete": "Διαγραφή",
+      "heading": "Κοινωνικά δίκτυα",
+      "addLabel": "Προσθήκη κοινωνικού δικτύου"
+    },
+    "rewards": {
+      "heading": "Ανταμοιβές",
+      "superlikes": "Superlikes",
+      "boosts": "Ενισχύσεις",
+      "buy": "Αγορά",
+      "buyLabel": "Αγόρασε superlikes ή ενισχύσεις",
+      "premiumCta": "👑 Γίνε Premium",
+      "premiumLabel": "Γίνε Premium",
+      "superlikeHistoryLabel_one": "Δες το ιστορικό superlikes, {{count}} απομένει",
+      "superlikeHistoryLabel_other": "Δες το ιστορικό superlikes, {{count}} απομένουν"
+    },
+    "currentlyAt": "Αυτή τη στιγμή στο {{place}}",
+    "bio": {
+      "label": "Βιογραφικό",
+      "placeholder": "Πρόσθεσε μια φράση για να συστηθείς."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Η φωτογραφία προφίλ σου",
+      "photoDesc": "Άλλαξε τη φωτογραφία προφίλ σου από τις ρυθμίσεις (εικονίδιο πάνω δεξιά).",
+      "bioTitle": "Το βιογραφικό σου",
+      "bioDesc": "Το βιογραφικό σου επεξεργάζεται από τις ρυθμίσεις. Είναι το πρώτο πράγμα που βλέπουν οι άλλοι.",
+      "socialTitle": "Τα κοινωνικά σου δίκτυα",
+      "socialDesc": "Πάτησε ➕ για να προσθέσεις ένα δίκτυο. Κράτησε πατημένο ένα εικονίδιο για να το επεξεργαστείς ή να το διαγράψεις.",
+      "statusTitle": "Η κατάστασή σου",
+      "statusDesc": "Δημόσιο προφίλ = ορατό σε όλους · Ιδιωτικό προφίλ = δίκτυα κρυμμένα · Ανώνυμος = αόρατος. Πάτησε για αλλαγή."
+    },
+    "errorTitle": "Σφάλμα",
+    "shareLocationUpdateError": "Δεν ήταν δυνατή η ενημέρωση της κοινοποίησης της τρέχουσας τοποθεσίας σου",
+    "comingSoonTitle": "Σύντομα διαθέσιμο 🚀",
+    "comingSoonStats": "Τα στατιστικά έρχονται πολύ σύντομα! Θα μπορείς να δεις ποιος επισκέπτεται το προφίλ και τα κοινωνικά σου δίκτυα.",
+    "shareTitle": "Κοινοποίηση",
+    "shareError": "Δεν ήταν δυνατή η κοινοποίηση.",
+    "boostClaimedToast": "Η ενίσχυση παραλήφθηκε 🚀",
+    "superlikeClaimedToast": "Το superlike παραλήφθηκε ⭐️",
+    "claimRewardError": "Δεν ήταν δυνατή η παραλαβή της ανταμοιβής",
+    "statusVisible": "Είσαι σε ορατή λειτουργία. Όλοι μπορούν να δουν τα κοινωνικά σου δίκτυα. Απολαμβάνεις πλήρως την εφαρμογή.",
+    "statusRestricted": "Είσαι σε περιορισμένη ορατή λειτουργία. Κανείς δεν μπορεί να δει τα κοινωνικά σου δίκτυα.",
+    "statusInvisible": "Είσαι σε αόρατη λειτουργία. Κανείς δεν θα σε βλέπει πλέον.",
+    "statusUpdateError": "Δεν ήταν δυνατή η ενημέρωση της κατάστασης",
+    "unsupportedPlatform": "Μη υποστηριζόμενη πλατφόρμα",
+    "handleRequired": "Παρακαλώ εισάγετε ένα αναγνωριστικό",
+    "invalidInstagramHandle": "Μη έγκυρο όνομα χρήστη Instagram. Παράδειγμα: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Μη έγκυρο όνομα χρήστη TikTok. Παράδειγμα: https://www.tiktok.com/@username",
+    "addSocialError": "Δεν ήταν δυνατή η προσθήκη του κοινωνικού δικτύου",
+    "invalidLinkTitle": "Μη έγκυρος σύνδεσμος",
+    "invalidInstagramHandleShort": "Μη έγκυρο όνομα χρήστη Instagram",
+    "invalidTiktokHandleShort": "Μη έγκυρο όνομα χρήστη TikTok",
+    "cannotOpenInstagramTitle": "Δεν ήταν δυνατό το άνοιγμα του Instagram",
+    "cannotOpenTiktokTitle": "Δεν ήταν δυνατό το άνοιγμα του TikTok",
+    "tryAgainLater": "Παρακαλώ δοκίμασε ξανά αργότερα.",
+    "editSocialError": "Δεν ήταν δυνατή η επεξεργασία του κοινωνικού δικτύου",
+    "deleteSocialError": "Δεν ήταν δυνατή η διαγραφή του κοινωνικού δικτύου",
+    "backLabel": "Πίσω",
+    "settingsLabel": "Ρυθμίσεις",
+    "streakTitle": "Το σερί σου 🔥",
+    "streakMessage": "Συνδέσου κάθε μέρα για να αυξήσεις το σερί σου. Την ημέρα 7, διεκδίκησε ένα superlike. Την ημέρα 14, διεκδίκησε μια ενίσχυση — το σερί σου ξεκινά τότε ξανά από το 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Ανακάλυψε ποιος βγαίνει κοντά σου",
+        "desc": "Δες σε πραγματικό χρόνο τα ζωντανά μέρη γύρω σου και τους ανθρώπους που βρίσκονται εκεί — τώρα."
+      },
+      "checkin": {
+        "title": "Αυτόματο check-in, μέρα ή νύχτα",
+        "desc": "Μόλις μπεις σε ένα μέρος, εμφανίζεσαι εκεί αυτόματα — και βλέπεις ποιος είναι εκεί. Η εφαρμογή εναλλάσσεται μεταξύ λειτουργίας Ημέρας (καφέ, πάρκα, αθλητισμός…) και λειτουργίας Νύχτας (μπαρ, εστιατόρια, κλαμπ…) όπως θέλεις."
+      },
+      "profile": {
+        "title": "Το προφίλ σου, τα μέρη που κινούνται",
+        "desc": "Πρόσθεσε τα κοινωνικά σου δίκτυα ώστε να σε βρίσκουν, δες τα προφίλ γύρω σου. Κάθε μέρος εμφανίζει επίσης 1 έως 3 αστέρια ανάλογα με την πραγματική επισκεψιμότητα — όσο πιο ζωντανό, τόσο πιο λαμπερό."
+      },
+      "referral": {
+        "title": "Σε προσκάλεσε ένας φίλος;",
+        "desc": "Εισάγετε τον κωδικό παραπομπής του (προαιρετικό) — τον βοηθά να ξεκλειδώσει έναν δωρεάν μήνα Premium."
+      }
+    },
+    "referralPlaceholder": "Κωδικός παραπομπής",
+    "next": "Επόμενο",
+    "start": "Ξεκινάμε 🚀",
+    "skip": "Παράλειψη"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Δες ποιος βλέπει το προφίλ σου",
+      "Ενισχύσεις προβολής (1 δωρεάν πακέτο)",
+      "Superlikes (3/εβδομάδα δωρεάν)",
+      "Λειτουργία αόρατου",
+      "Ακτίνα αναζήτησης έως 2 χλμ",
+      "Προηγμένα στατιστικά",
+      "Εμπλουτισμένες ειδοποιήσεις"
+    ],
+    "slides": {
+      "views": {
+        "title": "Ποιος σε επισκέπτεται;",
+        "desc": "Μάθε σε πραγματικό χρόνο ποιος βλέπει το προφίλ σου."
+      },
+      "boosts": {
+        "title": "Ενισχύσεις προβολής",
+        "desc": "Ανέβα στην κορυφή της λίστας για 30 λεπτά στο μέρος σου."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Δείξε ιδιαίτερο ενδιαφέρον για κάποιον που παρατηρείς."
+      },
+      "invisible": {
+        "title": "Λειτουργία αόρατου",
+        "desc": "Εξαφανίσου από τη λίστα κοντινών χρηστών όποτε θέλεις."
+      },
+      "radius": {
+        "title": "Διευρυμένη ακτίνα",
+        "desc": "Εξερεύνησε έως 2 χλμ γύρω σου (500 μ στη δωρεάν έκδοση)."
+      },
+      "stats": {
+        "title": "Προηγμένα στατιστικά",
+        "desc": "Παρακολούθησε τις προβολές και τα κλικ σε όλα τα κοινωνικά σου δίκτυα."
+      }
+    },
+    "trialError": "Δεν ήταν δυνατή η έναρξη της δωρεάν δοκιμής.",
+    "errorTitle": "Σφάλμα",
+    "offersUnavailableTitle": "Οι προσφορές δεν είναι διαθέσιμες",
+    "offersUnavailableMessage": "Οι προσφορές συνδρομής δεν έχουν φορτωθεί ακόμα. Δοκίμασε ξανά σε λίγο.",
+    "purchaseError": "Δεν ήταν δυνατή η ολοκλήρωση της αγοράς.",
+    "restoredTitle": "✅ Οι αγορές αποκαταστάθηκαν",
+    "restoredMessage": "Η συνδρομή σου Premium είναι ενεργή.",
+    "noRestoreTitle": "Δεν βρέθηκε αγορά",
+    "noRestoreMessage": "Δεν ήταν δυνατή η αποκατάσταση καμίας ενεργής συνδρομής.",
+    "restoreError": "Δεν ήταν δυνατή η αποκατάσταση των αγορών.",
+    "closeLabel": "Κλείσιμο",
+    "title": "👑 Premium",
+    "subtitle": "Ξεκλείδωσε όλες τις λειτουργίες",
+    "debugBanner": "⚠️ Οι πληρωμές είναι απενεργοποιημένες (λειτουργία debug)",
+    "monthly": "Μηνιαίο",
+    "perMonth": "/μήνα",
+    "annual": "Ετήσιο",
+    "perYear": "/έτος",
+    "mostChosen": "ΤΟ ΠΙΟ ΔΗΜΟΦΙΛΕΣ",
+    "allIncluded": "ΤΑ ΠΑΝΤΑ ΠΕΡΙΛΑΜΒΑΝΟΝΤΑΙ",
+    "ctaSimulate": "Προσομοίωση συνδρομής Premium",
+    "ctaTrial": "Ξεκίνα τη δωρεάν δοκιμή 7 ημερών",
+    "ctaLoading": "Φόρτωση προσφορών…",
+    "ctaSubscribe": "Εγγραφή",
+    "thenAnnual": "Στη συνέχεια {{price}}/έτος · Ακύρωση οποιαδήποτε στιγμή",
+    "thenMonthly": "Στη συνέχεια {{price}}/μήνα · Ακύρωση οποιαδήποτε στιγμή",
+    "restorePurchases": "Αποκατάσταση αγορών",
+    "legalText": "Η συνδρομή ανανεώνεται αυτόματα εκτός εάν ακυρωθεί πριν από το τέλος της τρέχουσας περιόδου. Διαχειρίσου τις συνδρομές σου στις ρυθμίσεις του App Store / Google Play. ",
+    "privacyPolicy": "Πολιτική απορρήτου",
+    "terms": "Όροι"
+  },
+  "premiumWelcome": {
+    "header": "👑 Καλώς ήρθες στο Premium",
+    "finalTitle": "Ξεκινάμε!",
+    "finalDesc": "Απόλαυσε τώρα όλα τα νέα σου προνόμια Premium.",
+    "discover": "Ανακάλυψε",
+    "next": "Επόμενο",
+    "skip": "Παράλειψη"
+  },
+  "referralScreen": {
+    "loadError": "Δεν ήταν δυνατή η φόρτωση των πληροφοριών παραπομπής σου.",
+    "errorTitle": "Σφάλμα",
+    "shareMessage": "Έλα μαζί μου στο LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Προσκάλεσε έναν φίλο στο LoocateMe",
+    "shareErrorTitle": "Κοινοποίηση",
+    "shareError": "Δεν ήταν δυνατή η κοινοποίηση.",
+    "codeSavedTitle": "Παραπομπή",
+    "codeSaved": "Ο κωδικός παραπομπής αποθηκεύτηκε!",
+    "selfReferralError": "Δεν μπορείς να χρησιμοποιήσεις τον δικό σου κωδικό.",
+    "alreadyReferredError": "Έχεις ήδη χρησιμοποιήσει έναν κωδικό παραπομπής.",
+    "invalidCodeError": "Αυτός ο κωδικός παραπομπής δεν είναι έγκυρος.",
+    "genericCodeError": "Δεν ήταν δυνατή η επικύρωση αυτού του κωδικού.",
+    "title": "Παραπομπή",
+    "infoText": "Προσκάλεσε 5 φίλους αυτόν τον μήνα (ο καθένας πρέπει να βγει έξω και να κάνει το 1ο επαληθευμένο check-in του) και κέρδισε 1 δωρεάν μήνα Premium 🎉",
+    "confirmCode": "Επιβεβαίωση του κωδικού παραπομπής «{{code}}»;",
+    "validate": "Επιβεβαίωση",
+    "rewardActive": "💎 Ο δωρεάν μήνας Premium σου είναι ενεργός",
+    "rewardActiveUntil": " έως {{date}}",
+    "yourCode": "Ο κωδικός παραπομπής σου",
+    "shareButton": "📤 Κοινοποίησε τον κωδικό μου",
+    "shareLabel": "Κοινοποίησε τον κωδικό μου",
+    "progressLabel": "{{count}} / {{target}} παραπομπές αυτόν τον μήνα",
+    "invitedFriends": "Προσκεκλημένοι φίλοι",
+    "noInvites": "Δεν έχεις προσκαλέσει ακόμα κανέναν φίλο.",
+    "defaultUser": "Χρήστης",
+    "statusValidated": "Επικυρώθηκε",
+    "statusVoid": "Ακυρώθηκε",
+    "statusPending": "Σε εκκρεμότητα"
+  },
+  "searchView": {
+    "closeLabel": "Κλείσιμο αναζήτησης",
+    "title": "Αναζήτηση",
+    "placeholder": "Όνομα χρήστη, μέρος...",
+    "clearLabel": "Καθαρισμός αναζήτησης",
+    "filterUsers": "Χρήστες",
+    "filterLocations": "Μέρη",
+    "searching": "Αναζήτηση…",
+    "typeToSearch": "Πληκτρολόγησε τουλάχιστον 2 γράμματα για να ξεκινήσεις την αναζήτηση",
+    "noResults": "Δεν βρέθηκαν αποτελέσματα για αυτήν την αναζήτηση.",
+    "checkFilters": "Έλεγξε τα φίλτρα ή δοκίμασε άλλη λέξη-κλειδί.",
+    "resultsCount_one": "{{count}} αποτέλεσμα",
+    "resultsCount_other": "{{count}} αποτελέσματα",
+    "noLongerHere": "Δεν είναι πια εδώ"
+  },
+  "settingsScreen": {
+    "title": "Ρυθμίσεις",
+    "tabProfile": "Προφίλ",
+    "tabSettings": "Ρυθμίσεις",
+    "sectionIdentity": "ΤΑΥΤΟΤΗΤΑ",
+    "firstName": "Όνομα",
+    "lastName": "Επώνυμο",
+    "customNameLabel": "Προσαρμοσμένο όνομα",
+    "bioLabel": "Βιογραφικό",
+    "sectionSubscription": "ΣΥΝΔΡΟΜΗ",
+    "premiumMonthly": "· Μηνιαία",
+    "premiumAnnual": "· Ετήσια",
+    "statusLoading": "Φόρτωση κατάστασης…",
+    "grantedOutsideStore": "Χορηγήθηκε εκτός συνδρομής App Store/Play Store (δωρεάν δοκιμή ή ειδική προσφορά)",
+    "renewsOn": "Ανανεώνεται στις {{date}}",
+    "expiresOn": "Λήγει στις {{date}}",
+    "opening": "Άνοιγμα…",
+    "manageSubscription": "Διαχείριση της συνδρομής μου",
+    "goPremium": "👑 Γίνε Premium",
+    "manageSubError": "Δεν ήταν δυνατό το άνοιγμα της διαχείρισης συνδρομής.",
+    "sectionGeneral": "ΓΕΝΙΚΑ",
+    "displayMode": "Λειτουργία εμφάνισης",
+    "fullNameMode": "Όνομα Επώνυμο",
+    "classicMode": "Κλασικό",
+    "customMode": "Προσαρμοσμένο",
+    "sectionReferral": "ΠΑΡΑΠΟΜΠΗ",
+    "alreadyReferred": "Έχεις ήδη παραπεμφθεί.",
+    "referralHint": "Ένας φίλος σου μοιράστηκε έναν κωδικό; Εισάγαγέ τον εδώ.",
+    "referralPlaceholder": "Κωδικός παραπομπής",
+    "validate": "Επιβεβαίωση",
+    "sectionNotifications": "ΕΙΔΟΠΟΙΗΣΕΙΣ",
+    "notifKinds": {
+      "superlike": "Superlikes που έλαβες",
+      "superlikeAccepted": "Αποδεκτά superlikes",
+      "eventBoost": "Ενισχύσεις εκδηλώσεων",
+      "streakExpiring": "Υπενθυμίσεις σερί",
+      "profileView": "Προβολές προφίλ",
+      "socialClick": "Προβολές των κοινωνικών σου δικτύων",
+      "inactiveProfileViews": "Προβολές που λήφθηκαν κατά την απουσία σου",
+      "referralValidated": "Παραπομπή επικυρώθηκε",
+      "referralRewardGranted": "Ανταμοιβή παραπομπής",
+      "nightModeActivated": "Ενεργοποίηση λειτουργίας νύχτας",
+      "atRiskReactivation": "Υπενθυμίσεις επανενεργοποίησης",
+      "weeklyDigest": "Εβδομαδιαία σύνοψη"
+    },
+    "notifCategories": {
+      "social": "Κοινωνική δραστηριότητα",
+      "rewards": "Σερί & ανταμοιβές",
+      "system": "Σύστημα & συνόψεις"
+    },
+    "sectionPrivacy": "ΑΠΟΡΡΗΤΟ & GDPR",
+    "privacyPolicyLink": "Πολιτική απορρήτου",
+    "consent": "Συγκατάθεση",
+    "analyticsLabel": "Analytics",
+    "dataSaleTitle": "Πώληση δεδομένων (CCPA)",
+    "dataSaleDesc": "Δεν πουλάμε ούτε μοιραζόμαστε τα προσωπικά σου δεδομένα με τρίτους για διαφημιστικούς σκοπούς.",
+    "invisibleModeTitle": "Λειτουργία αόρατου",
+    "invisibleModeDesc": "Θα είσαι αόρατος για τους άλλους χρήστες στα μέρη, αλλά δεν θα μπορείς να δεις τον χάρτη ή τη λίστα μερών όσο αυτή η λειτουργία είναι ενεργή.",
+    "shareLocationTitle": "Κοινοποίηση της τρέχουσας τοποθεσίας μου",
+    "shareLocationDesc": "Εμφανίζει στους άλλους χρήστες το ακριβές μέρος όπου βρίσκεσαι αυτή τη στιγμή, εκτός από την πόλη σου. Απενεργοποιημένο από προεπιλογή για την προστασία του απορρήτου σου και την αποφυγή κινδύνου παρακολούθησης.",
+    "policyLoadError": "Δεν ήταν δυνατή η φόρτωση της πολιτικής απορρήτου.",
+    "savePrivacyPrefsError": "Δεν ήταν δυνατή η αποθήκευση των προτιμήσεων απορρήτου σου",
+    "shareLocationUpdateError": "Δεν ήταν δυνατή η ενημέρωση της κοινοποίησης της τρέχουσας τοποθεσίας σου",
+    "invisibleModeUpdateError": "Δεν ήταν δυνατή η ενημέρωση της λειτουργίας αόρατου",
+    "notifPrefUpdateError": "Δεν ήταν δυνατή η ενημέρωση αυτής της προτίμησης ειδοποίησης",
+    "consentSavedTitle": "Επιτυχία",
+    "consentSaved": "Η συγκατάθεση αποθηκεύτηκε.",
+    "consentRevoked": "Η συγκατάθεση ανακλήθηκε.",
+    "consentSaveError": "Δεν ήταν δυνατή η αποθήκευση της συγκατάθεσής σου",
+    "revokeConsentTitle": "Ανάκληση συγκατάθεσης",
+    "revokeConsentMessage": "Η ανάκληση της συγκατάθεσής σου θα οδηγήσει στην οριστική διαγραφή του λογαριασμού σου και όλων των δεδομένων σου. Θέλεις να συνεχίσεις;",
+    "cancel": "Ακύρωση",
+    "continueLabel": "Συνέχεια",
+    "currentPasswordRequired": "Παρακαλώ εισάγετε τον τρέχοντα κωδικό σας.",
+    "passwordTooShort": "Ο νέος κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.",
+    "passwordConfirmMismatch": "Η επιβεβαίωση δεν ταιριάζει με τον νέο κωδικό.",
+    "passwordChangedTitle": "Ο κωδικός άλλαξε",
+    "passwordChangedMessage": "Ο κωδικός σου ενημερώθηκε.",
+    "currentPasswordInvalid": "Μη έγκυρος τρέχων κωδικός ή σφάλμα διακομιστή.",
+    "invalidEmail": "Παρακαλώ εισάγετε μια έγκυρη διεύθυνση email.",
+    "passwordRequiredConfirm": "Παρακαλώ εισάγετε τον κωδικό σας για επιβεβαίωση.",
+    "checkInboxTitle": "Έλεγξε τα εισερχόμενά σου",
+    "checkInboxMessage": "Ένα email επιβεβαίωσης στάλθηκε στο {{email}}. Κάνε κλικ στον σύνδεσμο για να επικυρώσεις την αλλαγή.",
+    "emailChangeError": "Δεν ήταν δυνατή η έναρξη της αλλαγής. Μη έγκυρος κωδικός ή σφάλμα διακομιστή.",
+    "exportReadyTitle": "Η εξαγωγή είναι έτοιμη",
+    "exportReadyMessage": "Τα δεδομένα σου εξήχθησαν ({{size}} χαρακτήρες).",
+    "exportError": "Δεν ήταν δυνατή η εξαγωγή των δεδομένων σου",
+    "deleteAccountConfirmTitle": "Διαγραφή λογαριασμού",
+    "deleteAccountConfirmMessage": "Η διαγραφή είναι οριστική. Επιβεβαιώνεις τη διαγραφή του λογαριασμού σου;",
+    "profileUpdatedTitle": "Προφίλ",
+    "profileUpdatedMessage": "Το προφίλ σου ενημερώθηκε.",
+    "loadBlockedError": "Δεν ήταν δυνατή η φόρτωση των αποκλεισμένων λογαριασμών",
+    "unblockError": "Δεν ήταν δυνατό το ξεμπλοκάρισμα αυτού του χρήστη",
+    "sectionAccount": "ΛΟΓΑΡΙΑΣΜΟΣ",
+    "emailLabel": "Email",
+    "notProvided": "Δεν έχει οριστεί",
+    "change": "Αλλαγή",
+    "passwordLabel": "Κωδικός πρόσβασης",
+    "blockedAccounts": "Αποκλεισμένοι λογαριασμοί",
+    "helpAndPrivacy": "Βοήθεια & απόρρητο",
+    "terms": "Όροι χρήσης",
+    "sectionModeration": "ΔΙΑΧΕΙΡΙΣΗ",
+    "moderatorSpace": "Χώρος συντονιστή",
+    "debugConsole": "Κονσόλα αποσφαλμάτωσης",
+    "exportData": "Εξαγωγή των δεδομένων μου",
+    "deleteAccount": "Διαγραφή του λογαριασμού μου",
+    "logout": "Αποσύνδεση",
+    "save": "Αποθήκευση",
+    "close": "Κλείσιμο",
+    "privacyModalTitle": "Απόρρητο",
+    "deleteAccountTitle": "Διαγραφή λογαριασμού",
+    "deleteAccountDesc": "Για επιβεβαίωση, εισάγετε τον κωδικό σας. Αυτή η ενέργεια είναι μη αναστρέψιμη.",
+    "deleting": "Διαγραφή...",
+    "changePasswordTitle": "Αλλαγή κωδικού",
+    "currentPasswordPlaceholder": "Τρέχων κωδικός",
+    "newPasswordPlaceholder": "Νέος κωδικός (τουλ. 6 χαρακτήρες)",
+    "confirmPasswordPlaceholder": "Επιβεβαίωση νέου κωδικού",
+    "changeEmailTitle": "Αλλαγή email",
+    "currentEmailLabel": "Τρέχον email: {{email}}",
+    "newEmailPlaceholder": "Νέο email",
+    "noBlockedAccounts": "Κανένας αποκλεισμένος λογαριασμός.",
+    "unblock": "Ξεμπλόκαρε"
+  },
+  "statisticsScreen": {
+    "loadError": "Δεν ήταν δυνατή η ανάκτηση των στατιστικών",
+    "loadVisitorsError": "Δεν ήταν δυνατή η ανάκτηση της λίστας επισκεπτών",
+    "justNow": "Μόλις τώρα",
+    "minutesAgo": "πριν από {{count}} λεπτά",
+    "hoursAgo": "πριν από {{count}}ώ",
+    "yesterday": "Χθες",
+    "daysAgo": "πριν από {{count}} μέρες",
+    "title": "Στατιστικά",
+    "comingSoonTitle": "Σύντομα διαθέσιμο 🚀",
+    "comingSoonDesc": "Τα στατιστικά έρχονται πολύ σύντομα! Θα μπορείς να δεις ποιος επισκέπτεται το προφίλ και τα κοινωνικά σου δίκτυα.",
+    "whoStalksTitle": "Ποιος σε παρακολουθεί; 👀",
+    "whoStalksDesc": "Γίνε Premium για να ανακαλύψεις ποιος επισκέπτεται το προφίλ και τα κοινωνικά σου δίκτυα!",
+    "discoverVisitors": "Ανακάλυψε τους επισκέπτες μου",
+    "later": "Αργότερα",
+    "profileViews": "Προβολές προφίλ",
+    "views": "προβολές",
+    "last30Days": "τις τελευταίες 30 ημέρες",
+    "clicksByNetwork": "Κλικ ανά δίκτυο",
+    "lastVisits": "Πρόσφατες επισκέψεις",
+    "noVisitorsTitle": "Κανείς δεν έχει επισκεφθεί ακόμα το προφίλ σου",
+    "noVisitorsDesc": "Συνέχισε να εξερευνάς μέρη για να σε ανακαλύψουν!",
+    "defaultUser": "Χρήστης",
+    "hiddenVisits_one": "{{count}} κρυφή επίσκεψη",
+    "hiddenVisits_other": "{{count}} κρυφές επισκέψεις",
+    "goPremiumToSeeAll": "Γίνε Premium για να τα δεις όλα",
+    "showMore": "Δες περισσότερα"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Παρενόχληση",
+      "spam": "Ανεπιθύμητο",
+      "inappropriate": "Ακατάλληλο περιεχόμενο",
+      "impersonation": "Πλαστοπροσωπία",
+      "scam": "Απάτη",
+      "other": "Άλλο"
+    },
+    "statusAvailable": "Διαθέσιμος/η",
+    "statusRestricted": "Περιορισμένη ορατότητα",
+    "statusInvisible": "Αόρατος/η",
+    "noUserSelected": "Δεν επιλέχθηκε χρήστης.",
+    "backToList": "Επιστροφή στη λίστα",
+    "superlikeLockedTitle": "Έρχεται σύντομα",
+    "superlikeLockedMessage": "Τα superlikes ξεκλειδώνουν μετά το πρώτο σου check-in.",
+    "superlikeSentTitle": "⭐ Το superlike στάλθηκε!",
+    "superlikeSentMessage": "Ο/Η {{name}} ενημερώθηκε ότι τον/την πρόσεξες.",
+    "errorTitle": "Σφάλμα",
+    "superlikeSendError": "Δεν ήταν δυνατή η αποστολή του superlike.",
+    "blockConfirmTitle": "Αποκλεισμός αυτού του χρήστη;",
+    "blockConfirmMessage": "Δεν θα βλέπεις πλέον αυτόν τον χρήστη και δεν θα μπορεί να σε επικοινωνήσει.",
+    "cancel": "Άκυρο",
+    "block": "Αποκλεισμός",
+    "userBlockedTitle": "Ο χρήστης αποκλείστηκε",
+    "userBlockedMessage": "Αυτός ο χρήστης έχει αποκλειστεί.",
+    "blockError": "Δεν ήταν δυνατός ο αποκλεισμός αυτού του χρήστη.",
+    "reasonRequiredTitle": "Απαιτείται αιτιολογία",
+    "reasonRequiredMessage": "Παρακαλούμε ανέφερε μια αιτιολογία.",
+    "reportSentTitle": "Η αναφορά στάλθηκε",
+    "reportSentMessage": "Ευχαριστούμε για την αναφορά σου.",
+    "reportSendError": "Δεν ήταν δυνατή η αποστολή της αναφοράς.",
+    "backA11y": "Πίσω",
+    "moreOptionsA11y": "Περισσότερες επιλογές",
+    "sendSuperlikeA11y": "Αποστολή superlike",
+    "superlikeLockedA11y": "Το superlike είναι κλειδωμένο, ξεκλειδώνει μετά το πρώτο σου check-in",
+    "currentlyAt": "Αυτή τη στιγμή στο {{place}}",
+    "mutualConnectionBanner": "Αυτό το άτομο θέλει να επικοινωνήσει",
+    "socialsHidden": "Αυτός ο χρήστης δεν μοιράζεται τα social media του",
+    "noBio": "Δεν έχει προστεθεί βιογραφικό ακόμα.",
+    "noSocials": "Κανένα social media",
+    "actionsTitle": "Ενέργειες",
+    "report": "Αναφορά",
+    "reportUserTitle": "Αναφορά χρήστη",
+    "reportWarning": "Οι καταχρηστικές αναφορές μπορεί να επιφέρουν κυρώσεις. Παρακαλούμε να είσαι ειλικρινής.",
+    "categoryLabel": "Κατηγορία",
+    "reasonLabel": "Αιτιολογία",
+    "reasonPlaceholder": "Εξήγησε συνοπτικά την αιτιολογία",
+    "descriptionLabel": "Περιγραφή (προαιρετική)",
+    "descriptionPlaceholder": "Επιπλέον λεπτομέρειες",
+    "sending": "Αποστολή...",
+    "sendReport": "Αποστολή αναφοράς",
+    "justNow": "Μόλις τώρα",
+    "minutesAgo_one": "Πριν από {{count}} λεπτό",
+    "minutesAgo_other": "Πριν από {{count}} λεπτά",
+    "hoursAgo_one": "Πριν από {{count}} ώρα",
+    "hoursAgo_other": "Πριν από {{count}} ώρες",
+    "yesterday": "Χθες",
+    "daysAgo_one": "Πριν από {{count}} ημέρα",
+    "daysAgo_other": "Πριν από {{count}} ημέρες"
+  },
+  "warningsScreen": {
+    "title": "Προειδοποιήσεις",
+    "banAlert": "Αυτή η συμπεριφορά μπορεί να οδηγήσει σε προσωρινό ή μόνιμο αποκλεισμό από την εφαρμογή.",
+    "empty": "Καμία προειδοποίηση.",
+    "typeLabel": "Τύπος προειδοποίησης",
+    "notSpecified": "Δεν καθορίστηκε",
+    "notSpecifiedFem": "Δεν καθορίστηκε",
+    "reasonLabel": "Λόγος"
+  },
+  "common": {
+    "close": "Κλείσιμο",
+    "errorTitle": "Σφάλμα"
+  },
+  "streakCard": {
+    "hintReady": "Η ανταμοιβή σου είναι έτοιμη!",
+    "hintGrow": "Συνδέσου κάθε μέρα για να την αυξήσεις.",
+    "claimBoost": "Διεκδίκησε το boost σου",
+    "claimSuperlike": "Διεκδίκησε το superlike σου"
+  },
+  "coteCard": {
+    "messageTop": "Στην κορυφή! Συνδέσου αύριο για να το κρατήσεις.",
+    "messageZero": "Συνδέσου σήμερα για να το ξεκινήσεις ξανά."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Ανέβα στην κορυφή για 30 λεπτά",
+    "boostPack5Desc": "Η καλύτερη σχέση ποιότητας/τιμής",
+    "superlikePack3Desc": "Δείξε το ενδιαφέρον σου με μοναδικό τρόπο",
+    "superlikePack10Desc": "Για τους αληθινούς συνδέτες",
+    "badgePopular": "Δημοφιλές",
+    "badgeBestOffer": "Καλύτερη προσφορά",
+    "notAvailableTitle": "Μη διαθέσιμο",
+    "notAvailableMessage": "Αυτό το πακέτο δεν είναι ακόμα διαθέσιμο στο κατάστημα.",
+    "purchaseErrorMessage": "Δεν ήταν δυνατή η ολοκλήρωση της αγοράς.",
+    "simulate": "Προσομοίωση"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Αναζήτησε σε αυτά τα μέρη",
+    "categoryBars": "Μπαρ",
+    "categoryClubs": "Κλαμπ",
+    "categoryRestos": "Εστιατόρια",
+    "categoryPubs": "Παμπ",
+    "categoryGyms": "Γυμναστήρια",
+    "categoryCafes": "Καφέ",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Βιβλιοθήκες"
+  },
+  "profileCard": {
+    "anonymousFallback": "Ανώνυμος"
+  },
+  "locationMapView": {
+    "loadError": "Δεν ήταν δυνατή η φόρτωση του χάρτη",
+    "renderError": "Σφάλμα κατά τη φόρτωση του χάρτη"
+  },
+  "churnSurveyModal": {
+    "title": "Ένα λεπτό πριν φύγεις;",
+    "subtitle": "Βοήθησέ μας να καταλάβουμε γιατί.",
+    "reasonTooManyNotifications": "Πάρα πολλές ειδοποιήσεις",
+    "reasonPrivacyConcern": "Δεν νιώθω άνετα με την κοινοποίηση",
+    "reasonNotUseful": "Δεν μου είναι πλέον χρήσιμο",
+    "reasonOther": "Άλλος λόγος",
+    "dismiss": "Παράλειψη",
+    "thanks": "Ευχαριστούμε για τα σχόλιά σου 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Αναζήτηση",
+    "tabNearby": "Κοντινά μέρη",
+    "tabAccount": "Λογαριασμός"
+  },
+  "documentViewer": {
+    "openError": "Δεν ήταν δυνατό το άνοιγμα αυτού του εγγράφου.",
+    "defaultLabel": "Προβολή εγγράφου"
+  },
+  "vibeFab": {
+    "toDay": "Εναλλαγή σε λειτουργία ημέρας",
+    "toNight": "Εναλλαγή σε λειτουργία νύχτας"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Ενεργή κοινή χρήση τοποθεσίας"
+  }
+}

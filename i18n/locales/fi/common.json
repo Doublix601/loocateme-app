@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Kirjaudu sisään",
+      "welcomeBack": "Tervetuloa takaisin!",
+      "subtitle": "Kirjaudu sisään jatkaaksesi",
+      "emailPlaceholder": "Sähköposti",
+      "passwordPlaceholder": "Salasana",
+      "submit": "Kirjaudu sisään",
+      "forgotPassword": "Unohditko salasanan?",
+      "noAccount": "Eikö sinulla ole vielä tiliä?",
+      "createAccount": "Luo tili",
+      "emailNotVerifiedTitle": "Sähköpostia ei ole vahvistettu",
+      "emailNotVerifiedMessage": "Sähköpostiosoitettasi ei ole vielä vahvistettu. Lähetimme sinulle juuri uuden vahvistusviestin. Napsauta linkkiä aktivoidaksesi tilisi ja yritä sitten uudelleen.",
+      "authFailedTitle": "Kirjautuminen epäonnistui",
+      "authFailedMessage": "Emme voineet kirjata sinua sisään. Tarkista tietosi ja yritä uudelleen."
+    },
+    "signup": {
+      "passwordMismatch": "Salasanat eivät täsmää.",
+      "requiredFields": "Kaikki kentät on täytettävä.",
+      "birthdateRequired": "Syntymäaika vaaditaan.",
+      "under18": "Sinun on oltava vähintään 18-vuotias rekisteröityäksesi.",
+      "policyLoadError": "Tietosuojakäytäntöä ei voitu ladata. Voit yrittää uudelleen."
+    }
+  },
+  "consent": {
+    "title": "Tietosuoja",
+    "changelogTitle": "Mikä on muuttunut",
+    "decline": "Hylkää",
+    "accept": "Hyväksy",
+    "accepting": "Tallennetaan...",
+    "declineInfoTitle": "Tiedoksi",
+    "declineInfoMessage": "Sinun on hyväksyttävä tietosuojakäytäntö käyttääksesi sovellusta.",
+    "acceptErrorTitle": "Virhe",
+    "acceptErrorMessage": "Suostumustasi ei voitu tallentaa. Yritä uudelleen."
+  },
+  "ageVerification": {
+    "title": "Iän vahvistus",
+    "urlMissing": "Vahvistus-URL puuttuu",
+    "startError": "Iän vahvistusta ei voitu aloittaa. Yritä uudelleen.",
+    "retry": "Yritä uudelleen",
+    "declinedTitle": "Vahvistus hylätty",
+    "declinedMessage": "Emme voineet vahvistaa, että olet yli 18-vuotias. Voit yrittää uudelleen."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Kieli",
+      "systemDefault": "Puhelimen kieli"
+    }
+  },
+  "forgotPassword": {
+    "title": "Unohtunut salasana",
+    "resetTitle": "Nollaa salasana",
+    "instructions": "Anna sähköpostiosoitteesi saadaksesi nollauslinkin.",
+    "emailPlaceholder": "Sähköposti",
+    "submit": "Lähetä linkki",
+    "successTitle": "Sähköposti lähetetty",
+    "successMessage": "Jos tili on olemassa, sähköposti on lähetetty.",
+    "errorTitle": "Virhe",
+    "errorFallback": "Yritä uudelleen"
+  },
+  "dataManagement": {
+    "title": "Tietosuoja",
+    "export": {
+      "title": "Vie tietoni",
+      "desc": "Lataa kopio tiedoistasi (profiili, sosiaaliset verkostot, asetukset).",
+      "button": "Vie",
+      "buttonWorking": "Odota hetki...",
+      "successTitle": "Tietojen vienti",
+      "successMessage": "Vientisi on luotu ja näytetty konsolissa.",
+      "errorTitle": "Virhe",
+      "errorMessage": "Tietojasi ei voitu viedä juuri nyt. Yritä uudelleen."
+    },
+    "delete": {
+      "title": "Poista tilini",
+      "desc": "Poistaa tilisi ja kaikki siihen liittyvät tiedot pysyvästi.",
+      "passwordPlaceholder": "Vahvista salasanallasi",
+      "button": "Poista pysyvästi",
+      "passwordRequiredTitle": "Salasana vaaditaan",
+      "passwordRequiredMessage": "Anna salasanasi.",
+      "confirmTitle": "Vahvistus",
+      "confirmMessage": "Tätä toimintoa ei voi peruuttaa. Haluatko varmasti poistaa tilisi?",
+      "cancel": "Peruuta",
+      "confirm": "Poista",
+      "successTitle": "Tili poistettu",
+      "successMessage": "Tilisi ja tietosi on poistettu.",
+      "errorTitle": "Virhe",
+      "errorMessage": "Poistaminen epäonnistui. Virheellinen salasana tai palvelinongelma."
+    }
+  },
+  "editProfile": {
+    "title": "Muokkaa profiiliani",
+    "subtitle": "Napauta kenttää muokataksesi sitä",
+    "notSet": "Ei asetettu",
+    "backLabel": "Takaisin",
+    "fields": {
+      "firstName": "Etunimi",
+      "lastName": "Sukunimi",
+      "customName": "Mukautettu nimi",
+      "bio": "Bio",
+      "birthdate": "Syntymäaika",
+      "gender": "Sukupuoli"
+    },
+    "gender": {
+      "male": "Poika",
+      "female": "Tyttö",
+      "preferNotToSay": "En halua sanoa"
+    },
+    "photo": {
+      "notSupportedTitle": "Ei tuettu",
+      "notSupportedMessage": "Kamera ei ole käytettävissä verkossa.",
+      "cameraPermissionTitle": "Lupa vaaditaan",
+      "cameraPermissionMessage": "Sovellus tarvitsee kameran käyttöoikeuden ottaakseen kuvan.",
+      "galleryPermissionMessage": "Sovellus tarvitsee pääsyn kuviisi valitakseen kuvan.",
+      "errorTitle": "Virhe",
+      "uploadErrorMessage": "Kuvaa ei voitu ladata",
+      "cameraOpenError": "Kameraa ei voitu avata.",
+      "galleryOpenError": "Galleriaa ei voitu avata.",
+      "deleteErrorMessage": "Profiilikuvaa ei voitu poistaa",
+      "deleteConfirmTitle": "Poistetaanko profiilikuva?",
+      "deleteConfirmMessage": "Tätä toimintoa ei voi peruuttaa.",
+      "cancel": "Peruuta",
+      "delete": "Poista",
+      "modalTitle": "Profiilikuva",
+      "takePhoto": "📸 Ota kuva",
+      "sending": "Ladataan...",
+      "chooseGallery": "🖼️ Valitse galleriasta",
+      "deletePhoto": "🗑️ Poista kuva",
+      "deleting": "Poistetaan..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Virheellinen etunimi",
+      "firstNameInvalidMessage": "Etunimen on alettava isolla kirjaimella ja voi sisältää kirjaimia (aksentit sallittu), välilyöntejä, heittomerkkejä tai yhdysmerkkejä.",
+      "lastNameInvalidTitle": "Virheellinen sukunimi",
+      "lastNameInvalidMessage": "Sukunimen on alettava isolla kirjaimella ja voi sisältää kirjaimia (aksentit sallittu), välilyöntejä, heittomerkkejä tai yhdysmerkkejä.",
+      "incompleteIdentityTitle": "Puutteellinen henkilöllisyys",
+      "incompleteIdentityMessage": "Anna Mukautettu nimi TAI Etunimi JA Sukunimi.",
+      "customNameRequiredTitle": "Mukautettu nimi vaaditaan",
+      "customNameRequiredMessage": "Et voi poistaa mukautettua nimeä, kun etu- tai sukunimi on tyhjä.",
+      "invalidDateTitle": "Virheellinen päivämäärä",
+      "invalidDateMessage": "Valitse kelvollinen syntymäaika.",
+      "minAgeTitle": "Vähimmäisikä vaaditaan",
+      "minAgeMessage": "Sinun on oltava vähintään 18-vuotias.",
+      "updateErrorMessage": "Profiiliasi ei voitu päivittää"
+    },
+    "modal": {
+      "editPrefix": "Muokkaa",
+      "editGeneric": "Muokkaa",
+      "selectDate": "Valitse päivämäärä",
+      "cancel": "Peruuta",
+      "save": "Tallenna",
+      "placeholders": {
+        "firstName": "Etunimesi",
+        "lastName": "Sukunimesi",
+        "customName": "Mukautettu nimesi",
+        "bio": "Kerro hieman itsestäsi...",
+        "default": "Tekstisi"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Näkymätön tila käytössä",
+      "subtitle": "Et voi nähdä paikkoja ympärilläsi, kun näkymätön tila on käytössä. Poista se käytöstä selataksesi paikkoja.",
+      "disableButton": "Poista näkymätön tila käytöstä"
+    },
+    "error": {
+      "title": "Sijainti ei ole käytettävissä",
+      "subtitle": "Ota sijaintipalvelut käyttöön laitteesi asetuksissa nähdäksesi paikkoja ympärilläsi.",
+      "retry": "Yritä uudelleen"
+    },
+    "empty": {
+      "title": "Rauhallinen alue toistaiseksi",
+      "subtitle": "Ympäriltäsi ei löytynyt aktiivista paikkaa. Laajenna sädettä tai ehdota uutta paikkaa.",
+      "expandRadius": "Laajenna sädettä",
+      "suggestLocation": "Ehdota tätä paikkaa"
+    },
+    "footer": {
+      "loadingMore": "Ladataan lisää paikkoja…",
+      "loadMoreError": "Lisää paikkoja ei voitu ladata. Tarkista yhteytesi.",
+      "retry": "Yritä uudelleen",
+      "reachedEnd": "Olet tutkinut kaikki lähellä olevat aktiiviset paikat. Liiku tai etsi nähdäksesi lisää."
+    },
+    "leaveModal": {
+      "defaultName": "Tämä paikka",
+      "subtitle": "Olet parhaillaan kirjautunut tänne. Haluatko poistua tästä paikasta?",
+      "confirm": "En ole enää täällä",
+      "cancel": "Peruuta"
+    },
+    "sections": {
+      "moreLocations": "Lisää paikkoja sinulle",
+      "sponsored": "Esillä",
+      "trending": "Tapahtuu nyt"
+    },
+    "filters": {
+      "all": "Kaikki"
+    },
+    "card": {
+      "visitors_one": "{{count}} kävijä",
+      "visitors_other": "{{count}} kävijää",
+      "sponsored": "SPONSOROITU",
+      "imHere": "Olen täällä",
+      "editLocation": "Muokkaa sijaintiani"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Manuaalinen sisäänkirjautuminen käytössä",
+    "checkinModeAutoOn": "Automaattinen sisäänkirjautuminen käytössä",
+    "checkinModeErrorTitle": "Virhe",
+    "checkinModeErrorMessage": "Sisäänkirjautumistilaa ei voitu muuttaa juuri nyt.",
+    "checkedInToast": "Olet nyt paikassa {{name}}!",
+    "checkinErrorMessage": "Läsnäoloasi ei voitu vahvistaa juuri nyt.",
+    "leftLocationToast": "Olet poistunut tästä paikasta.",
+    "boostActiveTitle": "Tehostus aktiivinen",
+    "boostActiveLeaveMessage": "Et voi poistua tästä paikasta, kun tehostuksesi on käynnissä.",
+    "leaveErrorMessage": "Sinua ei voitu uloskirjata tästä paikasta juuri nyt.",
+    "boostInProgressTitle": "Tehostus käynnissä",
+    "boostInProgressMessage": "Tehostuksesi on aktiivinen: odota sen päättymistä ennen paikan vaihtoa.",
+    "refreshErrorToast": "Ei voitu päivittää juuri nyt.",
+    "disableInvisibleErrorMessage": "Näkymätöntä tilaa ei voitu poistaa käytöstä juuri nyt.",
+    "switchToManualLabel": "Vaihda manuaaliseen sisäänkirjautumiseen",
+    "switchToAutoLabel": "Vaihda automaattiseen sisäänkirjautumiseen",
+    "entryAuto": "Auto. sisäänkirjaus",
+    "entryManual": "Manuaalinen sisäänkirjaus",
+    "showMapLabel": "Näytä kartta",
+    "showListLabel": "Näytä luettelo",
+    "mapButton": "Kartta",
+    "listButton": "Luettelo"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Virhe",
+    "checkinErrorMessage": "Läsnäoloasi ei voitu vahvistaa juuri nyt.",
+    "boostActiveHereTitle": "Tehostus käynnissä",
+    "boostActiveHereMessage": "Tehostuksesi on aktiivinen täällä: odota sen päättymistä ennen kuin poistut tästä paikasta.",
+    "boostActiveMessage": "Tehostuksesi on aktiivinen: odota sen päättymistä.",
+    "notFound": "Paikkaa ei löytynyt",
+    "back": "Takaisin",
+    "popularityVeryPopular": "Erittäin suosittu",
+    "popularityPopular": "Suosittu",
+    "popularityActive": "Aktiivinen",
+    "popularityCalm": "Rauhallinen",
+    "checkinConfirmed": "Vahvistettu!",
+    "imHere": "Olen täällä",
+    "viewPdf": "Näytä PDF",
+    "pdfLoadError": "Tätä PDF:ää ei voida näyttää.",
+    "openInBrowser": "Avaa selaimessa",
+    "profilesHere": "Profiilit täällä",
+    "recentlyCrossed": "Äskettäin kohdatut",
+    "seeMore": "Näytä lisää",
+    "boosted": "Tehostettu",
+    "boostProfileHere": "Tehosta profiiliani täällä",
+    "boostLockedAfterCheckins": "Tehostus 🔓 2 sisäänkirjautumisen jälkeen"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Jaa",
+      "shareLabel": "Jaa profiilini",
+      "qrCode": "QR-koodi",
+      "qrLabel": "Näytä QR-koodini",
+      "stats": "Tilastot",
+      "statsLabel": "Näytä tilastoni"
+    },
+    "qr": {
+      "title": "Skannaa nähdäksesi profiilini",
+      "hint": "Jos sovellusta ei ole asennettu, sinut ohjataan kauppaan ({{store}})."
+    },
+    "status": {
+      "title": "Tilasi",
+      "close": "Sulje",
+      "public": "Julkinen profiili",
+      "private": "Yksityinen profiili",
+      "incognito": "Incognito",
+      "pickLabel": "Valitse tilani"
+    },
+    "warnings": {
+      "title": "Varoitukset",
+      "message_one": "Sinulla on {{count}} varoitus.",
+      "message_other": "Sinulla on {{count}} varoitusta.",
+      "tapForDetails": "Napauta nähdäksesi tiedot"
+    },
+    "referral": {
+      "invite": "Kutsu ystäväsi",
+      "label": "Suositus: kutsu ystäväsi"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Jaa sijaintisi",
+      "message": "Ota käyttöön nykyisen paikkasi jakaminen, jotta muut lähellä olevat käyttäjät löytävät sinut helpommin.",
+      "activate": "Ota käyttöön",
+      "noThanks": "Ei kiitos"
+    },
+    "social": {
+      "addTitle": "Lisää verkosto",
+      "usernamePlaceholder": "@käyttäjänimi tai {{platform}}-tunnus",
+      "selectPlaceholder": "Valitse verkosto",
+      "snapchatHint": "Huom: Snapchat ei salli suoria linkkejä, syötä vain käyttäjänimesi.",
+      "save": "Tallenna",
+      "saveLabel": "Tallenna",
+      "editTitle": "Muokkaa {{platform}}",
+      "usernamePlaceholderSimple": "Käyttäjänimi",
+      "delete": "Poista",
+      "heading": "Sosiaaliset verkostot",
+      "addLabel": "Lisää sosiaalinen verkosto"
+    },
+    "rewards": {
+      "heading": "Palkinnot",
+      "superlikes": "Superlikes",
+      "boosts": "Tehostukset",
+      "buy": "Osta",
+      "buyLabel": "Osta superlikes tai tehostuksia",
+      "premiumCta": "👑 Hanki Premium",
+      "premiumLabel": "Hanki Premium",
+      "superlikeHistoryLabel_one": "Näytä superlike-historia, {{count}} jäljellä",
+      "superlikeHistoryLabel_other": "Näytä superlike-historia, {{count}} jäljellä"
+    },
+    "currentlyAt": "Tällä hetkellä paikassa {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Lisää lause esitelläksesi itsesi."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Profiilikuvasi",
+      "photoDesc": "Vaihda profiilikuvasi asetuksista (kuvake oikealla ylhäällä).",
+      "bioTitle": "Bio-tekstisi",
+      "bioDesc": "Bio-tekstisi muokataan asetuksista. Se on ensimmäinen asia, jonka muut näkevät.",
+      "socialTitle": "Sosiaaliset verkostosi",
+      "socialDesc": "Napauta ➕ lisätäksesi verkoston. Pidä kuvaketta painettuna muokataksesi tai poistaaksesi sen.",
+      "statusTitle": "Tilasi",
+      "statusDesc": "Julkinen profiili = näkyvä kaikille · Yksityinen profiili = verkostot piilotettu · Incognito = näkymätön. Napauta muuttaaksesi."
+    },
+    "errorTitle": "Virhe",
+    "shareLocationUpdateError": "Nykyisen sijaintisi jakamista ei voitu päivittää",
+    "comingSoonTitle": "Tulossa pian 🚀",
+    "comingSoonStats": "Tilastot tulevat hyvin pian! Näet, kuka vierailee profiilissasi ja sosiaalisissa verkostoissasi.",
+    "shareTitle": "Jaa",
+    "shareError": "Jakaminen ei onnistunut.",
+    "boostClaimedToast": "Tehostus lunastettu 🚀",
+    "superlikeClaimedToast": "Superlike lunastettu ⭐️",
+    "claimRewardError": "Palkintoa ei voitu lunastaa",
+    "statusVisible": "Olet näkyvässä tilassa. Kaikki näkevät sosiaaliset verkostosi. Hyödynnät sovellusta täysin.",
+    "statusRestricted": "Olet rajoitetussa näkyvässä tilassa. Kukaan ei näe sosiaalisia verkostojasi.",
+    "statusInvisible": "Olet näkymättömässä tilassa. Kukaan ei näe sinua tästä lähtien.",
+    "statusUpdateError": "Tilaa ei voitu päivittää",
+    "unsupportedPlatform": "Alustaa ei tueta",
+    "handleRequired": "Anna tunniste",
+    "invalidInstagramHandle": "Virheellinen Instagram-käyttäjänimi. Esimerkki: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Virheellinen TikTok-käyttäjänimi. Esimerkki: https://www.tiktok.com/@username",
+    "addSocialError": "Sosiaalista verkostoa ei voitu lisätä",
+    "invalidLinkTitle": "Virheellinen linkki",
+    "invalidInstagramHandleShort": "Virheellinen Instagram-käyttäjänimi",
+    "invalidTiktokHandleShort": "Virheellinen TikTok-käyttäjänimi",
+    "cannotOpenInstagramTitle": "Instagramia ei voitu avata",
+    "cannotOpenTiktokTitle": "TikTokia ei voitu avata",
+    "tryAgainLater": "Yritä myöhemmin uudelleen.",
+    "editSocialError": "Sosiaalista verkostoa ei voitu muokata",
+    "deleteSocialError": "Sosiaalista verkostoa ei voitu poistaa",
+    "backLabel": "Takaisin",
+    "settingsLabel": "Asetukset",
+    "streakTitle": "Putkesi 🔥",
+    "streakMessage": "Kirjaudu sisään joka päivä kasvattaaksesi putkeasi. Päivänä 7 lunasta superlike. Päivänä 14 lunasta tehostus — putkesi alkaa sitten alusta 0:sta."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Löydä, ketkä ovat lähelläsi",
+        "desc": "Näe reaaliajassa vilkkaat paikat ympärilläsi ja siellä olevat ihmiset — juuri nyt."
+      },
+      "checkin": {
+        "title": "Automaattinen sisäänkirjautuminen, päivin ja öin",
+        "desc": "Heti kun astut paikkaan, ilmestyt sinne automaattisesti — ja näet, kuka siellä on. Sovellus vaihtelee Päivätilan (kahvilat, puistot, urheilu…) ja Yötilan (baarit, ravintolat, klubit…) välillä mielesi mukaan."
+      },
+      "profile": {
+        "title": "Profiilisi, liikkuvat paikat",
+        "desc": "Lisää sosiaaliset verkostosi, jotta ihmiset löytävät sinut, katso profiileja ympärilläsi. Jokainen paikka näyttää myös 1–3 tähteä todellisen kävijämäärän mukaan — mitä vilkkaampaa, sitä enemmän se loistaa."
+      },
+      "referral": {
+        "title": "Ystävä kutsui sinut?",
+        "desc": "Syötä hänen suosituskoodinsa (valinnainen) — se auttaa häntä avaamaan ilmaisen Premium-kuukauden."
+      }
+    },
+    "referralPlaceholder": "Suosituskoodi",
+    "next": "Seuraava",
+    "start": "Mennään 🚀",
+    "skip": "Ohita"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Näe, kuka katsoo profiiliasi",
+      "Näkyvyystehostukset (1 ilmainen paketti)",
+      "Superlikes (3/viikko ilmaiseksi)",
+      "Näkymätön tila",
+      "Hakusäde jopa 2 km",
+      "Edistyneet tilastot",
+      "Laajennetut ilmoitukset"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kuka vierailee luonasi?",
+        "desc": "Selvitä reaaliajassa, kuka katsoo profiiliasi."
+      },
+      "boosts": {
+        "title": "Näkyvyystehostukset",
+        "desc": "Nouse listan kärkeen 30 minuutiksi paikassasi."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Osoita erityistä kiinnostusta jotakuta kohtaan, jonka huomaat."
+      },
+      "invisible": {
+        "title": "Näkymätön tila",
+        "desc": "Katoa lähellä olevien käyttäjien listalta milloin haluat."
+      },
+      "radius": {
+        "title": "Laajennettu säde",
+        "desc": "Tutki jopa 2 km ympärilläsi (500 m ilmaisversiossa)."
+      },
+      "stats": {
+        "title": "Edistyneet tilastot",
+        "desc": "Seuraa katselukertoja ja klikkauksia kaikilla sosiaalisilla verkostoillasi."
+      }
+    },
+    "trialError": "Ilmaista kokeilua ei voitu aloittaa.",
+    "errorTitle": "Virhe",
+    "offersUnavailableTitle": "Tarjoukset eivät ole saatavilla",
+    "offersUnavailableMessage": "Tilaustarjouksia ei ole vielä ladattu. Yritä hetken kuluttua uudelleen.",
+    "purchaseError": "Ostoa ei voitu viimeistellä.",
+    "restoredTitle": "✅ Ostot palautettu",
+    "restoredMessage": "Premium-tilauksesi on aktiivinen.",
+    "noRestoreTitle": "Ostoa ei löytynyt",
+    "noRestoreMessage": "Yhtään aktiivista tilausta ei voitu palauttaa.",
+    "restoreError": "Ostoja ei voitu palauttaa.",
+    "closeLabel": "Sulje",
+    "title": "👑 Premium",
+    "subtitle": "Avaa kaikki ominaisuudet",
+    "debugBanner": "⚠️ Maksut poistettu käytöstä (debug-tila)",
+    "monthly": "Kuukausittain",
+    "perMonth": "/kk",
+    "annual": "Vuosittain",
+    "perYear": "/vuosi",
+    "mostChosen": "SUOSITUIN",
+    "allIncluded": "KAIKKI SISÄLTYY",
+    "ctaSimulate": "Simuloi Premium-tilausta",
+    "ctaTrial": "Aloita 7 päivän ilmainen kokeilu",
+    "ctaLoading": "Ladataan tarjouksia…",
+    "ctaSubscribe": "Tilaa",
+    "thenAnnual": "Sitten {{price}}/vuosi · Peruutettavissa milloin tahansa",
+    "thenMonthly": "Sitten {{price}}/kk · Peruutettavissa milloin tahansa",
+    "restorePurchases": "Palauta ostokseni",
+    "legalText": "Tilaus uusiutuu automaattisesti, ellei sitä peruuteta ennen nykyisen jakson loppua. Hallitse tilauksiasi App Storen / Google Playn asetuksista. ",
+    "privacyPolicy": "Tietosuojakäytäntö",
+    "terms": "Käyttöehdot"
+  },
+  "premiumWelcome": {
+    "header": "👑 Tervetuloa Premiumiin",
+    "finalTitle": "Mennään!",
+    "finalDesc": "Nauti kaikista uusista Premium-eduistasi heti.",
+    "discover": "Tutustu",
+    "next": "Seuraava",
+    "skip": "Ohita"
+  },
+  "referralScreen": {
+    "loadError": "Suositustietojasi ei voitu ladata.",
+    "errorTitle": "Virhe",
+    "shareMessage": "Liity minuun LoocateMessa 👋\n\n{{url}}",
+    "shareTitle": "Kutsu ystävä LoocateMeen",
+    "shareErrorTitle": "Jaa",
+    "shareError": "Jakaminen ei onnistunut.",
+    "codeSavedTitle": "Suositus",
+    "codeSaved": "Suosituskoodi tallennettu!",
+    "selfReferralError": "Et voi käyttää omaa koodiasi.",
+    "alreadyReferredError": "Olet jo käyttänyt suosituskoodia.",
+    "invalidCodeError": "Tämä suosituskoodi ei kelpaa.",
+    "genericCodeError": "Tätä koodia ei voitu vahvistaa.",
+    "title": "Suositus",
+    "infoText": "Kutsu 5 ystävää tässä kuussa (jokaisen on mentävä ulos ja tehtävä 1. vahvistettu sisäänkirjautuminen) ja ansaitse 1 ilmainen Premium-kuukausi 🎉",
+    "confirmCode": "Vahvistetaanko suosituskoodi \"{{code}}\"?",
+    "validate": "Vahvista",
+    "rewardActive": "💎 Ilmainen Premium-kuukautesi on aktiivinen",
+    "rewardActiveUntil": " {{date}} asti",
+    "yourCode": "Suosituskoodisi",
+    "shareButton": "📤 Jaa koodini",
+    "shareLabel": "Jaa koodini",
+    "progressLabel": "{{count}} / {{target}} suositusta tässä kuussa",
+    "invitedFriends": "Kutsutut ystävät",
+    "noInvites": "Ei vielä kutsuttuja ystäviä.",
+    "defaultUser": "Käyttäjä",
+    "statusValidated": "Vahvistettu",
+    "statusVoid": "Peruutettu",
+    "statusPending": "Odottaa"
+  },
+  "searchView": {
+    "closeLabel": "Sulje haku",
+    "title": "Haku",
+    "placeholder": "Käyttäjänimi, paikka...",
+    "clearLabel": "Tyhjennä haku",
+    "filterUsers": "Käyttäjät",
+    "filterLocations": "Paikat",
+    "searching": "Haetaan…",
+    "typeToSearch": "Kirjoita vähintään 2 kirjainta aloittaaksesi haun",
+    "noResults": "Ei tuloksia tälle haulle.",
+    "checkFilters": "Tarkista suodattimet tai kokeile toista hakusanaa.",
+    "resultsCount_one": "{{count}} tulos",
+    "resultsCount_other": "{{count}} tulosta",
+    "noLongerHere": "Ei enää täällä"
+  },
+  "settingsScreen": {
+    "title": "Asetukset",
+    "tabProfile": "Profiili",
+    "tabSettings": "Asetukset",
+    "sectionIdentity": "HENKILÖLLISYYS",
+    "firstName": "Etunimi",
+    "lastName": "Sukunimi",
+    "customNameLabel": "Mukautettu nimi",
+    "bioLabel": "Bio",
+    "sectionSubscription": "TILAUS",
+    "premiumMonthly": "· Kuukausittainen",
+    "premiumAnnual": "· Vuosittainen",
+    "statusLoading": "Ladataan tilaa…",
+    "grantedOutsideStore": "Myönnetty App Storen/Play Storen tilauksen ulkopuolella (ilmainen kokeilu tai erikoistarjous)",
+    "renewsOn": "Uusiutuu {{date}}",
+    "expiresOn": "Vanhenee {{date}}",
+    "opening": "Avataan…",
+    "manageSubscription": "Hallitse tilaustani",
+    "goPremium": "👑 Hanki Premium",
+    "manageSubError": "Tilauksen hallintaa ei voitu avata.",
+    "sectionGeneral": "YLEISTÄ",
+    "displayMode": "Näyttötila",
+    "fullNameMode": "Etunimi Sukunimi",
+    "classicMode": "Klassinen",
+    "customMode": "Mukautettu",
+    "sectionReferral": "SUOSITUS",
+    "alreadyReferred": "Sinut on jo suositeltu.",
+    "referralHint": "Jakoiko ystäväsi koodin kanssasi? Syötä se tähän.",
+    "referralPlaceholder": "Suosituskoodi",
+    "validate": "Vahvista",
+    "sectionNotifications": "ILMOITUKSET",
+    "notifKinds": {
+      "superlike": "Vastaanotetut superlikes",
+      "superlikeAccepted": "Hyväksytyt superlikes",
+      "eventBoost": "Tapahtumatehostukset",
+      "streakExpiring": "Putkimuistutukset",
+      "profileView": "Profiilinäytöt",
+      "socialClick": "Sosiaalisten verkostojesi katselukerrat",
+      "inactiveProfileViews": "Poissaolosi aikana saadut katselukerrat",
+      "referralValidated": "Suositus vahvistettu",
+      "referralRewardGranted": "Suosituspalkkio",
+      "nightModeActivated": "Yötila aktivoitu",
+      "atRiskReactivation": "Uudelleenaktivointimuistutukset",
+      "weeklyDigest": "Viikkokoonti"
+    },
+    "notifCategories": {
+      "social": "Sosiaalinen toiminta",
+      "rewards": "Putket & palkinnot",
+      "system": "Järjestelmä & koonnit"
+    },
+    "sectionPrivacy": "TIETOSUOJA & GDPR",
+    "privacyPolicyLink": "Tietosuojakäytäntö",
+    "consent": "Suostumus",
+    "analyticsLabel": "Analytiikka",
+    "dataSaleTitle": "Tietojen myynti (CCPA)",
+    "dataSaleDesc": "Emme myy tai jaa henkilötietojasi kolmansille osapuolille mainostarkoituksiin.",
+    "invisibleModeTitle": "Näkymätön tila",
+    "invisibleModeDesc": "Olet näkymätön muille käyttäjille paikoissa, mutta et voi enää tarkastella karttaa tai paikkalistaa niin kauan kuin tämä tila on käytössä.",
+    "shareLocationTitle": "Jaa nykyinen sijaintini",
+    "shareLocationDesc": "Näyttää muille käyttäjille tarkan paikan, jossa olet tällä hetkellä, kaupunkisi lisäksi. Oletuksena pois päältä yksityisyytesi suojaamiseksi ja vainoamisriskin välttämiseksi.",
+    "policyLoadError": "Tietosuojakäytäntöä ei voitu ladata.",
+    "savePrivacyPrefsError": "Tietosuoja-asetuksiasi ei voitu tallentaa",
+    "shareLocationUpdateError": "Nykyisen sijaintisi jakamista ei voitu päivittää",
+    "invisibleModeUpdateError": "Näkymätöntä tilaa ei voitu päivittää",
+    "notifPrefUpdateError": "Tätä ilmoitusasetusta ei voitu päivittää",
+    "consentSavedTitle": "Onnistui",
+    "consentSaved": "Suostumus tallennettu.",
+    "consentRevoked": "Suostumus peruutettu.",
+    "consentSaveError": "Suostumustasi ei voitu tallentaa",
+    "revokeConsentTitle": "Suostumuksen peruuttaminen",
+    "revokeConsentMessage": "Suostumuksesi peruuttaminen johtaa tilisi ja kaikkien tietojesi pysyvään poistamiseen. Haluatko jatkaa?",
+    "cancel": "Peruuta",
+    "continueLabel": "Jatka",
+    "currentPasswordRequired": "Anna nykyinen salasanasi.",
+    "passwordTooShort": "Uuden salasanan on oltava vähintään 6 merkkiä pitkä.",
+    "passwordConfirmMismatch": "Vahvistus ei vastaa uutta salasanaa.",
+    "passwordChangedTitle": "Salasana vaihdettu",
+    "passwordChangedMessage": "Salasanasi on päivitetty.",
+    "currentPasswordInvalid": "Virheellinen nykyinen salasana tai palvelinvirhe.",
+    "invalidEmail": "Anna kelvollinen sähköpostiosoite.",
+    "passwordRequiredConfirm": "Anna salasanasi vahvistaaksesi.",
+    "checkInboxTitle": "Tarkista sähköpostisi",
+    "checkInboxMessage": "Vahvistussähköposti on lähetetty osoitteeseen {{email}}. Napsauta linkkiä vahvistaaksesi muutoksen.",
+    "emailChangeError": "Muutosta ei voitu aloittaa. Virheellinen salasana tai palvelinvirhe.",
+    "exportReadyTitle": "Vienti valmis",
+    "exportReadyMessage": "Tietosi on viety ({{size}} merkkiä).",
+    "exportError": "Tietojasi ei voitu viedä",
+    "deleteAccountConfirmTitle": "Poista tili",
+    "deleteAccountConfirmMessage": "Poisto on pysyvä. Vahvistatko tilisi poistamisen?",
+    "profileUpdatedTitle": "Profiili",
+    "profileUpdatedMessage": "Profiilisi on päivitetty.",
+    "loadBlockedError": "Estettyjä tilejä ei voitu ladata",
+    "unblockError": "Tämän käyttäjän eston poistaminen epäonnistui",
+    "sectionAccount": "TILI",
+    "emailLabel": "Sähköposti",
+    "notProvided": "Ei asetettu",
+    "change": "Vaihda",
+    "passwordLabel": "Salasana",
+    "blockedAccounts": "Estetyt tilit",
+    "helpAndPrivacy": "Ohje & tietosuoja",
+    "terms": "Käyttöehdot",
+    "sectionModeration": "MODEROINTI",
+    "moderatorSpace": "Moderaattorialue",
+    "debugConsole": "Virheenkorjauskonsoli",
+    "exportData": "Vie tietoni",
+    "deleteAccount": "Poista tilini",
+    "logout": "Kirjaudu ulos",
+    "save": "Tallenna",
+    "close": "Sulje",
+    "privacyModalTitle": "Tietosuoja",
+    "deleteAccountTitle": "Tilin poistaminen",
+    "deleteAccountDesc": "Vahvista antamalla salasanasi. Tätä toimintoa ei voi peruuttaa.",
+    "deleting": "Poistetaan...",
+    "changePasswordTitle": "Vaihda salasana",
+    "currentPasswordPlaceholder": "Nykyinen salasana",
+    "newPasswordPlaceholder": "Uusi salasana (väh. 6 merkkiä)",
+    "confirmPasswordPlaceholder": "Vahvista uusi salasana",
+    "changeEmailTitle": "Vaihda sähköposti",
+    "currentEmailLabel": "Nykyinen sähköposti: {{email}}",
+    "newEmailPlaceholder": "Uusi sähköposti",
+    "noBlockedAccounts": "Ei estettyjä tilejä.",
+    "unblock": "Poista esto"
+  },
+  "statisticsScreen": {
+    "loadError": "Tilastoja ei voitu hakea",
+    "loadVisitorsError": "Kävijälistaa ei voitu hakea",
+    "justNow": "Juuri nyt",
+    "minutesAgo": "{{count}} min sitten",
+    "hoursAgo": "{{count}}h sitten",
+    "yesterday": "Eilen",
+    "daysAgo": "{{count}} pv sitten",
+    "title": "Tilastot",
+    "comingSoonTitle": "Tulossa pian 🚀",
+    "comingSoonDesc": "Tilastot tulevat hyvin pian! Näet, kuka vierailee profiilissasi ja sosiaalisissa verkostoissasi.",
+    "whoStalksTitle": "Kuka vainoaa sinua? 👀",
+    "whoStalksDesc": "Hanki Premium nähdäksesi, kuka vierailee profiilissasi ja sosiaalisissa verkostoissasi!",
+    "discoverVisitors": "Löydä kävijäni",
+    "later": "Myöhemmin",
+    "profileViews": "Profiilikatselut",
+    "views": "katselua",
+    "last30Days": "viimeisen 30 päivän aikana",
+    "clicksByNetwork": "Klikkaukset verkostoittain",
+    "lastVisits": "Viimeisimmät vierailut",
+    "noVisitorsTitle": "Kukaan ei ole vielä vieraillut profiilissasi",
+    "noVisitorsDesc": "Jatka paikkojen tutkimista tullaksesi löydetyksi!",
+    "defaultUser": "Käyttäjä",
+    "hiddenVisits_one": "{{count}} piilotettu vierailu",
+    "hiddenVisits_other": "{{count}} piilotettua vierailua",
+    "goPremiumToSeeAll": "Hanki Premium nähdäksesi kaiken",
+    "showMore": "Näytä lisää"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Häirintä",
+      "spam": "Roskaposti",
+      "inappropriate": "Sopimaton sisältö",
+      "impersonation": "Identiteettivarkaus",
+      "scam": "Huijaus",
+      "other": "Muu"
+    },
+    "statusAvailable": "Käytettävissä",
+    "statusRestricted": "Rajoitettu näkyvyys",
+    "statusInvisible": "Näkymätön",
+    "noUserSelected": "Käyttäjää ei valittu.",
+    "backToList": "Takaisin listaan",
+    "superlikeLockedTitle": "Tulossa pian",
+    "superlikeLockedMessage": "Superlikeet avautuvat ensimmäisen check-inin jälkeen.",
+    "superlikeSentTitle": "⭐ Superlike lähetetty!",
+    "superlikeSentMessage": "{{name}}:lle ilmoitettiin, että huomasit hänet.",
+    "errorTitle": "Virhe",
+    "superlikeSendError": "Superlikea ei voitu lähettää.",
+    "blockConfirmTitle": "Estetäänkö tämä käyttäjä?",
+    "blockConfirmMessage": "Et enää näe tätä käyttäjää eikä hän voi enää ottaa sinuun yhteyttä.",
+    "cancel": "Peruuta",
+    "block": "Estä",
+    "userBlockedTitle": "Käyttäjä estetty",
+    "userBlockedMessage": "Tämä käyttäjä on estetty.",
+    "blockError": "Tätä käyttäjää ei voitu estää.",
+    "reasonRequiredTitle": "Syy vaaditaan",
+    "reasonRequiredMessage": "Anna syy.",
+    "reportSentTitle": "Ilmoitus lähetetty",
+    "reportSentMessage": "Kiitos ilmoituksestasi.",
+    "reportSendError": "Ilmoitusta ei voitu lähettää.",
+    "backA11y": "Takaisin",
+    "moreOptionsA11y": "Lisää vaihtoehtoja",
+    "sendSuperlikeA11y": "Lähetä superlike",
+    "superlikeLockedA11y": "Superlike lukittu, avautuu ensimmäisen check-inin jälkeen",
+    "currentlyAt": "Tällä hetkellä paikassa {{place}}",
+    "mutualConnectionBanner": "Tämä henkilö haluaa ottaa yhteyttä",
+    "socialsHidden": "Tämä käyttäjä ei jaa sosiaalista mediaansa",
+    "noBio": "Ei vielä bio-tietoja.",
+    "noSocials": "Ei sosiaalista mediaa",
+    "actionsTitle": "Toiminnot",
+    "report": "Ilmoita",
+    "reportUserTitle": "Ilmoita käyttäjästä",
+    "reportWarning": "Väärinkäytetyt ilmoitukset voivat johtaa seuraamuksiin. Ole rehellinen.",
+    "categoryLabel": "Kategoria",
+    "reasonLabel": "Syy",
+    "reasonPlaceholder": "Selitä syy lyhyesti",
+    "descriptionLabel": "Kuvaus (valinnainen)",
+    "descriptionPlaceholder": "Lisätiedot",
+    "sending": "Lähetetään...",
+    "sendReport": "Lähetä ilmoitus",
+    "justNow": "Juuri nyt",
+    "minutesAgo_one": "{{count}} min sitten",
+    "minutesAgo_other": "{{count}} min sitten",
+    "hoursAgo_one": "{{count}} tunti sitten",
+    "hoursAgo_other": "{{count}} tuntia sitten",
+    "yesterday": "Eilen",
+    "daysAgo_one": "{{count}} päivä sitten",
+    "daysAgo_other": "{{count}} päivää sitten"
+  },
+  "warningsScreen": {
+    "title": "Varoitukset",
+    "banAlert": "Tämä käytös voi johtaa väliaikaiseen tai pysyvään sovelluksen käyttökieltoon.",
+    "empty": "Ei varoituksia.",
+    "typeLabel": "Varoituksen tyyppi",
+    "notSpecified": "Ei määritetty",
+    "notSpecifiedFem": "Ei määritetty",
+    "reasonLabel": "Syy"
+  },
+  "common": {
+    "close": "Sulje",
+    "errorTitle": "Virhe"
+  },
+  "streakCard": {
+    "hintReady": "Palkintosi on valmis!",
+    "hintGrow": "Kirjaudu sisään joka päivä, jotta se kasvaa.",
+    "claimBoost": "Lunasta boostisi",
+    "claimSuperlike": "Lunasta superlikesi"
+  },
+  "coteCard": {
+    "messageTop": "Huipulla! Kirjaudu huomenna säilyttääksesi sen.",
+    "messageZero": "Kirjaudu tänään käynnistääksesi sen uudelleen."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Nouse kärkeen 30 minuutiksi",
+    "boostPack5Desc": "Paras hinta-laatusuhde",
+    "superlikePack3Desc": "Näytä kiinnostuksesi ainutlaatuisella tavalla",
+    "superlikePack10Desc": "Todellisille yhdistäjille",
+    "badgePopular": "Suosittu",
+    "badgeBestOffer": "Paras tarjous",
+    "notAvailableTitle": "Ei saatavilla",
+    "notAvailableMessage": "Tämä paketti ei ole vielä saatavilla kaupassa.",
+    "purchaseErrorMessage": "Ostoa ei voitu viimeistellä.",
+    "simulate": "Simuloi"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Hae näistä paikoista",
+    "categoryBars": "Baarit",
+    "categoryClubs": "Klubit",
+    "categoryRestos": "Ravintolat",
+    "categoryPubs": "Pubit",
+    "categoryGyms": "Kuntosalit",
+    "categoryCafes": "Kahvilat",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Kirjastot"
+  },
+  "profileCard": {
+    "anonymousFallback": "Nimetön"
+  },
+  "locationMapView": {
+    "loadError": "Karttaa ei voitu ladata",
+    "renderError": "Virhe kartan latauksessa"
+  },
+  "churnSurveyModal": {
+    "title": "Hetki ennen kuin lähdet?",
+    "subtitle": "Auta meitä ymmärtämään miksi.",
+    "reasonTooManyNotifications": "Liikaa ilmoituksia",
+    "reasonPrivacyConcern": "En ole mukava jakamisen kanssa",
+    "reasonNotUseful": "Se ei ole minulle enää hyödyllinen",
+    "reasonOther": "Muu syy",
+    "dismiss": "Ohita",
+    "thanks": "Kiitos palautteestasi 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Haku",
+    "tabNearby": "Lähellä olevat paikat",
+    "tabAccount": "Tili"
+  },
+  "documentViewer": {
+    "openError": "Tätä asiakirjaa ei voitu avata.",
+    "defaultLabel": "Näytä asiakirja"
+  },
+  "vibeFab": {
+    "toDay": "Vaihda päivätilaan",
+    "toNight": "Vaihda yötilaan"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Sijainnin jakaminen aktiivinen"
+  }
+}

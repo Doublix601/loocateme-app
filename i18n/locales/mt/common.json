@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Idħol",
+      "welcomeBack": "Merħba lura!",
+      "subtitle": "Idħol biex tkompli",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "submit": "Idħol",
+      "forgotPassword": "Insejt il-password?",
+      "noAccount": "Għad m'għandekx kont?",
+      "createAccount": "Oħloq kont",
+      "emailNotVerifiedTitle": "L-email mhux ivverifikat",
+      "emailNotVerifiedMessage": "L-indirizz email tiegħek għadu ma ġiex ivverifikat. Għadna kif bgħatnielek email ta' konferma ġdida. Ikklikkja fuq il-link biex tattiva l-kont tiegħek, u erġa' pprova.",
+      "authFailedTitle": "L-awtentikazzjoni falliet",
+      "authFailedMessage": "Ma stajniex ingħaqqduk. Iċċekkja d-dettalji tiegħek u erġa' pprova."
+    },
+    "signup": {
+      "passwordMismatch": "Il-passwords ma jaqblux.",
+      "requiredFields": "Il-fields kollha jridu jimtlew.",
+      "birthdateRequired": "Id-data tat-twelid hija obbligatorja.",
+      "under18": "Trid ikollok mill-inqas 18-il sena biex tirreġistra.",
+      "policyLoadError": "Il-politika tal-privatezza ma setgħetx tinġibed. Tista' terġa' tipprova."
+    }
+  },
+  "consent": {
+    "title": "Privatezza",
+    "changelogTitle": "X'inbidel",
+    "decline": "Irrifjuta",
+    "accept": "Aċċetta",
+    "accepting": "Qed jissejvja...",
+    "declineInfoTitle": "Informazzjoni",
+    "declineInfoMessage": "Trid taċċetta l-politika tal-privatezza biex tuża l-app.",
+    "acceptErrorTitle": "Żball",
+    "acceptErrorMessage": "Il-kunsens tiegħek ma setax jiġi ssejvjat. Erġa' pprova."
+  },
+  "ageVerification": {
+    "title": "Verifika tal-età",
+    "urlMissing": "Nieqes l-URL tal-verifika",
+    "startError": "Il-verifika tal-età ma setgħetx tinbeda. Erġa' pprova.",
+    "retry": "Erġa' pprova",
+    "declinedTitle": "Verifika miċħuda",
+    "declinedMessage": "Ma stajniex nikkonfermaw li għandek aktar minn 18-il sena. Tista' terġa' tipprova."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Lingwa",
+      "systemDefault": "Lingwa tat-telefon"
+    }
+  },
+  "forgotPassword": {
+    "title": "Insejt il-password",
+    "resetTitle": "Irrisettja",
+    "instructions": "Daħħal l-indirizz email tiegħek biex tirċievi link ta' rrisettjar.",
+    "emailPlaceholder": "Email",
+    "submit": "Ibgħat il-link",
+    "successTitle": "Email mibgħuta",
+    "successMessage": "Jekk jeżisti kont, ntbagħtet email.",
+    "errorTitle": "Żball",
+    "errorFallback": "Jekk jogħġbok erġa' pprova"
+  },
+  "dataManagement": {
+    "title": "Privatezza",
+    "export": {
+      "title": "Esporta d-dejta tiegħi",
+      "desc": "Niżżel kopja tal-informazzjoni tiegħek (profil, netwerks soċjali, settings).",
+      "button": "Esporta",
+      "buttonWorking": "Jekk jogħġbok stenna...",
+      "successTitle": "Esportazzjoni tad-dejta",
+      "successMessage": "L-esportazzjoni tiegħek ġiet iġġenerata u murija fil-console.",
+      "errorTitle": "Żball",
+      "errorMessage": "Id-dejta tiegħek ma setgħetx tiġi esportata issa. Erġa' pprova."
+    },
+    "delete": {
+      "title": "Ħassar il-kont tiegħi",
+      "desc": "Iħassar b'mod permanenti l-kont tiegħek u d-dejta assoċjata kollha.",
+      "passwordPlaceholder": "Ikkonferma bil-password tiegħek",
+      "button": "Ħassar b'mod permanenti",
+      "passwordRequiredTitle": "Password meħtieġa",
+      "passwordRequiredMessage": "Jekk jogħġbok daħħal il-password tiegħek.",
+      "confirmTitle": "Konferma",
+      "confirmMessage": "Din l-azzjoni ma tistax titħassar. Verament trid tħassar il-kont tiegħek?",
+      "cancel": "Ikkanċella",
+      "confirm": "Ħassar",
+      "successTitle": "Kont imħassar",
+      "successMessage": "Il-kont u d-dejta tiegħek tħassru.",
+      "errorTitle": "Żball",
+      "errorMessage": "It-tħassir falla. Password mhux valida jew problema fis-server."
+    }
+  },
+  "editProfile": {
+    "title": "Immodifika l-profil tiegħi",
+    "subtitle": "Mess fuq qasam biex timmodifikah",
+    "notSet": "Mhux stabbilit",
+    "backLabel": "Lura",
+    "fields": {
+      "firstName": "Isem",
+      "lastName": "Kunjom",
+      "customName": "Isem personalizzat",
+      "bio": "Bio",
+      "birthdate": "Data tat-twelid",
+      "gender": "Sess"
+    },
+    "gender": {
+      "male": "Tifel",
+      "female": "Tifla",
+      "preferNotToSay": "Nippreferi ma ngħidx"
+    },
+    "photo": {
+      "notSupportedTitle": "Mhux appoġġat",
+      "notSupportedMessage": "Il-kamera mhix disponibbli fuq il-web.",
+      "cameraPermissionTitle": "Permess meħtieġ",
+      "cameraPermissionMessage": "L-app teħtieġ aċċess għall-kamera biex tieħu ritratt.",
+      "galleryPermissionMessage": "L-app teħtieġ aċċess għar-ritratti tiegħek biex tagħżel immaġni.",
+      "errorTitle": "Żball",
+      "uploadErrorMessage": "L-immaġni ma setgħetx tittella'",
+      "cameraOpenError": "Il-kamera ma setgħetx tinfetaħ.",
+      "galleryOpenError": "Il-galerija ma setgħetx tinfetaħ.",
+      "deleteErrorMessage": "Ir-ritratt tal-profil ma setax jitħassar",
+      "deleteConfirmTitle": "Ħassar ir-ritratt tal-profil?",
+      "deleteConfirmMessage": "Dan l-azzjoni hija finali.",
+      "cancel": "Ikkanċella",
+      "delete": "Ħassar",
+      "modalTitle": "Ritratt tal-profil",
+      "takePhoto": "📸 Ħu ritratt",
+      "sending": "Qed jintbagħat...",
+      "chooseGallery": "🖼️ Agħżel mill-galerija",
+      "deletePhoto": "🗑️ Ħassar ir-ritratt",
+      "deleting": "Qed jitħassar..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Isem invalidu",
+      "firstNameInvalidMessage": "L-isem irid jibda b'ittra kbira u jista' jkun fih ittri (aċċenti permessi), spazji, apostrofi jew linji.",
+      "lastNameInvalidTitle": "Kunjom invalidu",
+      "lastNameInvalidMessage": "Il-kunjom irid jibda b'ittra kbira u jista' jkun fih ittri (aċċenti permessi), spazji, apostrofi jew linji.",
+      "incompleteIdentityTitle": "Identità mhux kompluta",
+      "incompleteIdentityMessage": "Daħħal Isem personalizzat JEW Isem U Kunjom.",
+      "customNameRequiredTitle": "Meħtieġ isem personalizzat",
+      "customNameRequiredMessage": "Ma tistax tneħħi l-isem personalizzat sakemm l-isem jew il-kunjom ikunu vojta.",
+      "invalidDateTitle": "Data invalida",
+      "invalidDateMessage": "Jekk jogħġbok agħżel data tat-twelid valida.",
+      "minAgeTitle": "Meħtieġa età minima",
+      "minAgeMessage": "Trid ikollok mill-inqas 18-il sena.",
+      "updateErrorMessage": "Il-profil tiegħek ma setax jiġi aġġornat"
+    },
+    "modal": {
+      "editPrefix": "Immodifika",
+      "editGeneric": "Immodifika",
+      "selectDate": "Agħżel data",
+      "cancel": "Ikkanċella",
+      "save": "Issejvja",
+      "placeholders": {
+        "firstName": "Ismek",
+        "lastName": "Kunjomek",
+        "customName": "L-isem personalizzat tiegħek",
+        "bio": "Għidilna ftit dwarek...",
+        "default": "It-test tiegħek"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Modalità inviżibbli attiva",
+      "subtitle": "Ma tistax tara postijiet madwarek sakemm il-modalità inviżibbli tkun attiva. Iddiżattivaha biex tesplora postijiet.",
+      "disableButton": "Iddiżattiva l-modalità inviżibbli"
+    },
+    "error": {
+      "title": "Post mhux disponibbli",
+      "subtitle": "Attiva s-servizzi tal-post fis-settings tal-apparat tiegħek biex tara postijiet madwarek.",
+      "retry": "Erġa' pprova"
+    },
+    "empty": {
+      "title": "Żona kwieta għalissa",
+      "subtitle": "Ma nstab l-ebda post attiv madwarek. Kabbar ir-raġġ jew issuġġerixxi post ġdid.",
+      "expandRadius": "Kabbar ir-raġġ",
+      "suggestLocation": "Issuġġerixxi dan il-post"
+    },
+    "footer": {
+      "loadingMore": "Qed jitgħabbew aktar postijiet…",
+      "loadMoreError": "Ma setgħux jitgħabbew aktar postijiet. Iċċekkja l-konnessjoni tiegħek.",
+      "retry": "Erġa' pprova",
+      "reachedEnd": "Esploraw il-postijiet attivi kollha fil-qrib. Iċċaqlaq jew fittex biex tara aktar."
+    },
+    "leaveModal": {
+      "defaultName": "Dan il-post",
+      "subtitle": "Bħalissa int irreġistrat hawn. Trid titlaq minn dan il-post?",
+      "confirm": "M'iniex hawn aktar",
+      "cancel": "Ikkanċella"
+    },
+    "sections": {
+      "moreLocations": "Aktar postijiet għalik",
+      "sponsored": "Miġbura",
+      "trending": "Qed jiġri issa"
+    },
+    "filters": {
+      "all": "Kollha"
+    },
+    "card": {
+      "visitors_one": "{{count}} viżitatur",
+      "visitors_other": "{{count}} viżitaturi",
+      "sponsored": "SPONSORJAT",
+      "imHere": "Jien hawn",
+      "editLocation": "Immodifika l-post tiegħi"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Check-in manwali attivat",
+    "checkinModeAutoOn": "Check-in awtomatiku attivat",
+    "checkinModeErrorTitle": "Żball",
+    "checkinModeErrorMessage": "Ma setax jinbidel il-modalità tal-check-in issa.",
+    "checkedInToast": "Issa qiegħed f'{{name}}!",
+    "checkinErrorMessage": "Il-preżenza tiegħek ma setgħetx tiġi kkonfermata issa.",
+    "leftLocationToast": "Tlaqt minn dan il-post.",
+    "boostActiveTitle": "Boost attiv",
+    "boostActiveLeaveMessage": "Ma tistax titlaq minn dan il-post sakemm il-boost tiegħek ikun għaddej.",
+    "leaveErrorMessage": "Ma stajtx tiġi checkjat minn dan il-post issa.",
+    "boostInProgressTitle": "Boost għaddej",
+    "boostInProgressMessage": "Il-boost tiegħek attiv: stenna sakemm jispiċċa qabel tibdel il-post.",
+    "refreshErrorToast": "Ma setax jiġi aġġornat issa.",
+    "disableInvisibleErrorMessage": "Il-modalità inviżibbli ma setgħetx tiġi diżattivata issa.",
+    "switchToManualLabel": "Aqleb għal check-in manwali",
+    "switchToAutoLabel": "Aqleb għal check-in awtomatiku",
+    "entryAuto": "Dħul awt.",
+    "entryManual": "Dħul manwali",
+    "showMapLabel": "Uri l-mappa",
+    "showListLabel": "Uri l-lista",
+    "mapButton": "Mappa",
+    "listButton": "Lista"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Żball",
+    "checkinErrorMessage": "Il-preżenza tiegħek ma setgħetx tiġi kkonfermata issa.",
+    "boostActiveHereTitle": "Boost għaddej",
+    "boostActiveHereMessage": "Il-boost tiegħek hu attiv hawn: stenna sakemm jispiċċa qabel titlaq minn dan il-post.",
+    "boostActiveMessage": "Il-boost tiegħek attiv: stenna sakemm jispiċċa.",
+    "notFound": "Il-post ma nstabx",
+    "back": "Lura",
+    "popularityVeryPopular": "Popolari ħafna",
+    "popularityPopular": "Popolari",
+    "popularityActive": "Attiv",
+    "popularityCalm": "Kwiet",
+    "checkinConfirmed": "Ikkonfermat!",
+    "imHere": "Jien hawn",
+    "viewPdf": "Ara PDF",
+    "pdfLoadError": "Dan il-PDF ma jistax jintwera.",
+    "openInBrowser": "Iftaħ fil-brawżer",
+    "profilesHere": "Profili hawn",
+    "recentlyCrossed": "Iltqajna dan l-aħħar",
+    "seeMore": "Ara aktar",
+    "boosted": "Imsaħħaħ",
+    "boostProfileHere": "Saħħaħ il-profil tiegħi hawn",
+    "boostLockedAfterCheckins": "Boost 🔓 wara 2 check-ins"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Ixxerja",
+      "shareLabel": "Ixxerja l-profil tiegħi",
+      "qrCode": "Kodiċi QR",
+      "qrLabel": "Uri l-kodiċi QR tiegħi",
+      "stats": "Statistika",
+      "statsLabel": "Ara l-istatistika tiegħi"
+    },
+    "qr": {
+      "title": "Skennja biex tara l-profil tiegħi",
+      "hint": "Jekk l-app mhix installata, tiġi rredirezzjonat lejn il-ħanut ({{store}})."
+    },
+    "status": {
+      "title": "L-istat tiegħek",
+      "close": "Agħlaq",
+      "public": "Profil pubbliku",
+      "private": "Profil privat",
+      "incognito": "Inkognito",
+      "pickLabel": "Agħżel l-istat tiegħi"
+    },
+    "warnings": {
+      "title": "Twissijiet",
+      "message_one": "Għandek {{count}} twissija.",
+      "message_other": "Għandek {{count}} twissijiet.",
+      "tapForDetails": "Mess biex tara d-dettalji"
+    },
+    "referral": {
+      "invite": "Istieden lil ħbiebek",
+      "label": "Referenza: istieden lil ħbiebek"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Aqsam il-post tiegħek",
+      "message": "Attiva l-kondiviżjoni tal-post tiegħek attwali biex tiġi individwat aktar faċilment minn utenti oħra fil-qrib.",
+      "activate": "Attiva",
+      "noThanks": "Le, grazzi"
+    },
+    "social": {
+      "addTitle": "Żid netwerk",
+      "usernamePlaceholder": "@username jew ID ta' {{platform}}",
+      "selectPlaceholder": "Agħżel netwerk",
+      "snapchatHint": "Nota: Snapchat ma jippermettix links diretti, daħħal biss l-username tiegħek.",
+      "save": "Issejvja",
+      "saveLabel": "Issejvja",
+      "editTitle": "Immodifika {{platform}}",
+      "usernamePlaceholderSimple": "Username",
+      "delete": "Ħassar",
+      "heading": "Networks soċjali",
+      "addLabel": "Żid network soċjali"
+    },
+    "rewards": {
+      "heading": "Rikompensi",
+      "superlikes": "Superlikes",
+      "boosts": "Boosts",
+      "buy": "Ixtri",
+      "buyLabel": "Ixtri superlikes jew boosts",
+      "premiumCta": "👑 Sir Premium",
+      "premiumLabel": "Sir Premium",
+      "superlikeHistoryLabel_one": "Ara l-istorja tas-superlikes, {{count}} fadal",
+      "superlikeHistoryLabel_other": "Ara l-istorja tas-superlikes, {{count}} fadal"
+    },
+    "currentlyAt": "Bħalissa fi {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Żid sentenza biex tintroduċi ruħek."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Ir-ritratt tal-profil tiegħek",
+      "photoDesc": "Biddel ir-ritratt tal-profil tiegħek mis-settings (ikona fuq il-lemin).",
+      "bioTitle": "Il-bio tiegħek",
+      "bioDesc": "Il-bio tiegħek tiġi editjata mis-settings. Hija l-ewwel ħaġa li jaraw l-oħrajn.",
+      "socialTitle": "In-networks soċjali tiegħek",
+      "socialDesc": "Mess ➕ biex iżżid network. Żomm ikona biex timmodifikaha jew tħassarha.",
+      "statusTitle": "L-istat tiegħek",
+      "statusDesc": "Profil pubbliku = viżibbli għal kulħadd · Profil privat = networks moħbija · Inkognito = inviżibbli. Mess biex tibdel."
+    },
+    "errorTitle": "Żball",
+    "shareLocationUpdateError": "Il-kondiviżjoni tal-post attwali tiegħek ma setgħetx tiġi aġġornata",
+    "comingSoonTitle": "Dalwaqt disponibbli 🚀",
+    "comingSoonStats": "L-istatistika ġejja dalwaqt! Tkun tista' tara min iżur il-profil u n-networks soċjali tiegħek.",
+    "shareTitle": "Ixxerja",
+    "shareError": "Ma setax jixxerja.",
+    "boostClaimedToast": "Boost meħud 🚀",
+    "superlikeClaimedToast": "Superlike meħud ⭐️",
+    "claimRewardError": "Ir-rikompensa ma setgħetx tittieħed",
+    "statusVisible": "Int fil-modalità viżibbli. Kulħadd jista' jara n-networks soċjali tiegħek. Qed tuża l-app bis-sħiħ.",
+    "statusRestricted": "Int fil-modalità viżibbli ristretta. Ħadd ma jista' jara n-networks soċjali tiegħek.",
+    "statusInvisible": "Int fil-modalità inviżibbli. Minn issa 'l quddiem ħadd ma jarak.",
+    "statusUpdateError": "L-istat ma setax jiġi aġġornat",
+    "unsupportedPlatform": "Pjattaforma mhux appoġġata",
+    "handleRequired": "Jekk jogħġbok daħħal identifikatur",
+    "invalidInstagramHandle": "Username tal-Instagram invalidu. Eżempju: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Username tat-TikTok invalidu. Eżempju: https://www.tiktok.com/@username",
+    "addSocialError": "In-network soċjali ma setax jiżdied",
+    "invalidLinkTitle": "Link invalidu",
+    "invalidInstagramHandleShort": "Username tal-Instagram invalidu",
+    "invalidTiktokHandleShort": "Username tat-TikTok invalidu",
+    "cannotOpenInstagramTitle": "Instagram ma setax jinfetaħ",
+    "cannotOpenTiktokTitle": "TikTok ma setax jinfetaħ",
+    "tryAgainLater": "Jekk jogħġbok erġa' pprova aktar tard.",
+    "editSocialError": "In-network soċjali ma setax jiġi editjat",
+    "deleteSocialError": "In-network soċjali ma setax jitħassar",
+    "backLabel": "Lura",
+    "settingsLabel": "Settings",
+    "streakTitle": "Is-serje tiegħek 🔥",
+    "streakMessage": "Idħol kuljum biex tkabbar is-serje tiegħek. Fil-jum 7, ħu superlike. Fil-jum 14, ħu boost — is-serje tiegħek imbagħad terġa' tibda minn 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Skopri min hu barra ħdejk",
+        "desc": "Ara f'ħin reali postijiet ħajjin madwarek u n-nies li jinsabu hemm — issa stess."
+      },
+      "checkin": {
+        "title": "Check-in awtomatiku, binhar jew billejl",
+        "desc": "Malli tidħol f'post, tidher hemm awtomatikament — u tara min hemm. L-app taqleb bejn il-Modalità tal-Jum (cafés, parks, sport…) u l-Modalità tal-Lejl (bars, restaurants, klabbs…) skont ix-xewqa tiegħek."
+      },
+      "profile": {
+        "title": "Il-profil tiegħek, il-postijiet li jiċċaqilqu",
+        "desc": "Żid in-networks soċjali tiegħek biex in-nies isibuk, ara l-profili madwarek. Kull post juri wkoll minn 1 sa 3 stilel skont il-frekwenza reali — aktar ma jkun ħaj, aktar jiddi."
+      },
+      "referral": {
+        "title": "Ħabib stedinlek?",
+        "desc": "Daħħal il-kodiċi ta' referenza tiegħu (fakultattiv) — dan jgħinu jisblokka xahar Premium b'xejn."
+      }
+    },
+    "referralPlaceholder": "Kodiċi ta' referenza",
+    "next": "Li jmiss",
+    "start": "Ejja nibdew 🚀",
+    "skip": "Aqbeż"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Ara min iħares lejn il-profil tiegħek",
+      "Boosts ta' viżibbiltà (1 pakkett b'xejn)",
+      "Superlikes (3/ġimgħa b'xejn)",
+      "Modalità inviżibbli",
+      "Raġġ ta' tfittxija sa 2 km",
+      "Statistika avvanzata",
+      "Notifiki mtejba"
+    ],
+    "slides": {
+      "views": {
+        "title": "Min iżurek?",
+        "desc": "Skopri f'ħin reali min iħares lejn il-profil tiegħek."
+      },
+      "boosts": {
+        "title": "Boosts ta' viżibbiltà",
+        "desc": "Itla' fil-quċċata tal-lista għal 30 min fil-post tiegħek."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Uri interess speċjali f'xi ħadd li tinnota."
+      },
+      "invisible": {
+        "title": "Modalità inviżibbli",
+        "desc": "Sparixxi mil-lista ta' utenti fil-qrib kull meta trid."
+      },
+      "radius": {
+        "title": "Raġġ estiż",
+        "desc": "Esplora sa 2 km madwarek (500 m fil-verżjoni b'xejn)."
+      },
+      "stats": {
+        "title": "Statistika avvanzata",
+        "desc": "Segwi l-views u l-klikkjar fuq in-networks soċjali kollha tiegħek."
+      }
+    },
+    "trialError": "Il-prova b'xejn ma setgħetx tinbeda.",
+    "errorTitle": "Żball",
+    "offersUnavailableTitle": "L-offerti mhumiex disponibbli",
+    "offersUnavailableMessage": "L-offerti tal-abbonament għadhom ma ġewx imtellgħa. Erġa' pprova f'ftit ħin.",
+    "purchaseError": "Ix-xiri ma setax jiġi ffinalizzat.",
+    "restoredTitle": "✅ Xirjiet irrestawrati",
+    "restoredMessage": "L-abbonament Premium tiegħek attiv.",
+    "noRestoreTitle": "L-ebda xiri ma nstab",
+    "noRestoreMessage": "L-ebda abbonament attiv ma seta' jiġi rrestawrat.",
+    "restoreError": "Ix-xirjiet ma setgħux jiġu rrestawrati.",
+    "closeLabel": "Agħlaq",
+    "title": "👑 Premium",
+    "subtitle": "Isblokka l-funzjonijiet kollha",
+    "debugBanner": "⚠️ Ħlasijiet diżattivati (modalità debug)",
+    "monthly": "Kull xahar",
+    "perMonth": "/xahar",
+    "annual": "Kull sena",
+    "perYear": "/sena",
+    "mostChosen": "L-AKTAR MAGĦŻUL",
+    "allIncluded": "KOLLOX INKLUŻ",
+    "ctaSimulate": "Issimula abbonament Premium",
+    "ctaTrial": "Ibda l-prova b'xejn ta' 7 ijiem tiegħi",
+    "ctaLoading": "Qed jitgħabbew l-offerti…",
+    "ctaSubscribe": "Abbona",
+    "thenAnnual": "Imbagħad {{price}}/sena · Tista' tikkanċella f'kull ħin",
+    "thenMonthly": "Imbagħad {{price}}/xahar · Tista' tikkanċella f'kull ħin",
+    "restorePurchases": "Irrestawra x-xirjiet tiegħi",
+    "legalText": "L-abbonament jiġġedded awtomatikament sakemm ma jiġix ikkanċellat qabel tmiem il-perjodu attwali. Immaniġġja l-abbonamenti tiegħek fis-settings tal-App Store / Google Play. ",
+    "privacyPolicy": "Politika tal-privatezza",
+    "terms": "Termini"
+  },
+  "premiumWelcome": {
+    "header": "👑 Merħba fil-Premium",
+    "finalTitle": "Ejja nibdew!",
+    "finalDesc": "Igawdi issa l-vantaġġi Premium ġodda kollha tiegħek.",
+    "discover": "Skopri",
+    "next": "Li jmiss",
+    "skip": "Aqbeż"
+  },
+  "referralScreen": {
+    "loadError": "L-informazzjoni tar-referenza tiegħek ma setgħetx tiġi mtellgħa.",
+    "errorTitle": "Żball",
+    "shareMessage": "Ingħaqad miegħi fuq LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Istieden ħabib għal LoocateMe",
+    "shareErrorTitle": "Ixxerja",
+    "shareError": "Ma setax jixxerja.",
+    "codeSavedTitle": "Referenza",
+    "codeSaved": "Kodiċi ta' referenza ssejvjat!",
+    "selfReferralError": "Ma tistax tuża l-kodiċi tiegħek stess.",
+    "alreadyReferredError": "Diġà użajt kodiċi ta' referenza.",
+    "invalidCodeError": "Dan il-kodiċi ta' referenza mhuwiex validu.",
+    "genericCodeError": "Dan il-kodiċi ma setax jiġi vvalidat.",
+    "title": "Referenza",
+    "infoText": "Istieden 5 ħbieb dan ix-xahar (kull wieħed irid joħroġ u jagħmel l-1 check-in ivverifikat tiegħu) u aqla' xahar Premium b'xejn 🎉",
+    "confirmCode": "Ikkonferma l-kodiċi ta' referenza «{{code}}»?",
+    "validate": "Ikkonferma",
+    "rewardActive": "💎 Ix-xahar Premium b'xejn tiegħek attiv",
+    "rewardActiveUntil": " sa {{date}}",
+    "yourCode": "Il-kodiċi ta' referenza tiegħek",
+    "shareButton": "📤 Ixxerja l-kodiċi tiegħi",
+    "shareLabel": "Ixxerja l-kodiċi tiegħi",
+    "progressLabel": "{{count}} / {{target}} referenzi dan ix-xahar",
+    "invitedFriends": "Ħbieb mistiedna",
+    "noInvites": "Għadu ma ġie mistieden l-ebda ħabib.",
+    "defaultUser": "Utent",
+    "statusValidated": "Ivvalidat",
+    "statusVoid": "Ikkanċellat",
+    "statusPending": "Pendenti"
+  },
+  "searchView": {
+    "closeLabel": "Agħlaq it-tfittxija",
+    "title": "Fittex",
+    "placeholder": "Username, post...",
+    "clearLabel": "Naddaf it-tfittxija",
+    "filterUsers": "Utenti",
+    "filterLocations": "Postijiet",
+    "searching": "Qed ifittex…",
+    "typeToSearch": "Ikteb mill-inqas 2 ittri biex tibda t-tfittxija",
+    "noResults": "L-ebda riżultat ma nstab għal din it-tfittxija.",
+    "checkFilters": "Iċċekkja l-filtri jew ipprova kelma oħra ewlenija.",
+    "resultsCount_one": "{{count}} riżultat",
+    "resultsCount_other": "{{count}} riżultati",
+    "noLongerHere": "Mhux hawn aktar"
+  },
+  "settingsScreen": {
+    "title": "Settings",
+    "tabProfile": "Profil",
+    "tabSettings": "Settings",
+    "sectionIdentity": "IDENTITÀ",
+    "firstName": "Isem",
+    "lastName": "Kunjom",
+    "customNameLabel": "Isem personalizzat",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ABBONAMENT",
+    "premiumMonthly": "· Kull xahar",
+    "premiumAnnual": "· Kull sena",
+    "statusLoading": "Qed jitgħabba l-istat…",
+    "grantedOutsideStore": "Mogħti barra mill-abbonament App Store/Play Store (prova b'xejn jew offerta speċjali)",
+    "renewsOn": "Jiġġedded fi {{date}}",
+    "expiresOn": "Jiskadi fi {{date}}",
+    "opening": "Qed jinfetaħ…",
+    "manageSubscription": "Immaniġġja l-abbonament tiegħi",
+    "goPremium": "👑 Sir Premium",
+    "manageSubError": "Ma setax jinfetaħ l-immaniġġar tal-abbonament.",
+    "sectionGeneral": "ĠENERALI",
+    "displayMode": "Modalità ta' viżwalizzazzjoni",
+    "fullNameMode": "Isem Kunjom",
+    "classicMode": "Klassiku",
+    "customMode": "Personalizzat",
+    "sectionReferral": "REFERENZA",
+    "alreadyReferred": "Diġà ġejt referut.",
+    "referralHint": "Ħabib qasam kodiċi miegħek? Daħħlu hawn.",
+    "referralPlaceholder": "Kodiċi ta' referenza",
+    "validate": "Ikkonferma",
+    "sectionNotifications": "NOTIFIKI",
+    "notifKinds": {
+      "superlike": "Superlikes riċevuti",
+      "superlikeAccepted": "Superlikes aċċettati",
+      "eventBoost": "Boosts ta' avvenimenti",
+      "streakExpiring": "Tfakkir ta' serje",
+      "profileView": "Views tal-profil",
+      "socialClick": "Views tan-networks soċjali tiegħek",
+      "inactiveProfileViews": "Views riċevuti waqt l-assenza tiegħek",
+      "referralValidated": "Referenza vvalidata",
+      "referralRewardGranted": "Rikompensa ta' referenza",
+      "nightModeActivated": "Attivazzjoni tal-modalità tal-lejl",
+      "atRiskReactivation": "Tfakkir ta' riattivazzjoni",
+      "weeklyDigest": "Sommarju ġimgħatiku"
+    },
+    "notifCategories": {
+      "social": "Attività soċjali",
+      "rewards": "Serje u rikompensi",
+      "system": "Sistema u sommarji"
+    },
+    "sectionPrivacy": "PRIVATEZZA U GDPR",
+    "privacyPolicyLink": "Politika tal-privatezza",
+    "consent": "Kunsens",
+    "analyticsLabel": "Analitika",
+    "dataSaleTitle": "Bejgħ tad-dejta (CCPA)",
+    "dataSaleDesc": "Ma nbigħux u ma naqsmux id-dejta personali tiegħek ma' partijiet terzi għal skopijiet ta' reklamar.",
+    "invisibleModeTitle": "Modalità inviżibbli",
+    "invisibleModeDesc": "Tkun inviżibbli għal utenti oħra fil-postijiet, iżda ma tkunx tista' tikkonsulta l-mappa jew il-lista tal-postijiet sakemm din il-modalità tkun attiva.",
+    "shareLocationTitle": "Aqsam il-post attwali tiegħi",
+    "shareLocationDesc": "Turi lil utenti oħra l-post preċiż fejn qiegħed bħalissa, minbarra l-belt tiegħek. Diżattivat b'default biex tipproteġi l-privatezza tiegħek u tevita riskju ta' stalking.",
+    "policyLoadError": "Il-politika tal-privatezza ma setgħetx tiġi mtellgħa.",
+    "savePrivacyPrefsError": "Il-preferenzi tal-privatezza tiegħek ma setgħux jiġu ssejvjati",
+    "shareLocationUpdateError": "Il-qsim tal-post attwali tiegħek ma setax jiġi aġġornat",
+    "invisibleModeUpdateError": "Il-modalità inviżibbli ma setgħetx tiġi aġġornata",
+    "notifPrefUpdateError": "Din il-preferenza ta' notifika ma setgħetx tiġi aġġornata",
+    "consentSavedTitle": "Suċċess",
+    "consentSaved": "Kunsens issejvjat.",
+    "consentRevoked": "Kunsens revokat.",
+    "consentSaveError": "Il-kunsens tiegħek ma setax jiġi ssejvjat",
+    "revokeConsentTitle": "Revoka tal-kunsens",
+    "revokeConsentMessage": "Ir-revoka tal-kunsens tiegħek twassal għat-tħassir permanenti tal-kont tiegħek u d-dejta kollha tiegħek. Trid tkompli?",
+    "cancel": "Ikkanċella",
+    "continueLabel": "Kompli",
+    "currentPasswordRequired": "Jekk jogħġbok daħħal il-password attwali tiegħek.",
+    "passwordTooShort": "Il-password il-ġdida trid ikun fiha mill-inqas 6 karattri.",
+    "passwordConfirmMismatch": "Il-konferma ma taqbilx mal-password il-ġdida.",
+    "passwordChangedTitle": "Password mibdula",
+    "passwordChangedMessage": "Il-password tiegħek ġiet aġġornata.",
+    "currentPasswordInvalid": "Password attwali invalida jew żball tas-server.",
+    "invalidEmail": "Jekk jogħġbok daħħal indirizz email validu.",
+    "passwordRequiredConfirm": "Jekk jogħġbok daħħal il-password tiegħek biex tikkonferma.",
+    "checkInboxTitle": "Iċċekkja l-posta tiegħek",
+    "checkInboxMessage": "Email ta' konferma ntbagħtet lil {{email}}. Ikklikkja fuq il-link biex tivvalida l-bidla.",
+    "emailChangeError": "Il-bidla ma setgħetx tinbeda. Password invalida jew żball tas-server.",
+    "exportReadyTitle": "Esportazzjoni lesta",
+    "exportReadyMessage": "Id-dejta tiegħek ġiet esportata ({{size}} karattri).",
+    "exportError": "Id-dejta tiegħek ma setgħetx tiġi esportata",
+    "deleteAccountConfirmTitle": "Ħassar il-kont",
+    "deleteAccountConfirmMessage": "It-tħassir huwa finali. Tikkonferma t-tħassir tal-kont tiegħek?",
+    "profileUpdatedTitle": "Profil",
+    "profileUpdatedMessage": "Il-profil tiegħek ġie aġġornat.",
+    "loadBlockedError": "Il-kontijiet imblukkati ma setgħux jiġu mtellgħa",
+    "unblockError": "Dan l-utent ma setax jiġi sblukkat",
+    "sectionAccount": "KONT",
+    "emailLabel": "Email",
+    "notProvided": "Mhux indikat",
+    "change": "Biddel",
+    "passwordLabel": "Password",
+    "blockedAccounts": "Kontijiet imblukkati",
+    "helpAndPrivacy": "Għajnuna u privatezza",
+    "terms": "Termini ta' użu",
+    "sectionModeration": "MODERAZZJONI",
+    "moderatorSpace": "Spazju tal-moderatur",
+    "debugConsole": "Konsol ta' debug",
+    "exportData": "Esporta d-dejta tiegħi",
+    "deleteAccount": "Ħassar il-kont tiegħi",
+    "logout": "Oħroġ",
+    "save": "Issejvja",
+    "close": "Agħlaq",
+    "privacyModalTitle": "Privatezza",
+    "deleteAccountTitle": "Tħassir tal-kont",
+    "deleteAccountDesc": "Biex tikkonferma, daħħal il-password tiegħek. Din l-azzjoni ma tistax titħassar.",
+    "deleting": "Qed jitħassar...",
+    "changePasswordTitle": "Biddel il-password",
+    "currentPasswordPlaceholder": "Password attwali",
+    "newPasswordPlaceholder": "Password ġdida (min. 6 karattri)",
+    "confirmPasswordPlaceholder": "Ikkonferma l-password il-ġdida",
+    "changeEmailTitle": "Biddel l-email",
+    "currentEmailLabel": "Email attwali: {{email}}",
+    "newEmailPlaceholder": "Email ġdid",
+    "noBlockedAccounts": "L-ebda kont imblukkat.",
+    "unblock": "Sblokka"
+  },
+  "statisticsScreen": {
+    "loadError": "L-istatistika ma setgħetx tinġieb",
+    "loadVisitorsError": "Il-lista tal-viżitaturi ma setgħetx tinġieb",
+    "justNow": "Issa stess",
+    "minutesAgo": "{{count}} min ilu",
+    "hoursAgo": "{{count}}s ilu",
+    "yesterday": "Il-bieraħ",
+    "daysAgo": "{{count}} j ilu",
+    "title": "Statistika",
+    "comingSoonTitle": "Dalwaqt disponibbli 🚀",
+    "comingSoonDesc": "L-istatistika ġejja dalwaqt! Tkun tista' tara min iżur il-profil u n-networks soċjali tiegħek.",
+    "whoStalksTitle": "Min qed jimmonitorjak? 👀",
+    "whoStalksDesc": "Sir Premium biex tiskopri min iżur il-profil u n-networks soċjali tiegħek!",
+    "discoverVisitors": "Skopri l-viżitaturi tiegħi",
+    "later": "Aktar tard",
+    "profileViews": "Views tal-profil",
+    "views": "views",
+    "last30Days": "fl-aħħar 30 jum",
+    "clicksByNetwork": "Klikkjar skont network",
+    "lastVisits": "Viżiti riċenti",
+    "noVisitorsTitle": "Ħadd għadu ma żar il-profil tiegħek",
+    "noVisitorsDesc": "Kompli esplora postijiet biex tiġi skopert!",
+    "defaultUser": "Utent",
+    "hiddenVisits_one": "{{count}} żjara moħbija",
+    "hiddenVisits_other": "{{count}} żjajjar moħbija",
+    "goPremiumToSeeAll": "Sir Premium biex tara kollox",
+    "showMore": "Uri aktar"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Fastidju",
+      "spam": "Spam",
+      "inappropriate": "Kontenut mhux xieraq",
+      "impersonation": "Serq ta' identità",
+      "scam": "Frodi",
+      "other": "Ieħor"
+    },
+    "statusAvailable": "Disponibbli",
+    "statusRestricted": "Viżibbiltà ristretta",
+    "statusInvisible": "Invisibbli",
+    "noUserSelected": "Ebda utent magħżul.",
+    "backToList": "Lura għal-lista",
+    "superlikeLockedTitle": "Dalwaqt",
+    "superlikeLockedMessage": "Is-superlikes jinfetħu wara l-ewwel check-in tiegħek.",
+    "superlikeSentTitle": "⭐ Superlike mibgħut!",
+    "superlikeSentMessage": "{{name}} ġie/ġiet innotifikat/a li innutajtu/ha.",
+    "errorTitle": "Żball",
+    "superlikeSendError": "Is-superlike ma setax jintbagħat.",
+    "blockConfirmTitle": "Timblokka lil dan l-utent?",
+    "blockConfirmMessage": "Mhux se tibqa' tara lil dan l-utent u hu/hi ma jkunx jista'/tkun tista' tikkuntattjak aktar.",
+    "cancel": "Ikkanċella",
+    "block": "Imblokka",
+    "userBlockedTitle": "Utent imblukkat",
+    "userBlockedMessage": "Dan l-utent ġie mblukkat.",
+    "blockError": "Dan l-utent ma setax jiġi mblukkat.",
+    "reasonRequiredTitle": "Raġuni meħtieġa",
+    "reasonRequiredMessage": "Jekk jogħġbok indika raġuni.",
+    "reportSentTitle": "Rapport mibgħut",
+    "reportSentMessage": "Grazzi tar-rapport tiegħek.",
+    "reportSendError": "Ir-rapport ma setax jintbagħat.",
+    "backA11y": "Lura",
+    "moreOptionsA11y": "Aktar għażliet",
+    "sendSuperlikeA11y": "Ibgħat superlike",
+    "superlikeLockedA11y": "Is-superlike msakkar, jinfetaħ wara l-ewwel check-in tiegħek",
+    "currentlyAt": "Bħalissa f'{{place}}",
+    "mutualConnectionBanner": "Din il-persuna trid tidħol f'kuntatt",
+    "socialsHidden": "Dan l-utent ma jaqsamx il-midja soċjali tiegħu",
+    "noBio": "Għadha ma ġiet miżjuda l-ebda bijografija.",
+    "noSocials": "Ebda midja soċjali",
+    "actionsTitle": "Azzjonijiet",
+    "report": "Irrapporta",
+    "reportUserTitle": "Irrapporta utent",
+    "reportWarning": "Rapporti abbużivi jistgħu jwasslu għal sanzjonijiet. Jekk jogħġbok kun onest/a.",
+    "categoryLabel": "Kategorija",
+    "reasonLabel": "Raġuni",
+    "reasonPlaceholder": "Spjega fil-qosor ir-raġuni",
+    "descriptionLabel": "Deskrizzjoni (mhux obbligatorja)",
+    "descriptionPlaceholder": "Dettalji addizzjonali",
+    "sending": "Qed jintbagħat...",
+    "sendReport": "Ibgħat ir-rapport",
+    "justNow": "Issa stess",
+    "minutesAgo_one": "{{count}} min ilu",
+    "minutesAgo_other": "{{count}} min ilu",
+    "hoursAgo_one": "{{count}} siegħa ilu",
+    "hoursAgo_other": "{{count}} sigħat ilu",
+    "yesterday": "Ilbieraħ",
+    "daysAgo_one": "{{count}} jum ilu",
+    "daysAgo_other": "{{count}} ijiem ilu"
+  },
+  "warningsScreen": {
+    "title": "Twissijiet",
+    "banAlert": "Dan l-imġiba jista' jwassal għal projbizzjoni temporanja jew permanenti mill-app.",
+    "empty": "L-ebda twissija.",
+    "typeLabel": "Tip ta' twissija",
+    "notSpecified": "Mhux speċifikat",
+    "notSpecifiedFem": "Mhux speċifikata",
+    "reasonLabel": "Raġuni"
+  },
+  "common": {
+    "close": "Agħlaq",
+    "errorTitle": "Żball"
+  },
+  "streakCard": {
+    "hintReady": "Il-premju tiegħek lest!",
+    "hintGrow": "Idħol kuljum biex tkabbru.",
+    "claimBoost": "Itlob il-boost tiegħek",
+    "claimSuperlike": "Itlob is-superlike tiegħek"
+  },
+  "coteCard": {
+    "messageTop": "Fil-quċċata! Idħol għada biex iżżommu.",
+    "messageZero": "Idħol illum biex terġa' tnedih."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Kun fuq nett għal 30 min",
+    "boostPack5Desc": "L-aħjar valur għall-flus",
+    "superlikePack3Desc": "Uri l-interess tiegħek b'mod uniku",
+    "superlikePack10Desc": "Għal dawk li verament jikkonnettjaw",
+    "badgePopular": "Popolari",
+    "badgeBestOffer": "L-aħjar offerta",
+    "notAvailableTitle": "Mhux disponibbli",
+    "notAvailableMessage": "Dan il-pakkett għadu mhux disponibbli fil-ħanut.",
+    "purchaseErrorMessage": "Ma setax jitlesta x-xiri.",
+    "simulate": "Simula"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Fittex f'dawn il-postijiet",
+    "categoryBars": "Bars",
+    "categoryClubs": "Klabbs",
+    "categoryRestos": "Restoranti",
+    "categoryPubs": "Pubs",
+    "categoryGyms": "Gyms",
+    "categoryCafes": "Kafetteriji",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Libreriji"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonimu"
+  },
+  "locationMapView": {
+    "loadError": "Ma setax jitgħabba l-map",
+    "renderError": "Żball fit-tagħbija tal-map"
+  },
+  "churnSurveyModal": {
+    "title": "Minuta qabel titlaq?",
+    "subtitle": "Għinna nifhmu għaliex.",
+    "reasonTooManyNotifications": "Wisq notifiki",
+    "reasonPrivacyConcern": "Mhux komdu bil-qsim",
+    "reasonNotUseful": "M'għadux utli għalija",
+    "reasonOther": "Raġuni oħra",
+    "dismiss": "Aqbeż",
+    "thanks": "Grazzi tal-feedback tiegħek 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Fittex",
+    "tabNearby": "Postijiet fil-qrib",
+    "tabAccount": "Kont"
+  },
+  "documentViewer": {
+    "openError": "Dan id-dokument ma setax jinfetaħ.",
+    "defaultLabel": "Ara d-dokument"
+  },
+  "vibeFab": {
+    "toDay": "Aqleb għall-modalità tal-jum",
+    "toNight": "Aqleb għall-modalità tal-lejl"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Il-qsim tal-post attiv"
+  }
+}

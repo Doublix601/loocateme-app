@@ -1,4 +1,5 @@
 import { useState, useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   TextInput,
   TouchableOpacity,
@@ -23,6 +24,7 @@ import { publish } from '../components/EventBus';
 import { mapBackendUser } from '../utils/mappers';
 
 const LoginScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,15 +75,9 @@ const LoginScreen = () => {
         response: e?.response,
       });
       if (e?.code === 'EMAIL_NOT_VERIFIED' || (e?.status === 403 && e?.response?.code === 'EMAIL_NOT_VERIFIED')) {
-        Alert.alert(
-          'Email non vérifié',
-          "Votre adresse email n'a pas encore été vérifiée. Nous venons de vous renvoyer un email de confirmation. Veuillez cliquer sur le lien pour activer votre compte, puis réessayez.",
-        );
+        Alert.alert(t('auth.login.emailNotVerifiedTitle'), t('auth.login.emailNotVerifiedMessage'));
       } else {
-        Alert.alert(
-          'Authentification échouée',
-          'Impossible de vous connecter. Vérifiez vos identifiants et réessayez.',
-        );
+        Alert.alert(t('auth.login.authFailedTitle'), t('auth.login.authFailedMessage'));
       }
     } finally {
       setLoading(false);
@@ -91,7 +87,7 @@ const LoginScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <ThemedText style={styles.headerTitle}>Connexion</ThemedText>
+        <ThemedText style={styles.headerTitle}>{t('auth.login.title')}</ThemedText>
       </View>
 
       <KeyboardAvoidingView
@@ -114,14 +110,14 @@ const LoginScreen = () => {
           <AppLogo width={width * 0.4} height={width * 0.4} style={styles.logo} />
 
           <View style={styles.card}>
-            <ThemedText style={styles.cardTitle}>Bon retour parmi nous !</ThemedText>
+            <ThemedText style={styles.cardTitle}>{t('auth.login.welcomeBack')}</ThemedText>
             <ThemedText style={styles.cardSubtitle} type="secondary">
-              Connectez-vous pour continuer
+              {t('auth.login.subtitle')}
             </ThemedText>
 
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={t('auth.login.emailPlaceholder')}
               placeholderTextColor={colors.placeholder}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -131,7 +127,7 @@ const LoginScreen = () => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Mot de passe"
+              placeholder={t('auth.login.passwordPlaceholder')}
               placeholderTextColor={colors.placeholder}
               secureTextEntry
               value={password}
@@ -144,7 +140,7 @@ const LoginScreen = () => {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <ThemedText style={styles.buttonText} type="white">
-                  Se connecter
+                  {t('auth.login.submit')}
                 </ThemedText>
               )}
             </TouchableOpacity>
@@ -154,7 +150,7 @@ const LoginScreen = () => {
               style={{ marginTop: 20, alignSelf: 'center' }}
             >
               <ThemedText style={[styles.linkText, { fontSize: width * 0.035 }]} type={isDark ? 'white' : 'accent'}>
-                Mot de passe oublié ?
+                {t('auth.login.forgotPassword')}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -164,8 +160,8 @@ const LoginScreen = () => {
             style={{ marginTop: 30, alignSelf: 'center' }}
           >
             <ThemedText style={[styles.linkText, { fontSize: width * 0.04 }]} type={isDark ? 'white' : 'secondary'}>
-              Pas encore de compte ?{' '}
-              <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>Créer un compte</ThemedText>
+              {t('auth.login.noAccount')}{' '}
+              <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>{t('auth.login.createAccount')}</ThemedText>
             </ThemedText>
           </TouchableOpacity>
         </ScrollView>

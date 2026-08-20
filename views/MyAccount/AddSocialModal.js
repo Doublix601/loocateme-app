@@ -14,6 +14,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 import socialMediaIcons from '../../constants/socialMediaIcons';
 
 const { width, height } = Dimensions.get('window');
@@ -29,6 +30,7 @@ const AddSocialModal = ({
   onChangeValue,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -53,7 +55,7 @@ const AddSocialModal = ({
                 style={[styles.modalBackButtonImage, { tintColor: colors.accent }]}
               />
             </TouchableOpacity>
-            <Text style={[styles.modalTitle, { color: colors.accent }]}>Ajouter un réseau</Text>
+            <Text style={[styles.modalTitle, { color: colors.accent }]}>{t('myAccount.social.addTitle')}</Text>
             <ScrollView
               ref={scrollRef}
               keyboardShouldPersistTaps="handled"
@@ -99,7 +101,7 @@ const AddSocialModal = ({
                   ref={inputRef}
                   value={value}
                   onChangeText={onChangeValue}
-                  placeholder={selectedPlatform ? `@username ou ID ${selectedPlatform}` : 'Sélectionnez un réseau'}
+                  placeholder={selectedPlatform ? t('myAccount.social.usernamePlaceholder', { platform: selectedPlatform }) : t('myAccount.social.selectPlaceholder')}
                   placeholderTextColor={isDark ? '#666' : '#999'}
                   style={[styles.wrappedInput, { color: colors.textPrimary }]}
                   autoCapitalize="none"
@@ -112,7 +114,7 @@ const AddSocialModal = ({
               </View>
               {selectedPlatform === 'Snapchat' && (
                 <Text style={styles.modalHint}>
-                  Note: Snapchat n'autorise pas les liens directs, entrez juste votre nom d'utilisateur.
+                  {t('myAccount.social.snapchatHint')}
                 </Text>
               )}
             </ScrollView>
@@ -125,7 +127,7 @@ const AddSocialModal = ({
                   (!selectedPlatform || !value) && { opacity: 0.5 },
                 ]}
                 disabled={!selectedPlatform || !value}
-                accessibilityLabel="Enregistrer"
+                accessibilityLabel={t('myAccount.social.saveLabel')}
               >
                 <Text style={styles.iconEmoji}>💾</Text>
               </TouchableOpacity>

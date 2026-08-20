@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Pieslēgties",
+      "welcomeBack": "Laipni lūdzam atpakaļ!",
+      "subtitle": "Pieslēdzieties, lai turpinātu",
+      "emailPlaceholder": "E-pasts",
+      "passwordPlaceholder": "Parole",
+      "submit": "Pieslēgties",
+      "forgotPassword": "Aizmirsāt paroli?",
+      "noAccount": "Vēl nav konta?",
+      "createAccount": "Izveidot kontu",
+      "emailNotVerifiedTitle": "E-pasts nav apstiprināts",
+      "emailNotVerifiedMessage": "Jūsu e-pasta adrese vēl nav apstiprināta. Mēs tikko nosūtījām jums jaunu apstiprinājuma e-pastu. Noklikšķiniet uz saites, lai aktivizētu kontu, un mēģiniet vēlreiz.",
+      "authFailedTitle": "Pieteikšanās neizdevās",
+      "authFailedMessage": "Mums neizdevās jūs pieteikt. Pārbaudiet savus datus un mēģiniet vēlreiz."
+    },
+    "signup": {
+      "passwordMismatch": "Paroles nesakrīt.",
+      "requiredFields": "Visi lauki ir jāaizpilda.",
+      "birthdateRequired": "Dzimšanas datums ir obligāts.",
+      "under18": "Lai reģistrētos, jums jābūt vismaz 18 gadus vecam.",
+      "policyLoadError": "Neizdevās ielādēt privātuma politiku. Varat mēģināt vēlreiz."
+    }
+  },
+  "consent": {
+    "title": "Privātums",
+    "changelogTitle": "Kas ir mainījies",
+    "decline": "Noraidīt",
+    "accept": "Piekrist",
+    "accepting": "Saglabā...",
+    "declineInfoTitle": "Informācija",
+    "declineInfoMessage": "Lai izmantotu lietotni, jums jāpiekrīt privātuma politikai.",
+    "acceptErrorTitle": "Kļūda",
+    "acceptErrorMessage": "Jūsu piekrišanu neizdevās saglabāt. Mēģiniet vēlreiz."
+  },
+  "ageVerification": {
+    "title": "Vecuma pārbaude",
+    "urlMissing": "Trūkst pārbaudes URL",
+    "startError": "Neizdevās sākt vecuma pārbaudi. Mēģiniet vēlreiz.",
+    "retry": "Mēģināt vēlreiz",
+    "declinedTitle": "Pārbaude noraidīta",
+    "declinedMessage": "Mums neizdevās apstiprināt, ka esat vecāks par 18 gadiem. Varat mēģināt vēlreiz."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Valoda",
+      "systemDefault": "Tālruņa valoda"
+    }
+  },
+  "forgotPassword": {
+    "title": "Aizmirsu paroli",
+    "resetTitle": "Atiestatīšana",
+    "instructions": "Ievadiet savu e-pasta adresi, lai saņemtu atiestatīšanas saiti.",
+    "emailPlaceholder": "E-pasts",
+    "submit": "Sūtīt saiti",
+    "successTitle": "E-pasts nosūtīts",
+    "successMessage": "Ja konts pastāv, e-pasts ir nosūtīts.",
+    "errorTitle": "Kļūda",
+    "errorFallback": "Lūdzu, mēģiniet vēlreiz"
+  },
+  "dataManagement": {
+    "title": "Privātums",
+    "export": {
+      "title": "Eksportēt manus datus",
+      "desc": "Lejupielādējiet savas informācijas kopiju (profils, sociālie tīkli, iestatījumi).",
+      "button": "Eksportēt",
+      "buttonWorking": "Lūdzu, uzgaidiet...",
+      "successTitle": "Datu eksports",
+      "successMessage": "Jūsu eksports ir izveidots un parādīts konsolē.",
+      "errorTitle": "Kļūda",
+      "errorMessage": "Jūsu datus pašlaik neizdevās eksportēt. Mēģiniet vēlreiz."
+    },
+    "delete": {
+      "title": "Dzēst manu kontu",
+      "desc": "Neatgriezeniski dzēš jūsu kontu un visus saistītos datus.",
+      "passwordPlaceholder": "Apstipriniet ar savu paroli",
+      "button": "Dzēst neatgriezeniski",
+      "passwordRequiredTitle": "Nepieciešama parole",
+      "passwordRequiredMessage": "Lūdzu, ievadiet savu paroli.",
+      "confirmTitle": "Apstiprinājums",
+      "confirmMessage": "Šī darbība ir neatgriezeniska. Vai tiešām vēlaties dzēst savu kontu?",
+      "cancel": "Atcelt",
+      "confirm": "Dzēst",
+      "successTitle": "Konts dzēsts",
+      "successMessage": "Jūsu konts un dati ir dzēsti.",
+      "errorTitle": "Kļūda",
+      "errorMessage": "Dzēšana neizdevās. Nederīga parole vai servera problēma."
+    }
+  },
+  "editProfile": {
+    "title": "Rediģēt manu profilu",
+    "subtitle": "Pieskarieties laukam, lai to rediģētu",
+    "notSet": "Nav norādīts",
+    "backLabel": "Atpakaļ",
+    "fields": {
+      "firstName": "Vārds",
+      "lastName": "Uzvārds",
+      "customName": "Pielāgots vārds",
+      "bio": "Bio",
+      "birthdate": "Dzimšanas datums",
+      "gender": "Dzimums"
+    },
+    "gender": {
+      "male": "Zēns",
+      "female": "Meitene",
+      "preferNotToSay": "Nevēlos norādīt"
+    },
+    "photo": {
+      "notSupportedTitle": "Netiek atbalstīts",
+      "notSupportedMessage": "Kamera nav pieejama tīmeklī.",
+      "cameraPermissionTitle": "Nepieciešama atļauja",
+      "cameraPermissionMessage": "Lietotnei ir nepieciešama piekļuve kamerai, lai uzņemtu fotoattēlu.",
+      "galleryPermissionMessage": "Lietotnei ir nepieciešama piekļuve jūsu fotoattēliem, lai izvēlētos attēlu.",
+      "errorTitle": "Kļūda",
+      "uploadErrorMessage": "Attēlu neizdevās augšupielādēt",
+      "cameraOpenError": "Kameru neizdevās atvērt.",
+      "galleryOpenError": "Galeriju neizdevās atvērt.",
+      "deleteErrorMessage": "Profila attēlu neizdevās dzēst",
+      "deleteConfirmTitle": "Dzēst profila attēlu?",
+      "deleteConfirmMessage": "Šī darbība ir galīga.",
+      "cancel": "Atcelt",
+      "delete": "Dzēst",
+      "modalTitle": "Profila attēls",
+      "takePhoto": "📸 Uzņemt fotoattēlu",
+      "sending": "Augšupielāde...",
+      "chooseGallery": "🖼️ Izvēlēties no galerijas",
+      "deletePhoto": "🗑️ Dzēst attēlu",
+      "deleting": "Dzēšana..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Nederīgs vārds",
+      "firstNameInvalidMessage": "Vārdam jāsākas ar lielo burtu, un tas var saturēt burtus (diakritiskās zīmes atļautas), atstarpes, apostrofus vai domuzīmes.",
+      "lastNameInvalidTitle": "Nederīgs uzvārds",
+      "lastNameInvalidMessage": "Uzvārdam jāsākas ar lielo burtu, un tas var saturēt burtus (diakritiskās zīmes atļautas), atstarpes, apostrofus vai domuzīmes.",
+      "incompleteIdentityTitle": "Nepilnīga identitāte",
+      "incompleteIdentityMessage": "Norādiet Pielāgotu vārdu VAI Vārdu UN Uzvārdu.",
+      "customNameRequiredTitle": "Nepieciešams pielāgots vārds",
+      "customNameRequiredMessage": "Nevarat noņemt pielāgoto vārdu, kamēr vārds vai uzvārds ir tukšs.",
+      "invalidDateTitle": "Nederīgs datums",
+      "invalidDateMessage": "Lūdzu, izvēlieties derīgu dzimšanas datumu.",
+      "minAgeTitle": "Nepieciešams minimālais vecums",
+      "minAgeMessage": "Jums jābūt vismaz 18 gadus vecam.",
+      "updateErrorMessage": "Jūsu profilu neizdevās atjaunināt"
+    },
+    "modal": {
+      "editPrefix": "Rediģēt",
+      "editGeneric": "Rediģēt",
+      "selectDate": "Izvēlēties datumu",
+      "cancel": "Atcelt",
+      "save": "Saglabāt",
+      "placeholders": {
+        "firstName": "Jūsu vārds",
+        "lastName": "Jūsu uzvārds",
+        "customName": "Jūsu pielāgotais vārds",
+        "bio": "Pastāstiet mums nedaudz par sevi...",
+        "default": "Jūsu teksts"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Neredzamais režīms aktīvs",
+      "subtitle": "Jūs nevarat redzēt vietas ap sevi, kamēr neredzamais režīms ir aktīvs. Izslēdziet to, lai pārlūkotu vietas.",
+      "disableButton": "Izslēgt neredzamo režīmu"
+    },
+    "error": {
+      "title": "Atrašanās vieta nav pieejama",
+      "subtitle": "Iespējojiet atrašanās vietas pakalpojumus ierīces iestatījumos, lai redzētu vietas ap sevi.",
+      "retry": "Mēģināt vēlreiz"
+    },
+    "empty": {
+      "title": "Pagaidām mierīga zona",
+      "subtitle": "Ap jums nav atrasta neviena aktīva vieta. Palieliniet rādiusu vai ieteiciet jaunu vietu.",
+      "expandRadius": "Palielināt rādiusu",
+      "suggestLocation": "Ieteikt šo vietu"
+    },
+    "footer": {
+      "loadingMore": "Ielādē vairāk vietu…",
+      "loadMoreError": "Neizdevās ielādēt vairāk vietu. Pārbaudiet savienojumu.",
+      "retry": "Mēģināt vēlreiz",
+      "reachedEnd": "Jūs esat izpētījuši visas aktīvās vietas tuvumā. Pārvietojieties vai meklējiet, lai redzētu vairāk."
+    },
+    "leaveModal": {
+      "defaultName": "Šī vieta",
+      "subtitle": "Jūs pašlaik esat reģistrējies šeit. Vai vēlaties pamest šo vietu?",
+      "confirm": "Es vairs neesmu šeit",
+      "cancel": "Atcelt"
+    },
+    "sections": {
+      "moreLocations": "Vairāk vietu jums",
+      "sponsored": "Izceltas",
+      "trending": "Notiek tagad"
+    },
+    "filters": {
+      "all": "Visas"
+    },
+    "card": {
+      "visitors_one": "{{count}} apmeklētājs",
+      "visitors_other": "{{count}} apmeklētāji",
+      "sponsored": "SPONSORĒTS",
+      "imHere": "Es esmu šeit",
+      "editLocation": "Rediģēt manu atrašanās vietu"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Manuālā reģistrēšanās aktivizēta",
+    "checkinModeAutoOn": "Automātiskā reģistrēšanās aktivizēta",
+    "checkinModeErrorTitle": "Kļūda",
+    "checkinModeErrorMessage": "Reģistrēšanās režīmu pašlaik neizdevās mainīt.",
+    "checkedInToast": "Tagad tu esi {{name}}!",
+    "checkinErrorMessage": "Tavu klātbūtni pašlaik neizdevās apstiprināt.",
+    "leftLocationToast": "Tu esi pametis šo vietu.",
+    "boostActiveTitle": "Paātrinājums aktīvs",
+    "boostActiveLeaveMessage": "Tu nevari pamest šo vietu, kamēr tavs paātrinājums darbojas.",
+    "leaveErrorMessage": "Tevi pašlaik neizdevās izrakstīt no šīs vietas.",
+    "boostInProgressTitle": "Paātrinājums notiek",
+    "boostInProgressMessage": "Tavs paātrinājums ir aktīvs: pagaidi, kamēr tas beigsies, pirms maini vietu.",
+    "refreshErrorToast": "Pašlaik neizdevās atsvaidzināt.",
+    "disableInvisibleErrorMessage": "Neredzamo režīmu pašlaik neizdevās izslēgt.",
+    "switchToManualLabel": "Pārslēgties uz manuālo reģistrēšanos",
+    "switchToAutoLabel": "Pārslēgties uz automātisko reģistrēšanos",
+    "entryAuto": "Auto. ieeja",
+    "entryManual": "Manuālā ieeja",
+    "showMapLabel": "Rādīt karti",
+    "showListLabel": "Rādīt sarakstu",
+    "mapButton": "Karte",
+    "listButton": "Saraksts"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Kļūda",
+    "checkinErrorMessage": "Tavu klātbūtni pašlaik neizdevās apstiprināt.",
+    "boostActiveHereTitle": "Paātrinājums notiek",
+    "boostActiveHereMessage": "Tavs paātrinājums šeit ir aktīvs: pagaidi, kamēr tas beigsies, pirms pamet šo vietu.",
+    "boostActiveMessage": "Tavs paātrinājums ir aktīvs: pagaidi, kamēr tas beigsies.",
+    "notFound": "Vieta nav atrasta",
+    "back": "Atpakaļ",
+    "popularityVeryPopular": "Ļoti populāra",
+    "popularityPopular": "Populāra",
+    "popularityActive": "Aktīva",
+    "popularityCalm": "Mierīga",
+    "checkinConfirmed": "Apstiprināts!",
+    "imHere": "Es esmu šeit",
+    "viewPdf": "Skatīt PDF",
+    "pdfLoadError": "Šo PDF nevar parādīt.",
+    "openInBrowser": "Atvērt pārlūkā",
+    "profilesHere": "Profili šeit",
+    "recentlyCrossed": "Nesen sastapti",
+    "seeMore": "Skatīt vairāk",
+    "boosted": "Paātrināts",
+    "boostProfileHere": "Paātrināt manu profilu šeit",
+    "boostLockedAfterCheckins": "Paātrinājums 🔓 pēc 2 reģistrēšanās"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Kopīgot",
+      "shareLabel": "Kopīgot manu profilu",
+      "qrCode": "QR kods",
+      "qrLabel": "Rādīt manu QR kodu",
+      "stats": "Statistika",
+      "statsLabel": "Skatīt manu statistiku"
+    },
+    "qr": {
+      "title": "Skenējiet, lai redzētu manu profilu",
+      "hint": "Ja lietotne nav instalēta, jūs tiksiet novirzīts uz veikalu ({{store}})."
+    },
+    "status": {
+      "title": "Tavs statuss",
+      "close": "Aizvērt",
+      "public": "Publisks profils",
+      "private": "Privāts profils",
+      "incognito": "Inkognito",
+      "pickLabel": "Izvēlēties manu statusu"
+    },
+    "warnings": {
+      "title": "Brīdinājumi",
+      "message_one": "Jums ir {{count}} brīdinājums.",
+      "message_other": "Jums ir {{count}} brīdinājumi.",
+      "tapForDetails": "Pieskarieties, lai redzētu detaļas"
+    },
+    "referral": {
+      "invite": "Uzaicini savus draugus",
+      "label": "Ieteikums: uzaicini savus draugus"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Kopīgojiet savu atrašanās vietu",
+      "message": "Iespējojiet savas pašreizējās vietas kopīgošanu, lai citi tuvumā esošie lietotāji vieglāk jūs atrastu.",
+      "activate": "Aktivizēt",
+      "noThanks": "Nē, paldies"
+    },
+    "social": {
+      "addTitle": "Pievienot tīklu",
+      "usernamePlaceholder": "@lietotājvārds vai {{platform}} ID",
+      "selectPlaceholder": "Izvēlieties tīklu",
+      "snapchatHint": "Piezīme: Snapchat neatļauj tiešas saites, vienkārši ievadiet savu lietotājvārdu.",
+      "save": "Saglabāt",
+      "saveLabel": "Saglabāt",
+      "editTitle": "Rediģēt {{platform}}",
+      "usernamePlaceholderSimple": "Lietotājvārds",
+      "delete": "Dzēst",
+      "heading": "Sociālie tīkli",
+      "addLabel": "Pievienot sociālo tīklu"
+    },
+    "rewards": {
+      "heading": "Balvas",
+      "superlikes": "Superlikes",
+      "boosts": "Paātrinājumi",
+      "buy": "Pirkt",
+      "buyLabel": "Pirkt superlikes vai paātrinājumus",
+      "premiumCta": "👑 Kļūt par Premium",
+      "premiumLabel": "Kļūt par Premium",
+      "superlikeHistoryLabel_one": "Skatīt superlikes vēsturi, atlicis {{count}}",
+      "superlikeHistoryLabel_other": "Skatīt superlikes vēsturi, atlicis {{count}}"
+    },
+    "currentlyAt": "Pašlaik {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Pievienojiet teikumu, lai iepazīstinātu ar sevi."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Tavs profila attēls",
+      "photoDesc": "Mainiet savu profila attēlu iestatījumos (ikona augšpusē pa labi).",
+      "bioTitle": "Tavs bio",
+      "bioDesc": "Tavs bio tiek rediģēts iestatījumos. Tas ir pirmais, ko redz citi.",
+      "socialTitle": "Tavi sociālie tīkli",
+      "socialDesc": "Pieskarieties ➕, lai pievienotu tīklu. Turiet ikonu, lai to rediģētu vai dzēstu.",
+      "statusTitle": "Tavs statuss",
+      "statusDesc": "Publisks profils = redzams visiem · Privāts profils = tīkli slēpti · Inkognito = neredzams. Pieskarieties, lai mainītu."
+    },
+    "errorTitle": "Kļūda",
+    "shareLocationUpdateError": "Tavas pašreizējās atrašanās vietas kopīgošanu neizdevās atjaunināt",
+    "comingSoonTitle": "Drīzumā 🚀",
+    "comingSoonStats": "Statistika būs pieejama ļoti drīz! Tu varēsi redzēt, kas apmeklē tavu profilu un sociālos tīklus.",
+    "shareTitle": "Kopīgot",
+    "shareError": "Kopīgošana neizdevās.",
+    "boostClaimedToast": "Paātrinājums saņemts 🚀",
+    "superlikeClaimedToast": "Superlike saņemts ⭐️",
+    "claimRewardError": "Balvu neizdevās saņemt",
+    "statusVisible": "Tu esi redzamā režīmā. Visi var redzēt tavus sociālos tīklus. Tu pilnībā izmanto lietotni.",
+    "statusRestricted": "Tu esi ierobežoti redzamā režīmā. Neviens nevar redzēt tavus sociālos tīklus.",
+    "statusInvisible": "Tu esi neredzamā režīmā. No šī brīža tevi neviens neredzēs.",
+    "statusUpdateError": "Statusu neizdevās atjaunināt",
+    "unsupportedPlatform": "Neatbalstīta platforma",
+    "handleRequired": "Lūdzu, ievadiet identifikatoru",
+    "invalidInstagramHandle": "Nederīgs Instagram lietotājvārds. Piemērs: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Nederīgs TikTok lietotājvārds. Piemērs: https://www.tiktok.com/@username",
+    "addSocialError": "Sociālo tīklu neizdevās pievienot",
+    "invalidLinkTitle": "Nederīga saite",
+    "invalidInstagramHandleShort": "Nederīgs Instagram lietotājvārds",
+    "invalidTiktokHandleShort": "Nederīgs TikTok lietotājvārds",
+    "cannotOpenInstagramTitle": "Instagram neizdevās atvērt",
+    "cannotOpenTiktokTitle": "TikTok neizdevās atvērt",
+    "tryAgainLater": "Lūdzu, mēģiniet vēlāk vēlreiz.",
+    "editSocialError": "Sociālo tīklu neizdevās rediģēt",
+    "deleteSocialError": "Sociālo tīklu neizdevās dzēst",
+    "backLabel": "Atpakaļ",
+    "settingsLabel": "Iestatījumi",
+    "streakTitle": "Tava sērija 🔥",
+    "streakMessage": "Piesakies katru dienu, lai palielinātu savu sēriju. 7. dienā saņem superlike. 14. dienā saņem paātrinājumu — tava sērija tad sākas no jauna no 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Atklāj, kas ir tev tuvumā",
+        "desc": "Skaties reāllaikā dzīvīgas vietas apkārt sev un cilvēkus, kas tur ir — tieši tagad."
+      },
+      "checkin": {
+        "title": "Automātiska reģistrēšanās, dienā vai naktī",
+        "desc": "Tiklīdz ieej kādā vietā, tu automātiski parādies tur — un redzi, kas tur ir. Lietotne pārslēdzas starp Dienas režīmu (kafejnīcas, parki, sports…) un Nakts režīmu (bāri, restorāni, klubi…) atbilstoši tavam noskaņojumam."
+      },
+      "profile": {
+        "title": "Tavs profils, vietas, kas dzīvo",
+        "desc": "Pievieno savus sociālos tīklus, lai cilvēki tevi atrastu, skaties profilus apkārt sev. Katra vieta arī parāda 1 līdz 3 zvaigznes atkarībā no reālā apmeklējuma — jo dzīvīgāk, jo vairāk tā mirdz."
+      },
+      "referral": {
+        "title": "Draugs tevi uzaicināja?",
+        "desc": "Ievadi viņa ieteikuma kodu (nav obligāti) — tas viņam palīdz atbloķēt bezmaksas Premium mēnesi."
+      }
+    },
+    "referralPlaceholder": "Ieteikuma kods",
+    "next": "Tālāk",
+    "start": "Sākam 🚀",
+    "skip": "Izlaist"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Skaties, kas apskata tavu profilu",
+      "Redzamības paātrinājumi (1 bezmaksas pakete)",
+      "Superlikes (3/nedēļā bez maksas)",
+      "Neredzamais režīms",
+      "Meklēšanas rādiuss līdz 2 km",
+      "Papildu statistika",
+      "Uzlaboti paziņojumi"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kas tevi apmeklē?",
+        "desc": "Uzzini reāllaikā, kas apskata tavu profilu."
+      },
+      "boosts": {
+        "title": "Redzamības paātrinājumi",
+        "desc": "Uzlec saraksta augšgalā uz 30 min savā vietā."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Parādi īpašu interesi par kādu, ko pamani."
+      },
+      "invisible": {
+        "title": "Neredzamais režīms",
+        "desc": "Pazūdi no tuvumā esošo lietotāju saraksta, kad vien vēlies."
+      },
+      "radius": {
+        "title": "Paplašināts rādiuss",
+        "desc": "Izpēti līdz 2 km apkārt sev (500 m bezmaksas versijā)."
+      },
+      "stats": {
+        "title": "Papildu statistika",
+        "desc": "Seko skatījumiem un klikšķiem visos savos sociālajos tīklos."
+      }
+    },
+    "trialError": "Bezmaksas izmēģinājuma periodu neizdevās sākt.",
+    "errorTitle": "Kļūda",
+    "offersUnavailableTitle": "Piedāvājumi nav pieejami",
+    "offersUnavailableMessage": "Abonēšanas piedāvājumi vēl nav ielādēti. Mēģini vēlreiz pēc brīža.",
+    "purchaseError": "Pirkumu neizdevās pabeigt.",
+    "restoredTitle": "✅ Pirkumi atjaunoti",
+    "restoredMessage": "Tavs Premium abonements ir aktīvs.",
+    "noRestoreTitle": "Pirkums nav atrasts",
+    "noRestoreMessage": "Nevienu aktīvu abonementu neizdevās atjaunot.",
+    "restoreError": "Pirkumus neizdevās atjaunot.",
+    "closeLabel": "Aizvērt",
+    "title": "👑 Premium",
+    "subtitle": "Atbloķē visas funkcijas",
+    "debugBanner": "⚠️ Maksājumi atspējoti (atkļūdošanas režīms)",
+    "monthly": "Ikmēneša",
+    "perMonth": "/mēn",
+    "annual": "Ikgadēja",
+    "perYear": "/gads",
+    "mostChosen": "VISVAIRĀK IZVĒLĒTAIS",
+    "allIncluded": "VISS IEKĻAUTS",
+    "ctaSimulate": "Simulēt Premium abonementu",
+    "ctaTrial": "Sākt manu 7 dienu bezmaksas izmēģinājuma periodu",
+    "ctaLoading": "Ielādē piedāvājumus…",
+    "ctaSubscribe": "Abonēt",
+    "thenAnnual": "Tad {{price}}/gads · Atceļams jebkurā laikā",
+    "thenMonthly": "Tad {{price}}/mēn · Atceļams jebkurā laikā",
+    "restorePurchases": "Atjaunot manus pirkumus",
+    "legalText": "Abonements tiek automātiski atjaunots, ja vien tas netiek atcelts pirms pašreizējā perioda beigām. Pārvaldi savus abonementus App Store / Google Play iestatījumos. ",
+    "privacyPolicy": "Privātuma politika",
+    "terms": "Noteikumi"
+  },
+  "premiumWelcome": {
+    "header": "👑 Laipni lūdzam Premium",
+    "finalTitle": "Sākam!",
+    "finalDesc": "Izbaudi tūlīt visas savas jaunās Premium priekšrocības.",
+    "discover": "Atklāt",
+    "next": "Tālāk",
+    "skip": "Izlaist"
+  },
+  "referralScreen": {
+    "loadError": "Tavu ieteikuma informāciju neizdevās ielādēt.",
+    "errorTitle": "Kļūda",
+    "shareMessage": "Pievienojies man LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Uzaicini draugu uz LoocateMe",
+    "shareErrorTitle": "Kopīgot",
+    "shareError": "Kopīgošana neizdevās.",
+    "codeSavedTitle": "Ieteikums",
+    "codeSaved": "Ieteikuma kods saglabāts!",
+    "selfReferralError": "Tu nevari izmantot savu paša kodu.",
+    "alreadyReferredError": "Tu jau esi izmantojis ieteikuma kodu.",
+    "invalidCodeError": "Šis ieteikuma kods nav derīgs.",
+    "genericCodeError": "Šo kodu neizdevās apstiprināt.",
+    "title": "Ieteikums",
+    "infoText": "Uzaicini 5 draugus šomēnes (katram jāiziet ārā un jāveic 1. apstiprinātā reģistrēšanās) un saņem 1 bezmaksas Premium mēnesi 🎉",
+    "confirmCode": "Apstiprināt ieteikuma kodu „{{code}}”?",
+    "validate": "Apstiprināt",
+    "rewardActive": "💎 Tavs bezmaksas Premium mēnesis ir aktīvs",
+    "rewardActiveUntil": " līdz {{date}}",
+    "yourCode": "Tavs ieteikuma kods",
+    "shareButton": "📤 Kopīgot manu kodu",
+    "shareLabel": "Kopīgot manu kodu",
+    "progressLabel": "{{count}} / {{target}} ieteikumi šomēnes",
+    "invitedFriends": "Uzaicinātie draugi",
+    "noInvites": "Vēl neviens draugs nav uzaicināts.",
+    "defaultUser": "Lietotājs",
+    "statusValidated": "Apstiprināts",
+    "statusVoid": "Atcelts",
+    "statusPending": "Gaida"
+  },
+  "searchView": {
+    "closeLabel": "Aizvērt meklēšanu",
+    "title": "Meklēšana",
+    "placeholder": "Lietotājvārds, vieta...",
+    "clearLabel": "Notīrīt meklēšanu",
+    "filterUsers": "Lietotāji",
+    "filterLocations": "Vietas",
+    "searching": "Notiek meklēšana…",
+    "typeToSearch": "Ievadi vismaz 2 burtus, lai sāktu meklēšanu",
+    "noResults": "Šai meklēšanai nekas netika atrasts.",
+    "checkFilters": "Pārbaudi filtrus vai izmēģini citu atslēgvārdu.",
+    "resultsCount_one": "{{count}} rezultāts",
+    "resultsCount_other": "{{count}} rezultāti",
+    "noLongerHere": "Vairs nav šeit"
+  },
+  "settingsScreen": {
+    "title": "Iestatījumi",
+    "tabProfile": "Profils",
+    "tabSettings": "Iestatījumi",
+    "sectionIdentity": "IDENTITĀTE",
+    "firstName": "Vārds",
+    "lastName": "Uzvārds",
+    "customNameLabel": "Pielāgots vārds",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ABONEMENTS",
+    "premiumMonthly": "· Ikmēneša",
+    "premiumAnnual": "· Ikgadējs",
+    "statusLoading": "Statusa ielāde…",
+    "grantedOutsideStore": "Piešķirts ārpus App Store/Play Store abonementa (bezmaksas izmēģinājums vai īpašs piedāvājums)",
+    "renewsOn": "Atjaunosies {{date}}",
+    "expiresOn": "Beidzas {{date}}",
+    "opening": "Atveras…",
+    "manageSubscription": "Pārvaldīt manu abonementu",
+    "goPremium": "👑 Kļūt par Premium",
+    "manageSubError": "Neizdevās atvērt abonementa pārvaldību.",
+    "sectionGeneral": "VISPĀRĪGI",
+    "displayMode": "Attēlošanas režīms",
+    "fullNameMode": "Vārds Uzvārds",
+    "classicMode": "Klasisks",
+    "customMode": "Pielāgots",
+    "sectionReferral": "IETEIKUMS",
+    "alreadyReferred": "Jūs jau esat ieteikts.",
+    "referralHint": "Draugs dalījās ar jums ar kodu? Ievadiet to šeit.",
+    "referralPlaceholder": "Ieteikuma kods",
+    "validate": "Apstiprināt",
+    "sectionNotifications": "PAZIŅOJUMI",
+    "notifKinds": {
+      "superlike": "Saņemtie superlikes",
+      "superlikeAccepted": "Pieņemtie superlikes",
+      "eventBoost": "Pasākumu paātrinājumi",
+      "streakExpiring": "Sērijas atgādinājumi",
+      "profileView": "Profila skatījumi",
+      "socialClick": "Jūsu sociālo tīklu skatījumi",
+      "inactiveProfileViews": "Skatījumi, saņemti prombūtnes laikā",
+      "referralValidated": "Ieteikums apstiprināts",
+      "referralRewardGranted": "Ieteikuma balva",
+      "nightModeActivated": "Nakts režīma aktivizēšana",
+      "atRiskReactivation": "Reaktivizācijas atgādinājumi",
+      "weeklyDigest": "Iknedēļas kopsavilkums"
+    },
+    "notifCategories": {
+      "social": "Sociālā aktivitāte",
+      "rewards": "Sērijas un balvas",
+      "system": "Sistēma un kopsavilkumi"
+    },
+    "sectionPrivacy": "PRIVĀTUMS UN GDPR",
+    "privacyPolicyLink": "Privātuma politika",
+    "consent": "Piekrišana",
+    "analyticsLabel": "Analītika",
+    "dataSaleTitle": "Datu pārdošana (CCPA)",
+    "dataSaleDesc": "Mēs nepārdodam un nedalāmies ar jūsu personas datiem ar trešajām pusēm reklāmas nolūkos.",
+    "invisibleModeTitle": "Neredzamais režīms",
+    "invisibleModeDesc": "Jūs būsiet neredzams citiem lietotājiem vietās, taču nevarēsiet skatīt karti vai vietu sarakstu, kamēr šis režīms ir aktīvs.",
+    "shareLocationTitle": "Kopīgot manu pašreizējo atrašanās vietu",
+    "shareLocationDesc": "Papildus jūsu pilsētai parāda citiem lietotājiem precīzu vietu, kur jūs pašlaik atrodaties. Pēc noklusējuma izslēgts, lai aizsargātu jūsu privātumu un izvairītos no vajāšanas riska.",
+    "policyLoadError": "Privātuma politiku neizdevās ielādēt.",
+    "savePrivacyPrefsError": "Jūsu privātuma preferences neizdevās saglabāt",
+    "shareLocationUpdateError": "Jūsu pašreizējās atrašanās vietas kopīgošanu neizdevās atjaunināt",
+    "invisibleModeUpdateError": "Neredzamo režīmu neizdevās atjaunināt",
+    "notifPrefUpdateError": "Šo paziņojumu preferenci neizdevās atjaunināt",
+    "consentSavedTitle": "Izdevās",
+    "consentSaved": "Piekrišana saglabāta.",
+    "consentRevoked": "Piekrišana atsaukta.",
+    "consentSaveError": "Jūsu piekrišanu neizdevās saglabāt",
+    "revokeConsentTitle": "Piekrišanas atsaukšana",
+    "revokeConsentMessage": "Piekrišanas atsaukšana novedīs pie jūsu konta un visu jūsu datu neatgriezeniskas dzēšanas. Vai vēlaties turpināt?",
+    "cancel": "Atcelt",
+    "continueLabel": "Turpināt",
+    "currentPasswordRequired": "Lūdzu, ievadiet savu pašreizējo paroli.",
+    "passwordTooShort": "Jaunajai parolei jāsatur vismaz 6 rakstzīmes.",
+    "passwordConfirmMismatch": "Apstiprinājums nesakrīt ar jauno paroli.",
+    "passwordChangedTitle": "Parole mainīta",
+    "passwordChangedMessage": "Jūsu parole ir atjaunināta.",
+    "currentPasswordInvalid": "Nederīga pašreizējā parole vai servera kļūda.",
+    "invalidEmail": "Lūdzu, ievadiet derīgu e-pasta adresi.",
+    "passwordRequiredConfirm": "Lūdzu, ievadiet savu paroli, lai apstiprinātu.",
+    "checkInboxTitle": "Pārbaudiet savu e-pastu",
+    "checkInboxMessage": "Apstiprinājuma e-pasts ir nosūtīts uz {{email}}. Noklikšķiniet uz saites, lai apstiprinātu izmaiņas.",
+    "emailChangeError": "Izmaiņas neizdevās sākt. Nederīga parole vai servera kļūda.",
+    "exportReadyTitle": "Eksports gatavs",
+    "exportReadyMessage": "Jūsu dati ir eksportēti ({{size}} rakstzīmes).",
+    "exportError": "Jūsu datus neizdevās eksportēt",
+    "deleteAccountConfirmTitle": "Dzēst kontu",
+    "deleteAccountConfirmMessage": "Dzēšana ir galīga. Vai apstiprināt sava konta dzēšanu?",
+    "profileUpdatedTitle": "Profils",
+    "profileUpdatedMessage": "Jūsu profils ir atjaunināts.",
+    "loadBlockedError": "Bloķētos kontus neizdevās ielādēt",
+    "unblockError": "Šo lietotāju neizdevās atbloķēt",
+    "sectionAccount": "KONTS",
+    "emailLabel": "E-pasts",
+    "notProvided": "Nav norādīts",
+    "change": "Mainīt",
+    "passwordLabel": "Parole",
+    "blockedAccounts": "Bloķētie konti",
+    "helpAndPrivacy": "Palīdzība un privātums",
+    "terms": "Lietošanas noteikumi",
+    "sectionModeration": "MODERĒŠANA",
+    "moderatorSpace": "Moderatora zona",
+    "debugConsole": "Atkļūdošanas konsole",
+    "exportData": "Eksportēt manus datus",
+    "deleteAccount": "Dzēst manu kontu",
+    "logout": "Izrakstīties",
+    "save": "Saglabāt",
+    "close": "Aizvērt",
+    "privacyModalTitle": "Privātums",
+    "deleteAccountTitle": "Konta dzēšana",
+    "deleteAccountDesc": "Lai apstiprinātu, ievadiet savu paroli. Šī darbība ir neatgriezeniska.",
+    "deleting": "Dzēšana...",
+    "changePasswordTitle": "Mainīt paroli",
+    "currentPasswordPlaceholder": "Pašreizējā parole",
+    "newPasswordPlaceholder": "Jauna parole (min. 6 rakstzīmes)",
+    "confirmPasswordPlaceholder": "Apstiprināt jauno paroli",
+    "changeEmailTitle": "Mainīt e-pastu",
+    "currentEmailLabel": "Pašreizējais e-pasts: {{email}}",
+    "newEmailPlaceholder": "Jauns e-pasts",
+    "noBlockedAccounts": "Nav bloķētu kontu.",
+    "unblock": "Atbloķēt"
+  },
+  "statisticsScreen": {
+    "loadError": "Statistiku neizdevās iegūt",
+    "loadVisitorsError": "Apmeklētāju sarakstu neizdevās iegūt",
+    "justNow": "Tikko",
+    "minutesAgo": "pirms {{count}} min",
+    "hoursAgo": "pirms {{count}}h",
+    "yesterday": "Vakar",
+    "daysAgo": "pirms {{count}} d",
+    "title": "Statistika",
+    "comingSoonTitle": "Drīzumā 🚀",
+    "comingSoonDesc": "Statistika būs pieejama ļoti drīz! Tu varēsi redzēt, kas apmeklē tavu profilu un sociālos tīklus.",
+    "whoStalksTitle": "Kas tevi vajā? 👀",
+    "whoStalksDesc": "Kļūsti par Premium, lai atklātu, kas apmeklē tavu profilu un sociālos tīklus!",
+    "discoverVisitors": "Atklāt manus apmeklētājus",
+    "later": "Vēlāk",
+    "profileViews": "Profila skatījumi",
+    "views": "skatījumi",
+    "last30Days": "pēdējo 30 dienu laikā",
+    "clicksByNetwork": "Klikšķi pēc tīkla",
+    "lastVisits": "Nesenie apmeklējumi",
+    "noVisitorsTitle": "Neviens vēl nav apmeklējis tavu profilu",
+    "noVisitorsDesc": "Turpini pētīt vietas, lai tevi atklātu!",
+    "defaultUser": "Lietotājs",
+    "hiddenVisits_one": "{{count}} slēpts apmeklējums",
+    "hiddenVisits_other": "{{count}} slēpti apmeklējumi",
+    "goPremiumToSeeAll": "Kļūsti par Premium, lai redzētu visu",
+    "showMore": "Rādīt vairāk"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Aizskaršana",
+      "spam": "Surogātpasts",
+      "inappropriate": "Nepiemērots saturs",
+      "impersonation": "Identitātes zādzība",
+      "scam": "Krāpšana",
+      "other": "Cits"
+    },
+    "statusAvailable": "Pieejams/a",
+    "statusRestricted": "Ierobežota redzamība",
+    "statusInvisible": "Neredzams/a",
+    "noUserSelected": "Nav izvēlēts neviens lietotājs.",
+    "backToList": "Atpakaļ uz sarakstu",
+    "superlikeLockedTitle": "Drīzumā",
+    "superlikeLockedMessage": "Superlike atbloķējas pēc tavas pirmās reģistrēšanās.",
+    "superlikeSentTitle": "⭐ Superlike nosūtīts!",
+    "superlikeSentMessage": "{{name}} tika informēts/a, ka tu viņu/-u pamanīji.",
+    "errorTitle": "Kļūda",
+    "superlikeSendError": "Superlike neizdevās nosūtīt.",
+    "blockConfirmTitle": "Bloķēt šo lietotāju?",
+    "blockConfirmMessage": "Tu vairs neredzēsi šo lietotāju, un viņš vairs nevarēs ar tevi sazināties.",
+    "cancel": "Atcelt",
+    "block": "Bloķēt",
+    "userBlockedTitle": "Lietotājs bloķēts",
+    "userBlockedMessage": "Šis lietotājs ir bloķēts.",
+    "blockError": "Šo lietotāju neizdevās bloķēt.",
+    "reasonRequiredTitle": "Nepieciešams iemesls",
+    "reasonRequiredMessage": "Lūdzu, norādi iemeslu.",
+    "reportSentTitle": "Ziņojums nosūtīts",
+    "reportSentMessage": "Paldies par tavu ziņojumu.",
+    "reportSendError": "Ziņojumu neizdevās nosūtīt.",
+    "backA11y": "Atpakaļ",
+    "moreOptionsA11y": "Vairāk opciju",
+    "sendSuperlikeA11y": "Nosūtīt superlike",
+    "superlikeLockedA11y": "Superlike bloķēts, atbloķējas pēc tavas pirmās reģistrēšanās",
+    "currentlyAt": "Pašlaik {{place}}",
+    "mutualConnectionBanner": "Šī persona vēlas sazināties",
+    "socialsHidden": "Šis lietotājs nedalās ar savām sociālajām saitēm",
+    "noBio": "Bio vēl nav pievienota.",
+    "noSocials": "Nav sociālo tīklu",
+    "actionsTitle": "Darbības",
+    "report": "Ziņot",
+    "reportUserTitle": "Ziņot par lietotāju",
+    "reportWarning": "Ziņojumu ļaunprātīga izmantošana var izraisīt sankcijas. Lūdzu, esi godīgs/a.",
+    "categoryLabel": "Kategorija",
+    "reasonLabel": "Iemesls",
+    "reasonPlaceholder": "Īsi paskaidro iemeslu",
+    "descriptionLabel": "Apraksts (neobligāts)",
+    "descriptionPlaceholder": "Papildu informācija",
+    "sending": "Sūta...",
+    "sendReport": "Nosūtīt ziņojumu",
+    "justNow": "Tikko",
+    "minutesAgo_one": "Pirms {{count}} min",
+    "minutesAgo_other": "Pirms {{count}} min",
+    "hoursAgo_one": "Pirms {{count}} h",
+    "hoursAgo_other": "Pirms {{count}} h",
+    "yesterday": "Vakar",
+    "daysAgo_one": "Pirms {{count}} dienas",
+    "daysAgo_other": "Pirms {{count}} dienām"
+  },
+  "warningsScreen": {
+    "title": "Brīdinājumi",
+    "banAlert": "Šāda uzvedība var izraisīt pagaidu vai pastāvīgu aizliegumu lietotnē.",
+    "empty": "Nav brīdinājumu.",
+    "typeLabel": "Brīdinājuma veids",
+    "notSpecified": "Nav norādīts",
+    "notSpecifiedFem": "Nav norādīts",
+    "reasonLabel": "Iemesls"
+  },
+  "common": {
+    "close": "Aizvērt",
+    "errorTitle": "Kļūda"
+  },
+  "streakCard": {
+    "hintReady": "Tava balva ir gatava!",
+    "hintGrow": "Piesakies katru dienu, lai to palielinātu.",
+    "claimBoost": "Saņem savu boost",
+    "claimSuperlike": "Saņem savu superlike"
+  },
+  "coteCard": {
+    "messageTop": "Pašā virsotnē! Piesakies rīt, lai to saglabātu.",
+    "messageZero": "Piesakies šodien, lai to atsāktu."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Esi augšgalā 30 min",
+    "boostPack5Desc": "Labākā cenas un kvalitātes attiecība",
+    "superlikePack3Desc": "Parādi savu interesi unikālā veidā",
+    "superlikePack10Desc": "Īstiem savienotājiem",
+    "badgePopular": "Populārs",
+    "badgeBestOffer": "Labākais piedāvājums",
+    "notAvailableTitle": "Nav pieejams",
+    "notAvailableMessage": "Šī pakete veikalā vēl nav pieejama.",
+    "purchaseErrorMessage": "Pirkumu neizdevās pabeigt.",
+    "simulate": "Simulēt"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Meklē šajās vietās",
+    "categoryBars": "Bāri",
+    "categoryClubs": "Klubi",
+    "categoryRestos": "Restorāni",
+    "categoryPubs": "Pubi",
+    "categoryGyms": "Sporta zāles",
+    "categoryCafes": "Kafejnīcas",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Bibliotēkas"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonīms"
+  },
+  "locationMapView": {
+    "loadError": "Karti neizdevās ielādēt",
+    "renderError": "Kļūda kartes ielādē"
+  },
+  "churnSurveyModal": {
+    "title": "Vienu minūti, pirms aizej?",
+    "subtitle": "Palīdzi mums saprast, kāpēc.",
+    "reasonTooManyNotifications": "Pārāk daudz paziņojumu",
+    "reasonPrivacyConcern": "Man nav ērti ar koplietošanu",
+    "reasonNotUseful": "Man tas vairs nav noderīgs",
+    "reasonOther": "Cits iemesls",
+    "dismiss": "Izlaist",
+    "thanks": "Paldies par atsauksmi 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Meklēt",
+    "tabNearby": "Vietas tuvumā",
+    "tabAccount": "Konts"
+  },
+  "documentViewer": {
+    "openError": "Šo dokumentu neizdevās atvērt.",
+    "defaultLabel": "Skatīt dokumentu"
+  },
+  "vibeFab": {
+    "toDay": "Pārslēgties uz dienas režīmu",
+    "toNight": "Pārslēgties uz nakts režīmu"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Atrašanās vietas kopīgošana aktīva"
+  }
+}

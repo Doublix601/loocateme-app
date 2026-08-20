@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
@@ -12,6 +13,7 @@ import { navigateAfterAuth } from '../utils/onboarding';
 // avant l'accès à l'application (loi "majorité numérique" — le simple
 // déclaratif de date de naissance saisi à l'inscription ne suffit pas).
 export default function AgeVerificationScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { user, updateUser } = useContext(UserContext);
   const { colors } = useTheme();
@@ -35,11 +37,11 @@ export default function AgeVerificationScreen() {
       if (res?.status === 'approved') {
         return onApproved();
       }
-      if (!res?.verificationUrl) throw new Error('URL de vérification manquante');
+      if (!res?.verificationUrl) throw new Error(t('ageVerification.urlMissing'));
       setVerificationUrl(res.verificationUrl);
       startPolling();
     } catch (e) {
-      setError("Impossible de démarrer la vérification d'âge. Réessayez.");
+      setError(t('ageVerification.startError'));
     } finally {
       setLoading(false);
     }
@@ -75,16 +77,16 @@ export default function AgeVerificationScreen() {
 
   const onDeclined = () => {
     Alert.alert(
-      'Vérification refusée',
-      "Nous n'avons pas pu confirmer que vous avez plus de 18 ans. Vous pouvez réessayer.",
-      [{ text: 'Réessayer', onPress: startSession }],
+      t('ageVerification.declinedTitle'),
+      t('ageVerification.declinedMessage'),
+      [{ text: t('ageVerification.retry'), onPress: startSession }],
     );
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.surface }]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Vérification d'âge</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{t('ageVerification.title')}</Text>
       </View>
 
       {loading && (
@@ -97,7 +99,7 @@ export default function AgeVerificationScreen() {
         <View style={styles.center}>
           <Text style={[styles.errorText, { color: colors.textPrimary }]}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={startSession}>
-            <Text style={styles.retryButtonText}>Réessayer</Text>
+            <Text style={styles.retryButtonText}>{t('ageVerification.retry')}</Text>
           </TouchableOpacity>
         </View>
       )}

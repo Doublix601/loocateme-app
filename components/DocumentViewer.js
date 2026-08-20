@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, Linking, Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BASE_URL, getAccessToken } from './ApiRequest';
 
 // Ouvre un document protégé (KBIS, pièce d'identité...) dans le navigateur/
@@ -8,6 +9,7 @@ import { BASE_URL, getAccessToken } from './ApiRequest';
 // backend accepte explicitement ce mode pour cette preview (cf.
 // requireAuthFromHeaderOrQuery dans businessClaim.routes.js).
 const DocumentViewer = ({ path, label }) => {
+  const { t } = useTranslation();
   const handleOpen = async () => {
     const token = getAccessToken();
     if (!token || !path) return;
@@ -15,13 +17,13 @@ const DocumentViewer = ({ path, label }) => {
     try {
       await Linking.openURL(url);
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir ce document.");
+      Alert.alert(t('common.errorTitle'), t('documentViewer.openError'));
     }
   };
 
   return (
     <TouchableOpacity style={styles.button} onPress={handleOpen}>
-      <Text style={styles.buttonText}>📄 {label || 'Voir le document'}</Text>
+      <Text style={styles.buttonText}>📄 {label || t('documentViewer.defaultLabel')}</Text>
     </TouchableOpacity>
   );
 };

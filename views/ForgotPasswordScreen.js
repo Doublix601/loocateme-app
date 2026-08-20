@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   TextInput,
   TouchableOpacity,
@@ -20,6 +21,7 @@ import AppLogo from '../components/AppLogo';
 import { forgotPassword } from '../components/ApiRequest';
 
 const ForgotPasswordScreen = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
@@ -32,7 +34,7 @@ const ForgotPasswordScreen = () => {
     try {
       setLoading(true);
       await forgotPassword(email);
-      Alert.alert('Email envoyé', 'Si un compte existe, un email a été envoyé.');
+      Alert.alert(t('forgotPassword.successTitle'), t('forgotPassword.successMessage'));
       navigation.navigate('Login');
     } catch (e) {
       console.error('[ForgotPasswordScreen] Forgot password error', {
@@ -42,7 +44,7 @@ const ForgotPasswordScreen = () => {
         details: e?.details,
         response: e?.response,
       });
-      Alert.alert('Erreur', e?.message || 'Veuillez réessayer');
+      Alert.alert(t('forgotPassword.errorTitle'), e?.message || t('forgotPassword.errorFallback'));
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ const ForgotPasswordScreen = () => {
           <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backIcon} />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle} type={isDark ? 'primary' : 'accent'}>
-          Mot de passe oublié
+          {t('forgotPassword.title')}
         </ThemedText>
       </View>
 
@@ -82,14 +84,14 @@ const ForgotPasswordScreen = () => {
           <AppLogo width={width * 0.35} height={width * 0.35} style={styles.logo} />
 
           <View style={styles.card}>
-            <ThemedText style={styles.cardTitle}>Réinitialisation</ThemedText>
+            <ThemedText style={styles.cardTitle}>{t('forgotPassword.resetTitle')}</ThemedText>
             <ThemedText style={styles.instructionText} type="secondary">
-              Saisissez votre adresse email pour recevoir un lien de réinitialisation.
+              {t('forgotPassword.instructions')}
             </ThemedText>
 
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={t('forgotPassword.emailPlaceholder')}
               placeholderTextColor={colors.placeholder}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -103,7 +105,7 @@ const ForgotPasswordScreen = () => {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <ThemedText style={styles.buttonText} type="white">
-                  Envoyer le lien
+                  {t('forgotPassword.submit')}
                 </ThemedText>
               )}
             </TouchableOpacity>

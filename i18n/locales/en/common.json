@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Log in",
+      "welcomeBack": "Welcome back!",
+      "subtitle": "Log in to continue",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "submit": "Log in",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create an account",
+      "emailNotVerifiedTitle": "Email not verified",
+      "emailNotVerifiedMessage": "Your email address hasn't been verified yet. We've just sent you a new confirmation email. Please click the link to activate your account, then try again.",
+      "authFailedTitle": "Authentication failed",
+      "authFailedMessage": "We couldn't log you in. Please check your credentials and try again."
+    },
+    "signup": {
+      "passwordMismatch": "Passwords do not match.",
+      "requiredFields": "All fields must be filled in.",
+      "birthdateRequired": "Date of birth is required.",
+      "under18": "You must be at least 18 years old to sign up.",
+      "policyLoadError": "We couldn't load the privacy policy. You can try again."
+    }
+  },
+  "consent": {
+    "title": "Privacy",
+    "changelogTitle": "What's changed",
+    "decline": "Decline",
+    "accept": "Accept",
+    "accepting": "Saving...",
+    "declineInfoTitle": "Information",
+    "declineInfoMessage": "You must accept the privacy policy to use the app.",
+    "acceptErrorTitle": "Error",
+    "acceptErrorMessage": "We couldn't save your consent. Please try again."
+  },
+  "ageVerification": {
+    "title": "Age verification",
+    "urlMissing": "Verification URL missing",
+    "startError": "We couldn't start age verification. Please try again.",
+    "retry": "Retry",
+    "declinedTitle": "Verification declined",
+    "declinedMessage": "We couldn't confirm that you are over 18. You can try again."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Language",
+      "systemDefault": "Phone language"
+    }
+  },
+  "forgotPassword": {
+    "title": "Forgot password",
+    "resetTitle": "Reset password",
+    "instructions": "Enter your email address to receive a reset link.",
+    "emailPlaceholder": "Email",
+    "submit": "Send link",
+    "successTitle": "Email sent",
+    "successMessage": "If an account exists, an email has been sent.",
+    "errorTitle": "Error",
+    "errorFallback": "Please try again"
+  },
+  "dataManagement": {
+    "title": "Privacy",
+    "export": {
+      "title": "Export my data",
+      "desc": "Download a copy of your information (profile, social networks, settings).",
+      "button": "Export",
+      "buttonWorking": "Please wait...",
+      "successTitle": "Data export",
+      "successMessage": "Your export has been generated. It has been logged to the console.",
+      "errorTitle": "Error",
+      "errorMessage": "We couldn't export your data right now. Please try again."
+    },
+    "delete": {
+      "title": "Delete my account",
+      "desc": "Permanently deletes your account and all associated data.",
+      "passwordPlaceholder": "Confirm with your password",
+      "button": "Delete permanently",
+      "passwordRequiredTitle": "Password required",
+      "passwordRequiredMessage": "Please enter your password.",
+      "confirmTitle": "Confirmation",
+      "confirmMessage": "This action is irreversible. Do you really want to delete your account?",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "successTitle": "Account deleted",
+      "successMessage": "Your account and data have been deleted.",
+      "errorTitle": "Error",
+      "errorMessage": "Deletion failed. Invalid password or server issue."
+    }
+  },
+  "editProfile": {
+    "title": "Edit my profile",
+    "subtitle": "Tap a field to edit it",
+    "notSet": "Not set",
+    "backLabel": "Back",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "customName": "Custom name",
+      "bio": "Bio",
+      "birthdate": "Date of birth",
+      "gender": "Gender"
+    },
+    "gender": {
+      "male": "Boy",
+      "female": "Girl",
+      "preferNotToSay": "Prefer not to say"
+    },
+    "photo": {
+      "notSupportedTitle": "Not supported",
+      "notSupportedMessage": "The camera isn't available on the web.",
+      "cameraPermissionTitle": "Permission required",
+      "cameraPermissionMessage": "The app needs camera access to take a photo.",
+      "galleryPermissionMessage": "The app needs access to your photos to select an image.",
+      "errorTitle": "Error",
+      "uploadErrorMessage": "We couldn't upload the image",
+      "cameraOpenError": "We couldn't open the camera.",
+      "galleryOpenError": "We couldn't open the gallery.",
+      "deleteErrorMessage": "We couldn't delete the profile photo",
+      "deleteConfirmTitle": "Delete profile photo?",
+      "deleteConfirmMessage": "This action is permanent.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "modalTitle": "Profile photo",
+      "takePhoto": "📸 Take a photo",
+      "sending": "Uploading...",
+      "chooseGallery": "🖼️ Choose from gallery",
+      "deletePhoto": "🗑️ Delete photo",
+      "deleting": "Deleting..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Invalid first name",
+      "firstNameInvalidMessage": "The first name must start with a capital letter and may contain letters (accents allowed), spaces, apostrophes or hyphens.",
+      "lastNameInvalidTitle": "Invalid last name",
+      "lastNameInvalidMessage": "The last name must start with a capital letter and may contain letters (accents allowed), spaces, apostrophes or hyphens.",
+      "incompleteIdentityTitle": "Incomplete identity",
+      "incompleteIdentityMessage": "Enter a Custom name OR a First name AND a Last name.",
+      "customNameRequiredTitle": "Custom name required",
+      "customNameRequiredMessage": "You can't remove the custom name while first or last name is empty.",
+      "invalidDateTitle": "Invalid date",
+      "invalidDateMessage": "Please select a valid date of birth.",
+      "minAgeTitle": "Minimum age required",
+      "minAgeMessage": "You must be at least 18 years old.",
+      "updateErrorMessage": "We couldn't update your profile"
+    },
+    "modal": {
+      "editPrefix": "Edit",
+      "editGeneric": "Edit",
+      "selectDate": "Select a date",
+      "cancel": "Cancel",
+      "save": "Save",
+      "placeholders": {
+        "firstName": "Your first name",
+        "lastName": "Your last name",
+        "customName": "Your custom name",
+        "bio": "Tell us a bit about yourself...",
+        "default": "Your text"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Invisible mode active",
+      "subtitle": "You can't see places around you while invisible mode is on. Turn it off to browse places.",
+      "disableButton": "Turn off invisible mode"
+    },
+    "error": {
+      "title": "Location unavailable",
+      "subtitle": "Enable location services in your device settings to see places around you.",
+      "retry": "Retry"
+    },
+    "empty": {
+      "title": "Quiet zone for now",
+      "subtitle": "No active place was found around you. Expand the radius or suggest a new place.",
+      "expandRadius": "Expand radius",
+      "suggestLocation": "Suggest this place"
+    },
+    "footer": {
+      "loadingMore": "Loading more places…",
+      "loadMoreError": "Couldn't load more places. Check your connection.",
+      "retry": "Retry",
+      "reachedEnd": "You've explored all the active places nearby. Move around or search to see more."
+    },
+    "leaveModal": {
+      "defaultName": "This place",
+      "subtitle": "You're currently checked in here. Do you want to leave this place?",
+      "confirm": "I'm no longer here",
+      "cancel": "Cancel"
+    },
+    "sections": {
+      "moreLocations": "More places for you",
+      "sponsored": "Featured",
+      "trending": "Happening now"
+    },
+    "filters": {
+      "all": "All"
+    },
+    "card": {
+      "visitors_one": "{{count}} visitor",
+      "visitors_other": "{{count}} visitors",
+      "sponsored": "SPONSORED",
+      "imHere": "I'm here",
+      "editLocation": "Edit my location"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Manual check-in enabled",
+    "checkinModeAutoOn": "Automatic check-in enabled",
+    "checkinModeErrorTitle": "Error",
+    "checkinModeErrorMessage": "We couldn't change the check-in mode right now.",
+    "checkedInToast": "You're now at {{name}}!",
+    "checkinErrorMessage": "We couldn't confirm your check-in right now.",
+    "leftLocationToast": "You've left this place.",
+    "boostActiveTitle": "Boost active",
+    "boostActiveLeaveMessage": "You can't leave this place while your boost is running.",
+    "leaveErrorMessage": "We couldn't check you out of this place right now.",
+    "boostInProgressTitle": "Boost in progress",
+    "boostInProgressMessage": "Your boost is active: wait for it to end before changing places.",
+    "refreshErrorToast": "Couldn't refresh right now.",
+    "disableInvisibleErrorMessage": "We couldn't disable invisible mode right now.",
+    "switchToManualLabel": "Switch to manual check-in",
+    "switchToAutoLabel": "Switch to automatic check-in",
+    "entryAuto": "Auto entry",
+    "entryManual": "Manual entry",
+    "showMapLabel": "Show map",
+    "showListLabel": "Show list",
+    "mapButton": "Map",
+    "listButton": "List"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Error",
+    "checkinErrorMessage": "We couldn't confirm your check-in right now.",
+    "boostActiveHereTitle": "Boost in progress",
+    "boostActiveHereMessage": "Your boost is active here: wait for it to end before leaving this place.",
+    "boostActiveMessage": "Your boost is active: wait for it to end.",
+    "notFound": "Place not found",
+    "back": "Back",
+    "popularityVeryPopular": "Very popular",
+    "popularityPopular": "Popular",
+    "popularityActive": "Active",
+    "popularityCalm": "Calm",
+    "checkinConfirmed": "Confirmed!",
+    "imHere": "I'm here",
+    "viewPdf": "View PDF",
+    "pdfLoadError": "This PDF can't be displayed.",
+    "openInBrowser": "Open in browser",
+    "profilesHere": "Profiles here",
+    "recentlyCrossed": "Recently crossed paths",
+    "seeMore": "See more",
+    "boosted": "Boosted",
+    "boostProfileHere": "Boost my profile here",
+    "boostLockedAfterCheckins": "Boost 🔓 after 2 check-ins"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Share",
+      "shareLabel": "Share my profile",
+      "qrCode": "QR code",
+      "qrLabel": "Show my QR code",
+      "stats": "Stats",
+      "statsLabel": "View my stats"
+    },
+    "qr": {
+      "title": "Scan to see my profile",
+      "hint": "If the app isn't installed, you'll be redirected to the store ({{store}})."
+    },
+    "status": {
+      "title": "Your status",
+      "close": "Close",
+      "public": "Public profile",
+      "private": "Private profile",
+      "incognito": "Incognito",
+      "pickLabel": "Choose my status"
+    },
+    "warnings": {
+      "title": "Warnings",
+      "message_one": "You have {{count}} warning.",
+      "message_other": "You have {{count}} warnings.",
+      "tapForDetails": "Tap to see details"
+    },
+    "referral": {
+      "invite": "Invite your friends",
+      "label": "Referral: invite your friends"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Share your location",
+      "message": "Enable sharing of your current place to be more easily spotted by other nearby users.",
+      "activate": "Activate",
+      "noThanks": "No thanks"
+    },
+    "social": {
+      "addTitle": "Add a network",
+      "usernamePlaceholder": "@username or {{platform}} ID",
+      "selectPlaceholder": "Select a network",
+      "snapchatHint": "Note: Snapchat doesn't allow direct links, just enter your username.",
+      "save": "Save",
+      "saveLabel": "Save",
+      "editTitle": "Edit {{platform}}",
+      "usernamePlaceholderSimple": "Username",
+      "delete": "Delete",
+      "heading": "Social networks",
+      "addLabel": "Add a social network"
+    },
+    "rewards": {
+      "heading": "Rewards",
+      "superlikes": "Superlikes",
+      "boosts": "Boosts",
+      "buy": "Buy",
+      "buyLabel": "Buy superlikes or boosts",
+      "premiumCta": "👑 Go Premium",
+      "premiumLabel": "Go Premium",
+      "superlikeHistoryLabel_one": "View superlike history, {{count}} left",
+      "superlikeHistoryLabel_other": "View superlike history, {{count}} left"
+    },
+    "currentlyAt": "Currently at {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Add a sentence to introduce yourself."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Your profile photo",
+      "photoDesc": "Change your profile photo from Settings (icon top right).",
+      "bioTitle": "Your bio",
+      "bioDesc": "Your bio is edited from Settings. It's the first thing others see.",
+      "socialTitle": "Your social networks",
+      "socialDesc": "Tap ➕ to add a network. Press and hold an icon to edit or delete it.",
+      "statusTitle": "Your status",
+      "statusDesc": "Public profile = visible to everyone · Private profile = social networks hidden · Incognito = invisible. Tap to change."
+    },
+    "errorTitle": "Error",
+    "shareLocationUpdateError": "We couldn't update your current location sharing",
+    "comingSoonTitle": "Coming soon 🚀",
+    "comingSoonStats": "Stats are coming very soon! You'll be able to see who visits your profile and social networks.",
+    "shareTitle": "Share",
+    "shareError": "We couldn't share.",
+    "boostClaimedToast": "Boost claimed 🚀",
+    "superlikeClaimedToast": "Superlike claimed ⭐️",
+    "claimRewardError": "We couldn't claim the reward",
+    "statusVisible": "You're in visible mode. Everyone can see your social networks. You're getting the full app experience.",
+    "statusRestricted": "You're in restricted visible mode. No one can see your social networks.",
+    "statusInvisible": "You're in invisible mode. No one will see you from now on.",
+    "statusUpdateError": "We couldn't update your status",
+    "unsupportedPlatform": "Unsupported platform",
+    "handleRequired": "Please enter a handle",
+    "invalidInstagramHandle": "Invalid Instagram username. Example: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Invalid TikTok username. Example: https://www.tiktok.com/@username",
+    "addSocialError": "We couldn't add the social network",
+    "invalidLinkTitle": "Invalid link",
+    "invalidInstagramHandleShort": "Invalid Instagram username",
+    "invalidTiktokHandleShort": "Invalid TikTok username",
+    "cannotOpenInstagramTitle": "Couldn't open Instagram",
+    "cannotOpenTiktokTitle": "Couldn't open TikTok",
+    "tryAgainLater": "Please try again later.",
+    "editSocialError": "We couldn't edit the social network",
+    "deleteSocialError": "We couldn't delete the social network",
+    "backLabel": "Back",
+    "settingsLabel": "Settings",
+    "streakTitle": "Your streak 🔥",
+    "streakMessage": "Log in every day to grow your streak. At day 7, claim a superlike. At day 14, claim a boost — your streak then resets to 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Discover who's out near you",
+        "desc": "See lively places around you in real time and the people there — right now."
+      },
+      "checkin": {
+        "title": "Automatic check-in, day or night",
+        "desc": "As soon as you enter a place, you show up there automatically — and you see who's there. The app switches between Day mode (cafés, parks, sports…) and Night mode (bars, restaurants, clubs…) as you like."
+      },
+      "profile": {
+        "title": "Your profile, the places that move",
+        "desc": "Add your social networks so people can find you, check out profiles around you. Each place also shows 1 to 3 stars based on real attendance — the busier it is, the brighter it shines."
+      },
+      "referral": {
+        "title": "A friend invited you?",
+        "desc": "Enter their referral code (optional) — it helps them unlock a free month of Premium."
+      }
+    },
+    "referralPlaceholder": "Referral code",
+    "next": "Next",
+    "start": "Let's go 🚀",
+    "skip": "Skip"
+  },
+  "premiumPaywall": {
+    "features": [
+      "See who views your profile",
+      "Visibility boosts (1 free pack)",
+      "Superlikes (3/week free)",
+      "Invisible mode",
+      "Search radius up to 2 km",
+      "Advanced stats",
+      "Enhanced notifications"
+    ],
+    "slides": {
+      "views": {
+        "title": "Who's visiting you?",
+        "desc": "Find out in real time who's checking your profile."
+      },
+      "boosts": {
+        "title": "Visibility boosts",
+        "desc": "Jump to the top of the list for 30 min at your venue."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Show special interest in someone you notice."
+      },
+      "invisible": {
+        "title": "Invisible mode",
+        "desc": "Disappear from the list of nearby users whenever you want."
+      },
+      "radius": {
+        "title": "Extended radius",
+        "desc": "Explore up to 2 km around you (500 m on the free plan)."
+      },
+      "stats": {
+        "title": "Advanced stats",
+        "desc": "Track views and clicks across all your social networks."
+      }
+    },
+    "trialError": "We couldn't start your free trial.",
+    "errorTitle": "Error",
+    "offersUnavailableTitle": "Offers unavailable",
+    "offersUnavailableMessage": "Subscription offers aren't loaded yet. Try again in a moment.",
+    "purchaseError": "We couldn't complete the purchase.",
+    "restoredTitle": "✅ Purchases restored",
+    "restoredMessage": "Your Premium subscription is active.",
+    "noRestoreTitle": "No purchase found",
+    "noRestoreMessage": "No active subscription could be restored.",
+    "restoreError": "We couldn't restore your purchases.",
+    "closeLabel": "Close",
+    "title": "👑 Premium",
+    "subtitle": "Unlock all features",
+    "debugBanner": "⚠️ Payments disabled (debug mode)",
+    "monthly": "Monthly",
+    "perMonth": "/month",
+    "annual": "Annual",
+    "perYear": "/year",
+    "mostChosen": "MOST CHOSEN",
+    "allIncluded": "EVERYTHING INCLUDED",
+    "ctaSimulate": "Simulate a Premium subscription",
+    "ctaTrial": "Start my 7-day free trial",
+    "ctaLoading": "Loading offers…",
+    "ctaSubscribe": "Subscribe",
+    "thenAnnual": "Then {{price}}/year · Cancel anytime",
+    "thenMonthly": "Then {{price}}/month · Cancel anytime",
+    "restorePurchases": "Restore purchases",
+    "legalText": "The subscription renews automatically unless cancelled before the end of the current period. Manage your subscriptions in App Store / Google Play settings. ",
+    "privacyPolicy": "Privacy policy",
+    "terms": "Terms"
+  },
+  "premiumWelcome": {
+    "header": "👑 Welcome to Premium",
+    "finalTitle": "Let's go!",
+    "finalDesc": "Enjoy all your new Premium perks right now.",
+    "discover": "Discover",
+    "next": "Next",
+    "skip": "Skip"
+  },
+  "referralScreen": {
+    "loadError": "We couldn't load your referral information.",
+    "errorTitle": "Error",
+    "shareMessage": "Join me on LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Invite a friend to LoocateMe",
+    "shareErrorTitle": "Share",
+    "shareError": "We couldn't share.",
+    "codeSavedTitle": "Referral",
+    "codeSaved": "Referral code saved!",
+    "selfReferralError": "You can't use your own code.",
+    "alreadyReferredError": "You've already used a referral code.",
+    "invalidCodeError": "This referral code is invalid.",
+    "genericCodeError": "We couldn't validate this code.",
+    "title": "Referral",
+    "infoText": "Invite 5 friends this month (each must go out and complete their 1st verified check-in) and earn 1 free month of Premium 🎉",
+    "confirmCode": "Confirm the referral code \"{{code}}\"?",
+    "validate": "Confirm",
+    "rewardActive": "💎 Your free Premium month is active",
+    "rewardActiveUntil": " until {{date}}",
+    "yourCode": "Your referral code",
+    "shareButton": "📤 Share my code",
+    "shareLabel": "Share my code",
+    "progressLabel": "{{count}} / {{target}} referrals this month",
+    "invitedFriends": "Invited friends",
+    "noInvites": "No friends invited yet.",
+    "defaultUser": "User",
+    "statusValidated": "Validated",
+    "statusVoid": "Cancelled",
+    "statusPending": "Pending"
+  },
+  "searchView": {
+    "closeLabel": "Close search",
+    "title": "Search",
+    "placeholder": "Username, place...",
+    "clearLabel": "Clear search",
+    "filterUsers": "Users",
+    "filterLocations": "Places",
+    "searching": "Searching…",
+    "typeToSearch": "Type at least 2 letters to start searching",
+    "noResults": "No results found for this search.",
+    "checkFilters": "Check the filters or try another keyword.",
+    "resultsCount_one": "{{count}} result",
+    "resultsCount_other": "{{count}} results",
+    "noLongerHere": "No longer here"
+  },
+  "settingsScreen": {
+    "title": "Settings",
+    "tabProfile": "Profile",
+    "tabSettings": "Settings",
+    "sectionIdentity": "IDENTITY",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "customNameLabel": "Custom name",
+    "bioLabel": "Bio",
+    "sectionSubscription": "SUBSCRIPTION",
+    "premiumMonthly": "· Monthly",
+    "premiumAnnual": "· Annual",
+    "statusLoading": "Loading status…",
+    "grantedOutsideStore": "Granted outside App Store/Play Store subscription (free trial or special offer)",
+    "renewsOn": "Renews on {{date}}",
+    "expiresOn": "Expires on {{date}}",
+    "opening": "Opening…",
+    "manageSubscription": "Manage my subscription",
+    "goPremium": "👑 Go Premium",
+    "manageSubError": "We couldn't open subscription management.",
+    "sectionGeneral": "GENERAL",
+    "displayMode": "Display mode",
+    "fullNameMode": "First Last",
+    "classicMode": "Classic",
+    "customMode": "Custom",
+    "sectionReferral": "REFERRAL",
+    "alreadyReferred": "You've already been referred.",
+    "referralHint": "A friend shared a code with you? Enter it here.",
+    "referralPlaceholder": "Referral code",
+    "validate": "Confirm",
+    "sectionNotifications": "NOTIFICATIONS",
+    "notifKinds": {
+      "superlike": "Superlikes received",
+      "superlikeAccepted": "Superlikes accepted",
+      "eventBoost": "Event boosts",
+      "streakExpiring": "Streak reminders",
+      "profileView": "Profile views",
+      "socialClick": "Views of your social networks",
+      "inactiveProfileViews": "Views received while away",
+      "referralValidated": "Referral validated",
+      "referralRewardGranted": "Referral reward",
+      "nightModeActivated": "Night mode activated",
+      "atRiskReactivation": "Reactivation reminders",
+      "weeklyDigest": "Weekly digest"
+    },
+    "notifCategories": {
+      "social": "Social activity",
+      "rewards": "Streaks & rewards",
+      "system": "System & digests"
+    },
+    "sectionPrivacy": "PRIVACY & GDPR",
+    "privacyPolicyLink": "Privacy policy",
+    "consent": "Consent",
+    "analyticsLabel": "Analytics",
+    "dataSaleTitle": "Data sale (CCPA)",
+    "dataSaleDesc": "We do not sell or share your personal data with third parties for advertising purposes.",
+    "invisibleModeTitle": "Invisible mode",
+    "invisibleModeDesc": "You'll be invisible to other users at places, but you won't be able to view the map or place list while this mode is active.",
+    "shareLocationTitle": "Share my current location",
+    "shareLocationDesc": "Shows other users the precise place where you currently are, in addition to your city. Off by default to protect your privacy and avoid any risk of stalking.",
+    "policyLoadError": "We couldn't load the privacy policy.",
+    "savePrivacyPrefsError": "We couldn't save your privacy preferences",
+    "shareLocationUpdateError": "We couldn't update current-location sharing",
+    "invisibleModeUpdateError": "We couldn't update invisible mode",
+    "notifPrefUpdateError": "We couldn't update this notification preference",
+    "consentSavedTitle": "Success",
+    "consentSaved": "Consent saved.",
+    "consentRevoked": "Consent revoked.",
+    "consentSaveError": "We couldn't save your consent",
+    "revokeConsentTitle": "Revoke consent",
+    "revokeConsentMessage": "Revoking your consent will permanently delete your account and all your data. Do you want to continue?",
+    "cancel": "Cancel",
+    "continueLabel": "Continue",
+    "currentPasswordRequired": "Please enter your current password.",
+    "passwordTooShort": "The new password must be at least 6 characters.",
+    "passwordConfirmMismatch": "The confirmation doesn't match the new password.",
+    "passwordChangedTitle": "Password changed",
+    "passwordChangedMessage": "Your password has been updated.",
+    "currentPasswordInvalid": "Invalid current password or server error.",
+    "invalidEmail": "Please enter a valid email address.",
+    "passwordRequiredConfirm": "Please enter your password to confirm.",
+    "checkInboxTitle": "Check your inbox",
+    "checkInboxMessage": "A confirmation email has been sent to {{email}}. Click the link to confirm the change.",
+    "emailChangeError": "We couldn't start the change. Invalid password or server error.",
+    "exportReadyTitle": "Export ready",
+    "exportReadyMessage": "Your data has been exported ({{size}} characters).",
+    "exportError": "We couldn't export your data",
+    "deleteAccountConfirmTitle": "Delete account",
+    "deleteAccountConfirmMessage": "Deletion is permanent. Do you confirm the deletion of your account?",
+    "profileUpdatedTitle": "Profile",
+    "profileUpdatedMessage": "Your profile has been updated.",
+    "loadBlockedError": "We couldn't load blocked accounts",
+    "unblockError": "We couldn't unblock this user",
+    "sectionAccount": "ACCOUNT",
+    "emailLabel": "Email",
+    "notProvided": "Not set",
+    "change": "Change",
+    "passwordLabel": "Password",
+    "blockedAccounts": "Blocked accounts",
+    "helpAndPrivacy": "Help & privacy",
+    "terms": "Terms of use",
+    "sectionModeration": "MODERATION",
+    "moderatorSpace": "Moderator area",
+    "debugConsole": "Debug Console",
+    "exportData": "Export my data",
+    "deleteAccount": "Delete my account",
+    "logout": "Log out",
+    "save": "Save",
+    "close": "Close",
+    "privacyModalTitle": "Privacy",
+    "deleteAccountTitle": "Account deletion",
+    "deleteAccountDesc": "To confirm, enter your password. This action is irreversible.",
+    "deleting": "Deleting...",
+    "changePasswordTitle": "Change password",
+    "currentPasswordPlaceholder": "Current password",
+    "newPasswordPlaceholder": "New password (min. 6 characters)",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "changeEmailTitle": "Change email",
+    "currentEmailLabel": "Current email: {{email}}",
+    "newEmailPlaceholder": "New email",
+    "noBlockedAccounts": "No blocked accounts.",
+    "unblock": "Unblock"
+  },
+  "statisticsScreen": {
+    "loadError": "We couldn't retrieve statistics",
+    "loadVisitorsError": "We couldn't retrieve the visitor list",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}}h ago",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}}d ago",
+    "title": "Stats",
+    "comingSoonTitle": "Coming soon 🚀",
+    "comingSoonDesc": "Stats are coming very soon! You'll be able to see who visits your profile and social networks.",
+    "whoStalksTitle": "Who's stalking you? 👀",
+    "whoStalksDesc": "Go Premium to discover who visits your profile and social networks!",
+    "discoverVisitors": "Discover my visitors",
+    "later": "Later",
+    "profileViews": "Profile views",
+    "views": "views",
+    "last30Days": "over the last 30 days",
+    "clicksByNetwork": "Clicks by network",
+    "lastVisits": "Recent visits",
+    "noVisitorsTitle": "No one has visited your profile yet",
+    "noVisitorsDesc": "Keep exploring places to get discovered!",
+    "defaultUser": "User",
+    "hiddenVisits_one": "{{count}} hidden visit",
+    "hiddenVisits_other": "{{count}} hidden visits",
+    "goPremiumToSeeAll": "Go Premium to see everything",
+    "showMore": "Show more"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Harassment",
+      "spam": "Spam",
+      "inappropriate": "Inappropriate content",
+      "impersonation": "Impersonation",
+      "scam": "Scam",
+      "other": "Other"
+    },
+    "statusAvailable": "Available",
+    "statusRestricted": "Restricted visibility",
+    "statusInvisible": "Invisible",
+    "noUserSelected": "No user selected.",
+    "backToList": "Back to list",
+    "superlikeLockedTitle": "Coming soon",
+    "superlikeLockedMessage": "Superlikes unlock after your first check-in.",
+    "superlikeSentTitle": "⭐ Superlike sent!",
+    "superlikeSentMessage": "{{name}} was notified that you noticed them.",
+    "errorTitle": "Error",
+    "superlikeSendError": "Couldn't send the superlike.",
+    "blockConfirmTitle": "Block this user?",
+    "blockConfirmMessage": "You'll no longer see this user and they won't be able to contact you.",
+    "cancel": "Cancel",
+    "block": "Block",
+    "userBlockedTitle": "User blocked",
+    "userBlockedMessage": "This user has been blocked.",
+    "blockError": "Couldn't block this user.",
+    "reasonRequiredTitle": "Reason required",
+    "reasonRequiredMessage": "Please provide a reason.",
+    "reportSentTitle": "Report sent",
+    "reportSentMessage": "Thanks for your report.",
+    "reportSendError": "Couldn't send the report.",
+    "backA11y": "Back",
+    "moreOptionsA11y": "More options",
+    "sendSuperlikeA11y": "Send a superlike",
+    "superlikeLockedA11y": "Superlike locked, unlocks after your first check-in",
+    "currentlyAt": "Currently at {{place}}",
+    "mutualConnectionBanner": "This person wants to connect",
+    "socialsHidden": "This user doesn't share their social media",
+    "noBio": "No bio added yet.",
+    "noSocials": "No social media",
+    "actionsTitle": "Actions",
+    "report": "Report",
+    "reportUserTitle": "Report a user",
+    "reportWarning": "Abusive reports can lead to sanctions. Please be honest.",
+    "categoryLabel": "Category",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Briefly explain the reason",
+    "descriptionLabel": "Description (optional)",
+    "descriptionPlaceholder": "Additional details",
+    "sending": "Sending...",
+    "sendReport": "Send report",
+    "justNow": "Just now",
+    "minutesAgo_one": "{{count}} min ago",
+    "minutesAgo_other": "{{count}} min ago",
+    "hoursAgo_one": "{{count}} hour ago",
+    "hoursAgo_other": "{{count}} hours ago",
+    "yesterday": "Yesterday",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago"
+  },
+  "warningsScreen": {
+    "title": "Warnings",
+    "banAlert": "This behavior may result in a temporary or permanent ban from the app.",
+    "empty": "No warnings.",
+    "typeLabel": "Warning type",
+    "notSpecified": "Not specified",
+    "notSpecifiedFem": "Not specified",
+    "reasonLabel": "Reason"
+  },
+  "common": {
+    "close": "Close",
+    "errorTitle": "Error"
+  },
+  "streakCard": {
+    "hintReady": "Your reward is ready!",
+    "hintGrow": "Log in every day to keep it climbing.",
+    "claimBoost": "Claim your boost",
+    "claimSuperlike": "Claim your superlike"
+  },
+  "coteCard": {
+    "messageTop": "You're at the top! Log in tomorrow to keep it.",
+    "messageZero": "Log in today to get it going again."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Jump to the top for 30 min",
+    "boostPack5Desc": "The best value for money",
+    "superlikePack3Desc": "Show your interest in a unique way",
+    "superlikePack10Desc": "For true connectors",
+    "badgePopular": "Popular",
+    "badgeBestOffer": "Best offer",
+    "notAvailableTitle": "Not available",
+    "notAvailableMessage": "This pack isn't available in the store yet.",
+    "purchaseErrorMessage": "Couldn't complete the purchase.",
+    "simulate": "Simulate"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Search in these places",
+    "categoryBars": "Bars",
+    "categoryClubs": "Clubs",
+    "categoryRestos": "Restaurants",
+    "categoryPubs": "Pubs",
+    "categoryGyms": "Gyms",
+    "categoryCafes": "Cafés",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Libraries"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonymous"
+  },
+  "locationMapView": {
+    "loadError": "Couldn't load the map",
+    "renderError": "Error loading the map"
+  },
+  "churnSurveyModal": {
+    "title": "One minute before you go?",
+    "subtitle": "Help us understand why.",
+    "reasonTooManyNotifications": "Too many notifications",
+    "reasonPrivacyConcern": "I'm not comfortable with the sharing",
+    "reasonNotUseful": "It's not useful to me anymore",
+    "reasonOther": "Other reason",
+    "dismiss": "Skip",
+    "thanks": "Thanks for your feedback 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Search",
+    "tabNearby": "Nearby places",
+    "tabAccount": "Account"
+  },
+  "documentViewer": {
+    "openError": "Couldn't open this document.",
+    "defaultLabel": "View document"
+  },
+  "vibeFab": {
+    "toDay": "Switch to day mode",
+    "toNight": "Switch to night mode"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Location sharing active"
+  }
+}

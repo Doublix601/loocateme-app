@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import ImageWithPlaceholder from '../../components/ImageWithPlaceholder';
 
 const { width } = Dimensions.get('window');
@@ -17,11 +18,12 @@ const { width } = Dimensions.get('window');
  * l'étape 1 de l'onboarding.
  */
 const ProfileHero = ({ photoRef, statusRef, user, colors, isDark, cityLabel, currentPlaceLabel, onOpenStatusPicker }) => {
+  const { t } = useTranslation();
   const displayName =
     user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username);
 
   const statusColor = user?.status === 'red' ? '#F44336' : user?.status === 'orange' ? '#FF9800' : '#4CAF50';
-  const statusLabel = user?.status === 'red' ? 'Incognito' : user?.status === 'orange' ? 'Profil privé' : 'Profil public';
+  const statusLabel = user?.status === 'red' ? t('myAccount.status.incognito') : user?.status === 'orange' ? t('myAccount.status.private') : t('myAccount.status.public');
 
   return (
     <View
@@ -65,7 +67,7 @@ const ProfileHero = ({ photoRef, statusRef, user, colors, isDark, cityLabel, cur
           <TouchableOpacity
             style={styles.statusRow}
             onPress={onOpenStatusPicker}
-            accessibilityLabel="Choisir mon statut"
+            accessibilityLabel={t('myAccount.status.pickLabel')}
           >
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
             <Text style={styles.statusText}>
@@ -77,7 +79,7 @@ const ProfileHero = ({ photoRef, statusRef, user, colors, isDark, cityLabel, cur
         </View>
         {currentPlaceLabel ? (
           <Text style={styles.currentPlaceText} numberOfLines={1}>
-            Actuellement à {currentPlaceLabel}
+            {t('myAccount.currentlyAt', { place: currentPlaceLabel })}
           </Text>
         ) : null}
       </View>

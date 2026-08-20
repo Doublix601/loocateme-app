@@ -1,0 +1,798 @@
+{
+  "auth": {
+    "login": {
+      "title": "Identifikohu",
+      "welcomeBack": "Mirë se u ktheve!",
+      "subtitle": "Identifikohu për të vazhduar",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Fjalëkalimi",
+      "submit": "Identifikohu",
+      "forgotPassword": "Harrove fjalëkalimin?",
+      "noAccount": "Nuk keni ende llogari?",
+      "createAccount": "Krijo një llogari",
+      "emailNotVerifiedTitle": "Email-i nuk është verifikuar",
+      "emailNotVerifiedMessage": "Adresa juaj e email-it nuk është verifikuar ende. Sapo ju kemi dërguar një email konfirmimi të ri. Klikoni linkun për të aktivizuar llogarinë tuaj dhe provoni përsëri.",
+      "authFailedTitle": "Identifikimi dështoi",
+      "authFailedMessage": "Nuk mundëm t'ju identifikojmë. Kontrolloni të dhënat tuaja dhe provoni përsëri."
+    },
+    "signup": {
+      "passwordMismatch": "Fjalëkalimet nuk përputhen.",
+      "requiredFields": "Të gjitha fushat duhet të plotësohen.",
+      "birthdateRequired": "Data e lindjes është e detyrueshme.",
+      "under18": "Duhet të keni të paktën 18 vjeç për t'u regjistruar.",
+      "policyLoadError": "Politika e privatësisë nuk mund të ngarkohej. Mund të provoni përsëri."
+    }
+  },
+  "consent": {
+    "title": "Privatësia",
+    "changelogTitle": "Çfarë ka ndryshuar",
+    "decline": "Refuzo",
+    "accept": "Prano",
+    "accepting": "Duke ruajtur...",
+    "declineInfoTitle": "Informacion",
+    "declineInfoMessage": "Duhet të pranoni politikën e privatësisë për të përdorur aplikacionin.",
+    "acceptErrorTitle": "Gabim",
+    "acceptErrorMessage": "Pëlqimi juaj nuk mund të ruhej. Provoni përsëri."
+  },
+  "ageVerification": {
+    "title": "Verifikimi i moshës",
+    "urlMissing": "Mungon URL-ja e verifikimit",
+    "startError": "Verifikimi i moshës nuk mund të fillonte. Provoni përsëri.",
+    "retry": "Provo përsëri",
+    "declinedTitle": "Verifikimi u refuzua",
+    "declinedMessage": "Nuk mundëm të konfirmojmë që jeni mbi 18 vjeç. Mund të provoni përsëri."
+  },
+  "settings": {
+    "language": {
+      "sectionTitle": "Gjuha",
+      "systemDefault": "Gjuha e telefonit"
+    }
+  },
+  "forgotPassword": {
+    "title": "Harrove fjalëkalimin",
+    "resetTitle": "Rivendosje",
+    "instructions": "Fut adresën tënde të email-it për të marrë një link rivendosjeje.",
+    "emailPlaceholder": "Email",
+    "submit": "Dërgo linkun",
+    "successTitle": "Email-i u dërgua",
+    "successMessage": "Nëse ekziston një llogari, është dërguar një email.",
+    "errorTitle": "Gabim",
+    "errorFallback": "Ju lutemi provoni përsëri"
+  },
+  "dataManagement": {
+    "title": "Privatësia",
+    "export": {
+      "title": "Eksporto të dhënat e mia",
+      "desc": "Shkarko një kopje të informacionit tënd (profili, rrjetet sociale, cilësimet).",
+      "button": "Eksporto",
+      "buttonWorking": "Ju lutemi prisni...",
+      "successTitle": "Eksportimi i të dhënave",
+      "successMessage": "Eksportimi yt u krijua dhe u shfaq në konsolë.",
+      "errorTitle": "Gabim",
+      "errorMessage": "Të dhënat e tua nuk mund të eksportoheshin tani. Provo përsëri."
+    },
+    "delete": {
+      "title": "Fshi llogarinë time",
+      "desc": "Fshin përgjithmonë llogarinë tënde dhe të gjitha të dhënat e lidhura.",
+      "passwordPlaceholder": "Konfirmo me fjalëkalimin tënd",
+      "button": "Fshi përfundimisht",
+      "passwordRequiredTitle": "Kërkohet fjalëkalimi",
+      "passwordRequiredMessage": "Ju lutemi fusni fjalëkalimin tuaj.",
+      "confirmTitle": "Konfirmim",
+      "confirmMessage": "Ky veprim është i pakthyeshëm. Vërtet dëshiron ta fshish llogarinë tënde?",
+      "cancel": "Anulo",
+      "confirm": "Fshi",
+      "successTitle": "Llogaria u fshi",
+      "successMessage": "Llogaria dhe të dhënat e tua janë fshirë.",
+      "errorTitle": "Gabim",
+      "errorMessage": "Fshirja dështoi. Fjalëkalim i pavlefshëm ose problem me serverin."
+    }
+  },
+  "editProfile": {
+    "title": "Modifiko profilin tim",
+    "subtitle": "Prek një fushë për ta modifikuar",
+    "notSet": "E papërcaktuar",
+    "backLabel": "Prapa",
+    "fields": {
+      "firstName": "Emri",
+      "lastName": "Mbiemri",
+      "customName": "Emër i personalizuar",
+      "bio": "Bio",
+      "birthdate": "Data e lindjes",
+      "gender": "Gjinia"
+    },
+    "gender": {
+      "male": "Djalë",
+      "female": "Vajzë",
+      "preferNotToSay": "Preferoj të mos them"
+    },
+    "photo": {
+      "notSupportedTitle": "Nuk mbështetet",
+      "notSupportedMessage": "Kamera nuk është e disponueshme në web.",
+      "cameraPermissionTitle": "Kërkohet leje",
+      "cameraPermissionMessage": "Aplikacioni ka nevojë për akses në kamerë për të bërë një foto.",
+      "galleryPermissionMessage": "Aplikacioni ka nevojë për akses në fotot e tua për të zgjedhur një imazh.",
+      "errorTitle": "Gabim",
+      "uploadErrorMessage": "Imazhi nuk mund të ngarkohej",
+      "cameraOpenError": "Kamera nuk mund të hapej.",
+      "galleryOpenError": "Galeria nuk mund të hapej.",
+      "deleteErrorMessage": "Foto e profilit nuk mund të fshihej",
+      "deleteConfirmTitle": "Fshi foton e profilit?",
+      "deleteConfirmMessage": "Ky veprim është përfundimtar.",
+      "cancel": "Anulo",
+      "delete": "Fshi",
+      "modalTitle": "Foto e profilit",
+      "takePhoto": "📸 Bëj një foto",
+      "sending": "Duke ngarkuar...",
+      "chooseGallery": "🖼️ Zgjidh nga galeria",
+      "deletePhoto": "🗑️ Fshi foton",
+      "deleting": "Duke fshirë..."
+    },
+    "validation": {
+      "firstNameInvalidTitle": "Emër i pavlefshëm",
+      "firstNameInvalidMessage": "Emri duhet të fillojë me shkronjë të madhe dhe mund të përmbajë shkronja (theksat lejohen), hapësira, apostrofa ose vija lidhëse.",
+      "lastNameInvalidTitle": "Mbiemër i pavlefshëm",
+      "lastNameInvalidMessage": "Mbiemri duhet të fillojë me shkronjë të madhe dhe mund të përmbajë shkronja (theksat lejohen), hapësira, apostrofa ose vija lidhëse.",
+      "incompleteIdentityTitle": "Identitet i paplotë",
+      "incompleteIdentityMessage": "Fut një Emër të personalizuar OSE një Emër DHE një Mbiemër.",
+      "customNameRequiredTitle": "Kërkohet emër i personalizuar",
+      "customNameRequiredMessage": "Nuk mund ta heqësh emrin e personalizuar përderisa emri ose mbiemri janë bosh.",
+      "invalidDateTitle": "Datë e pavlefshme",
+      "invalidDateMessage": "Ju lutemi zgjidhni një datëlindje të vlefshme.",
+      "minAgeTitle": "Kërkohet mosha minimale",
+      "minAgeMessage": "Duhet të jesh të paktën 18 vjeç.",
+      "updateErrorMessage": "Profili yt nuk mund të përditësohej"
+    },
+    "modal": {
+      "editPrefix": "Modifiko",
+      "editGeneric": "Modifiko",
+      "selectDate": "Zgjidh një datë",
+      "cancel": "Anulo",
+      "save": "Ruaj",
+      "placeholders": {
+        "firstName": "Emri yt",
+        "lastName": "Mbiemri yt",
+        "customName": "Emri yt i personalizuar",
+        "bio": "Na trego pak për veten...",
+        "default": "Teksti yt"
+      }
+    }
+  },
+  "locationList": {
+    "invisibleMode": {
+      "title": "Modaliteti i padukshëm aktiv",
+      "subtitle": "Nuk mund të shohësh vendet rreth teje derisa modaliteti i padukshëm është aktiv. Çaktivizoje për të shfletuar vende.",
+      "disableButton": "Çaktivizo modalitetin e padukshëm"
+    },
+    "error": {
+      "title": "Vendndodhja nuk është e disponueshme",
+      "subtitle": "Aktivizo shërbimet e vendndodhjes në cilësimet e pajisjes për të parë vendet rreth teje.",
+      "retry": "Provo përsëri"
+    },
+    "empty": {
+      "title": "Zonë e qetë për momentin",
+      "subtitle": "Nuk u gjet asnjë vend aktiv rreth teje. Zgjero rrezen ose sugjero një vend të ri.",
+      "expandRadius": "Zgjero rrezen",
+      "suggestLocation": "Sugjero këtë vend"
+    },
+    "footer": {
+      "loadingMore": "Duke ngarkuar më shumë vende…",
+      "loadMoreError": "Nuk mund të ngarkoheshin më shumë vende. Kontrollo lidhjen tënde.",
+      "retry": "Provo përsëri",
+      "reachedEnd": "Ke eksploruar të gjitha vendet aktive aty pranë. Lëviz ose kërko për të parë më shumë."
+    },
+    "leaveModal": {
+      "defaultName": "Ky vend",
+      "subtitle": "Aktualisht je i regjistruar këtu. Dëshiron ta lësh këtë vend?",
+      "confirm": "Nuk jam më këtu",
+      "cancel": "Anulo"
+    },
+    "sections": {
+      "moreLocations": "Më shumë vende për ty",
+      "sponsored": "Të veçuara",
+      "trending": "Po ndodh tani"
+    },
+    "filters": {
+      "all": "Të gjitha"
+    },
+    "card": {
+      "visitors_one": "{{count}} vizitor",
+      "visitors_other": "{{count}} vizitorë",
+      "sponsored": "TË SPONSORIZUARA",
+      "imHere": "Jam këtu",
+      "editLocation": "Modifiko vendndodhjen time"
+    }
+  },
+  "locationListScreen": {
+    "checkinModeManualOn": "Regjistrimi manual u aktivizua",
+    "checkinModeAutoOn": "Regjistrimi automatik u aktivizua",
+    "checkinModeErrorTitle": "Gabim",
+    "checkinModeErrorMessage": "Nuk mund të ndryshohej modaliteti i regjistrimit tani.",
+    "checkedInToast": "Tani je në {{name}}!",
+    "checkinErrorMessage": "Prania jote nuk mund të konfirmohej tani.",
+    "leftLocationToast": "Ke lënë këtë vend.",
+    "boostActiveTitle": "Boost aktiv",
+    "boostActiveLeaveMessage": "Nuk mund ta lësh këtë vend derisa boost-i yt është aktiv.",
+    "leaveErrorMessage": "Nuk mund të çregjistroheshe nga ky vend tani.",
+    "boostInProgressTitle": "Boost në vazhdim",
+    "boostInProgressMessage": "Boost-i yt është aktiv: prit të përfundojë para se të ndryshosh vendin.",
+    "refreshErrorToast": "Nuk mund të rifreskohej tani.",
+    "disableInvisibleErrorMessage": "Modaliteti i padukshëm nuk mund të çaktivizohej tani.",
+    "switchToManualLabel": "Kalo te regjistrimi manual",
+    "switchToAutoLabel": "Kalo te regjistrimi automatik",
+    "entryAuto": "Hyrje auto.",
+    "entryManual": "Hyrje manuale",
+    "showMapLabel": "Shfaq hartën",
+    "showListLabel": "Shfaq listën",
+    "mapButton": "Harta",
+    "listButton": "Lista"
+  },
+  "locationScreen": {
+    "checkinErrorTitle": "Gabim",
+    "checkinErrorMessage": "Prania jote nuk mund të konfirmohej tani.",
+    "boostActiveHereTitle": "Boost në vazhdim",
+    "boostActiveHereMessage": "Boost-i yt është aktiv këtu: prit të përfundojë para se të largohesh nga ky vend.",
+    "boostActiveMessage": "Boost-i yt është aktiv: prit të përfundojë.",
+    "notFound": "Vendi nuk u gjet",
+    "back": "Prapa",
+    "popularityVeryPopular": "Shumë popullor",
+    "popularityPopular": "Popullor",
+    "popularityActive": "Aktiv",
+    "popularityCalm": "I qetë",
+    "checkinConfirmed": "U konfirmua!",
+    "imHere": "Jam këtu",
+    "viewPdf": "Shiko PDF",
+    "pdfLoadError": "Ky PDF nuk mund të shfaqet.",
+    "openInBrowser": "Hap në shfletues",
+    "profilesHere": "Profilet këtu",
+    "recentlyCrossed": "Të takuar së fundmi",
+    "seeMore": "Shiko më shumë",
+    "boosted": "I përforcuar",
+    "boostProfileHere": "Përforco profilin tim këtu",
+    "boostLockedAfterCheckins": "Boost 🔓 pas 2 regjistrimeve"
+  },
+  "myAccount": {
+    "actions": {
+      "share": "Shpërndaj",
+      "shareLabel": "Shpërndaj profilin tim",
+      "qrCode": "Kod QR",
+      "qrLabel": "Shfaq kodin tim QR",
+      "stats": "Statistika",
+      "statsLabel": "Shiko statistikat e mia"
+    },
+    "qr": {
+      "title": "Skano për të parë profilin tim",
+      "hint": "Nëse aplikacioni nuk është instaluar, do të ridrejtohesh te dyqani ({{store}})."
+    },
+    "status": {
+      "title": "Statusi yt",
+      "close": "Mbyll",
+      "public": "Profil publik",
+      "private": "Profil privat",
+      "incognito": "Incognito",
+      "pickLabel": "Zgjidh statusin tim"
+    },
+    "warnings": {
+      "title": "Paralajmërime",
+      "message_one": "Ke {{count}} paralajmërim.",
+      "message_other": "Ke {{count}} paralajmërime.",
+      "tapForDetails": "Prek për detaje"
+    },
+    "referral": {
+      "invite": "Fto shokët e tu",
+      "label": "Referim: fto shokët e tu"
+    },
+    "shareLocationNudge": {
+      "title": "📍 Ndaj vendndodhjen tënde",
+      "message": "Aktivizo ndarjen e vendit tënd aktual për t'u gjetur më lehtë nga përdorues të tjerë aty pranë.",
+      "activate": "Aktivizo",
+      "noThanks": "Jo faleminderit"
+    },
+    "social": {
+      "addTitle": "Shto një rrjet",
+      "usernamePlaceholder": "@username ose ID {{platform}}",
+      "selectPlaceholder": "Zgjidh një rrjet",
+      "snapchatHint": "Shënim: Snapchat nuk lejon lidhje direkte, fut vetëm emrin e përdoruesit.",
+      "save": "Ruaj",
+      "saveLabel": "Ruaj",
+      "editTitle": "Modifiko {{platform}}",
+      "usernamePlaceholderSimple": "Emri i përdoruesit",
+      "delete": "Fshi",
+      "heading": "Rrjete sociale",
+      "addLabel": "Shto një rrjet social"
+    },
+    "rewards": {
+      "heading": "Shpërblime",
+      "superlikes": "Superlikes",
+      "boosts": "Boost-e",
+      "buy": "Bli",
+      "buyLabel": "Bli superlikes ose boost-e",
+      "premiumCta": "👑 Kalo në Premium",
+      "premiumLabel": "Kalo në Premium",
+      "superlikeHistoryLabel_one": "Shiko historikun e superlikes, {{count}} mbetur",
+      "superlikeHistoryLabel_other": "Shiko historikun e superlikes, {{count}} mbetur"
+    },
+    "currentlyAt": "Aktualisht në {{place}}",
+    "bio": {
+      "label": "Bio",
+      "placeholder": "Shto një fjali për t'u prezantuar."
+    }
+  },
+  "myAccountScreen": {
+    "spot": {
+      "photoTitle": "Fotoja jote e profilit",
+      "photoDesc": "Ndrysho fotografinë e profilit nga cilësimet (ikona lart djathtas).",
+      "bioTitle": "Bio-ja jote",
+      "bioDesc": "Bio-ja jote redaktohet nga cilësimet. Është gjëja e parë që të tjerët shohin.",
+      "socialTitle": "Rrjetet e tua sociale",
+      "socialDesc": "Prek ➕ për të shtuar një rrjet. Mbaj shtypur një ikonë për ta modifikuar ose fshirë.",
+      "statusTitle": "Statusi yt",
+      "statusDesc": "Profil publik = i dukshëm për të gjithë · Profil privat = rrjete të fshehura · Incognito = i padukshëm. Prek për të ndryshuar."
+    },
+    "errorTitle": "Gabim",
+    "shareLocationUpdateError": "Ndarja e vendndodhjes sate aktuale nuk mund të përditësohej",
+    "comingSoonTitle": "Së shpejti 🚀",
+    "comingSoonStats": "Statistikat vijnë shumë shpejt! Do të mund të shohësh kush viziton profilin dhe rrjetet e tua sociale.",
+    "shareTitle": "Shpërndaj",
+    "shareError": "Shpërndarja dështoi.",
+    "boostClaimedToast": "Boost u mor 🚀",
+    "superlikeClaimedToast": "Superlike u mor ⭐️",
+    "claimRewardError": "Shpërblimi nuk mund të merrej",
+    "statusVisible": "Je në modalitetin e dukshëm. Të gjithë mund të shohin rrjetet e tua sociale. Po e shfrytëzon aplikacionin plotësisht.",
+    "statusRestricted": "Je në modalitetin e dukshëm të kufizuar. Askush nuk mund t'i shohë rrjetet e tua sociale.",
+    "statusInvisible": "Je në modalitetin e padukshëm. Askush nuk do të të shohë tani e tutje.",
+    "statusUpdateError": "Statusi nuk mund të përditësohej",
+    "unsupportedPlatform": "Platformë e pambështetur",
+    "handleRequired": "Ju lutemi fusni një identifikues",
+    "invalidInstagramHandle": "Emër përdoruesi i pavlefshëm në Instagram. Shembull: https://www.instagram.com/username/",
+    "invalidTiktokHandle": "Emër përdoruesi i pavlefshëm në TikTok. Shembull: https://www.tiktok.com/@username",
+    "addSocialError": "Rrjeti social nuk mund të shtohej",
+    "invalidLinkTitle": "Lidhje e pavlefshme",
+    "invalidInstagramHandleShort": "Emër përdoruesi i pavlefshëm në Instagram",
+    "invalidTiktokHandleShort": "Emër përdoruesi i pavlefshëm në TikTok",
+    "cannotOpenInstagramTitle": "Instagram nuk mund të hapej",
+    "cannotOpenTiktokTitle": "TikTok nuk mund të hapej",
+    "tryAgainLater": "Ju lutemi provoni përsëri më vonë.",
+    "editSocialError": "Rrjeti social nuk mund të modifikohej",
+    "deleteSocialError": "Rrjeti social nuk mund të fshihej",
+    "backLabel": "Prapa",
+    "settingsLabel": "Cilësimet",
+    "streakTitle": "Seria jote 🔥",
+    "streakMessage": "Identifikohu çdo ditë për të rritur serinë tënde. Në ditën e 7-të, merr një superlike. Në ditën e 14-të, merr një boost — seria jote fillon përsëri nga 0."
+  },
+  "onboarding": {
+    "slides": {
+      "welcome": {
+        "title": "Zbulo kush del pranë teje",
+        "desc": "Shiko në kohë reale vendet e gjalla rreth teje dhe njerëzit që janë atje — pikërisht tani."
+      },
+      "checkin": {
+        "title": "Regjistrim automatik, ditë a natë",
+        "desc": "Sapo hyn në një vend, shfaqesh atje automatikisht — dhe sheh kush është atje. Aplikacioni kalon nga modaliteti Ditë (kafene, parqe, sport…) te modaliteti Natë (bare, restorante, klube…) sipas dëshirës tënde."
+      },
+      "profile": {
+        "title": "Profili yt, vendet që lëvizin",
+        "desc": "Shto rrjetet e tua sociale që njerëzit të të gjejnë, shiko profilet rreth teje. Çdo vend shfaq gjithashtu 1 deri në 3 yje sipas frekuentimit real — sa më i gjallë, aq më shumë shkëlqen."
+      },
+      "referral": {
+        "title": "Të ftoi një mik?",
+        "desc": "Fut kodin e tij të referimit (opsionale) — kjo e ndihmon të zhbllokojë një muaj falas Premium."
+      }
+    },
+    "referralPlaceholder": "Kodi i referimit",
+    "next": "Tjetër",
+    "start": "Le të fillojmë 🚀",
+    "skip": "Kalo"
+  },
+  "premiumPaywall": {
+    "features": [
+      "Shiko kush e shikon profilin tënd",
+      "Boost-e dukshmërie (1 paketë falas)",
+      "Superlikes (3/javë falas)",
+      "Modaliteti i padukshëm",
+      "Rreze kërkimi deri në 2 km",
+      "Statistika të avancuara",
+      "Njoftime të pasuruara"
+    ],
+    "slides": {
+      "views": {
+        "title": "Kush të viziton?",
+        "desc": "Zbulo në kohë reale kush e shikon profilin tënd."
+      },
+      "boosts": {
+        "title": "Boost-e dukshmërie",
+        "desc": "Ngjitu në krye të listës për 30 min në lokalin tënd."
+      },
+      "superlikes": {
+        "title": "Superlikes",
+        "desc": "Trego interes të veçantë për dikë që e vëren."
+      },
+      "invisible": {
+        "title": "Modaliteti i padukshëm",
+        "desc": "Zhduku nga lista e përdoruesve aty pranë kur të duash."
+      },
+      "radius": {
+        "title": "Rreze e zgjeruar",
+        "desc": "Eksploro deri në 2 km rreth teje (500 m në versionin falas)."
+      },
+      "stats": {
+        "title": "Statistika të avancuara",
+        "desc": "Ndiq shikimet dhe klikimet në të gjitha rrjetet e tua sociale."
+      }
+    },
+    "trialError": "Periudha e provës falas nuk mund të fillonte.",
+    "errorTitle": "Gabim",
+    "offersUnavailableTitle": "Ofertat nuk janë të disponueshme",
+    "offersUnavailableMessage": "Ofertat e abonimit nuk janë ngarkuar ende. Provo përsëri pas pak.",
+    "purchaseError": "Blerja nuk mund të finalizohej.",
+    "restoredTitle": "✅ Blerjet u rikthyen",
+    "restoredMessage": "Abonimi yt Premium është aktiv.",
+    "noRestoreTitle": "Nuk u gjet asnjë blerje",
+    "noRestoreMessage": "Asnjë abonim aktiv nuk mund të rikthehej.",
+    "restoreError": "Blerjet nuk mund të rikthehen.",
+    "closeLabel": "Mbyll",
+    "title": "👑 Premium",
+    "subtitle": "Zhblloko të gjitha funksionet",
+    "debugBanner": "⚠️ Pagesat janë çaktivizuar (modaliteti debug)",
+    "monthly": "Mujore",
+    "perMonth": "/muaj",
+    "annual": "Vjetore",
+    "perYear": "/vit",
+    "mostChosen": "MË E ZGJEDHURA",
+    "allIncluded": "GJITHÇKA E PËRFSHIRË",
+    "ctaSimulate": "Simulo një abonim Premium",
+    "ctaTrial": "Fillo periudhën time 7-ditore provë falas",
+    "ctaLoading": "Duke ngarkuar ofertat…",
+    "ctaSubscribe": "Abonohu",
+    "thenAnnual": "Pastaj {{price}}/vit · Anulueshme në çdo kohë",
+    "thenMonthly": "Pastaj {{price}}/muaj · Anulueshme në çdo kohë",
+    "restorePurchases": "Rikthe blerjet e mia",
+    "legalText": "Abonimi rinovohet automatikisht përveç nëse anulohet para përfundimit të periudhës aktuale. Menaxho abonimet e tua në cilësimet e App Store / Google Play. ",
+    "privacyPolicy": "Politika e privatësisë",
+    "terms": "Kushtet"
+  },
+  "premiumWelcome": {
+    "header": "👑 Mirë se erdhe në Premium",
+    "finalTitle": "Le të fillojmë!",
+    "finalDesc": "Shijo tani të gjitha avantazhet e reja Premium.",
+    "discover": "Zbulo",
+    "next": "Tjetër",
+    "skip": "Kalo"
+  },
+  "referralScreen": {
+    "loadError": "Informacioni yt i referimit nuk mund të ngarkohej.",
+    "errorTitle": "Gabim",
+    "shareMessage": "Më bashkohu në LoocateMe 👋\n\n{{url}}",
+    "shareTitle": "Fto një mik në LoocateMe",
+    "shareErrorTitle": "Shpërndaj",
+    "shareError": "Shpërndarja dështoi.",
+    "codeSavedTitle": "Referim",
+    "codeSaved": "Kodi i referimit u ruajt!",
+    "selfReferralError": "Nuk mund ta përdorësh kodin tënd.",
+    "alreadyReferredError": "Ke përdorur tashmë një kod referimi.",
+    "invalidCodeError": "Ky kod referimi është i pavlefshëm.",
+    "genericCodeError": "Ky kod nuk mund të validohej.",
+    "title": "Referim",
+    "infoText": "Fto 5 miq këtë muaj (secili duhet të dalë dhe të bëjë regjistrimin e tij të 1-rë të verifikuar) dhe fito 1 muaj falas Premium 🎉",
+    "confirmCode": "Konfirmo kodin e referimit «{{code}}»?",
+    "validate": "Konfirmo",
+    "rewardActive": "💎 Muaji yt falas Premium është aktiv",
+    "rewardActiveUntil": " deri më {{date}}",
+    "yourCode": "Kodi yt i referimit",
+    "shareButton": "📤 Shpërndaj kodin tim",
+    "shareLabel": "Shpërndaj kodin tim",
+    "progressLabel": "{{count}} / {{target}} referime këtë muaj",
+    "invitedFriends": "Miq të ftuar",
+    "noInvites": "Ende asnjë mik i ftuar.",
+    "defaultUser": "Përdorues",
+    "statusValidated": "I validuar",
+    "statusVoid": "I anuluar",
+    "statusPending": "Në pritje"
+  },
+  "searchView": {
+    "closeLabel": "Mbyll kërkimin",
+    "title": "Kërko",
+    "placeholder": "Emri i përdoruesit, vendi...",
+    "clearLabel": "Pastro kërkimin",
+    "filterUsers": "Përdoruesit",
+    "filterLocations": "Vendet",
+    "searching": "Duke kërkuar…",
+    "typeToSearch": "Shkruaj të paktën 2 shkronja për të filluar kërkimin",
+    "noResults": "Nuk u gjet asnjë rezultat për këtë kërkim.",
+    "checkFilters": "Kontrollo filtrat ose provo një fjalë tjetër kyçe.",
+    "resultsCount_one": "{{count}} rezultat",
+    "resultsCount_other": "{{count}} rezultate",
+    "noLongerHere": "Nuk është më këtu"
+  },
+  "settingsScreen": {
+    "title": "Cilësimet",
+    "tabProfile": "Profili",
+    "tabSettings": "Cilësimet",
+    "sectionIdentity": "IDENTITETI",
+    "firstName": "Emri",
+    "lastName": "Mbiemri",
+    "customNameLabel": "Emër i personalizuar",
+    "bioLabel": "Bio",
+    "sectionSubscription": "ABONIMI",
+    "premiumMonthly": "· Mujor",
+    "premiumAnnual": "· Vjetor",
+    "statusLoading": "Duke ngarkuar statusin…",
+    "grantedOutsideStore": "Dhënë jashtë abonimit të App Store/Play Store (provë falas ose ofertë speciale)",
+    "renewsOn": "Rinovohet më {{date}}",
+    "expiresOn": "Skadon më {{date}}",
+    "opening": "Duke hapur…",
+    "manageSubscription": "Menaxho abonimin tim",
+    "goPremium": "👑 Kalo në Premium",
+    "manageSubError": "Nuk mund të hapej menaxhimi i abonimit.",
+    "sectionGeneral": "TË PËRGJITHSHME",
+    "displayMode": "Modaliteti i shfaqjes",
+    "fullNameMode": "Emri Mbiemri",
+    "classicMode": "Klasik",
+    "customMode": "I personalizuar",
+    "sectionReferral": "REFERIMI",
+    "alreadyReferred": "Ke qenë tashmë referuar.",
+    "referralHint": "Një mik ndau një kod me ty? Fute këtu.",
+    "referralPlaceholder": "Kodi i referimit",
+    "validate": "Konfirmo",
+    "sectionNotifications": "NJOFTIMET",
+    "notifKinds": {
+      "superlike": "Superlikes të marra",
+      "superlikeAccepted": "Superlikes të pranuara",
+      "eventBoost": "Boost-e ngjarjesh",
+      "streakExpiring": "Kujtesa serie",
+      "profileView": "Shikime profili",
+      "socialClick": "Shikime të rrjeteve të tua sociale",
+      "inactiveProfileViews": "Shikime marrë gjatë mungesës tënde",
+      "referralValidated": "Referimi u validua",
+      "referralRewardGranted": "Shpërblim referimi",
+      "nightModeActivated": "Aktivizimi i modalitetit të natës",
+      "atRiskReactivation": "Kujtesa riaktivizimi",
+      "weeklyDigest": "Përmbledhje javore"
+    },
+    "notifCategories": {
+      "social": "Aktivitet social",
+      "rewards": "Seritë dhe shpërblimet",
+      "system": "Sistemi dhe përmbledhjet"
+    },
+    "sectionPrivacy": "PRIVATËSIA DHE GDPR",
+    "privacyPolicyLink": "Politika e privatësisë",
+    "consent": "Pëlqim",
+    "analyticsLabel": "Analitika",
+    "dataSaleTitle": "Shitja e të dhënave (CCPA)",
+    "dataSaleDesc": "Nuk shesim as nuk ndajmë të dhënat e tua personale me palë të treta për qëllime reklamimi.",
+    "invisibleModeTitle": "Modaliteti i padukshëm",
+    "invisibleModeDesc": "Do të jesh i padukshëm për përdoruesit e tjerë në vende, por nuk do të mund të shikosh më hartën ose listën e vendeve sa kohë ky modalitet është aktiv.",
+    "shareLocationTitle": "Ndaj vendndodhjen time aktuale",
+    "shareLocationDesc": "U tregon përdoruesve të tjerë vendin e saktë ku ndodhesh aktualisht, përveç qytetit tënd. Çaktivizuar si parazgjedhje për të mbrojtur privatësinë tënde dhe për të shmangur çdo rrezik ndjekjeje.",
+    "policyLoadError": "Politika e privatësisë nuk mund të ngarkohej.",
+    "savePrivacyPrefsError": "Preferencat e tua të privatësisë nuk mund të ruheshin",
+    "shareLocationUpdateError": "Ndarja e vendndodhjes tënde aktuale nuk mund të përditësohej",
+    "invisibleModeUpdateError": "Modaliteti i padukshëm nuk mund të përditësohej",
+    "notifPrefUpdateError": "Kjo preferencë njoftimi nuk mund të përditësohej",
+    "consentSavedTitle": "Sukses",
+    "consentSaved": "Pëlqimi u ruajt.",
+    "consentRevoked": "Pëlqimi u revokua.",
+    "consentSaveError": "Pëlqimi yt nuk mund të ruhej",
+    "revokeConsentTitle": "Revokimi i pëlqimit",
+    "revokeConsentMessage": "Revokimi i pëlqimit tënd do të çojë në fshirjen e përhershme të llogarisë dhe të gjitha të dhënave të tua. Dëshiron të vazhdosh?",
+    "cancel": "Anulo",
+    "continueLabel": "Vazhdo",
+    "currentPasswordRequired": "Ju lutemi fusni fjalëkalimin aktual.",
+    "passwordTooShort": "Fjalëkalimi i ri duhet të përmbajë të paktën 6 karaktere.",
+    "passwordConfirmMismatch": "Konfirmimi nuk përputhet me fjalëkalimin e ri.",
+    "passwordChangedTitle": "Fjalëkalimi u ndryshua",
+    "passwordChangedMessage": "Fjalëkalimi yt u përditësua.",
+    "currentPasswordInvalid": "Fjalëkalim aktual i pavlefshëm ose gabim serveri.",
+    "invalidEmail": "Ju lutemi fusni një adresë email të vlefshme.",
+    "passwordRequiredConfirm": "Ju lutemi fusni fjalëkalimin për të konfirmuar.",
+    "checkInboxTitle": "Kontrollo kutinë tënde postare",
+    "checkInboxMessage": "Një email konfirmimi u dërgua te {{email}}. Kliko lidhjen për të vlerësuar ndryshimin.",
+    "emailChangeError": "Ndryshimi nuk mund të fillonte. Fjalëkalim i pavlefshëm ose gabim serveri.",
+    "exportReadyTitle": "Eksportimi gati",
+    "exportReadyMessage": "Të dhënat e tua u eksportuan ({{size}} karaktere).",
+    "exportError": "Të dhënat e tua nuk mund të eksportoheshin",
+    "deleteAccountConfirmTitle": "Fshi llogarinë",
+    "deleteAccountConfirmMessage": "Fshirja është përfundimtare. A konfirmon fshirjen e llogarisë tënde?",
+    "profileUpdatedTitle": "Profili",
+    "profileUpdatedMessage": "Profili yt u përditësua.",
+    "loadBlockedError": "Llogaritë e bllokuara nuk mund të ngarkoheshin",
+    "unblockError": "Ky përdorues nuk mund të zhbllokohej",
+    "sectionAccount": "LLOGARIA",
+    "emailLabel": "Email",
+    "notProvided": "Nuk është vendosur",
+    "change": "Ndrysho",
+    "passwordLabel": "Fjalëkalimi",
+    "blockedAccounts": "Llogari të bllokuara",
+    "helpAndPrivacy": "Ndihmë dhe privatësi",
+    "terms": "Kushtet e përdorimit",
+    "sectionModeration": "MODERIMI",
+    "moderatorSpace": "Hapësira e moderatorit",
+    "debugConsole": "Konsola e korrigjimit",
+    "exportData": "Eksporto të dhënat e mia",
+    "deleteAccount": "Fshi llogarinë time",
+    "logout": "Dil",
+    "save": "Ruaj",
+    "close": "Mbyll",
+    "privacyModalTitle": "Privatësia",
+    "deleteAccountTitle": "Fshirja e llogarisë",
+    "deleteAccountDesc": "Për të konfirmuar, fut fjalëkalimin. Ky veprim është i pakthyeshëm.",
+    "deleting": "Duke fshirë...",
+    "changePasswordTitle": "Ndrysho fjalëkalimin",
+    "currentPasswordPlaceholder": "Fjalëkalimi aktual",
+    "newPasswordPlaceholder": "Fjalëkalim i ri (min. 6 karaktere)",
+    "confirmPasswordPlaceholder": "Konfirmo fjalëkalimin e ri",
+    "changeEmailTitle": "Ndrysho email-in",
+    "currentEmailLabel": "Email aktual: {{email}}",
+    "newEmailPlaceholder": "Email i ri",
+    "noBlockedAccounts": "Asnjë llogari e bllokuar.",
+    "unblock": "Zhblloko"
+  },
+  "statisticsScreen": {
+    "loadError": "Statistikat nuk mund të merreshin",
+    "loadVisitorsError": "Lista e vizitorëve nuk mund të merrej",
+    "justNow": "Pikërisht tani",
+    "minutesAgo": "{{count}} min më parë",
+    "hoursAgo": "{{count}}orë më parë",
+    "yesterday": "Dje",
+    "daysAgo": "{{count}} ditë më parë",
+    "title": "Statistikat",
+    "comingSoonTitle": "Së shpejti 🚀",
+    "comingSoonDesc": "Statistikat vijnë shumë shpejt! Do të mund të shohësh kush viziton profilin dhe rrjetet e tua sociale.",
+    "whoStalksTitle": "Kush të ndjek? 👀",
+    "whoStalksDesc": "Kalo në Premium për të zbuluar kush viziton profilin dhe rrjetet e tua sociale!",
+    "discoverVisitors": "Zbulo vizitorët e mi",
+    "later": "Më vonë",
+    "profileViews": "Shikime profili",
+    "views": "shikime",
+    "last30Days": "gjatë 30 ditëve të fundit",
+    "clicksByNetwork": "Klikime sipas rrjetit",
+    "lastVisits": "Vizitat e fundit",
+    "noVisitorsTitle": "Askush nuk e ka vizituar ende profilin tënd",
+    "noVisitorsDesc": "Vazhdo të eksplorosh vende për t'u zbuluar!",
+    "defaultUser": "Përdorues",
+    "hiddenVisits_one": "{{count}} vizitë e fshehur",
+    "hiddenVisits_other": "{{count}} vizita të fshehura",
+    "goPremiumToSeeAll": "Kalo në Premium për të parë gjithçka",
+    "showMore": "Shfaq më shumë"
+  },
+  "userProfileScreen": {
+    "reportCategories": {
+      "harassment": "Ngacmim",
+      "spam": "Spam",
+      "inappropriate": "Përmbajtje e papërshtatshme",
+      "impersonation": "Vjedhje identiteti",
+      "scam": "Mashtrim",
+      "other": "Tjetër"
+    },
+    "statusAvailable": "I/E disponueshëm/me",
+    "statusRestricted": "Dukshmëri e kufizuar",
+    "statusInvisible": "I/E padukshëm/me",
+    "noUserSelected": "Nuk është zgjedhur asnjë përdorues.",
+    "backToList": "Kthehu te lista",
+    "superlikeLockedTitle": "Së shpejti",
+    "superlikeLockedMessage": "Superlike-t zhbllokohen pas check-in-it tënd të parë.",
+    "superlikeSentTitle": "⭐ Superlike u dërgua!",
+    "superlikeSentMessage": "{{name}} u njoftua që e ke vënë re.",
+    "errorTitle": "Gabim",
+    "superlikeSendError": "Superlike nuk mund të dërgohej.",
+    "blockConfirmTitle": "Të bllokohet ky përdorues?",
+    "blockConfirmMessage": "Nuk do ta shohësh më këtë përdorues dhe ai nuk do të mund të të kontaktojë më.",
+    "cancel": "Anulo",
+    "block": "Blloko",
+    "userBlockedTitle": "Përdoruesi u bllokua",
+    "userBlockedMessage": "Ky përdorues u bllokua.",
+    "blockError": "Ky përdorues nuk mund të bllokohej.",
+    "reasonRequiredTitle": "Kërkohet arsye",
+    "reasonRequiredMessage": "Ju lutemi tregoni një arsye.",
+    "reportSentTitle": "Raportimi u dërgua",
+    "reportSentMessage": "Faleminderit për raportimin.",
+    "reportSendError": "Raportimi nuk mund të dërgohej.",
+    "backA11y": "Kthehu",
+    "moreOptionsA11y": "Më shumë opsione",
+    "sendSuperlikeA11y": "Dërgo një superlike",
+    "superlikeLockedA11y": "Superlike i bllokuar, zhbllokohet pas check-in-it tënd të parë",
+    "currentlyAt": "Aktualisht në {{place}}",
+    "mutualConnectionBanner": "Ky person dëshiron të lidhet",
+    "socialsHidden": "Ky përdorues nuk i ndan rrjetet sociale",
+    "noBio": "Ende pa bio.",
+    "noSocials": "Asnjë rrjet social",
+    "actionsTitle": "Veprime",
+    "report": "Raporto",
+    "reportUserTitle": "Raporto një përdorues",
+    "reportWarning": "Raportimet abuzive mund të çojnë në sanksione. Ju lutemi jini të sinqertë.",
+    "categoryLabel": "Kategoria",
+    "reasonLabel": "Arsyeja",
+    "reasonPlaceholder": "Shpjego shkurtimisht arsyen",
+    "descriptionLabel": "Përshkrim (opsionale)",
+    "descriptionPlaceholder": "Detaje shtesë",
+    "sending": "Duke dërguar...",
+    "sendReport": "Dërgo raportimin",
+    "justNow": "Pikërisht tani",
+    "minutesAgo_one": "{{count}} min më parë",
+    "minutesAgo_other": "{{count}} min më parë",
+    "hoursAgo_one": "{{count}} orë më parë",
+    "hoursAgo_other": "{{count}} orë më parë",
+    "yesterday": "Dje",
+    "daysAgo_one": "{{count}} ditë më parë",
+    "daysAgo_other": "{{count}} ditë më parë"
+  },
+  "warningsScreen": {
+    "title": "Paralajmërime",
+    "banAlert": "Ky sjellje mund të çojë në ndalim të përkohshëm ose të përhershëm nga aplikacioni.",
+    "empty": "Asnjë paralajmërim.",
+    "typeLabel": "Lloji i paralajmërimit",
+    "notSpecified": "Nuk është specifikuar",
+    "notSpecifiedFem": "Nuk është specifikuar",
+    "reasonLabel": "Arsyeja"
+  },
+  "common": {
+    "close": "Mbyll",
+    "errorTitle": "Gabim"
+  },
+  "streakCard": {
+    "hintReady": "Shpërblimi yt është gati!",
+    "hintGrow": "Hyr çdo ditë për ta rritur.",
+    "claimBoost": "Merr boost-in tënd",
+    "claimSuperlike": "Merr superlike-un tënd"
+  },
+  "coteCard": {
+    "messageTop": "Në krye! Hyr nesër për ta mbajtur.",
+    "messageZero": "Hyr sot për ta rinisur."
+  },
+  "consumablesShop": {
+    "boostPack1Desc": "Ngjitu në krye për 30 min",
+    "boostPack5Desc": "Raporti më i mirë cilësi/çmim",
+    "superlikePack3Desc": "Trego interesin tënd në mënyrë unike",
+    "superlikePack10Desc": "Për lidhësit e vërtetë",
+    "badgePopular": "I popullarizuar",
+    "badgeBestOffer": "Oferta më e mirë",
+    "notAvailableTitle": "Jo i disponueshëm",
+    "notAvailableMessage": "Ky pako nuk është ende i disponueshëm në dyqan.",
+    "purchaseErrorMessage": "Blerja nuk mund të përfundohej.",
+    "simulate": "Simulo"
+  },
+  "vibeTransitOverlay": {
+    "sub": "Kërko në këto vende",
+    "categoryBars": "Bare",
+    "categoryClubs": "Klube",
+    "categoryRestos": "Restorante",
+    "categoryPubs": "Pube",
+    "categoryGyms": "Palestra",
+    "categoryCafes": "Kafene",
+    "categoryCoworking": "Coworking",
+    "categoryLibraries": "Biblioteka"
+  },
+  "profileCard": {
+    "anonymousFallback": "Anonim"
+  },
+  "locationMapView": {
+    "loadError": "Harta nuk mund të ngarkohej",
+    "renderError": "Gabim gjatë ngarkimit të hartës"
+  },
+  "churnSurveyModal": {
+    "title": "Një minutë para se të largohesh?",
+    "subtitle": "Na ndihmo të kuptojmë pse.",
+    "reasonTooManyNotifications": "Shumë njoftime",
+    "reasonPrivacyConcern": "Nuk ndihem rehat me ndarjen",
+    "reasonNotUseful": "Nuk më shërben më",
+    "reasonOther": "Arsye tjetër",
+    "dismiss": "Kalo",
+    "thanks": "Faleminderit për komentin tënd 🙏"
+  },
+  "mainTabBar": {
+    "tabSearch": "Kërko",
+    "tabNearby": "Vendet aty pranë",
+    "tabAccount": "Llogaria"
+  },
+  "documentViewer": {
+    "openError": "Ky dokument nuk mund të hapej.",
+    "defaultLabel": "Shiko dokumentin"
+  },
+  "vibeFab": {
+    "toDay": "Kalo në modalitetin ditë",
+    "toNight": "Kalo në modalitetin natë"
+  },
+  "backgroundLocation": {
+    "notificationBody": "Ndarja e vendndodhjes aktive"
+  }
+}
