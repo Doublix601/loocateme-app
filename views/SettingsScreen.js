@@ -28,7 +28,6 @@ import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 
 import { UserContext } from '../components/contexts/UserContext';
 import {
-  setVisibility as apiSetVisibility,
   getPrivacyPolicy,
   updateConsent,
   exportMyData,
@@ -52,6 +51,18 @@ import IAPStore from '../services/IAPStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
+import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES, setAppLanguage } from '../i18n';
+
+// Noms affichés dans leur propre langue (pas besoin de les traduire).
+const LANGUAGE_NAMES = {
+  fr: 'Français', en: 'English', de: 'Deutsch', es: 'Español', it: 'Italiano',
+  pt: 'Português', nl: 'Nederlands', pl: 'Polski', ro: 'Română', el: 'Ελληνικά',
+  sv: 'Svenska', da: 'Dansk', fi: 'Suomi', cs: 'Čeština', sk: 'Slovenčina',
+  hu: 'Magyar', bg: 'Български', hr: 'Hrvatski', sl: 'Slovenščina', sr: 'Српски',
+  bs: 'Bosanski', mk: 'Македонски', sq: 'Shqip', uk: 'Українська', et: 'Eesti',
+  lv: 'Latviešu', lt: 'Lietuvių', mt: 'Malti', is: 'Íslenska',
+};
 
 const { width, height } = Dimensions.get('window');
 
@@ -64,43 +75,44 @@ const DISPLAY_NAME_PREF_KEY = 'display_name_mode'; // 'full' | 'custom'
 // retirés : aucune notification backend réelle ne porte ces kinds (les
 // littéraux `kind: 'story'`/`'event'` du backend sont des types de job
 // BullMQ de transcodage vidéo, pas des notifications).
-const NOTIFICATION_KINDS = [
-  { kind: 'superlike', label: 'Superlikes reçus' },
-  { kind: 'superlike_accepted', label: 'Superlikes acceptés' },
-  { kind: 'event_boost', label: "Boosts d'événements" },
-  { kind: 'streak_expiring', label: 'Rappels de série' },
-  { kind: 'profile_view', label: 'Vues de profil' },
-  { kind: 'social_click', label: 'Consultations de tes réseaux sociaux' },
-  { kind: 'inactive_profile_views', label: 'Vues reçues pendant votre absence' },
-  { kind: 'referral_validated', label: 'Parrainage validé' },
-  { kind: 'referral_reward_granted', label: 'Récompense de parrainage' },
-  { kind: 'night_mode_activated', label: 'Activation du mode nuit' },
-  { kind: 'at_risk_reactivation', label: 'Relances de réactivation' },
-  { kind: 'weekly_digest', label: 'Résumé hebdomadaire' },
-];
-
-// Regroupement des types de notifications par catégorie, affichées en
-// sections déroulantes dans l'onglet Paramètres.
-const NOTIFICATION_CATEGORIES = [
-  { key: 'social', label: 'Activité sociale', kinds: ['superlike', 'superlike_accepted', 'profile_view', 'social_click'] },
-  {
-    key: 'rewards',
-    label: 'Séries & récompenses',
-    kinds: ['event_boost', 'streak_expiring', 'referral_validated', 'referral_reward_granted'],
-  },
-  {
-    key: 'system',
-    label: 'Système & résumés',
-    kinds: ['inactive_profile_views', 'night_mode_activated', 'at_risk_reactivation', 'weekly_digest'],
-  },
-];
-
 const SettingsScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, colors } = useTheme();
   const { isMoon } = useVibe();
+  const { t, i18n } = useTranslation();
+
+  const NOTIFICATION_KINDS = [
+    { kind: 'superlike', label: t('settingsScreen.notifKinds.superlike') },
+    { kind: 'superlike_accepted', label: t('settingsScreen.notifKinds.superlikeAccepted') },
+    { kind: 'event_boost', label: t('settingsScreen.notifKinds.eventBoost') },
+    { kind: 'streak_expiring', label: t('settingsScreen.notifKinds.streakExpiring') },
+    { kind: 'profile_view', label: t('settingsScreen.notifKinds.profileView') },
+    { kind: 'social_click', label: t('settingsScreen.notifKinds.socialClick') },
+    { kind: 'inactive_profile_views', label: t('settingsScreen.notifKinds.inactiveProfileViews') },
+    { kind: 'referral_validated', label: t('settingsScreen.notifKinds.referralValidated') },
+    { kind: 'referral_reward_granted', label: t('settingsScreen.notifKinds.referralRewardGranted') },
+    { kind: 'night_mode_activated', label: t('settingsScreen.notifKinds.nightModeActivated') },
+    { kind: 'at_risk_reactivation', label: t('settingsScreen.notifKinds.atRiskReactivation') },
+    { kind: 'weekly_digest', label: t('settingsScreen.notifKinds.weeklyDigest') },
+  ];
+
+  const NOTIFICATION_CATEGORIES = [
+    { key: 'social', label: t('settingsScreen.notifCategories.social'), kinds: ['superlike', 'superlike_accepted', 'profile_view', 'social_click'] },
+    {
+      key: 'rewards',
+      label: t('settingsScreen.notifCategories.rewards'),
+      kinds: ['event_boost', 'streak_expiring', 'referral_validated', 'referral_reward_granted'],
+    },
+    {
+      key: 'system',
+      label: t('settingsScreen.notifCategories.system'),
+      kinds: ['inactive_profile_views', 'night_mode_activated', 'at_risk_reactivation', 'weekly_digest'],
+    },
+  ];
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const [languageSaving, setLanguageSaving] = useState(false);
   const isDark = themeMode === 'dark';
   const [saving, setSaving] = useState(false);
   const [displayNameMode, setDisplayNameMode] = useState('full');
@@ -229,7 +241,7 @@ const SettingsScreen = () => {
     try {
       await IAPStore.openManageSubscriptions(subscriptionInfo?.productIdentifier);
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir la gestion de l'abonnement.");
+      Alert.alert(t('myAccountScreen.errorTitle'), t('settingsScreen.manageSubError'));
     } finally {
       setManageSubLoading(false);
     }
@@ -262,17 +274,17 @@ const SettingsScreen = () => {
       const freshUser = await getMyUser();
       if (freshUser) updateUser(freshUser);
       setReferralCodeInput('');
-      Alert.alert('Parrainage', 'Code de parrainage enregistré !');
+      Alert.alert(t('referralScreen.codeSavedTitle'), t('referralScreen.codeSaved'));
     } catch (e) {
       const message =
         e?.code === 'SELF_REFERRAL'
-          ? 'Vous ne pouvez pas utiliser votre propre code.'
+          ? t('referralScreen.selfReferralError')
           : e?.code === 'ALREADY_REFERRED'
-          ? 'Vous avez déjà utilisé un code de parrainage.'
+          ? t('referralScreen.alreadyReferredError')
           : e?.code === 'INVALID_CODE'
-          ? 'Ce code de parrainage est invalide.'
-          : e?.message || 'Impossible de valider ce code.';
-      Alert.alert('Parrainage', message);
+          ? t('referralScreen.invalidCodeError')
+          : e?.message || t('referralScreen.genericCodeError');
+      Alert.alert(t('referralScreen.codeSavedTitle'), message);
     } finally {
       setReferralSubmitting(false);
     }
@@ -286,6 +298,16 @@ const SettingsScreen = () => {
     Linking.openURL('https://loocateme.com/terms');
   };
 
+  const handleSelectLanguage = async (code) => {
+    try {
+      setLanguageSaving(true);
+      await setAppLanguage(code);
+      setLanguageModalVisible(false);
+    } finally {
+      setLanguageSaving(false);
+    }
+  };
+
   const openPolicy = async () => {
     try {
       setPolicyLoading(true);
@@ -294,7 +316,7 @@ const SettingsScreen = () => {
       const text = typeof res === 'string' ? res : res?.policy || res?.text || JSON.stringify(res, null, 2);
       setPolicyText(text);
     } catch (e) {
-      setPolicyText('Impossible de charger la politique de confidentialité.');
+      setPolicyText(t('settingsScreen.policyLoadError'));
     } finally {
       setPolicyLoading(false);
     }
@@ -345,7 +367,7 @@ const SettingsScreen = () => {
         });
       }
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible d'enregistrer vos préférences de confidentialité");
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.savePrivacyPrefsError'));
     }
   };
 
@@ -392,7 +414,7 @@ const SettingsScreen = () => {
       }
     } catch (e) {
       setShareCurrentLocation(!v);
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le partage du lieu actuel');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.shareLocationUpdateError'));
     } finally {
       setShareCurrentLocationSaving(false);
     }
@@ -414,7 +436,7 @@ const SettingsScreen = () => {
       }
     } catch (e) {
       setInvisibleMode(!v);
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le mode invisible');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.invisibleModeUpdateError'));
     } finally {
       setInvisibleSaving(false);
     }
@@ -433,7 +455,7 @@ const SettingsScreen = () => {
       }
     } catch (e) {
       setNotifPrefs((prev) => ({ ...prev, [kind]: !v }));
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour cette préférence de notification');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.notifPrefUpdateError'));
     } finally {
       setNotifSavingKind(null);
     }
@@ -469,26 +491,26 @@ const SettingsScreen = () => {
         });
       }
       setConsentAccepted(accepted);
-      Alert.alert('Succès', accepted ? 'Consentement enregistré.' : 'Consentement révoqué.');
+      Alert.alert(t('settingsScreen.consentSavedTitle'), accepted ? t('settingsScreen.consentSaved') : t('settingsScreen.consentRevoked'));
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible d'enregistrer le consentement");
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.consentSaveError'));
     }
   };
 
   const handleRevokePress = () => {
     Alert.alert(
-      'Révocation du consentement',
-      'Révoquer votre consentement entraînera la suppression définitive de votre compte et de toutes vos données. Voulez-vous continuer ?',
+      t('settingsScreen.revokeConsentTitle'),
+      t('settingsScreen.revokeConsentMessage'),
       [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Continuer', style: 'destructive', onPress: () => setRevokeVisible(true) },
+        { text: t('settingsScreen.cancel'), style: 'cancel' },
+        { text: t('settingsScreen.continueLabel'), style: 'destructive', onPress: () => setRevokeVisible(true) },
       ],
     );
   };
 
   const performRevokeDelete = async () => {
     if (!revokePassword || revokePassword.length < 6) {
-      Alert.alert('Mot de passe requis', 'Merci de saisir votre mot de passe.');
+      Alert.alert(t('dataManagement.delete.passwordRequiredTitle'), t('dataManagement.delete.passwordRequiredMessage'));
       return;
     }
     try {
@@ -501,7 +523,7 @@ const SettingsScreen = () => {
       } catch (_) {}
       navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Suppression impossible. Mot de passe invalide ou problème serveur.');
+      Alert.alert(t('dataManagement.delete.errorTitle'), e?.message || t('dataManagement.delete.errorMessage'));
     } finally {
       setRevokeWorking(false);
     }
@@ -518,15 +540,15 @@ const SettingsScreen = () => {
   const handleChangePassword = async () => {
     setPasswordError('');
     if (!currentPasswordInput) {
-      setPasswordError('Merci de saisir votre mot de passe actuel.');
+      setPasswordError(t('settingsScreen.currentPasswordRequired'));
       return;
     }
     if (!newPasswordInput || newPasswordInput.length < 6) {
-      setPasswordError('Le nouveau mot de passe doit contenir au moins 6 caractères.');
+      setPasswordError(t('settingsScreen.passwordTooShort'));
       return;
     }
     if (newPasswordInput !== confirmNewPasswordInput) {
-      setPasswordError('La confirmation ne correspond pas au nouveau mot de passe.');
+      setPasswordError(t('settingsScreen.passwordConfirmMismatch'));
       return;
     }
     try {
@@ -536,9 +558,9 @@ const SettingsScreen = () => {
       setCurrentPasswordInput('');
       setNewPasswordInput('');
       setConfirmNewPasswordInput('');
-      Alert.alert('Mot de passe modifié', 'Votre mot de passe a bien été mis à jour.');
+      Alert.alert(t('settingsScreen.passwordChangedTitle'), t('settingsScreen.passwordChangedMessage'));
     } catch (e) {
-      setPasswordError(e?.message || 'Mot de passe actuel invalide ou erreur serveur.');
+      setPasswordError(e?.message || t('settingsScreen.currentPasswordInvalid'));
     } finally {
       setPasswordSaving(false);
     }
@@ -556,11 +578,11 @@ const SettingsScreen = () => {
     const email = (newEmailInput || '').trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setEmailError('Merci de saisir une adresse email valide.');
+      setEmailError(t('settingsScreen.invalidEmail'));
       return;
     }
     if (!emailCurrentPasswordInput) {
-      setEmailError('Merci de saisir votre mot de passe pour confirmer.');
+      setEmailError(t('settingsScreen.passwordRequiredConfirm'));
       return;
     }
     try {
@@ -570,11 +592,11 @@ const SettingsScreen = () => {
       setNewEmailInput('');
       setEmailCurrentPasswordInput('');
       Alert.alert(
-        'Vérifie ta boîte mail',
-        `Un email de confirmation a été envoyé à ${email}. Clique sur le lien pour valider le changement.`,
+        t('settingsScreen.checkInboxTitle'),
+        t('settingsScreen.checkInboxMessage', { email }),
       );
     } catch (e) {
-      setEmailError(e?.message || 'Impossible de démarrer le changement. Mot de passe invalide ou erreur serveur.');
+      setEmailError(e?.message || t('settingsScreen.emailChangeError'));
     } finally {
       setEmailSaving(false);
     }
@@ -585,21 +607,21 @@ const SettingsScreen = () => {
       const data = await exportMyData();
       // For simplicity, just show a success and a snippet length; in a real app, save to file/share
       const size = JSON.stringify(data)?.length || 0;
-      Alert.alert('Export prêt', `Vos données ont été exportées (${size} caractères).`);
+      Alert.alert(t('settingsScreen.exportReadyTitle'), t('settingsScreen.exportReadyMessage', { size }));
     } catch (e) {
-      Alert.alert('Erreur', e?.message || "Impossible d'exporter vos données");
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.exportError'));
     }
   };
 
   const handleDelete = async () => {
     try {
       Alert.alert(
-        'Supprimer le compte',
-        'La suppression est définitive. Confirmez-vous la suppression de votre compte ?',
+        t('settingsScreen.deleteAccountConfirmTitle'),
+        t('settingsScreen.deleteAccountConfirmMessage'),
         [
-          { text: 'Annuler', style: 'cancel' },
+          { text: t('settingsScreen.cancel'), style: 'cancel' },
           {
-            text: 'Supprimer',
+            text: t('settingsScreen.deleteAccount'),
             style: 'destructive',
             onPress: () => {
               // Open the revoke modal to let user enter their password, then perform delete
@@ -645,13 +667,13 @@ const SettingsScreen = () => {
   const handleCamera = async () => {
     if (photoActionLoading) return;
     if (Platform.OS === 'web') {
-      Alert.alert('Non supporté', "La caméra n'est pas disponible sur le web.");
+      Alert.alert(t('editProfile.photo.notSupportedTitle'), t('editProfile.photo.notSupportedMessage'));
       return;
     }
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Autorisation requise', "L'application a besoin de l'accès à la caméra pour prendre une photo.");
+        Alert.alert(t('editProfile.photo.cameraPermissionTitle'), t('editProfile.photo.cameraPermissionMessage'));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, quality: 0.8 });
@@ -669,12 +691,12 @@ const SettingsScreen = () => {
         await refreshMyProfile();
         setPhotoOptionsVisible(false);
       } catch (e2) {
-        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+        Alert.alert(t('editProfile.photo.errorTitle'), e2?.message || t('editProfile.photo.uploadErrorMessage'));
       } finally {
         setPhotoActionLoading(null);
       }
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir la caméra.");
+      Alert.alert(t('editProfile.photo.errorTitle'), t('editProfile.photo.cameraOpenError'));
     }
   };
 
@@ -685,8 +707,8 @@ const SettingsScreen = () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
           Alert.alert(
-            'Autorisation requise',
-            "L'application a besoin de l'accès à vos photos pour sélectionner une image.",
+            t('editProfile.photo.cameraPermissionTitle'),
+            t('editProfile.photo.galleryPermissionMessage'),
           );
           return;
         }
@@ -706,12 +728,12 @@ const SettingsScreen = () => {
         await refreshMyProfile();
         setPhotoOptionsVisible(false);
       } catch (e2) {
-        Alert.alert('Erreur', e2?.message || "Impossible de téléverser l'image");
+        Alert.alert(t('editProfile.photo.errorTitle'), e2?.message || t('editProfile.photo.uploadErrorMessage'));
       } finally {
         setPhotoActionLoading(null);
       }
     } catch (e) {
-      Alert.alert('Erreur', "Impossible d'ouvrir la galerie.");
+      Alert.alert(t('editProfile.photo.errorTitle'), t('editProfile.photo.galleryOpenError'));
     }
   };
 
@@ -725,7 +747,7 @@ const SettingsScreen = () => {
       await refreshMyProfile();
       setPhotoOptionsVisible(false);
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de supprimer la photo de profil');
+      Alert.alert(t('editProfile.photo.errorTitle'), e?.message || t('editProfile.photo.deleteErrorMessage'));
     } finally {
       setPhotoActionLoading(null);
     }
@@ -733,9 +755,9 @@ const SettingsScreen = () => {
 
   const confirmDeletePhoto = () => {
     if (photoActionLoading) return;
-    Alert.alert('Supprimer la photo de profil ?', 'Cette action est définitive.', [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: handleDeletePhoto },
+    Alert.alert(t('editProfile.photo.deleteConfirmTitle'), t('editProfile.photo.deleteConfirmMessage'), [
+      { text: t('editProfile.photo.cancel'), style: 'cancel' },
+      { text: t('editProfile.photo.delete'), style: 'destructive', onPress: handleDeletePhoto },
     ]);
   };
 
@@ -750,7 +772,7 @@ const SettingsScreen = () => {
       const hasFirst = candidateFirst.length > 0;
       const hasLast = candidateLast.length > 0;
       if (!hasCustom && !(hasFirst && hasLast)) {
-        Alert.alert('Identité incomplète', 'Renseigne un Nom personnalisé OU un Prénom ET un Nom.');
+        Alert.alert(t('editProfile.validation.incompleteIdentityTitle'), t('editProfile.validation.incompleteIdentityMessage'));
         setProfileSaving(false);
         return;
       }
@@ -771,9 +793,9 @@ const SettingsScreen = () => {
         photo: updated.profileImageUrl ?? user.photo,
       });
       await refreshMyProfile();
-      Alert.alert('Profil', 'Votre profil a été mis à jour.');
+      Alert.alert(t('settingsScreen.profileUpdatedTitle'), t('settingsScreen.profileUpdatedMessage'));
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de mettre à jour le profil');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('editProfile.validation.updateErrorMessage'));
     } finally {
       setProfileSaving(false);
     }
@@ -788,7 +810,7 @@ const SettingsScreen = () => {
       const list = Array.isArray(res?.blocks) ? res.blocks : Array.isArray(res) ? res : [];
       setBlockedList(list);
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de charger les comptes bloqués');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.loadBlockedError'));
     } finally {
       setBlockedLoading(false);
     }
@@ -799,7 +821,7 @@ const SettingsScreen = () => {
       await apiUnblockUser(blockId);
       setBlockedList((prev) => prev.filter((b) => (b?._id || b?.id) !== blockId));
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de débloquer cet utilisateur');
+      Alert.alert(t('myAccountScreen.errorTitle'), e?.message || t('settingsScreen.unblockError'));
     }
   };
 
@@ -818,7 +840,7 @@ const SettingsScreen = () => {
         >
           <Image source={require('../assets/appIcons/backArrow.png')} style={styles.backButtonImage} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.textPrimary }]}>Paramètres</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>{t('settingsScreen.title')}</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -829,7 +851,7 @@ const SettingsScreen = () => {
           style={[styles.tabPill, activeTab === 'profile' && { backgroundColor: '#00c2cb' }]}
         >
           <Text style={[styles.tabPillText, { color: activeTab === 'profile' ? '#fff' : colors.textSecondary }]}>
-            Profil
+            {t('settingsScreen.tabProfile')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -837,7 +859,7 @@ const SettingsScreen = () => {
           style={[styles.tabPill, activeTab === 'settings' && { backgroundColor: '#00c2cb' }]}
         >
           <Text style={[styles.tabPillText, { color: activeTab === 'settings' ? '#fff' : colors.textSecondary }]}>
-            Paramètres
+            {t('settingsScreen.tabSettings')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -867,8 +889,8 @@ const SettingsScreen = () => {
             </TouchableOpacity>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>IDENTITÉ</Text>
-              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Prénom</Text>
+              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionIdentity')}</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('settingsScreen.firstName')}</Text>
               <TextInput
                 style={[
                   styles.textField,
@@ -876,10 +898,10 @@ const SettingsScreen = () => {
                 ]}
                 value={profileFirstName}
                 onChangeText={setProfileFirstName}
-                placeholder="Votre prénom"
+                placeholder={t('editProfile.modal.placeholders.firstName')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
               />
-              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nom</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('settingsScreen.lastName')}</Text>
               <TextInput
                 style={[
                   styles.textField,
@@ -887,10 +909,10 @@ const SettingsScreen = () => {
                 ]}
                 value={profileLastName}
                 onChangeText={setProfileLastName}
-                placeholder="Votre nom"
+                placeholder={t('editProfile.modal.placeholders.lastName')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
               />
-              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Nom personnalisé</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('settingsScreen.customNameLabel')}</Text>
               <TextInput
                 style={[
                   styles.textField,
@@ -898,10 +920,10 @@ const SettingsScreen = () => {
                 ]}
                 value={profileCustomName}
                 onChangeText={setProfileCustomName}
-                placeholder="Votre nom personnalisé"
+                placeholder={t('editProfile.modal.placeholders.customName')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
               />
-              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Bio</Text>
+              <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('settingsScreen.bioLabel')}</Text>
               <TextInput
                 style={[
                   styles.textField,
@@ -910,7 +932,7 @@ const SettingsScreen = () => {
                 ]}
                 value={profileBio}
                 onChangeText={setProfileBio}
-                placeholder="Parle un peu de toi..."
+                placeholder={t('editProfile.modal.placeholders.bio')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
                 multiline
                 numberOfLines={4}
@@ -922,22 +944,22 @@ const SettingsScreen = () => {
         ) : (
           <>
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>ABONNEMENT</Text>
+              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionSubscription')}</Text>
               {user?.isPremium ? (
                 <>
                   <View style={[styles.optionContainer, { borderBottomColor: colors.border, borderBottomWidth: subscriptionInfo && typeof subscriptionInfo === 'object' ? 1 : 0 }]}>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.optionText, { color: colors.textPrimary }]}>
                         👑 Premium{' '}
-                        {subscriptionInfo && typeof subscriptionInfo === 'object' ? (subscriptionInfo.isMonthly ? '· Mensuel' : '· Annuel') : ''}
+                        {subscriptionInfo && typeof subscriptionInfo === 'object' ? (subscriptionInfo.isMonthly ? t('settingsScreen.premiumMonthly') : t('settingsScreen.premiumAnnual')) : ''}
                       </Text>
                       <Text style={{ fontSize: 12, color: colors.textSecondary }}>
                         {subscriptionInfo === 'idle'
-                          ? 'Statut en cours de chargement…'
+                          ? t('settingsScreen.statusLoading')
                           : subscriptionInfo === 'none'
-                            ? 'Accordé hors abonnement App Store/Play Store (essai gratuit ou offre spéciale)'
+                            ? t('settingsScreen.grantedOutsideStore')
                             : subscriptionInfo?.expirationDate
-                              ? `${subscriptionInfo.willRenew ? 'Renouvellement' : 'Expire'} le ${new Date(subscriptionInfo.expirationDate).toLocaleDateString('fr-FR')}`
+                              ? (subscriptionInfo.willRenew ? t('settingsScreen.renewsOn', { date: new Date(subscriptionInfo.expirationDate).toLocaleDateString(i18n.language) }) : t('settingsScreen.expiresOn', { date: new Date(subscriptionInfo.expirationDate).toLocaleDateString(i18n.language) }))
                               : ''}
                       </Text>
                     </View>
@@ -949,7 +971,7 @@ const SettingsScreen = () => {
                       disabled={manageSubLoading}
                     >
                       <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>
-                        {manageSubLoading ? 'Ouverture…' : 'Gérer mon abonnement'}
+                        {manageSubLoading ? t('settingsScreen.opening') : t('settingsScreen.manageSubscription')}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -959,19 +981,19 @@ const SettingsScreen = () => {
                   style={[styles.linkRow, { borderBottomWidth: 0 }]}
                   onPress={() => navigation.navigate('PremiumPaywall', { source: 'settings' })}
                 >
-                  <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>👑 Passer au Premium</Text>
+                  <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>{t('settingsScreen.goPremium')}</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>GÉNÉRAL</Text>
+              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionGeneral')}</Text>
 
               <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode d'affichage</Text>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.displayMode')}</Text>
                   <Text style={{ fontSize: 12, color: colors.textSecondary }}>
-                    {displayNameMode === 'full' ? 'Prénom Nom' : 'Nom personnalisé'}
+                    {displayNameMode === 'full' ? t('settingsScreen.fullNameMode') : t('settingsScreen.customNameLabel')}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -979,22 +1001,22 @@ const SettingsScreen = () => {
                   style={[styles.smallPill, { backgroundColor: colors.background }]}
                 >
                   <Text style={[styles.smallPillText, { color: colors.textPrimary }]}>
-                    {displayNameMode === 'full' ? 'Classique' : 'Custom'}
+                    {displayNameMode === 'full' ? t('settingsScreen.classicMode') : t('settingsScreen.customMode')}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>PARRAINAGE</Text>
+              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionReferral')}</Text>
               {user?.referredBy ? (
                 <Text style={{ fontSize: 14, color: colors.textSecondary, paddingVertical: 10 }}>
-                  Vous avez déjà été parrainé.
+                  {t('settingsScreen.alreadyReferred')}
                 </Text>
               ) : (
                 <View style={{ paddingVertical: 10 }}>
                   <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
-                    Un ami vous a partagé un code ? Entrez-le ici.
+                    {t('settingsScreen.referralHint')}
                   </Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <TextInput
@@ -1008,7 +1030,7 @@ const SettingsScreen = () => {
                           backgroundColor: isDark ? '#0f1115' : '#ffffff',
                         },
                       ]}
-                      placeholder="Code de parrainage"
+                      placeholder={t('settingsScreen.referralPlaceholder')}
                       placeholderTextColor={isDark ? '#999' : '#666'}
                       autoCapitalize="characters"
                       value={referralCodeInput}
@@ -1022,7 +1044,7 @@ const SettingsScreen = () => {
                       {referralSubmitting ? (
                         <ActivityIndicator size="small" color="#fff" />
                       ) : (
-                        <Text style={[styles.smallPillText, { color: '#fff' }]}>Valider</Text>
+                        <Text style={[styles.smallPillText, { color: '#fff' }]}>{t('settingsScreen.validate')}</Text>
                       )}
                     </TouchableOpacity>
                   </View>
@@ -1031,7 +1053,7 @@ const SettingsScreen = () => {
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionNotifications')}</Text>
               {NOTIFICATION_CATEGORIES.map((category, catIdx) => {
                 const items = NOTIFICATION_KINDS.filter((item) => category.kinds.includes(item.kind));
                 const expanded = !!expandedNotifCategories[category.key];
@@ -1094,13 +1116,13 @@ const SettingsScreen = () => {
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>CONFIDENTIALITÉ & RGPD</Text>
+              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionPrivacy')}</Text>
               <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={openPolicy}>
-                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Politique de confidentialité</Text>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>{t('settingsScreen.privacyPolicyLink')}</Text>
               </TouchableOpacity>
 
               <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Consentement</Text>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.consent')}</Text>
                 <Switch
                   value={consentAccepted}
                   onValueChange={handleToggleConsent}
@@ -1109,7 +1131,7 @@ const SettingsScreen = () => {
                 />
               </View>
               <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Analytics</Text>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.analyticsLabel')}</Text>
                 <Switch
                   value={analytics}
                   onValueChange={handleToggleAnalytics}
@@ -1118,7 +1140,7 @@ const SettingsScreen = () => {
                 />
               </View>
               <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Marketing</Text>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.marketingLabel')}</Text>
                 <Switch
                   value={marketing}
                   onValueChange={handleToggleMarketing}
@@ -1128,20 +1150,18 @@ const SettingsScreen = () => {
               </View>
               <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Vente de données (CCPA)</Text>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.dataSaleTitle')}</Text>
                   <Text style={{ fontSize: 11, color: colors.textSecondary }}>
-                    Nous ne vendons ni ne partageons vos données personnelles avec des tiers à des fins
-                    publicitaires.
+                    {t('settingsScreen.dataSaleDesc')}
                   </Text>
                 </View>
               </View>
 
               <View style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
                 <View style={{ flex: 1, paddingRight: 12 }}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mode invisible</Text>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.invisibleModeTitle')}</Text>
                   <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
-                    Vous serez invisible pour les autres utilisateurs des lieux, mais vous ne pourrez plus consulter
-                    la carte ni la liste des lieux tant que ce mode est actif.
+                    {t('settingsScreen.invisibleModeDesc')}
                   </Text>
                 </View>
                 {invisibleSaving ? (
@@ -1158,11 +1178,9 @@ const SettingsScreen = () => {
 
               <View style={[styles.optionContainer, { borderBottomWidth: 0 }]}>
                 <View style={{ flex: 1, paddingRight: 12 }}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Partager mon lieu actuel</Text>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.shareLocationTitle')}</Text>
                   <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4, lineHeight: 16 }}>
-                    Affiche aux autres utilisateurs l'endroit précis où vous vous trouvez actuellement (ex :
-                    "Actuellement à ..."), en plus de votre ville. Désactivé par défaut pour protéger votre vie
-                    privée et éviter tout risque de traque.
+                    {t('settingsScreen.shareLocationDesc')}
                   </Text>
                 </View>
                 {shareCurrentLocationSaving ? (
@@ -1179,53 +1197,62 @@ const SettingsScreen = () => {
             </View>
 
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
-              <Text style={styles.sectionTitle}>COMPTE</Text>
+              <Text style={styles.sectionTitle}>{t('settingsScreen.sectionAccount')}</Text>
               <TouchableOpacity
                 style={[styles.optionContainer, { borderBottomColor: colors.border }]}
                 onPress={openEmailModal}
               >
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>Email</Text>
-                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>{user?.email || 'Non renseigné'}</Text>
+                  <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.emailLabel')}</Text>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>{user?.email || t('settingsScreen.notProvided')}</Text>
                 </View>
-                <Text style={{ fontSize: 12, color: '#00c2cb', fontWeight: '700' }}>Changer</Text>
+                <Text style={{ fontSize: 12, color: '#00c2cb', fontWeight: '700' }}>{t('settingsScreen.change')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.optionContainer, { borderBottomColor: colors.border }]}
                 onPress={openPasswordModal}
               >
-                <Text style={[styles.optionText, { color: colors.textPrimary }]}>Mot de passe</Text>
-                <Text style={{ fontSize: 12, color: '#00c2cb', fontWeight: '700' }}>Changer</Text>
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settingsScreen.passwordLabel')}</Text>
+                <Text style={{ fontSize: 12, color: '#00c2cb', fontWeight: '700' }}>{t('settingsScreen.change')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.optionContainer, { borderBottomColor: colors.border }]}
+                onPress={() => setLanguageModalVisible(true)}
+              >
+                <Text style={[styles.optionText, { color: colors.textPrimary }]}>{t('settings.language.sectionTitle')}</Text>
+                <Text style={{ fontSize: 12, color: '#00c2cb', fontWeight: '700' }}>
+                  {LANGUAGE_NAMES[i18n.language] || i18n.language}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.linkRow, { borderBottomColor: colors.border }]}
                 onPress={openBlockedUsers}
               >
-                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Comptes bloqués</Text>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>{t('settingsScreen.blockedAccounts')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.linkRow, { borderBottomColor: colors.border }]} onPress={openPolicy}>
-                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Aide et confidentialité</Text>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>{t('settingsScreen.helpAndPrivacy')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.linkRow, { borderBottomWidth: 0 }]} onPress={openTerms}>
-                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Conditions générales d'utilisation</Text>
+                <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>{t('settingsScreen.terms')}</Text>
               </TouchableOpacity>
             </View>
 
             {['admin', 'moderator'].includes(user?.role) && (
               <View style={[styles.card, { backgroundColor: colors.surface }]}>
-                <Text style={styles.sectionTitle}>MODÉRATION</Text>
+                <Text style={styles.sectionTitle}>{t('settingsScreen.sectionModeration')}</Text>
                 <TouchableOpacity
                   style={[styles.linkRow, { borderBottomColor: colors.border }]}
                   onPress={() => navigation.navigate('Moderator')}
                 >
-                  <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Espace modérateur</Text>
+                  <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>{t('settingsScreen.moderatorSpace')}</Text>
                 </TouchableOpacity>
                 {user?.role === 'admin' && (
                   <TouchableOpacity
                     style={[styles.linkRow, { borderBottomWidth: 0 }]}
                     onPress={() => navigation.navigate('Debug')}
                   >
-                    <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>Debug Console</Text>
+                    <Text style={[styles.linkRowText, { color: '#00c2cb' }]}>{t('settingsScreen.debugConsole')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -1233,18 +1260,18 @@ const SettingsScreen = () => {
 
             <View style={{ gap: 12, marginTop: 20 }}>
               <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.surface }]} onPress={handleExport}>
-                <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>Exporter mes données</Text>
+                <Text style={[styles.actionButtonText, { color: colors.textPrimary }]}>{t('settingsScreen.exportData')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.actionButton, { backgroundColor: isDark ? 'rgba(255,77,77,0.1)' : '#ffe6e6' }]}
                 onPress={handleDelete}
               >
-                <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>Supprimer mon compte</Text>
+                <Text style={[styles.actionButtonText, { color: '#ff4d4d' }]}>{t('settingsScreen.deleteAccount')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={[styles.logoutButton, { backgroundColor: '#ff4d4d' }]} onPress={handleLogout}>
-                <Text style={styles.logoutText}>Déconnexion</Text>
+                <Text style={styles.logoutText}>{t('settingsScreen.logout')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -1267,7 +1294,7 @@ const SettingsScreen = () => {
             {profileSaving ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.saveButtonText}>Enregistrer</Text>
+              <Text style={styles.saveButtonText}>{t('settingsScreen.save')}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1277,9 +1304,9 @@ const SettingsScreen = () => {
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setPolicyModalVisible(false)}>
-              <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Fermer</Text>
+              <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>{t('settingsScreen.close')}</Text>
             </TouchableOpacity>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Confidentialité</Text>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{t('settingsScreen.privacyModalTitle')}</Text>
             <View style={{ width: 60 }} />
           </View>
 
@@ -1299,9 +1326,9 @@ const SettingsScreen = () => {
       <Modal transparent visible={revokeVisible} animationType="fade" onRequestClose={() => setRevokeVisible(false)}>
         <View style={[styles.revokeBackdrop, { backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.35)' }]}>
           <View style={[styles.revokeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={[styles.revokeTitle, { color: colors.textPrimary }]}>Suppression du compte</Text>
+            <Text style={[styles.revokeTitle, { color: colors.textPrimary }]}>{t('settingsScreen.deleteAccountTitle')}</Text>
             <Text style={[styles.revokeDesc, { color: isDark ? '#fff' : colors.textSecondary }]}>
-              Pour confirmer, entrez votre mot de passe. Cette action est irréversible.
+              {t('settingsScreen.deleteAccountDesc')}
             </Text>
             <TextInput
               style={[
@@ -1312,7 +1339,7 @@ const SettingsScreen = () => {
                   backgroundColor: isDark ? '#0f1115' : '#ffffff',
                 },
               ]}
-              placeholder="Mot de passe"
+              placeholder={t('settingsScreen.passwordLabel')}
               placeholderTextColor={isDark ? '#999' : '#666'}
               secureTextEntry
               value={revokePassword}
@@ -1324,14 +1351,14 @@ const SettingsScreen = () => {
                 onPress={() => setRevokeVisible(false)}
                 disabled={revokeWorking}
               >
-                <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
+                <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>{t('settingsScreen.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.primaryButton, styles.dangerButton]}
                 onPress={performRevokeDelete}
                 disabled={revokeWorking}
               >
-                <Text style={styles.dangerButtonText}>{revokeWorking ? 'Suppression...' : 'Supprimer'}</Text>
+                <Text style={styles.dangerButtonText}>{revokeWorking ? t('settingsScreen.deleting') : t('settingsScreen.deleteAccount')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1354,14 +1381,14 @@ const SettingsScreen = () => {
           <View style={styles.blurModalCenter} pointerEvents="box-none">
             <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 12 }]}>
-                Changer le mot de passe
+                {t('settingsScreen.changePasswordTitle')}
               </Text>
               <TextInput
                 style={[
                   styles.revokeInput,
                   { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
                 ]}
-                placeholder="Mot de passe actuel"
+                placeholder={t('settingsScreen.currentPasswordPlaceholder')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
                 secureTextEntry
                 value={currentPasswordInput}
@@ -1373,7 +1400,7 @@ const SettingsScreen = () => {
                   styles.revokeInput,
                   { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
                 ]}
-                placeholder="Nouveau mot de passe (6 caractères min.)"
+                placeholder={t('settingsScreen.newPasswordPlaceholder')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
                 secureTextEntry
                 value={newPasswordInput}
@@ -1385,7 +1412,7 @@ const SettingsScreen = () => {
                   styles.revokeInput,
                   { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
                 ]}
-                placeholder="Confirmer le nouveau mot de passe"
+                placeholder={t('settingsScreen.confirmPasswordPlaceholder')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
                 secureTextEntry
                 value={confirmNewPasswordInput}
@@ -1401,7 +1428,7 @@ const SettingsScreen = () => {
                   onPress={() => setPasswordModalVisible(false)}
                   disabled={passwordSaving}
                 >
-                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
+                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>{t('settingsScreen.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.primaryButton, { backgroundColor: '#00c2cb' }]}
@@ -1411,10 +1438,53 @@ const SettingsScreen = () => {
                   {passwordSaving ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.dangerButtonText}>Valider</Text>
+                    <Text style={styles.dangerButtonText}>{t('settingsScreen.validate')}</Text>
                   )}
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Sélection de la langue */}
+      <Modal
+        transparent
+        visible={languageModalVisible}
+        animationType="fade"
+        onRequestClose={() => !languageSaving && setLanguageModalVisible(false)}
+      >
+        <View style={styles.blurModalContainer}>
+          <BlurView intensity={30} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFillObject} />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => !languageSaving && setLanguageModalVisible(false)}
+          />
+          <View style={styles.blurModalCenter} pointerEvents="box-none">
+            <View style={[styles.blurModalCard, { backgroundColor: colors.surface, maxHeight: '75%' }]}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 12 }]}>
+                {t('settings.language.sectionTitle')}
+              </Text>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {SUPPORTED_LANGUAGES.map((code) => (
+                  <TouchableOpacity
+                    key={code}
+                    style={[styles.optionContainer, { borderBottomColor: colors.border }]}
+                    onPress={() => handleSelectLanguage(code)}
+                    disabled={languageSaving}
+                  >
+                    <Text
+                      style={[
+                        styles.optionText,
+                        { color: colors.textPrimary, fontWeight: i18n.language === code ? '800' : '400' },
+                      ]}
+                    >
+                      {LANGUAGE_NAMES[code] || code}
+                    </Text>
+                    {i18n.language === code && <Ionicons name="checkmark" size={18} color="#00c2cb" />}
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           </View>
         </View>
@@ -1433,17 +1503,17 @@ const SettingsScreen = () => {
           <View style={styles.blurModalCenter} pointerEvents="box-none">
             <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 12 }]}>
-                Changer d'email
+                {t('settingsScreen.changeEmailTitle')}
               </Text>
               <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 8 }}>
-                Email actuel : {user?.email || 'Non renseigné'}
+                {t('settingsScreen.currentEmailLabel', { email: user?.email || t('settingsScreen.notProvided') })}
               </Text>
               <TextInput
                 style={[
                   styles.revokeInput,
                   { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
                 ]}
-                placeholder="Nouvel email"
+                placeholder={t('settingsScreen.newEmailPlaceholder')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
                 autoCapitalize="none"
                 keyboardType="email-address"
@@ -1456,7 +1526,7 @@ const SettingsScreen = () => {
                   styles.revokeInput,
                   { borderColor: colors.border, color: isDark ? '#fff' : colors.textPrimary, backgroundColor: isDark ? '#0f1115' : '#ffffff' },
                 ]}
-                placeholder="Mot de passe actuel"
+                placeholder={t('settingsScreen.currentPasswordPlaceholder')}
                 placeholderTextColor={isDark ? '#999' : '#666'}
                 secureTextEntry
                 value={emailCurrentPasswordInput}
@@ -1470,7 +1540,7 @@ const SettingsScreen = () => {
                   onPress={() => setEmailModalVisible(false)}
                   disabled={emailSaving}
                 >
-                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Annuler</Text>
+                  <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>{t('settingsScreen.cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.primaryButton, { backgroundColor: '#00c2cb' }]}
@@ -1480,7 +1550,7 @@ const SettingsScreen = () => {
                   {emailSaving ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
-                    <Text style={styles.dangerButtonText}>Valider</Text>
+                    <Text style={styles.dangerButtonText}>{t('settingsScreen.validate')}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -1499,14 +1569,14 @@ const SettingsScreen = () => {
           />
           <View style={styles.blurModalCenter} pointerEvents="box-none">
             <View style={[styles.blurModalCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 16 }]}>Photo de profil</Text>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 16 }]}>{t('editProfile.photo.modalTitle')}</Text>
               <TouchableOpacity
                 style={[styles.photoOptionButton, { borderColor: colors.border }]}
                 onPress={handleCamera}
                 disabled={!!photoActionLoading}
               >
                 <Text style={[styles.photoOptionText, { color: colors.textPrimary }]}>
-                  {photoActionLoading === 'camera' ? 'Envoi...' : '📸 Prendre une photo'}
+                  {photoActionLoading === 'camera' ? t('editProfile.photo.sending') : t('editProfile.photo.takePhoto')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -1515,7 +1585,7 @@ const SettingsScreen = () => {
                 disabled={!!photoActionLoading}
               >
                 <Text style={[styles.photoOptionText, { color: colors.textPrimary }]}>
-                  {photoActionLoading === 'gallery' ? 'Envoi...' : '🖼️ Choisir dans la galerie'}
+                  {photoActionLoading === 'gallery' ? t('editProfile.photo.sending') : t('editProfile.photo.chooseGallery')}
                 </Text>
               </TouchableOpacity>
               {!!user?.photo && (
@@ -1525,7 +1595,7 @@ const SettingsScreen = () => {
                   disabled={!!photoActionLoading}
                 >
                   <Text style={styles.photoOptionDeleteText}>
-                    {photoActionLoading === 'delete' ? 'Suppression...' : '🗑️ Supprimer la photo'}
+                    {photoActionLoading === 'delete' ? t('editProfile.photo.deleting') : t('editProfile.photo.deletePhoto')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -1534,7 +1604,7 @@ const SettingsScreen = () => {
                 style={[styles.photoOptionButton, { borderColor: colors.border, marginBottom: 0 }]}
                 disabled={!!photoActionLoading}
               >
-                <Text style={{ color: colors.textSecondary, fontSize: 15, fontWeight: '600' }}>Annuler</Text>
+                <Text style={{ color: colors.textSecondary, fontSize: 15, fontWeight: '600' }}>{t('editProfile.photo.cancel')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1550,9 +1620,9 @@ const SettingsScreen = () => {
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           <View style={[styles.modalHeader, { backgroundColor: colors.surface }]}>
             <TouchableOpacity style={styles.modalCloseButton} onPress={() => setBlockedModalVisible(false)}>
-              <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Fermer</Text>
+              <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>{t('settingsScreen.close')}</Text>
             </TouchableOpacity>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Comptes bloqués</Text>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>{t('settingsScreen.blockedAccounts')}</Text>
             <View style={{ width: 60 }} />
           </View>
           <View style={styles.modalContent}>
@@ -1560,13 +1630,13 @@ const SettingsScreen = () => {
               <ActivityIndicator size="large" color="#00c2cb" style={{ marginTop: 50 }} />
             ) : blockedList.length === 0 ? (
               <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 30 }}>
-                Aucun compte bloqué.
+                {t('settingsScreen.noBlockedAccounts')}
               </Text>
             ) : (
               <ScrollView showsVerticalScrollIndicator={false}>
                 {blockedList.map((b) => {
                   const id = b?._id || b?.id;
-                  const name = b?.targetUser?.username || b?.targetUser?.name || b?.username || 'Utilisateur';
+                  const name = b?.targetUser?.username || b?.targetUser?.name || b?.username || t('referralScreen.defaultUser');
                   return (
                     <View key={id} style={[styles.optionContainer, { borderBottomColor: colors.border }]}>
                       <Text style={[styles.optionText, { color: colors.textPrimary }]}>{name}</Text>
@@ -1574,7 +1644,7 @@ const SettingsScreen = () => {
                         style={[styles.smallPill, { backgroundColor: '#00c2cb' }]}
                         onPress={() => handleUnblock(id)}
                       >
-                        <Text style={[styles.smallPillText, { color: '#fff' }]}>Débloquer</Text>
+                        <Text style={[styles.smallPillText, { color: '#fff' }]}>{t('settingsScreen.unblock')}</Text>
                       </TouchableOpacity>
                     </View>
                   );
