@@ -722,6 +722,7 @@
     "errorTitle": "Błąd"
   },
   "streakCard": {
+    "title": "Twoja seria",
     "hintReady": "Twoja nagroda jest gotowa!",
     "hintGrow": "Loguj się codziennie, aby ją zwiększać.",
     "claimBoost": "Odbierz swój boost",

@@ -1642,7 +1642,14 @@ const LocationListScreen = () => {
             initialNumToRender={8}
             maxToRenderPerBatch={10}
             windowSize={10}
-            removeClippedSubviews={Platform.OS === 'android'}
+            // Désactivé : sur Android, cette optimisation détache du natif les
+            // cellules hors-écran, et leur zone de tap peut rester désynchronisée
+            // au moment où elles sont réutilisées — particulièrement visible ici
+            // car les cartes ont une hauteur variable (bannière/logo pro,
+            // nombre d'avatars, bouton "Je suis là" conditionnels). Résultat :
+            // les cartes s'affichent normalement mais deviennent silencieusement
+            // non cliquables après un scroll.
+            removeClippedSubviews={false}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.4}
             ListHeaderComponent={renderListSectionsHeader}

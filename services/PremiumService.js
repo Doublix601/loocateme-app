@@ -138,8 +138,11 @@ const PremiumService = {
     }
   },
 
-  // Appelé depuis UserContext après login / mise à jour profil.
-  _updateFromUser(user) {
+  // Resynchronise le cache local boost/superlike depuis un objet `user` déjà
+  // fraîchement récupéré du backend (ex: après un claim de récompense de
+  // série) — évite un aller-retour réseau supplémentaire pour une donnée
+  // qu'on vient tout juste de recevoir.
+  updateFromUser(user) {
     if (!user) return;
     _state.subscriptionStatus = user.isPremium ? 'premium_monthly' : 'free';
     _state.boostsRemaining = typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;

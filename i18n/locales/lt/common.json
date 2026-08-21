@@ -722,6 +722,7 @@
     "errorTitle": "Klaida"
   },
   "streakCard": {
+    "title": "Tavo serija",
     "hintReady": "Tavo apdovanojimas paruoštas!",
     "hintGrow": "Prisijunk kasdien, kad jis augtų.",
     "claimBoost": "Atsiimk savo boost",

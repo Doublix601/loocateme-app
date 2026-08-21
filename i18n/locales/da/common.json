@@ -722,6 +722,7 @@
     "errorTitle": "Fejl"
   },
   "streakCard": {
+    "title": "Din stime",
     "hintReady": "Din belønning er klar!",
     "hintGrow": "Log ind hver dag for at få den til at stige.",
     "claimBoost": "Hent din boost",

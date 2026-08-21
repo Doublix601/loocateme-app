@@ -722,6 +722,7 @@
     "errorTitle": "Fout"
   },
   "streakCard": {
+    "title": "Jouw streak",
     "hintReady": "Je beloning is klaar!",
     "hintGrow": "Log elke dag in om hem te laten stijgen.",
     "claimBoost": "Claim je boost",

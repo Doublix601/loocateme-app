@@ -722,6 +722,7 @@
     "errorTitle": "Napaka"
   },
   "streakCard": {
+    "title": "Tvoj niz",
     "hintReady": "Tvoja nagrada je pripravljena!",
     "hintGrow": "Prijavi se vsak dan, da jo povečaš.",
     "claimBoost": "Prevzemi svoj boost",

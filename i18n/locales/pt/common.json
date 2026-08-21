@@ -722,6 +722,7 @@
     "errorTitle": "Erro"
   },
   "streakCard": {
+    "title": "A tua sequência",
     "hintReady": "A tua recompensa está pronta!",
     "hintGrow": "Entra todos os dias para a fazer subir.",
     "claimBoost": "Reclamar o teu boost",

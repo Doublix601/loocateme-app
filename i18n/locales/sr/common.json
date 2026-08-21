@@ -722,6 +722,7 @@
     "errorTitle": "Greška"
   },
   "streakCard": {
+    "title": "Tvoj niz",
     "hintReady": "Tvoja nagrada je spremna!",
     "hintGrow": "Prijavljuj se svaki dan da bi rasla.",
     "claimBoost": "Preuzmi svoj boost",

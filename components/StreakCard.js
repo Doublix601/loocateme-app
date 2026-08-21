@@ -24,7 +24,6 @@ const StreakCard = ({
 }) => {
   const { t } = useTranslation();
   const safeCount = Math.max(0, Math.min(MAX_DAYS, count || 0));
-  const displayCount = Math.max(1, safeCount);
   const scale = useRef(new Animated.Value(1)).current;
   const canClaim = supervisePendingClaim || boostPendingClaim;
 
@@ -64,9 +63,9 @@ const StreakCard = ({
         <View style={styles.topRow}>
           <View style={styles.titleRow}>
             <Text style={[styles.flame, safeCount === 0 && styles.flameDim]}>🔥</Text>
-            <Text style={[styles.title, { color: isDark ? '#fff' : colors.textPrimary }]}>Ta série</Text>
+            <Text style={[styles.title, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('streakCard.title')}</Text>
           </View>
-          <Text style={[styles.percent, { color: '#FF6B35' }]}>{displayCount}/{MAX_DAYS}</Text>
+          <Text style={[styles.percent, { color: '#FF6B35' }]}>{safeCount}/{MAX_DAYS}</Text>
         </View>
 
         <View style={styles.gaugeRow}>

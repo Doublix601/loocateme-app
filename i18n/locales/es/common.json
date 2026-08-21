@@ -722,6 +722,7 @@
     "errorTitle": "Error"
   },
   "streakCard": {
+    "title": "Tu racha",
     "hintReady": "¡Tu recompensa está lista!",
     "hintGrow": "Conéctate cada día para que siga subiendo.",
     "claimBoost": "Reclamar tu boost",

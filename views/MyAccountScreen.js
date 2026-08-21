@@ -192,6 +192,16 @@ const MyAccountScreen = () => {
   const goToStep = async (idx) => {
     if (idx < 0 || idx >= SPOT_STEPS.length) return;
     const rect = await scrollAndMeasure(idx);
+    if (!rect) {
+      // La mesure a échoué (ref pas encore montée / layout natif pas encore
+      // terminé — plus fréquent sur Android au tout premier lancement). Sans
+      // rect, le modal du halo ne s'affiche jamais (visible = spotStep >= 0
+      // && !!spotRect), donc aucun bouton "Suivant"/"Passer" n'est atteignable
+      // pour débloquer le swiper : on abandonne proprement plutôt que de
+      // laisser lockSwiper() actif indéfiniment.
+      await endOnboarding();
+      return;
+    }
     setSpotRect(rect);
     setSpotStep(idx);
   };
@@ -519,6 +529,12 @@ const MyAccountScreen = () => {
       const res = await getMyUser();
       const me = res?.user;
       if (!me || !updateUser) return;
+      // Resynchronise le cache local boost/superlike (PremiumService, source
+      // affichée par RewardsCard) avec ce `boostBalance`/`superlikeBalance`
+      // fraîchement reçu — sans cet appel, un claim de récompense de série
+      // incrémente bien le solde côté serveur mais l'app continue d'afficher
+      // l'ancien solde indéfiniment.
+      PremiumService.updateFromUser(me);
       updateUser({
         ...user,
         firstName: typeof me.firstName === 'string' ? me.firstName : user?.firstName || '',

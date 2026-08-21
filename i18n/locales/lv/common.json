@@ -722,6 +722,7 @@
     "errorTitle": "Kļūda"
   },
   "streakCard": {
+    "title": "Tava sērija",
     "hintReady": "Tava balva ir gatava!",
     "hintGrow": "Piesakies katru dienu, lai to palielinātu.",
     "claimBoost": "Saņem savu boost",

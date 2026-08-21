@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -209,7 +209,13 @@ const LocationCard = React.memo(function LocationCard({
 
   const isActive = !!visibleSetRef?.current?.has(index);
 
-  if (isUserHere) {
+  // Le Canvas Skia de AnimatedGradientBorder ne respecte pas pointerEvents="none"
+  // sous Android/New Architecture (bug connu de @shopify/react-native-skia :
+  // sa vue native intercepte le touch quel que soit pointerEvents) et bloque
+  // silencieusement tous les taps sur la carte en dessous. On désactive la
+  // bordure néon sur Android — mieux vaut perdre l'effet visuel que rendre
+  // les lieux non cliquables.
+  if (Platform.OS !== 'android' && isUserHere) {
     return (
       <AnimatedGradientBorder borderRadius={20} index={index} active={isActive} marginBottom={16}>
         {card}
@@ -218,7 +224,7 @@ const LocationCard = React.memo(function LocationCard({
   }
 
   // Vibe nuit : bordure néon animée sur toutes les cartes.
-  if (isMoon) {
+  if (Platform.OS !== 'android' && isMoon) {
     return (
       <AnimatedGradientBorder
         borderRadius={20}

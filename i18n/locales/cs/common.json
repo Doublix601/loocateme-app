@@ -722,6 +722,7 @@
     "errorTitle": "Chyba"
   },
   "streakCard": {
+    "title": "Tvoje série",
     "hintReady": "Tvoje odměna je připravena!",
     "hintGrow": "Přihlašuj se každý den, aby rostla.",
     "claimBoost": "Vyzvednout boost",

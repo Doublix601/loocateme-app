@@ -722,6 +722,7 @@
     "errorTitle": "Villa"
   },
   "streakCard": {
+    "title": "Runan þín",
     "hintReady": "Verðlaunin þín eru tilbúin!",
     "hintGrow": "Skráðu þig inn á hverjum degi til að hækka hana.",
     "claimBoost": "Sæktu boost-ið þitt",

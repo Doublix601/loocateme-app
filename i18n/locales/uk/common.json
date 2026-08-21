@@ -722,6 +722,7 @@
     "errorTitle": "Помилка"
   },
   "streakCard": {
+    "title": "Твоя серія",
     "hintReady": "Твоя нагорода готова!",
     "hintGrow": "Заходь щодня, щоб вона зростала.",
     "claimBoost": "Забрати свій boost",

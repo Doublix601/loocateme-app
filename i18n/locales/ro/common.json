@@ -722,6 +722,7 @@
     "errorTitle": "Eroare"
   },
   "streakCard": {
+    "title": "Seria ta",
     "hintReady": "Recompensa ta este gata!",
     "hintGrow": "Conectează-te în fiecare zi pentru a o crește.",
     "claimBoost": "Revendică-ți boost-ul",

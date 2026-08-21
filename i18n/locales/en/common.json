@@ -722,6 +722,7 @@
     "errorTitle": "Error"
   },
   "streakCard": {
+    "title": "Your streak",
     "hintReady": "Your reward is ready!",
     "hintGrow": "Log in every day to keep it climbing.",
     "claimBoost": "Claim your boost",

@@ -722,6 +722,7 @@
     "errorTitle": "Грешка"
   },
   "streakCard": {
+    "title": "Твоята серия",
     "hintReady": "Наградата ти е готова!",
     "hintGrow": "Влизай всеки ден, за да я увеличаваш.",
     "claimBoost": "Вземи своя boost",

@@ -722,6 +722,7 @@
     "errorTitle": "Virhe"
   },
   "streakCard": {
+    "title": "Putkesi",
     "hintReady": "Palkintosi on valmis!",
     "hintGrow": "Kirjaudu sisään joka päivä, jotta se kasvaa.",
     "claimBoost": "Lunasta boostisi",

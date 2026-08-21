@@ -53,6 +53,14 @@ const RewardsCard = ({
           />
 
           <View style={[styles.consumablesCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : '#fff' }]}>
+            <View style={styles.stat}>
+              <Animated.View style={{ transform: [{ scale: boostPulse }] }}>
+                <Ionicons name="flash" size={18} color={colors.accent} />
+              </Animated.View>
+              <Text style={[styles.statLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.rewards.boosts')}</Text>
+              <Text style={[styles.statValue, { color: isDark ? '#fff' : colors.textPrimary }]}>{boostBalance}</Text>
+            </View>
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <TouchableOpacity
               style={styles.stat}
               onPress={onOpenSuperlikeHistory}
@@ -66,14 +74,6 @@ const RewardsCard = ({
                 {superlikeBalance}
               </Text>
             </TouchableOpacity>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <View style={styles.stat}>
-              <Animated.View style={{ transform: [{ scale: boostPulse }] }}>
-                <Ionicons name="flash" size={18} color={colors.accent} />
-              </Animated.View>
-              <Text style={[styles.statLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.rewards.boosts')}</Text>
-              <Text style={[styles.statValue, { color: isDark ? '#fff' : colors.textPrimary }]}>{boostBalance}</Text>
-            </View>
             <TouchableOpacity
               style={[styles.buyButton, { backgroundColor: colors.accent }]}
               onPress={onOpenConsumablesShop}

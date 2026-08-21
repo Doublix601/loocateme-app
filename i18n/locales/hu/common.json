@@ -722,6 +722,7 @@
     "errorTitle": "Hiba"
   },
   "streakCard": {
+    "title": "Sorozatod",
     "hintReady": "A jutalmad készen áll!",
     "hintGrow": "Jelentkezz be minden nap, hogy növekedjen.",
     "claimBoost": "Boost igénylése",

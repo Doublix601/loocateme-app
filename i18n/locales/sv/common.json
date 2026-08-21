@@ -722,6 +722,7 @@
     "errorTitle": "Fel"
   },
   "streakCard": {
+    "title": "Din svit",
     "hintReady": "Din belöning är klar!",
     "hintGrow": "Logga in varje dag för att öka den.",
     "claimBoost": "Hämta din boost",

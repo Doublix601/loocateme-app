@@ -722,6 +722,7 @@
     "errorTitle": "Fehler"
   },
   "streakCard": {
+    "title": "Deine Serie",
     "hintReady": "Deine Belohnung ist bereit!",
     "hintGrow": "Melde dich jeden Tag an, um sie zu steigern.",
     "claimBoost": "Boost abholen",

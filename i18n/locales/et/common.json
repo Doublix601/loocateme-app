@@ -722,6 +722,7 @@
     "errorTitle": "Viga"
   },
   "streakCard": {
+    "title": "Sinu seeria",
     "hintReady": "Sinu preemia on valmis!",
     "hintGrow": "Logi iga päev sisse, et see kasvaks.",
     "claimBoost": "Nõua oma boost",
