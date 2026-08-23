@@ -1,3 +1,7 @@
+// Doit rester le tout premier import : installe la capture d'erreur fatale
+// avant que le reste des modules (App et ses ~40 imports) ne s'évalue.
+import './errorReporting';
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';

@@ -45,6 +45,7 @@ import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext'
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n, { initI18n } from './i18n';
+import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 import { usePresence } from './hooks/usePresence';
 import {
   initApiFromStorage,
@@ -678,11 +679,27 @@ function AppShell({ purchasesReady }) {
   );
 }
 
-export default function App() {
+function AppRoot() {
   const [i18nReady, setI18nReady] = useState(false);
 
   useEffect(() => {
     initI18n().finally(() => setI18nReady(true));
+  }, []);
+
+  // Si le lancement précédent s'est terminé par une exception fatale (cf.
+  // errorReporting.js / GlobalErrorBoundary), on l'affiche dans la console
+  // pour pouvoir enfin lire la vraie cause du crash (Xcode Console / logs
+  // TestFlight) au lieu du crash log Apple non symbolisé, sans message.
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('@loocateme:last_fatal_error');
+        if (raw) {
+          console.warn('[LoocateMe] Dernière exception fatale enregistrée:', raw);
+          await AsyncStorage.removeItem('@loocateme:last_fatal_error');
+        }
+      } catch (_) {}
+    })();
   }, []);
 
   if (!i18nReady) {
@@ -710,6 +727,14 @@ export default function App() {
         </SafeAreaProvider>
       </I18nextProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function App() {
+  return (
+    <GlobalErrorBoundary>
+      <AppRoot />
+    </GlobalErrorBoundary>
   );
 }
 
