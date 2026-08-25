@@ -77,4 +77,7 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# @end expo-cli.superpowers/
+# @end expo-cli
+
+# Superpowers scratch workspace (ledgers, briefs, review packages) — never versioned
+.superpowers/
