@@ -220,6 +220,14 @@ function AppShell({ purchasesReady }) {
               resolvedRoute = 'Login';
             } else {
               const seen = await hasSeenOnboarding();
+              if (seen) {
+                // Same reasoning as the success-path branch above: no
+                // interactive login here either (getMyUser failed non-401,
+                // e.g. transient network error), so navigateAfterAuth()
+                // never runs. Prime the location permission before routing
+                // straight to MainTabs.
+                await ensureLocationPermissionRequested();
+              }
               resolvedRoute = seen ? 'MainTabs' : 'Onboarding';
             }
           }

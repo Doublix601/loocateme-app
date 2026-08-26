@@ -417,7 +417,7 @@ const DebugScreen = () => {
     debRef.current = setTimeout(async () => {
       try {
         setSearching(true);
-        const res = await searchUsers({ q, limit: 10 });
+        const res = await searchUsers({ q });
         const list = Array.isArray(res?.users) ? res.users : [];
         setResults(list);
       } catch (_e) {
