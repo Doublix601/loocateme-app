@@ -241,7 +241,8 @@
     "seeMore": "Shiko më shumë",
     "boosted": "I përforcuar",
     "boostProfileHere": "Përforco profilin tim këtu",
-    "boostLockedAfterCheckins": "Boost 🔓 pas 2 regjistrimeve"
+    "boostLockedAfterCheckins": "Boost 🔓 pas 2 regjistrimeve",
+    "boostRequiresPresence": "Duhet të jesh në këtë vend për të përforcuar profilin tënd."
   },
   "myAccount": {
     "actions": {

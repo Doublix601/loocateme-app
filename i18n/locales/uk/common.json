@@ -241,7 +241,8 @@
     "seeMore": "Показати більше",
     "boosted": "Прискорено",
     "boostProfileHere": "Прискорити мій профіль тут",
-    "boostLockedAfterCheckins": "Прискорення 🔓 після 2 реєстрацій"
+    "boostLockedAfterCheckins": "Прискорення 🔓 після 2 реєстрацій",
+    "boostRequiresPresence": "Ти маєш бути в цьому місці, щоб підсилити свій профіль."
   },
   "myAccount": {
     "actions": {

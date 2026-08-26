@@ -241,7 +241,8 @@
     "seeMore": "Vaata rohkem",
     "boosted": "Kiirendatud",
     "boostProfileHere": "Kiirenda minu profiili siin",
-    "boostLockedAfterCheckins": "Kiirendus 🔓 pärast 2 sisseregistreerimist"
+    "boostLockedAfterCheckins": "Kiirendus 🔓 pärast 2 sisseregistreerimist",
+    "boostRequiresPresence": "Profiili kiirendamiseks pead olema selles kohas."
   },
   "myAccount": {
     "actions": {

@@ -241,7 +241,8 @@
     "seeMore": "Ara aktar",
     "boosted": "Imsaħħaħ",
     "boostProfileHere": "Saħħaħ il-profil tiegħi hawn",
-    "boostLockedAfterCheckins": "Boost 🔓 wara 2 check-ins"
+    "boostLockedAfterCheckins": "Boost 🔓 wara 2 check-ins",
+    "boostRequiresPresence": "Trid tkun f'dan il-post biex issaħħaħ il-profil tiegħek."
   },
   "myAccount": {
     "actions": {

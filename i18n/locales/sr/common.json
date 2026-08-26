@@ -241,7 +241,8 @@
     "seeMore": "Vidi više",
     "boosted": "Pojačano",
     "boostProfileHere": "Pojačaj moj profil ovde",
-    "boostLockedAfterCheckins": "Boost 🔓 posle 2 prijave"
+    "boostLockedAfterCheckins": "Boost 🔓 posle 2 prijave",
+    "boostRequiresPresence": "Morate biti na ovom mestu da biste pojačali svoj profil."
   },
   "myAccount": {
     "actions": {

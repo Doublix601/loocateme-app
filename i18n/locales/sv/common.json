@@ -241,7 +241,8 @@
     "seeMore": "Se mer",
     "boosted": "Boostad",
     "boostProfileHere": "Boosta min profil här",
-    "boostLockedAfterCheckins": "Boost 🔓 efter 2 incheckningar"
+    "boostLockedAfterCheckins": "Boost 🔓 efter 2 incheckningar",
+    "boostRequiresPresence": "Du måste vara på denna plats för att boosta din profil."
   },
   "myAccount": {
     "actions": {

@@ -241,7 +241,8 @@
     "seeMore": "Sjá meira",
     "boosted": "Örvað",
     "boostProfileHere": "Örva prófílinn minn hér",
-    "boostLockedAfterCheckins": "Örvun 🔓 eftir 2 innritanir"
+    "boostLockedAfterCheckins": "Örvun 🔓 eftir 2 innritanir",
+    "boostRequiresPresence": "Þú þarft að vera á þessum stað til að örva prófílinn þinn."
   },
   "myAccount": {
     "actions": {

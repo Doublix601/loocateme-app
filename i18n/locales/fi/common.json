@@ -241,7 +241,8 @@
     "seeMore": "Näytä lisää",
     "boosted": "Tehostettu",
     "boostProfileHere": "Tehosta profiiliani täällä",
-    "boostLockedAfterCheckins": "Tehostus 🔓 2 sisäänkirjautumisen jälkeen"
+    "boostLockedAfterCheckins": "Tehostus 🔓 2 sisäänkirjautumisen jälkeen",
+    "boostRequiresPresence": "Sinun täytyy olla tässä paikassa tehostaaksesi profiiliasi."
   },
   "myAccount": {
     "actions": {

@@ -241,7 +241,8 @@
     "seeMore": "Vezi mai mult",
     "boosted": "Impulsionat",
     "boostProfileHere": "Impulsionează-mi profilul aici",
-    "boostLockedAfterCheckins": "Boost 🔓 după 2 check-in-uri"
+    "boostLockedAfterCheckins": "Boost 🔓 după 2 check-in-uri",
+    "boostRequiresPresence": "Trebuie să fii în acest loc pentru a-ți impulsiona profilul."
   },
   "myAccount": {
     "actions": {

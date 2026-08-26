@@ -241,7 +241,8 @@
     "seeMore": "Több megtekintése",
     "boosted": "Megerősítve",
     "boostProfileHere": "Profilom megerősítése itt",
-    "boostLockedAfterCheckins": "Boost 🔓 2 bejelentkezés után"
+    "boostLockedAfterCheckins": "Boost 🔓 2 bejelentkezés után",
+    "boostRequiresPresence": "A profilod megerősítéséhez itt kell lenned."
   },
   "myAccount": {
     "actions": {

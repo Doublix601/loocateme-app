@@ -241,7 +241,8 @@
     "seeMore": "Види повеќе",
     "boosted": "Засилено",
     "boostProfileHere": "Засили го мојот профил тука",
-    "boostLockedAfterCheckins": "Буст 🔓 по 2 пријавувања"
+    "boostLockedAfterCheckins": "Буст 🔓 по 2 пријавувања",
+    "boostRequiresPresence": "Мора да си на ова место за да го засилиш профилот."
   },
   "myAccount": {
     "actions": {

@@ -241,7 +241,8 @@
     "seeMore": "Δες περισσότερα",
     "boosted": "Ενισχύθηκε",
     "boostProfileHere": "Ενίσχυσε το προφίλ μου εδώ",
-    "boostLockedAfterCheckins": "Ενίσχυση 🔓 μετά από 2 check-in"
+    "boostLockedAfterCheckins": "Ενίσχυση 🔓 μετά από 2 check-in",
+    "boostRequiresPresence": "Πρέπει να βρίσκεσαι σε αυτό το μέρος για να ενισχύσεις το προφίλ σου."
   },
   "myAccount": {
     "actions": {

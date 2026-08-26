@@ -241,7 +241,8 @@
     "seeMore": "Vedi altro",
     "boosted": "Potenziato",
     "boostProfileHere": "Potenzia il mio profilo qui",
-    "boostLockedAfterCheckins": "Boost 🔓 dopo 2 check-in"
+    "boostLockedAfterCheckins": "Boost 🔓 dopo 2 check-in",
+    "boostRequiresPresence": "Devi essere sul posto per potenziare il tuo profilo."
   },
   "myAccount": {
     "actions": {

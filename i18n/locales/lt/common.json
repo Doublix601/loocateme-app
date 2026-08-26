@@ -241,7 +241,8 @@
     "seeMore": "Žiūrėti daugiau",
     "boosted": "Pagreitinta",
     "boostProfileHere": "Pagreitinti mano profilį čia",
-    "boostLockedAfterCheckins": "Pagreitinimas 🔓 po 2 įsiregistravimų"
+    "boostLockedAfterCheckins": "Pagreitinimas 🔓 po 2 įsiregistravimų",
+    "boostRequiresPresence": "Turi būti šioje vietoje, kad galėtum pagreitinti savo profilį."
   },
   "myAccount": {
     "actions": {

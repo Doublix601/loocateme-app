@@ -241,7 +241,8 @@
     "seeMore": "Meer zien",
     "boosted": "Geboost",
     "boostProfileHere": "Boost mijn profiel hier",
-    "boostLockedAfterCheckins": "Boost 🔓 na 2 check-ins"
+    "boostLockedAfterCheckins": "Boost 🔓 na 2 check-ins",
+    "boostRequiresPresence": "Je moet op deze plek zijn om je profiel te boosten."
   },
   "myAccount": {
     "actions": {

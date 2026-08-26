@@ -986,12 +986,14 @@ const LocationScreen = () => {
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={handleBoost}
+            disabled={!isUserHere && !isBoosted}
             style={[
               styles.primaryButton,
               {
                 borderRadius: radius.pill,
                 paddingVertical: spacing.md,
                 shadowColor: palette.accent,
+                opacity: !isUserHere && !isBoosted ? 0.45 : 1,
               },
             ]}
           >
@@ -1006,6 +1008,16 @@ const LocationScreen = () => {
               {isBoosted ? t('locationScreen.boosted') : boostUnlocked ? t('locationScreen.boostProfileHere') : t('locationScreen.boostLockedAfterCheckins')}
             </Text>
           </TouchableOpacity>
+          {!isUserHere && !isBoosted && (
+            <Text
+              style={[
+                typography.caption,
+                { textAlign: 'center', marginTop: spacing.xs },
+              ]}
+            >
+              {t('locationScreen.boostRequiresPresence')}
+            </Text>
+          )}
           {isUserHere && (
             <TouchableOpacity
               onPress={handleNotHereFromVerify}

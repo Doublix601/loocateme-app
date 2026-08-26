@@ -241,7 +241,8 @@
     "seeMore": "Se mere",
     "boosted": "Boostet",
     "boostProfileHere": "Boost min profil her",
-    "boostLockedAfterCheckins": "Boost 🔓 efter 2 indtjekninger"
+    "boostLockedAfterCheckins": "Boost 🔓 efter 2 indtjekninger",
+    "boostRequiresPresence": "Du skal være på dette sted for at booste din profil."
   },
   "myAccount": {
     "actions": {

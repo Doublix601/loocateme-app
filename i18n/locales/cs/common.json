@@ -241,7 +241,8 @@
     "seeMore": "Zobrazit více",
     "boosted": "Posíleno",
     "boostProfileHere": "Posílit můj profil zde",
-    "boostLockedAfterCheckins": "Boost 🔓 po 2 check-inech"
+    "boostLockedAfterCheckins": "Boost 🔓 po 2 check-inech",
+    "boostRequiresPresence": "Musíš být na tomto místě, chceš-li posílit svůj profil."
   },
   "myAccount": {
     "actions": {

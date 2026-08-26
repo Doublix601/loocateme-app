@@ -241,7 +241,8 @@
     "seeMore": "Skatīt vairāk",
     "boosted": "Paātrināts",
     "boostProfileHere": "Paātrināt manu profilu šeit",
-    "boostLockedAfterCheckins": "Paātrinājums 🔓 pēc 2 reģistrēšanās"
+    "boostLockedAfterCheckins": "Paātrinājums 🔓 pēc 2 reģistrēšanās",
+    "boostRequiresPresence": "Tev jābūt šajā vietā, lai paātrinātu savu profilu."
   },
   "myAccount": {
     "actions": {

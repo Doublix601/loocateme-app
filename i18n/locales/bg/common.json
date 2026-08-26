@@ -241,7 +241,8 @@
     "seeMore": "Виж повече",
     "boosted": "Подсилен",
     "boostProfileHere": "Подсили профила ми тук",
-    "boostLockedAfterCheckins": "Буст 🔓 след 2 регистрации"
+    "boostLockedAfterCheckins": "Буст 🔓 след 2 регистрации",
+    "boostRequiresPresence": "Трябва да си на това място, за да усилиш профила си."
   },
   "myAccount": {
     "actions": {
