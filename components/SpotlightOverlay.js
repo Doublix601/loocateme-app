@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Dimensions, Animated } from 'react-native';
+import { computeSpotlightTooltipTop } from '../utils/spotlightPlacement';
 
 const { width: W, height: H } = Dimensions.get('window');
 const PAD = 12;
@@ -82,9 +83,7 @@ export default function SpotlightOverlay({
   // Plafonner br à la moitié du côté le plus court pour éviter des caps gigantesques (ex: photo circulaire)
   const br = Math.min((rect.borderRadius ?? 14) + PAD, sw / 2, sh / 2);
 
-  const showBelow = sy + sh < H * 0.58;
-  const tooltipTop = showBelow ? Math.min(sy + sh + 16, H - 220) : undefined;
-  const tooltipBottom = !showBelow ? Math.max(H - sy + 16, 16) : undefined;
+  const tooltipTop = computeSpotlightTooltipTop({ sy, sh, screenHeight: H });
 
   const isLast = stepIndex === totalSteps - 1;
 
@@ -128,7 +127,6 @@ export default function SpotlightOverlay({
               opacity: tooltipOpacity,
               transform: [{ translateY: tooltipTranslateY }],
               top: tooltipTop,
-              bottom: tooltipBottom,
               left: 20,
               right: 20,
             },
