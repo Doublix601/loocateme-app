@@ -85,6 +85,7 @@ const SettingsScreen = () => {
     { kind: 'superlike_accepted', label: t('settingsScreen.notifKinds.superlikeAccepted') },
     { kind: 'event_boost', label: t('settingsScreen.notifKinds.eventBoost') },
     { kind: 'streak_expiring', label: t('settingsScreen.notifKinds.streakExpiring') },
+    { kind: 'streak_lost', label: t('settingsScreen.notifKinds.streakLost') },
     { kind: 'profile_view', label: t('settingsScreen.notifKinds.profileView') },
     { kind: 'social_click', label: t('settingsScreen.notifKinds.socialClick') },
     { kind: 'inactive_profile_views', label: t('settingsScreen.notifKinds.inactiveProfileViews') },
@@ -100,7 +101,7 @@ const SettingsScreen = () => {
     {
       key: 'rewards',
       label: t('settingsScreen.notifCategories.rewards'),
-      kinds: ['event_boost', 'streak_expiring', 'referral_validated', 'referral_reward_granted'],
+      kinds: ['event_boost', 'streak_expiring', 'streak_lost', 'referral_validated', 'referral_reward_granted'],
     },
     {
       key: 'system',

@@ -532,6 +532,7 @@
       "superlikeAccepted": "Aktsepteeritud superlike'id",
       "eventBoost": "Ürituste kiirendused",
       "streakExpiring": "Seeria meeldetuletused",
+      "streakLost": "Seeria kadumine",
       "profileView": "Profiilivaatamised",
       "socialClick": "Sinu sotsiaalvõrgustike vaatamised",
       "inactiveProfileViews": "Sinu äraoleku ajal saadud vaatamised",

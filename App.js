@@ -572,6 +572,8 @@ function AppShell({ purchasesReady }) {
             publish('ui:open_superlike_history', { tab: 'sent' });
           } else if (data.kind === 'streak_expiring') {
             navigationRef.navigate('MainTabs');
+          } else if (data.kind === 'streak_lost') {
+            navigationRef.navigate('MainTabs');
           } else if (data.kind === 'referral_validated' || data.kind === 'referral_reward_granted') {
             navigationRef.navigate('Referral');
           } else if (data.kind === 'profile_view' || data.kind === 'inactive_profile_views' || data.kind === 'weekly_digest') {
