@@ -701,7 +701,7 @@ export async function claimBoost() {
   return request('/users/streak/claim-boost', { method: 'POST' });
 }
 
-export async function searchUsers({ q, limit = 10, lat, lon, includeUsers = true, includeLocations = true }) {
+export async function searchUsers({ q, limit = 5, lat, lon, includeUsers = true, includeLocations = true }) {
   const params = { q: String(q || ''), limit: String(limit) };
   if (lat) params.lat = String(lat);
   if (lon) params.lon = String(lon);

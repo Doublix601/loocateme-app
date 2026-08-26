@@ -26,6 +26,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
+import { mergeSearchResults } from '../utils/searchResults';
 
 const { width, height } = Dimensions.get('window');
 
@@ -92,7 +93,7 @@ export default function SearchView() {
         } catch (_) {}
         const res = await searchUsers({
           q,
-          limit: 10,
+          limit: 5,
           lat: userLocation?.latitude,
           lon: userLocation?.longitude,
           includeUsers,
@@ -130,7 +131,7 @@ export default function SearchView() {
           _id: l._id || l.id,
         }));
 
-        setResults([...users, ...locations].slice(0, 10));
+        setResults(mergeSearchResults(users, locations, 5));
       } catch (_e) {
         setResults([]);
       } finally {
