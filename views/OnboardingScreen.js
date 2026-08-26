@@ -4,7 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { markOnboardingDone } from '../utils/onboarding';
+import { markOnboardingDone, ensureLocationPermissionRequested } from '../utils/onboarding';
 import { redeemReferralCode } from '../components/ApiRequest';
 import { useTranslation } from 'react-i18next';
 
@@ -88,6 +88,7 @@ export default function OnboardingScreen() {
         } catch (_) {}
       }
       await markOnboardingDone();
+      await ensureLocationPermissionRequested();
       navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
     } else {
       flatRef.current?.scrollToIndex({ index: index + 1, animated: true });
@@ -96,6 +97,7 @@ export default function OnboardingScreen() {
 
   const skip = async () => {
     await markOnboardingDone();
+    await ensureLocationPermissionRequested();
     navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
   };
 
