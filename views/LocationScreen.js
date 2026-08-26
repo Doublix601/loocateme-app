@@ -646,7 +646,11 @@ const LocationScreen = () => {
               borderRadius: radius.pill,
               paddingVertical: spacing.md,
               marginTop: spacing.md,
-              backgroundColor: manualCheckinSuccess ? '#4CAF50' : palette.accent,
+              // Couleur de marque fixe (bleu azur), volontairement indépendante de
+              // palette.accent : ce CTA de check-in est une action fonctionnelle,
+              // pas un élément décoratif de la vibe jour/nuit (qui rendrait ce
+              // bouton rose en mode lune, cf. plan "bouton Je suis ici").
+              backgroundColor: manualCheckinSuccess ? '#4CAF50' : '#00C2CB',
               opacity: manualCheckinLoading ? 0.7 : 1,
             },
           ]}
