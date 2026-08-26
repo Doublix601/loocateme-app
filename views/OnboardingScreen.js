@@ -115,6 +115,7 @@ export default function OnboardingScreen() {
 
       {/* Slides */}
       <Animated.FlatList
+        style={{ flex: 1 }}
         ref={flatRef}
         data={SLIDES}
         keyExtractor={(s) => s.key}
@@ -189,7 +190,7 @@ function Slide({ item, children }) {
     <View style={{ width: W }}>
       <LinearGradient colors={item.gradient} style={StyleSheet.absoluteFill} />
 
-      <SafeAreaView style={[styles.slide, { paddingTop: insets.top + 20 }]}>
+      <SafeAreaView edges={['left', 'right']} style={[styles.slide, { paddingTop: insets.top + 20 }]}>
         {/* Emoji bubble */}
         <View style={[styles.emojiBubble, { borderColor: item.accent + '55', shadowColor: item.accent }]}>
           <Text style={styles.emojiTxt}>{item.emoji}</Text>

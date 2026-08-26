@@ -19,8 +19,8 @@ export async function getCurrentPositionSmart({ skipLastKnown = false } = {}) {
   }
 
   try {
-    return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 10000 });
   } catch (balancedErr) {
-    return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+    return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low, timeout: 8000 });
   }
 }
