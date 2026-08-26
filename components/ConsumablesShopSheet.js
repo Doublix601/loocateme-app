@@ -112,7 +112,14 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
 
   useEffect(() => {
     if (!visible) return;
+    // Affichage immédiat depuis le cache local (pas d'écran vide le temps du
+    // réseau), puis resynchronisation depuis le backend : sans ça, le sheet
+    // pouvait afficher un solde périmé jusqu'à ce que l'utilisateur tape
+    // manuellement sur le bouton 🔄 (cf. handleRefresh ci-dessous).
     refresh();
+    PremiumService.refreshFromBackend()
+      .then(refresh)
+      .catch(() => {});
     IAPStore.getOfferings()
       .then(setOfferings)
       .catch(() => {});
