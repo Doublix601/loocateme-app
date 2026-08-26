@@ -60,7 +60,7 @@ import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
 import PremiumNudgeService from './services/PremiumNudgeService';
 import { mapBackendUser, mapProfileUser } from './utils/mappers';
-import { hasSeenOnboarding } from './utils/onboarding';
+import { hasSeenOnboarding, ensureLocationPermissionRequested } from './utils/onboarding';
 import { hydrateLocationHeartbeatSuppression } from './utils/devLocationSuppression';
 import RootNavigator from './navigation/RootNavigator';
 
@@ -201,6 +201,13 @@ function AppShell({ purchasesReady }) {
             }
             if (consentAccepted && !policyBlocking) {
               const seen = await hasSeenOnboarding();
+              if (seen) {
+                // Cold start with an already-persisted session (no interactive
+                // login, so navigateAfterAuth() never runs): prime the location
+                // permission here too before routing straight to MainTabs, for
+                // the same reason navigateAfterAuth() does it — cf. plan Task 1.
+                await ensureLocationPermissionRequested();
+              }
               resolvedRoute = seen ? 'MainTabs' : 'Onboarding';
               setTimeout(() => publish('userlist:refresh'), 1000);
             } else {
