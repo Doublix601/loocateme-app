@@ -113,8 +113,8 @@ const LocationCard = React.memo(function LocationCard({
           })()}
         </View>
         <View style={styles.badgesRow}>
-          <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
-            <Text style={[styles.typeText, isDark && styles.typeTextDark]}>{formatLocationType(item.type)}</Text>
+          <View style={[styles.typeBadge, !isMoon && styles.typeBadgeDay]}>
+            <Text style={[styles.typeText, !isMoon && styles.typeTextDay]}>{formatLocationType(item.type)}</Text>
           </View>
           {item.isPro && (
             <View style={styles.verifiedBadge}>
@@ -288,11 +288,15 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignSelf: 'flex-start',
   },
-  typeBadgeDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  // Mode jour (vibe soleil) : fond gris neutre + texte blanc, pour trancher
+  // avec le reste de l'interface au lieu du bleu par défaut (cf. plan
+  // "badge type de lieu en mode jour"). Le style de base ci-dessus
+  // (typeBadge/typeText, bleu) reste utilisé tel quel en mode nuit.
+  typeBadgeDay: {
+    backgroundColor: '#5A5A63',
   },
   typeText: { color: '#00c2cb', fontWeight: '700', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
-  typeTextDark: { color: '#fff' },
+  typeTextDay: { color: '#FFFFFF' },
   activeUsersContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   usersCountText: { fontSize: 13, marginRight: 10, fontWeight: '500' },
   avatarStack: { flexDirection: 'row', alignItems: 'center' },

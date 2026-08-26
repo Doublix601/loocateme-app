@@ -541,8 +541,8 @@ const LocationScreen = () => {
     >
       <View style={styles.rowBetween}>
         <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
-          <View style={[styles.typePill, { backgroundColor: palette.accentSoft }]}>
-            <Text style={[styles.typePillText, { color: palette.accent }]}>{formatLocationType(location.type)}</Text>
+          <View style={[styles.typePill, { backgroundColor: isMoon ? palette.accentSoft : '#5A5A63' }]}>
+            <Text style={[styles.typePillText, { color: isMoon ? palette.accent : '#FFFFFF' }]}>{formatLocationType(location.type)}</Text>
           </View>
           {isUserHere && (
             <View
