@@ -599,6 +599,15 @@ const LocationScreen = () => {
         </Text>
       </View>
 
+      {location.city && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs }}>
+          <Ionicons name="location-outline" size={13} color={palette.textMuted} />
+          <Text style={[typography.caption, { marginLeft: 4 }]} numberOfLines={1}>
+            {location.city}
+          </Text>
+        </View>
+      )}
+
       <View style={[styles.metaRow, { marginTop: spacing.sm }]}>
         <View style={styles.metaItem}>
           <Ionicons name="people" size={14} color={palette.textMuted} />

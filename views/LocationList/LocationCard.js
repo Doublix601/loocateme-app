@@ -96,13 +96,21 @@ const LocationCard = React.memo(function LocationCard({
           >
             {item.name}
           </Text>
-          {isUserHere ? null : (
-            item.distance !== undefined && (
-              <Text style={[styles.distanceText, { color: colors.textSecondary }]}>
-                {formatDistance(item.distance)}
+          {(() => {
+            const metaParts = [];
+            if (!isUserHere && item.distance !== undefined) metaParts.push(formatDistance(item.distance));
+            if (item.city) metaParts.push(item.city);
+            if (!metaParts.length) return null;
+            return (
+              <Text
+                style={[styles.distanceText, { color: colors.textSecondary }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {metaParts.join(' · ')}
               </Text>
-            )
-          )}
+            );
+          })()}
         </View>
         <View style={styles.badgesRow}>
           <View style={[styles.typeBadge, isDark && styles.typeBadgeDark]}>
@@ -271,7 +279,7 @@ const styles = StyleSheet.create({
   locationInfo: { flex: 1 },
   locationHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   locationName: { fontSize: 20, fontWeight: '800', letterSpacing: -0.3, flex: 1, marginRight: 8 },
-  distanceText: { fontSize: 13, fontWeight: '600' },
+  distanceText: { fontSize: 13, fontWeight: '600', maxWidth: '45%' },
   badgesRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', marginBottom: 10, gap: 6 },
   typeBadge: {
     backgroundColor: 'rgba(0, 194, 203, 0.15)',
