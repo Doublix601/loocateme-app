@@ -17,6 +17,14 @@ const BAR_PADDING = 6;
 
 export const TAB_BAR_HEIGHT = 64;
 export const TAB_BAR_BOTTOM_OFFSET = -12;
+// Hauteur totale (hors safe-area) occupée par la pile de nav flottante ;
+// VibeFAB s'y appuie pour se positionner juste au-dessus. Sur les écrans
+// scrollables SANS VibeFAB (Recherche, Compte), réserver
+// `contentContainerStyle.paddingBottom = insets.bottom + TAB_BAR_STACK_HEIGHT`.
+export const TAB_BAR_STACK_HEIGHT = 79;
+// Marge supplémentaire à ajouter sur les écrans où VibeFAB est visible
+// (LocationList, carte) : hauteur du FAB + respiration.
+export const FAB_CLEARANCE = 72;
 
 const EXPAND_ANIM = {
   duration: 320,

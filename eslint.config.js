@@ -5,7 +5,9 @@ module.exports = [
   ...expoConfig,
   prettierConfig,
   {
-    ignores: ['dist/*', 'node_modules/*', '.expo/*'],
+    // assets/map/src/map-app.js tourne DANS la WebView MapLibre (ES5, globals
+    // navigateur), pas dans le bundle RN — il n'a pas à suivre les règles RN.
+    ignores: ['dist/*', 'node_modules/*', '.expo/*', 'assets/**'],
   },
   {
     rules: {

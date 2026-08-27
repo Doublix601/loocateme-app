@@ -905,10 +905,17 @@ const MyAccountScreen = () => {
               cityLabel={cityLabel}
               currentPlaceLabel={currentPlaceLabel}
               onOpenStatusPicker={() => setStatusPickerVisible(true)}
+              onEditPhoto={() => navigation.navigate('Settings', { initialTab: 'profile', focus: 'photo' })}
             />
 
-            {/* 2. Bio (lecture seule) */}
-            <BioSection bioRef={bioRef} bio={user?.bio} colors={colors} isDark={isDark} />
+            {/* 2. Bio — tap pour éditer (Réglages → Profil) */}
+            <BioSection
+              bioRef={bioRef}
+              bio={user?.bio}
+              colors={colors}
+              isDark={isDark}
+              onEditBio={() => navigation.navigate('Settings', { initialTab: 'profile', focus: 'bio' })}
+            />
 
             {/* 3. Suggestion partage position (conditionnel) */}
             {shareLocationNudgeVisible && (

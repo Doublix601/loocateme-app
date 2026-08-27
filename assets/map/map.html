@@ -124,6 +124,21 @@ return maplibregl$1;
   // pincement zoom/dézoom.
   var lastLocations = [];
   var lastPalette = null;
+  var didInitialFit = false;
+
+  // Décale les contrôles bas de MapLibre (attribution © MapTiler / © OSM) pour
+  // qu'ils ne passent pas sous la barre de nav flottante + VibeFAB côté RN.
+  function applyBottomInset(px) {
+    var n = Math.max(0, parseInt(px, 10) || 0);
+    var el = document.getElementById('__mapBottomInset');
+    if (!el) {
+      el = document.createElement('style');
+      el.id = '__mapBottomInset';
+      document.head.appendChild(el);
+    }
+    el.textContent =
+      '.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{bottom:' + n + 'px !important;}';
+  }
 
   function post(msg) {
     if (window.ReactNativeWebView) {
@@ -620,9 +635,34 @@ return maplibregl$1;
     var zoom = payload.zoom;
     var locations = payload.locations;
     var palette = payload.palette;
+    var bottomInset = payload.bottomInset || 0;
+    var hasUserLocation = !!payload.hasUserLocation;
 
     lastLocations = locations;
     lastPalette = palette;
+    applyBottomInset(bottomInset);
+
+    // Au tout premier rendu : cadrer sur l'utilisateur + les lieux proches
+    // plutôt que de rester sur un zoom fixe qui peut laisser l'utilisateur
+    // hors champ.
+    function initialFit() {
+      if (didInitialFit) return;
+      var pts = [];
+      if (hasUserLocation && Array.isArray(center) && center.length >= 2) pts.push(center);
+      (locations || []).forEach(function (l) {
+        if (l && Array.isArray(l.coords) && l.coords.length >= 2) pts.push(l.coords);
+      });
+      if (pts.length < 2) return; // rien à cadrer : on garde center/zoom
+      didInitialFit = true;
+      var b = pts.reduce(function (acc, p) {
+        return acc.extend(p);
+      }, new maplibregl.LngLatBounds(pts[0], pts[0]));
+      map.fitBounds(b, {
+        padding: { top: 64, left: 40, right: 40, bottom: bottomInset + 48 },
+        maxZoom: 15,
+        duration: 0,
+      });
+    }
 
     // Un nouveau payload RN prime sur un recalcul de clustering local en
     // attente (déclenché par zoomend) : sans ça, les deux rendus peuvent se
@@ -645,6 +685,7 @@ return maplibregl$1;
 
       map.on('load', function () {
         ready = true;
+        initialFit();
         renderMarkers(locations, palette);
         post({ type: 'ready' });
       });
@@ -693,6 +734,8 @@ return maplibregl$1;
     } else if (ready) {
       renderMarkers(locations, palette);
     }
+    // Si le 1er payload n'avait pas encore de lieux, cadrer dès qu'ils arrivent.
+    if (ready) initialFit();
   }
 
   function handleMessage(rawData) {

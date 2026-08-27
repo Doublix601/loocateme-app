@@ -12,12 +12,13 @@ const ALL_KEY = '__all__';
 
 const TypeFilterBar = ({ types, selectedType, onSelect, colors, isDark, isMoon, lockSwiper, unlockSwiper }) => {
   const { t } = useTranslation();
+  const [layoutWidth, setLayoutWidth] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+
   if (!types || types.length === 0) return null;
 
   const chipBg = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.55)';
   const chipTextColor = isMoon ? colors.textPrimary : colors.textPrimary;
-  const [layoutWidth, setLayoutWidth] = useState(0);
-  const [contentWidth, setContentWidth] = useState(0);
   const canScroll = contentWidth > layoutWidth;
   const fadeColors = isDark
     ? ['rgba(0,0,0,0)', 'rgba(0,0,0,0.55)']

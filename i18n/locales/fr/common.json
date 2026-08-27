@@ -22,7 +22,35 @@
       "under18": "Tu dois avoir au moins 18 ans pour t'inscrire.",
       "policyLoadError": "Impossible de charger la politique de confidentialité. Tu pourras réessayer.",
       "ageAttest": "Je certifie avoir 18 ans ou plus.",
-      "ageAttestRequired": "Tu dois certifier avoir 18 ans ou plus pour continuer."
+      "ageAttestRequired": "Tu dois certifier avoir 18 ans ou plus pour continuer.",
+      "header": "Créer un compte",
+      "welcome": "Bienvenue !",
+      "firstNamePlaceholder": "Prénom",
+      "lastNamePlaceholder": "Nom",
+      "customNamePlaceholder": "Nom personnalisé (optionnel)",
+      "birthdatePlaceholder": "Date de naissance *",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Mot de passe",
+      "confirmPasswordPlaceholder": "Confirmer le mot de passe",
+      "submit": "S'inscrire",
+      "haveAccount": "Déjà un compte ?",
+      "signIn": "Se connecter",
+      "gdprTitle": "Confidentialité & RGPD",
+      "analyticsToggle": "Partage analytics",
+      "decline": "Refuser",
+      "accept": "Accepter",
+      "creating": "Création...",
+      "validateCreate": "Valider et créer mon compte",
+      "errorTitle": "Erreur d'inscription",
+      "errorFallback": "Veuillez réessayer.",
+      "subtitle": "Rejoins la communauté LoocateMe",
+      "checkInfoTitle": "Erreur",
+      "checkInfo": "Vérifie les informations saisies.",
+      "checkEmailTitle": "Vérifie tes emails",
+      "checkEmailMessage": "Un email de vérification vient de t'être envoyé. Clique sur le lien pour confirmer ton adresse, puis connecte-toi.",
+      "genderMale": "Garçon",
+      "genderFemale": "Fille",
+      "genderPreferNotToSay": "Ne souhaite pas répondre"
     }
   },
   "consent": {
@@ -165,7 +193,7 @@
     },
     "empty": {
       "title": "Zone calme pour l'instant",
-      "subtitle": "Aucun lieu actif n'a été repéré autour de toi. Élargis le périmètre ou propose un nouveau lieu.",
+      "subtitle": "Aucun lieu trouvé autour de toi. Élargis le périmètre ou propose un nouveau lieu.",
       "expandRadius": "Élargir le périmètre",
       "suggestLocation": "Suggérer ce lieu"
     },
@@ -173,7 +201,9 @@
       "loadingMore": "Chargement de lieux supplémentaires…",
       "loadMoreError": "Impossible de charger plus de lieux. Vérifie ta connexion.",
       "retry": "Réessayer",
-      "reachedEnd": "Tu as vu tous les lieux à proximité. Déplace-toi ou lance une recherche pour en voir plus."
+      "reachedEnd": "Tu as vu tous les lieux à proximité. Déplace-toi ou lance une recherche pour en voir plus.",
+      "radiusCapped": "Tu as atteint le rayon de 2 km. Passe Premium pour explorer jusqu'à 30 km.",
+      "radiusCappedCta": "Passer Premium"
     },
     "leaveModal": {
       "defaultName": "Ce lieu",
@@ -245,7 +275,12 @@
     "boostProfileHere": "Booster mon profil ici",
     "boostLockedAfterCheckins": "Boost 🔓 après 2 check-ins",
     "noProfilesHere": "Personne n'est ici pour le moment.\nSois le premier à te signaler !",
-    "crossedPathsPremiumHint": "Passe Premium pour voir les croisements des 7 derniers jours (24 h en gratuit)."
+    "crossedPathsPremiumHint": "Passe Premium pour voir les croisements des 7 derniers jours (24 h en gratuit).",
+    "onSite": "{{count}} sur place",
+    "thisMonth": "{{count}} ce mois",
+    "specialOffer": "Offre spéciale de ce lieu",
+    "youAreHere": "Tu es sur place !",
+    "specialOfferHint": "Passe 20 minutes sur place pour débloquer un boost de profil gratuit !"
   },
   "myAccount": {
     "actions": {
@@ -280,7 +315,7 @@
     },
     "shareLocationNudge": {
       "title": "📍 Partage ta position",
-      "message": "Active le partage de ton lieu actuel pour être plus facilement repéré·e par les autres utilisateurs à proximité.",
+      "message": "Partage ton lieu précis (en plus de ta ville) pour que les autres te repèrent plus facilement quand tu es à proximité. Tu peux le couper à tout moment dans les réglages.",
       "activate": "Activer",
       "noThanks": "Non merci"
     },
@@ -311,15 +346,17 @@
     "currentlyAt": "Actuellement à {{place}}",
     "bio": {
       "label": "Bio",
-      "placeholder": "Ajoute une phrase pour te présenter."
-    }
+      "placeholder": "Ajoute une phrase pour te présenter.",
+      "editA11y": "Modifier ma bio"
+    },
+    "editPhotoA11y": "Modifier ma photo de profil"
   },
   "myAccountScreen": {
     "spot": {
       "photoTitle": "Ta photo de profil",
-      "photoDesc": "Modifie ta photo de profil depuis les réglages (icône en haut à droite).",
+      "photoDesc": "Appuie sur ta photo pour la changer.",
       "bioTitle": "Ta bio",
-      "bioDesc": "Ta bio se modifie depuis les réglages. C'est la première chose que les autres voient.",
+      "bioDesc": "Appuie sur ta bio pour la modifier. C'est la première chose que les autres voient.",
       "socialTitle": "Tes réseaux sociaux",
       "socialDesc": "Appuie sur ➕ pour ajouter un réseau. Reste appuyé sur une icône pour la modifier ou supprimer.",
       "statusTitle": "Ton statut",
@@ -439,7 +476,7 @@
     "restoreError": "Impossible de restaurer les achats.",
     "closeLabel": "Fermer",
     "title": "👑 Premium",
-    "subtitle": "Débloque toutes les fonctionnalités",
+    "subtitle": "Débloque l'expérience Premium complète",
     "debugBanner": "⚠️ Paiements désactivés (mode debug)",
     "monthly": "Mensuel",
     "perMonth": "/mois",
@@ -632,7 +669,10 @@
     "currentEmailLabel": "Email actuel : {{email}}",
     "newEmailPlaceholder": "Nouvel email",
     "noBlockedAccounts": "Aucun compte bloqué.",
-    "unblock": "Débloquer"
+    "unblock": "Débloquer",
+    "invisibleConfirmTitle": "Activer le mode invisible ?",
+    "invisibleConfirmMessage": "Tu disparaîtras des lieux pour les autres utilisateurs, mais tu ne pourras plus consulter la carte ni la liste des lieux tant que ce mode est actif.",
+    "invisibleConfirmActivate": "Activer"
   },
   "statisticsScreen": {
     "loadError": "Impossible de récupérer les statistiques",
@@ -734,7 +774,8 @@
   },
   "common": {
     "close": "Fermer",
-    "errorTitle": "Erreur"
+    "errorTitle": "Erreur",
+    "cancelAction": "Annuler"
   },
   "streakCard": {
     "title": "Ta série",
@@ -802,5 +843,52 @@
   },
   "backgroundLocation": {
     "notificationBody": "Partage de position actif"
+  },
+  "osmHelp": {
+    "a11y": "Signaler un lieu manquant ou incorrect",
+    "title": "🗺️ Un lieu est absent ou mal renseigné ?",
+    "body": "Nos lieux viennent d'OpenStreetMap. Sur la fiche d'un lieu existant, utilise « Signaler une info incorrecte » pour proposer une correction. Pour ajouter un lieu absent, tu peux le créer directement sur OpenStreetMap — ça profite à tout le monde.",
+    "tutoLink": "📖 Tuto : ajouter un lieu sur OpenStreetMap",
+    "editLink": "✏️ Ouvrir l'éditeur OpenStreetMap"
+  },
+  "locationCorrection": {
+    "trigger": "Signaler une info incorrecte",
+    "title": "Corriger ce lieu",
+    "subtitle": "Propose un nom ou un type corrigé. Un modérateur vérifiera avant publication.",
+    "nameLabel": "Nom corrigé",
+    "typeLabel": "Type corrigé",
+    "reasonLabel": "Précision (facultatif)",
+    "reasonPlaceholder": "Ex : l'enseigne a changé de nom en 2024",
+    "submit": "Envoyer la correction",
+    "nothingToChange": "Modifie au moins le nom ou le type.",
+    "sentTitle": "Merci !",
+    "sentMessage": "Ta correction a été envoyée à la modération.",
+    "genericError": "Impossible d'envoyer la correction. Réessaie."
+  },
+  "spotlight": {
+    "skip": "Passer",
+    "done": "Terminé",
+    "next": "Suivant"
+  },
+  "errorBoundary": {
+    "title": "Un problème est survenu",
+    "retry": "Réessayer"
+  },
+  "featureGate": {
+    "comingSoonShort": "🔓 Bientôt",
+    "comingSoon": "Bientôt disponible",
+    "premiumOnly": "Réservé aux membres Premium"
+  },
+  "superlikeHistory": {
+    "validate": "Valider"
+  },
+  "premiumNudgeBanner": {
+    "see": "Voir"
+  },
+  "profileHero": {
+    "premiumBadge": "👑 Premium"
+  },
+  "vibeTransit": {
+    "skip": "Passer"
   }
 }

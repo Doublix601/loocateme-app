@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import DaySkyBackground from '../components/DaySkyBackground';
 import NightSkyBackground from '../components/NightSkyBackground';
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +26,7 @@ import ImageWithPlaceholder from '../components/ImageWithPlaceholder';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TAB_BAR_STACK_HEIGHT } from '../components/MainTabBar';
 import { useMainSwiper } from '../components/contexts/MainSwiperContext';
 
 const { width, height } = Dimensions.get('window');
@@ -320,30 +322,34 @@ export default function SearchView() {
         </View>
 
         <View style={styles.filters}>
-          <TouchableOpacity
-            style={[
-              styles.filterBtn,
-              {
-                backgroundColor: includeUsers ? '#00c2cb' : colors.surface,
-                borderColor: includeUsers ? '#00c2cb' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-              },
-            ]}
-            onPress={() => toggleFilter('users')}
-          >
-            <Text style={[styles.filterText, { color: includeUsers ? '#fff' : colors.textPrimary }]}>{t('searchView.filterUsers')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.filterBtn,
-              {
-                backgroundColor: includeLocations ? '#00c2cb' : colors.surface,
-                borderColor: includeLocations ? '#00c2cb' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-              },
-            ]}
-            onPress={() => toggleFilter('locations')}
-          >
-            <Text style={[styles.filterText, { color: includeLocations ? '#fff' : colors.textPrimary }]}>{t('searchView.filterLocations')}</Text>
-          </TouchableOpacity>
+          {[
+            { key: 'users', active: includeUsers, label: t('searchView.filterUsers') },
+            { key: 'locations', active: includeLocations, label: t('searchView.filterLocations') },
+          ].map(({ key, active, label }) => (
+            <TouchableOpacity
+              key={key}
+              style={[
+                styles.filterBtn,
+                {
+                  backgroundColor: active ? '#00c2cb' : 'transparent',
+                  borderColor: active ? '#00c2cb' : isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)',
+                },
+              ]}
+              onPress={() => toggleFilter(key)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: active }}
+            >
+              {active ? <Ionicons name="checkmark" size={15} color="#fff" style={{ marginRight: 4 }} /> : null}
+              <Text
+                style={[
+                  styles.filterText,
+                  { color: active ? '#fff' : colors.textSecondary, fontWeight: active ? '700' : '500' },
+                ]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
@@ -359,7 +365,11 @@ export default function SearchView() {
           data={results}
           keyExtractor={(it, i) => String(it._id || it.id || i)}
           renderItem={renderRow}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 40 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 10,
+            paddingBottom: insets.bottom + TAB_BAR_STACK_HEIGHT,
+          }}
           ListHeaderComponent={
             showInfoMsg ? (
               <View style={{ marginTop: 40, paddingHorizontal: 30, alignItems: 'center' }}>
@@ -447,16 +457,13 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 16 },
   filters: { flexDirection: 'row', marginTop: 15, marginBottom: 10 },
   filterBtn: {
-    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
     marginRight: 10,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
   },
   filterText: { fontSize: 14, fontWeight: '600' },
   row: {

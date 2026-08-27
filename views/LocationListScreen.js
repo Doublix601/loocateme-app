@@ -40,6 +40,7 @@ import { subscribe, publish } from '../components/EventBus';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { getOverpassRadiusM, DISCOVERY_RADIUS_FREE_M, DISCOVERY_RADIUS_PREMIUM_M } from '../constants/premiumFeatures';
+import { TAB_BAR_STACK_HEIGHT, FAB_CLEARANCE } from '../components/MainTabBar';
 import { useBoost } from '../hooks/useBoost';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance } from '../components/ServerUtils';
@@ -192,6 +193,10 @@ const LocationListScreen = () => {
   // Cela évite l'affichage prématuré du message « Vous avez exploré tous les
   // lieux actifs à proximité » lorsque la DB locale est peu peuplée.
   const [hasMore, setHasMore] = useState(true);
+  // Le backend a renvoyé peu de lieux PARCE QUE le rayon (2 km gratuit) est
+  // atteint, pas parce qu'il n'y a plus rien : on affiche alors un message
+  // "élargir via Premium" plutôt que "tu as tout vu".
+  const [cappedByRadius, setCappedByRadius] = useState(false);
   // Filtre par type de lieu (barre de chips, cf. TypeFilterBar) : "Tous" par
   // défaut, un seul type actif à la fois. Ne s'applique JAMAIS à la section
   // "Mis en avant" (sponsorisés), qui reste toujours affichée intégralement.
@@ -984,6 +989,7 @@ const LocationListScreen = () => {
         setOsmPois(cached.osmPois);
         setDisplayLimit(cached.displayLimit);
         setHasMore(cached.hasMore);
+        setCappedByRadius(!!cached.cappedByRadius);
         setLoadingMore(false);
         setLoadMoreError(false);
       } else {
@@ -1350,6 +1356,7 @@ const LocationListScreen = () => {
         const hasMoreResult = normalized.length >= reqLimit && reqLimit < MAX_LOCATIONS;
         setLocations(normalized);
         setHasMore(hasMoreResult);
+        setCappedByRadius(!!res.cappedByRadius);
 
         const zoneKey = getZoneKey(Math.round(latitude * 1000) / 1000, Math.round(longitude * 1000) / 1000);
         writeVibeCache(currentVibe, {
@@ -1357,6 +1364,7 @@ const LocationListScreen = () => {
           locations: normalized,
           displayLimit: reqLimit,
           hasMore: hasMoreResult,
+          cappedByRadius: !!res.cappedByRadius,
         });
       }
 
@@ -1662,17 +1670,16 @@ const LocationListScreen = () => {
               />
             }
             // Optimization for performance
-            initialNumToRender={8}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-            // Désactivé : sur Android, cette optimisation détache du natif les
+            initialNumToRender={6}
+            maxToRenderPerBatch={8}
+            windowSize={8}
+            // Désactivé sur Android : cette optimisation détache du natif les
             // cellules hors-écran, et leur zone de tap peut rester désynchronisée
             // au moment où elles sont réutilisées — particulièrement visible ici
             // car les cartes ont une hauteur variable (bannière/logo pro,
-            // nombre d'avatars, bouton "Je suis là" conditionnels). Résultat :
-            // les cartes s'affichent normalement mais deviennent silencieusement
-            // non cliquables après un scroll.
-            removeClippedSubviews={false}
+            // nombre d'avatars, bouton "Je suis là" conditionnels). Sur iOS ce
+            // problème ne se pose pas et le gain de perf au scroll est réel.
+            removeClippedSubviews={Platform.OS === 'ios'}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.4}
             ListHeaderComponent={renderListSectionsHeader}
@@ -1683,10 +1690,15 @@ const LocationListScreen = () => {
                 loadMoreError={loadMoreError}
                 onRetry={handleRetryLoadMore}
                 reachedEnd={reachedCap || exhausted}
+                cappedByRadius={cappedByRadius && !isPremium && premiumSystemEnabled}
+                onGoPremium={() => navigation.navigate('PremiumPaywall', { source: 'radius_cap' })}
               />
             }
             // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
-            contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
+            contentContainerStyle={[
+              styles.listContent,
+              { flexGrow: 1, paddingBottom: insets.bottom + TAB_BAR_STACK_HEIGHT + FAB_CLEARANCE },
+            ]}
             // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
             bounces
             overScrollMode="always"

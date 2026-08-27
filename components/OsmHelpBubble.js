@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Linking, Modal, Pressable, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useVibeTheme } from '../hooks/useVibeTheme';
 import { useTheme } from './contexts/ThemeContext';
 
@@ -15,13 +16,14 @@ const OSM_TUTO_URL = 'https://learnosm.org/fr/beginner/start-osm/';
 export default function OsmHelpBubble({ style }) {
   const { palette } = useVibeTheme();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   return (
     <>
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel="Comment corriger les informations d'un lieu"
+        accessibilityLabel={t('osmHelp.a11y')}
         onPress={() => setVisible(true)}
         activeOpacity={0.75}
         hitSlop={{ top: 8, left: 8, bottom: 8, right: 8 }}
@@ -36,31 +38,21 @@ export default function OsmHelpBubble({ style }) {
             style={[styles.card, { backgroundColor: palette.bgElevated, borderColor: palette.border }]}
             onPress={() => {}}
           >
-            <Text style={[styles.title, { color: colors.accent }]}>
-              🗺️ Un établissement n'est pas à jour ou n'existe pas dans l'app ?
-            </Text>
-            <Text style={[styles.body, { color: palette.textMuted }]}>
-              Nos données proviennent d'OpenStreetMap. Si un établissement est absent ou mal
-              référencé, vous pouvez le créer ou le corriger directement, ça profitera à tous les
-              utilisateurs de l'app.
-            </Text>
+            <Text style={[styles.title, { color: colors.accent }]}>{t('osmHelp.title')}</Text>
+            <Text style={[styles.body, { color: palette.textMuted }]}>{t('osmHelp.body')}</Text>
 
             <TouchableOpacity onPress={() => Linking.openURL(OSM_TUTO_URL)} style={styles.linkRow}>
-              <Text style={[styles.link, { color: palette.accentAlt }]}>
-                📖 Tuto : ajouter un lieu sur OpenStreetMap
-              </Text>
+              <Text style={[styles.link, { color: palette.accentAlt }]}>{t('osmHelp.tutoLink')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => Linking.openURL(OSM_EDIT_URL)} style={styles.linkRow}>
-              <Text style={[styles.link, { color: palette.accentAlt }]}>
-                ✏️ Modifier / ajouter un lieu sur OpenStreetMap
-              </Text>
+              <Text style={[styles.link, { color: palette.accentAlt }]}>{t('osmHelp.editLink')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => setVisible(false)}
               style={[styles.closeButton, { borderColor: palette.border }]}
             >
-              <Text style={[styles.closeButtonText, { color: palette.text }]}>Fermer</Text>
+              <Text style={[styles.closeButtonText, { color: palette.text }]}>{t('common.close')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>

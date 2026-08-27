@@ -6,6 +6,7 @@ import ImageWithPlaceholder from './ImageWithPlaceholder';
 import SuperlikeService from '../services/SuperlikeService';
 import PremiumService from '../services/PremiumService';
 import { useNavigateToUser } from '../hooks/useNavigateToUser';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from './contexts/ThemeContext';
 import { useLocale } from './contexts/LocalizationContext';
 
@@ -24,6 +25,7 @@ const formatDate = (iso, locale) => {
 };
 
 const SuperlikeHistoryModal = ({ visible, onClose, initialTab = 'received' }) => {
+  const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const { locale } = useLocale();
   const navigateToUser = useNavigateToUser();
@@ -156,7 +158,7 @@ const SuperlikeHistoryModal = ({ visible, onClose, initialTab = 'received' }) =>
                           disabled={acceptingId === item.id}
                         >
                           <Ionicons name="checkmark-circle-outline" size={16} color={colors.textPrimary} />
-                          <Text style={[styles.acceptLabel, { color: colors.textPrimary }]}>Valider</Text>
+                          <Text style={[styles.acceptLabel, { color: colors.textPrimary }]}>{t('superlikeHistory.validate')}</Text>
                         </Pressable>
                       )}
                       {tab === 'received' && item.status === 'accepted' && (

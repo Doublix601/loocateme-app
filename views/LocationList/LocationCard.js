@@ -91,7 +91,7 @@ const LocationCard = React.memo(function LocationCard({
         <View style={styles.locationHeaderRow}>
           <Text
             style={[styles.locationName, { color: isDark ? '#FFFFFF' : colors.textPrimary }]}
-            numberOfLines={1}
+            numberOfLines={2}
             ellipsizeMode="tail"
           >
             {item.name}
@@ -223,8 +223,11 @@ const LocationCard = React.memo(function LocationCard({
     );
   }
 
-  // Vibe nuit : bordure néon animée sur toutes les cartes.
-  if (Platform.OS !== 'android' && isMoon) {
+  // Vibe nuit : bordure néon ANIMÉE réservée aux 2 cartes "mises en avant"
+  // (item._featuredRank). Les autres cartes gardent leur bordure rose statique
+  // (cf. styles.locationCard borderColor) — un Canvas Skia animé par carte
+  // visible était le principal coût de rendu / cause de scroll saccadé (UI-04).
+  if (Platform.OS !== 'android' && isMoon && item._featuredRank) {
     return (
       <AnimatedGradientBorder
         borderRadius={20}

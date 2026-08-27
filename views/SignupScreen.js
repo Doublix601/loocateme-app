@@ -25,10 +25,10 @@ import AppLogo from '../components/AppLogo';
 import { mapBackendUser } from '../utils/mappers';
 import { isAtLeast18 } from '../utils/age';
 
-const GENDER_OPTIONS = [
-  { key: 'male', label: 'Garçon' },
-  { key: 'female', label: 'Fille' },
-  { key: 'prefer_not_to_say', label: 'Ne souhaite pas répondre' },
+const GENDER_OPTION_KEYS = [
+  { key: 'male', labelKey: 'auth.signup.genderMale' },
+  { key: 'female', labelKey: 'auth.signup.genderFemale' },
+  { key: 'prefer_not_to_say', labelKey: 'auth.signup.genderPreferNotToSay' },
 ];
 
 const SignupScreen = () => {
@@ -104,7 +104,7 @@ const SignupScreen = () => {
     // Called from GDPR modal after user accepted policy and set preferences
     // Re-run minimal validations to be safe
     if (!email || !password || password !== confirmPassword || !birthdate || !isAtLeast18(birthdate) || !ageAttested) {
-      Alert.alert('Erreur', 'Vérifiez les informations saisies.');
+      Alert.alert(t('auth.signup.checkInfoTitle'), t('auth.signup.checkInfo'));
       return;
     }
     try {
@@ -142,10 +142,7 @@ const SignupScreen = () => {
         }
       }
       setGdprModalVisible(false);
-      Alert.alert(
-        'Vérifiez vos emails',
-        'Un email de vérification vient de vous être envoyé. Cliquez sur le lien pour confirmer votre adresse, puis connectez-vous.',
-      );
+      Alert.alert(t('auth.signup.checkEmailTitle'), t('auth.signup.checkEmailMessage'));
       navigation.navigate('Login');
     } catch (e) {
       console.error('[SignupScreen] Signup error', {
@@ -155,7 +152,7 @@ const SignupScreen = () => {
         details: e?.details,
         response: e?.response,
       });
-      Alert.alert("Erreur d'inscription", e?.message || 'Veuillez réessayer');
+      Alert.alert(t('auth.signup.errorTitle'), e?.message || t('auth.signup.errorFallback'));
     } finally {
       setProcessing(false);
     }
@@ -164,7 +161,7 @@ const SignupScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
-        <ThemedText style={styles.headerTitle}>Créer un compte</ThemedText>
+        <ThemedText style={styles.headerTitle}>{t('auth.signup.header')}</ThemedText>
       </View>
 
       <KeyboardAvoidingView
@@ -186,15 +183,15 @@ const SignupScreen = () => {
           <AppLogo width={width * 0.35} height={width * 0.35} style={styles.logo} />
 
           <View style={styles.card}>
-            <ThemedText style={styles.cardTitle}>Bienvenue !</ThemedText>
+            <ThemedText style={styles.cardTitle}>{t('auth.signup.welcome')}</ThemedText>
             <ThemedText style={styles.cardSubtitle} type="secondary">
-              Rejoignez la communauté LoocateMe
+              {t('auth.signup.subtitle')}
             </ThemedText>
 
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}
-                placeholder="Prénom"
+                placeholder={t('auth.signup.firstNamePlaceholder')}
                 placeholderTextColor={colors.placeholder}
                 value={firstName}
                 onChangeText={setFirstName}
@@ -202,7 +199,7 @@ const SignupScreen = () => {
               />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
-                placeholder="Nom"
+                placeholder={t('auth.signup.lastNamePlaceholder')}
                 placeholderTextColor={colors.placeholder}
                 value={lastName}
                 onChangeText={setLastName}
@@ -212,7 +209,7 @@ const SignupScreen = () => {
 
             <TextInput
               style={styles.input}
-              placeholder="Nom personnalisé (optionnel)"
+              placeholder={t('auth.signup.customNamePlaceholder')}
               placeholderTextColor={colors.placeholder}
               value={customName}
               onChangeText={setCustomName}
@@ -224,7 +221,7 @@ const SignupScreen = () => {
               onPress={() => setShowDatePicker(true)}
             >
               <ThemedText style={{ color: birthdate ? colors.textPrimary : colors.placeholder }}>
-                {birthdate ? birthdate.toLocaleDateString('fr-FR') : 'Date de naissance *'}
+                {birthdate ? birthdate.toLocaleDateString() : t('auth.signup.birthdatePlaceholder')}
               </ThemedText>
             </TouchableOpacity>
             {showDatePicker && (
@@ -256,14 +253,14 @@ const SignupScreen = () => {
             </TouchableOpacity>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-              {GENDER_OPTIONS.map((opt) => (
+              {GENDER_OPTION_KEYS.map((opt) => (
                 <TouchableOpacity
                   key={opt.key}
                   onPress={() => setGender(gender === opt.key ? '' : opt.key)}
                   style={[styles.genderPill, gender === opt.key && styles.genderPillActive]}
                 >
                   <ThemedText style={gender === opt.key ? styles.genderPillTextActive : styles.genderPillText}>
-                    {opt.label}
+                    {t(opt.labelKey)}
                   </ThemedText>
                 </TouchableOpacity>
               ))}
@@ -271,7 +268,7 @@ const SignupScreen = () => {
 
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={t('auth.signup.emailPlaceholder')}
               placeholderTextColor={colors.placeholder}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -281,7 +278,7 @@ const SignupScreen = () => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Mot de passe"
+              placeholder={t('auth.signup.passwordPlaceholder')}
               placeholderTextColor={colors.placeholder}
               secureTextEntry={true}
               value={password}
@@ -290,7 +287,7 @@ const SignupScreen = () => {
             />
             <TextInput
               style={styles.input}
-              placeholder="Confirmer le mot de passe"
+              placeholder={t('auth.signup.confirmPasswordPlaceholder')}
               placeholderTextColor={colors.placeholder}
               secureTextEntry={true}
               value={confirmPassword}
@@ -309,15 +306,15 @@ const SignupScreen = () => {
                 <ActivityIndicator color="#fff" />
               ) : (
                 <ThemedText style={styles.buttonText} type="white">
-                  S'inscrire
+                  {t('auth.signup.submit')}
                 </ThemedText>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')}>
               <ThemedText style={styles.linkText} type={isDark ? 'white' : 'secondary'}>
-                Déjà un compte ?{' '}
-                <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>Se connecter</ThemedText>
+                {t('auth.signup.haveAccount')}{' '}
+                <ThemedText style={{ color: colors.accent, fontWeight: 'bold' }}>{t('auth.signup.signIn')}</ThemedText>
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -328,7 +325,7 @@ const SignupScreen = () => {
       <Modal visible={gdprModalVisible} animationType="slide" onRequestClose={() => setGdprModalVisible(false)}>
         <SafeAreaView style={styles.gdprContainer}>
           <View style={styles.gdprHeader}>
-            <ThemedText style={styles.gdprTitle}>Confidentialité & RGPD</ThemedText>
+            <ThemedText style={styles.gdprTitle}>{t('auth.signup.gdprTitle')}</ThemedText>
           </View>
           {gdprStep === 'policy' ? (
             <View style={{ flex: 1, marginTop: 10 }}>
@@ -351,7 +348,7 @@ const SignupScreen = () => {
                   }}
                 >
                   <ThemedText style={styles.gdprButtonText} type="primary">
-                    Refuser
+                    {t('auth.signup.decline')}
                   </ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -362,7 +359,7 @@ const SignupScreen = () => {
                   }}
                 >
                   <ThemedText style={styles.gdprButtonText} type="white">
-                    Accepter
+                    {t('auth.signup.accept')}
                   </ThemedText>
                 </TouchableOpacity>
               </View>
@@ -372,7 +369,7 @@ const SignupScreen = () => {
               <View style={[styles.gdprContent, { paddingHorizontal: 20 }]}>
                 <View style={styles.gdprPrefsCard}>
                   <View style={[styles.gdprToggleRow, { borderBottomWidth: 0 }]}>
-                    <ThemedText style={styles.gdprLabel}>Partage analytics</ThemedText>
+                    <ThemedText style={styles.gdprLabel}>{t('auth.signup.analyticsToggle')}</ThemedText>
                     <Switch
                       value={prefAnalytics}
                       onValueChange={setPrefAnalytics}
@@ -389,7 +386,7 @@ const SignupScreen = () => {
                   disabled={processing}
                 >
                   <ThemedText style={styles.gdprButtonText} type="white">
-                    {processing ? 'Création...' : 'Valider et créer mon compte'}
+                    {processing ? t('auth.signup.creating') : t('auth.signup.validateCreate')}
                   </ThemedText>
                 </TouchableOpacity>
               </View>

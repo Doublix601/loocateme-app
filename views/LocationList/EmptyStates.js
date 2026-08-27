@@ -102,7 +102,7 @@ export const EmptyListState = ({ colors, isDark, refreshing, onRefresh, onExpand
   );
 };
 
-export const ListFooter = ({ colors, loadingMore, loadMoreError, onRetry, reachedEnd }) => {
+export const ListFooter = ({ colors, loadingMore, loadMoreError, onRetry, reachedEnd, cappedByRadius, onGoPremium }) => {
   const { t } = useTranslation();
   if (loadingMore) {
     return (
@@ -120,6 +120,18 @@ export const ListFooter = ({ colors, loadingMore, loadMoreError, onRetry, reache
         </Text>
         <GradientButton onPress={onRetry} colors={colors}>
           <Text style={styles.gradientButtonText}>{t('locationList.footer.retry')}</Text>
+        </GradientButton>
+      </View>
+    );
+  }
+  if (cappedByRadius) {
+    return (
+      <View style={styles.footerContainer}>
+        <Text style={[styles.footerText, { color: colors.textSecondary, marginBottom: 8, textAlign: 'center' }]}>
+          {t('locationList.footer.radiusCapped')}
+        </Text>
+        <GradientButton onPress={onGoPremium} colors={colors}>
+          <Text style={styles.gradientButtonText}>{t('locationList.footer.radiusCappedCta')}</Text>
         </GradientButton>
       </View>
     );

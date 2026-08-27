@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { VIBE_SPIN_DURATION_MS, VIBE_TRANSITION_DURATION_MS } from './vibe/vibeTransition.constants';
+import { TAB_BAR_STACK_HEIGHT } from './MainTabBar';
 
 // Total duration of the 360° pre-loading micro-animation (ms).
 // Kept in the 400–600ms range to feel snappy yet perceptible.
@@ -112,7 +113,7 @@ export default function VibeFAB() {
   const moonStyle = useAnimatedStyle(() => ({ opacity: moonOpacity.value, position: 'absolute' }));
 
   return (
-    <View pointerEvents="box-none" style={[styles.container, { bottom: TAB_BAR_HEIGHT + insets.bottom + 4 }]}>
+    <View pointerEvents="box-none" style={[styles.container, { bottom: TAB_BAR_STACK_HEIGHT + insets.bottom + 4 }]}>
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel={isMoon ? t('vibeFab.toDay') : t('vibeFab.toNight')}
@@ -137,7 +138,6 @@ export default function VibeFAB() {
 }
 
 const FAB_SIZE = 56; // ≥ 44x44 ergonomic minimum
-const TAB_BAR_HEIGHT = 79; // must match MainTabBar's height so the FAB clears it
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',

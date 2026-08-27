@@ -3,13 +3,18 @@ import * as ImageManipulator from 'expo-image-manipulator';
 // Resize and compress an image file (from ImagePicker or { uri, name, type })
 // options: { maxWidth, maxHeight, quality (0..1), format: 'jpeg'|'png'|'webp' }
 export async function resizeAndCompress(input, options = {}) {
-  const { maxWidth = 1024, maxHeight = 1024, quality = 0.8, format = 'jpeg' } = options;
+  const { maxWidth = 1024, maxHeight, quality = 0.8, format = 'jpeg' } = options;
   const uri = input?.uri || input;
   if (!uri) throw new Error('Invalid image input');
 
+  // IMPORTANT : ne contraindre qu'UNE dimension. Passer width ET height force
+  // l'image à ce rectangle exact → déformation (ratio cassé) et upscale des
+  // petites images, d'où l'aspect "peinture" sur les photos de profil (UI-07).
+  // expo-image-manipulator conserve le ratio quand une seule dimension est
+  // donnée. `maxHeight` reste accepté pour les rares cas portrait.
   const actions = [
     {
-      resize: { width: maxWidth, height: maxHeight },
+      resize: maxHeight && !maxWidth ? { height: maxHeight } : { width: maxWidth },
     },
   ];
   const saveOptions = {

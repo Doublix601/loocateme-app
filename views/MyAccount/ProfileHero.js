@@ -17,7 +17,7 @@ const { width } = Dimensions.get('window');
  * porte la ref au même endroit visuel (la carte photo) pour ne pas casser
  * l'étape 1 de l'onboarding.
  */
-const ProfileHero = ({ photoRef, statusRef, user, isPremium, colors, isDark, cityLabel, currentPlaceLabel, onOpenStatusPicker }) => {
+const ProfileHero = ({ photoRef, statusRef, user, isPremium, colors, isDark, cityLabel, currentPlaceLabel, onOpenStatusPicker, onEditPhoto }) => {
   const { t } = useTranslation();
   const displayName =
     user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username);
@@ -36,13 +36,27 @@ const ProfileHero = ({ photoRef, statusRef, user, isPremium, colors, isDark, cit
         },
       ]}
     >
-      {user?.photo ? (
-        <ImageWithPlaceholder uri={user.photo} style={styles.image} />
-      ) : (
-        <View style={[styles.image, styles.placeholder, { backgroundColor: colors.accent }]}>
-          <Image source={require('../../assets/appIcons/userProfile.png')} style={styles.placeholderIcon} />
-        </View>
-      )}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onEditPhoto}
+        disabled={!onEditPhoto}
+        style={styles.image}
+        accessibilityRole="button"
+        accessibilityLabel={t('myAccount.editPhotoA11y')}
+      >
+        {user?.photo ? (
+          <ImageWithPlaceholder uri={user.photo} style={styles.image} />
+        ) : (
+          <View style={[styles.image, styles.placeholder, { backgroundColor: colors.accent }]}>
+            <Image source={require('../../assets/appIcons/userProfile.png')} style={styles.placeholderIcon} />
+          </View>
+        )}
+      </TouchableOpacity>
+      {onEditPhoto ? (
+        <TouchableOpacity style={styles.editButton} onPress={onEditPhoto} accessibilityLabel={t('myAccount.editPhotoA11y')}>
+          <Ionicons name="camera" size={18} color="#fff" />
+        </TouchableOpacity>
+      ) : null}
 
       {/* Dégradé sombre bas d'image pour la lisibilité du texte overlay */}
       <LinearGradient
@@ -52,18 +66,18 @@ const ProfileHero = ({ photoRef, statusRef, user, isPremium, colors, isDark, cit
         pointerEvents="none"
       />
 
-      <View style={styles.overlayContent}>
+      <View ref={statusRef} style={styles.overlayContent}>
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>
             {displayName}
           </Text>
           {(isPremium ?? user?.isPremium) ? (
             <View style={styles.premiumPill}>
-              <Text style={styles.premiumPillText}>👑 Premium</Text>
+              <Text style={styles.premiumPillText}>{t('profileHero.premiumBadge')}</Text>
             </View>
           ) : null}
         </View>
-        <View ref={statusRef}>
+        <View>
           <TouchableOpacity
             style={styles.statusRow}
             onPress={onOpenStatusPicker}
