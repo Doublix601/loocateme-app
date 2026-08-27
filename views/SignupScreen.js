@@ -38,6 +38,7 @@ const SignupScreen = () => {
   const [lastName, setLastName] = useState('');
   const [customName, setCustomName] = useState('');
   const [birthdate, setBirthdate] = useState(null);
+  const [ageAttested, setAgeAttested] = useState(false);
   const [gender, setGender] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [email, setEmail] = useState('');
@@ -78,12 +79,15 @@ const SignupScreen = () => {
       setErrorMessage(t('auth.signup.under18'));
       return;
     }
+    if (!ageAttested) {
+      setErrorMessage(t('auth.signup.ageAttestRequired'));
+      return;
+    }
     // Start GDPR flow: show policy then preferences, then perform signup + consent update
     setErrorMessage('');
     try {
       setGdprStep('policy');
       setPrefAnalytics(false);
-      setPrefMarketing(false);
       setGdprModalVisible(true);
       setPolicyLoading(true);
       const res = await getPrivacyPolicy();
@@ -99,7 +103,7 @@ const SignupScreen = () => {
   const doSignupWithConsent = async () => {
     // Called from GDPR modal after user accepted policy and set preferences
     // Re-run minimal validations to be safe
-    if (!email || !password || password !== confirmPassword || !birthdate || !isAtLeast18(birthdate)) {
+    if (!email || !password || password !== confirmPassword || !birthdate || !isAtLeast18(birthdate) || !ageAttested) {
       Alert.alert('Erreur', 'Vérifiez les informations saisies.');
       return;
     }
@@ -114,6 +118,7 @@ const SignupScreen = () => {
         customName,
         birthdate: birthdateIso,
         gender: gender || undefined,
+        ageAttested,
       });
       if (res?.accessToken) setAccessToken(res.accessToken);
       // Persist consent with chosen preferences
@@ -236,6 +241,19 @@ const SignupScreen = () => {
                 }}
               />
             )}
+
+            <TouchableOpacity
+              style={styles.ageAttestRow}
+              onPress={() => setAgeAttested((v) => !v)}
+              activeOpacity={0.7}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: ageAttested }}
+            >
+              <View style={[styles.ageAttestBox, ageAttested && styles.ageAttestBoxChecked]}>
+                {ageAttested ? <ThemedText style={styles.ageAttestMark}>✓</ThemedText> : null}
+              </View>
+              <ThemedText style={styles.ageAttestLabel}>{t('auth.signup.ageAttest')}</ThemedText>
+            </TouchableOpacity>
 
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
               {GENDER_OPTIONS.map((opt) => (
@@ -505,6 +523,36 @@ const getStyles = ({ colors, isDark }) =>
       marginTop: 15,
       fontSize: 14,
       fontWeight: '600',
+    },
+    ageAttestRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 12,
+      paddingVertical: 4,
+    },
+    ageAttestBox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ageAttestBoxChecked: {
+      backgroundColor: colors.accent,
+      borderColor: colors.accent,
+    },
+    ageAttestMark: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '900',
+      lineHeight: 16,
+    },
+    ageAttestLabel: {
+      flex: 1,
+      fontSize: 14,
     },
     gdprContainer: {
       flex: 1,

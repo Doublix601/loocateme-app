@@ -485,10 +485,11 @@ export async function signup({
   customName = '',
   birthdate,
   gender,
+  ageAttested = false,
 }) {
   const data = await request('/auth/signup', {
     method: 'POST',
-    body: { email, password, username, firstName, lastName, customName, birthdate, gender },
+    body: { email, password, username, firstName, lastName, customName, birthdate, gender, ageAttested },
   });
   if (data?.accessToken) setAccessToken(data.accessToken);
   if (data?.refreshToken) setRefreshToken(data.refreshToken);

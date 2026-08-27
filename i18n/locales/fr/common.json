@@ -20,7 +20,9 @@
       "requiredFields": "Tous les champs doivent être remplis.",
       "birthdateRequired": "La date de naissance est obligatoire.",
       "under18": "Tu dois avoir au moins 18 ans pour t'inscrire.",
-      "policyLoadError": "Impossible de charger la politique de confidentialité. Tu pourras réessayer."
+      "policyLoadError": "Impossible de charger la politique de confidentialité. Tu pourras réessayer.",
+      "ageAttest": "Je certifie avoir 18 ans ou plus.",
+      "ageAttestRequired": "Tu dois certifier avoir 18 ans ou plus pour continuer."
     }
   },
   "consent": {
