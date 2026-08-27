@@ -45,6 +45,28 @@ export async function resetProfileOnboarding() {
   } catch {}
 }
 
+const LOCATION_PRIMER_KEY = 'loocateme_location_primer_done';
+
+export async function hasSeenLocationPrimer() {
+  try {
+    return (await AsyncStorage.getItem(LOCATION_PRIMER_KEY)) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export async function markLocationPrimerSeen() {
+  try {
+    await AsyncStorage.setItem(LOCATION_PRIMER_KEY, 'true');
+  } catch {}
+}
+
+export async function resetLocationPrimer() {
+  try {
+    await AsyncStorage.removeItem(LOCATION_PRIMER_KEY);
+  } catch {}
+}
+
 // Navigue vers Onboarding si pas encore vu, sinon MainTabs.
 export async function navigateAfterAuth(navigation) {
   const seen = await hasSeenOnboarding();

@@ -237,6 +237,15 @@ const LocationListScreen = () => {
       LocationService.setCheckInMode(nextMode);
       updateUser?.({ ...currentUser, checkInMode: nextMode });
       showToast(nextMode === 'manual' ? t('locationListScreen.checkinModeManualOn') : t('locationListScreen.checkinModeAutoOn'));
+      // Le mode auto n'a d'intérêt "app fermée" que si la position "Toujours"
+      // est accordée : c'est le moment pertinent pour la demander (primer +
+      // dialogue système), plutôt qu'à chaque lancement de l'app.
+      if (nextMode === 'auto') {
+        try {
+          const bg = await Location.getBackgroundPermissionsAsync();
+          if (bg.status !== 'granted') publish('ui:request_background_permission');
+        } catch (_) {}
+      }
     } catch (e) {
       console.warn('[LocationListScreen] apiUpdateCheckInMode failed', e?.message || e);
       Alert.alert(t('locationListScreen.checkinModeErrorTitle'), t('locationListScreen.checkinModeErrorMessage'));

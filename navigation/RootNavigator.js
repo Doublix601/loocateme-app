@@ -17,6 +17,7 @@ import DataManagementScreen from '../views/DataManagementScreen';
 import EditProfileScreen from '../views/EditProfileScreen';
 import PremiumPaywallScreen from '../views/PremiumPaywallScreen';
 import OnboardingScreen from '../views/OnboardingScreen';
+import LocationPrimerScreen from '../views/LocationPrimerScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +32,9 @@ export default function RootNavigator({ initialRouteName = 'Login' }) {
         fullScreenGestureEnabled: true,
       }}
     >
+      {/* Pre-auth location priming */}
+      <Stack.Screen name="LocationPrimer" component={LocationPrimerScreen} options={{ animation: 'fade', gestureEnabled: false }} />
+
       {/* Auth */}
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Signup" component={SignupScreen} />

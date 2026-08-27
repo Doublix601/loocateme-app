@@ -78,3 +78,6 @@ yarn-error.*
 *.tsbuildinfo
 
 # @end expo-cli.superpowers/
+
+# Native build output (expo prebuild)
+/ios/

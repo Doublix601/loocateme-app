@@ -61,7 +61,12 @@ import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
 import PremiumNudgeService from './services/PremiumNudgeService';
 import { mapBackendUser, mapProfileUser } from './utils/mappers';
-import { hasSeenOnboarding } from './utils/onboarding';
+import { hasSeenOnboarding, hasSeenLocationPrimer } from './utils/onboarding';
+import {
+  shouldPromptBackgroundPermission,
+  markBackgroundPermissionPrompted,
+  resetBackgroundPermissionPrompt,
+} from './utils/backgroundPermissionPrompt';
 import { hydrateLocationHeartbeatSuppression } from './utils/devLocationSuppression';
 import RootNavigator from './navigation/RootNavigator';
 
@@ -107,6 +112,10 @@ function AppShell({ purchasesReady }) {
   const lastKnownLocationStatus = useRef(null);
   const hasShownChurnSurvey = useRef(false);
   const didInitialScanRef = useRef(false);
+  // Toujours à jour pour les closures des effets ci-dessous (deps volontairement
+  // courtes) : la permission "Toujours" ne concerne que le mode de check-in auto.
+  const checkInModeRef = useRef(appUser?.checkInMode || 'auto');
+  checkInModeRef.current = appUser?.checkInMode || 'auto';
   const currentPoiIdRef = useRef(null);
 
   usePresence(isAuthenticated);
@@ -223,6 +232,14 @@ function AppShell({ purchasesReady }) {
       } catch (err) {
         resolvedRoute = 'Login';
       } finally {
+        // Premier lancement, utilisateur non authentifié : on affiche l'écran
+        // d'accroche qui demande l'autorisation de localisation (foreground)
+        // avant même le Login.
+        if (resolvedRoute === 'Login') {
+          try {
+            if (!(await hasSeenLocationPrimer())) resolvedRoute = 'LocationPrimer';
+          } catch (_) {}
+        }
         setInitialRoute(resolvedRoute);
         setAuthReady(true);
       }
@@ -345,6 +362,44 @@ function AppShell({ purchasesReady }) {
   }, []);
 
   useEffect(() => {
+    // Demande explicite déclenchée par l'utilisateur (activation du mode auto
+    // depuis la liste des lieux) : on affiche le primer sans passer par le
+    // plafond de fréquence, puisque c'est lui qui vient de le demander.
+    const off = subscribe('ui:request_background_permission', async () => {
+      try {
+        const { status: fg } = await Location.getForegroundPermissionsAsync();
+        if (fg !== 'granted') {
+          const req = await Location.requestForegroundPermissionsAsync();
+          if (req.status !== 'granted') {
+            setLocationModal({ visible: true, type: 'always' });
+            return;
+          }
+        }
+        const { status: bg } = await Location.getBackgroundPermissionsAsync();
+        if (bg === 'granted') {
+          resetBackgroundPermissionPrompt();
+          startBackgroundLocationForSixHours();
+          return;
+        }
+        const reqBg = await Location.requestBackgroundPermissionsAsync();
+        if (reqBg.status === 'granted') {
+          resetBackgroundPermissionPrompt();
+          startBackgroundLocationForSixHours();
+        } else {
+          // iOS n'accorde "Toujours" qu'en deux temps (et parfois plus tard, de
+          // lui-même) : on explique via le primer plutôt que de forcer.
+          setLocationModal({ visible: true, type: 'always' });
+        }
+      } catch (_) {}
+    });
+    return () => {
+      try {
+        off && off();
+      } catch (_) {}
+    };
+  }, []);
+
+  useEffect(() => {
     const checkLocationPermissions = async () => {
       if (!getAccessToken()) return;
       if (hasShownLocationModal.current) return;
@@ -376,9 +431,19 @@ function AppShell({ purchasesReady }) {
 
         const { status: bgStatus } = await Location.getBackgroundPermissionsAsync();
         if (bgStatus !== 'granted') {
-          setLocationModal({ visible: true, type: 'always' });
-          hasShownLocationModal.current = true;
+          // La permission "Toujours" ne sert qu'au mode de check-in automatique
+          // (entrées/sorties en arrière-plan). Inutile de la réclamer à un
+          // utilisateur en mode manuel — et même en mode auto, le rappel est
+          // plafonné (cf. backgroundPermissionPrompt) pour ne pas s'afficher à
+          // chaque lancement.
+          const isAutoMode = checkInModeRef.current !== 'manual';
+          if (isAutoMode && (await shouldPromptBackgroundPermission())) {
+            setLocationModal({ visible: true, type: 'always' });
+            hasShownLocationModal.current = true;
+            markBackgroundPermissionPrompted();
+          }
         } else {
+          resetBackgroundPermissionPrompt();
           setLocationModal((prev) => (prev.visible ? { ...prev, visible: false } : prev));
           // Sans ça, la permission "Toujours" est accordée mais aucune mise à jour
           // de position n'est jamais émise une fois l'écran verrouillé : le

@@ -376,6 +376,13 @@
     "start": "C'est parti 🚀",
     "skip": "Passer"
   },
+  "locationPrimer": {
+    "title": "Active ta position",
+    "desc": "LoocateMe utilise ta position pour te montrer les lieux animés et les personnes autour de toi. Sans elle, l'app ne peut pas fonctionner.",
+    "note": "À l'écran suivant, choisis « Autoriser lorsque l'app est active ».",
+    "allow": "Autoriser la localisation",
+    "later": "Plus tard"
+  },
   "premiumPaywall": {
     "features": [
       "Voir qui consulte ton profil",

@@ -376,6 +376,13 @@
     "start": "Let's go 🚀",
     "skip": "Skip"
   },
+  "locationPrimer": {
+    "title": "Turn on your location",
+    "desc": "LoocateMe uses your location to show you lively places and people around you. Without it, the app can't work.",
+    "note": "On the next screen, choose \"Allow While Using App\".",
+    "allow": "Allow location",
+    "later": "Later"
+  },
   "premiumPaywall": {
     "features": [
       "See who views your profile",

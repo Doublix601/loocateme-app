@@ -1,42 +1,102 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
+import * as Location from 'expo-location';
 import { useTheme } from './contexts/ThemeContext';
+import { resetBackgroundPermissionPrompt } from '../utils/backgroundPermissionPrompt';
+import { startBackgroundLocationForSixHours } from './BackgroundLocation';
 import CloseButton from './CloseButton';
 
+// Primer (écran de pré-permission) pour la position "Toujours".
+//
+// Ce n'est pas un prérequis de l'app : la localisation "Toujours" ne sert qu'au
+// mode de check-in automatique — rester visible dans un lieu même sans ouvrir
+// l'app. On l'affiche donc au moment pertinent (activation du mode auto, ou
+// rappel plafonné), jamais à chaque lancement.
 const LocationPermissionModal = ({ visible, onClose }) => {
   const { colors } = useTheme();
+  const [busy, setBusy] = useState(false);
 
-  const handleOpenSettings = () => {
-    Linking.openSettings();
+  const close = () => {
     if (onClose) onClose();
   };
 
-  const instructions =
+  const handleEnable = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const fg = await Location.getForegroundPermissionsAsync();
+      if (fg.status !== 'granted') {
+        const reqFg = await Location.requestForegroundPermissionsAsync();
+        if (reqFg.status !== 'granted') {
+          Linking.openSettings();
+          close();
+          return;
+        }
+      }
+
+      const bg = await Location.getBackgroundPermissionsAsync();
+      if (bg.status === 'granted') {
+        resetBackgroundPermissionPrompt();
+        startBackgroundLocationForSixHours();
+        close();
+        return;
+      }
+
+      // iOS/Android : si on peut encore demander, la boîte de dialogue système
+      // s'affiche. Sinon (déjà refusé une fois), il faut passer par les réglages.
+      if (bg.canAskAgain === false) {
+        Linking.openSettings();
+        close();
+        return;
+      }
+
+      const reqBg = await Location.requestBackgroundPermissionsAsync();
+      if (reqBg.status === 'granted') {
+        resetBackgroundPermissionPrompt();
+        startBackgroundLocationForSixHours();
+      } else if (reqBg.canAskAgain === false) {
+        Linking.openSettings();
+      }
+    } catch (_) {
+      Linking.openSettings();
+    } finally {
+      setBusy(false);
+      close();
+    }
+  };
+
+  const iosHint =
     Platform.OS === 'ios'
-      ? 'Pour une expérience optimale, réglez l\'autorisation sur "Toujours" dans les réglages de votre iPhone (Réglages > LoocateMe > Position).'
-      : 'Pour une expérience optimale, réglez l\'autorisation sur "Toujours" dans les paramètres de votre Android (Paramètres > Applications > LoocateMe > Autorisations > Position).';
+      ? 'iOS peut demander l\'accès en deux temps : autorisez d\'abord "Pendant l\'utilisation", puis "Toujours" lorsque l\'app vous le proposera.'
+      : null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
-          <CloseButton onPress={onClose} style={styles.closeBtn} />
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Position "Toujours"</Text>
+          <CloseButton onPress={close} style={styles.closeBtn} />
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Restez visible sans ouvrir l'app</Text>
           <Text style={[styles.message, { color: colors.textSecondary }]}>
-            L'application fonctionne mieux si vous autorisez la localisation en mode "Toujours". Cela permet de vous
-            localiser même lorsque l'application est en arrière-plan.
+            Avec le mode automatique, vos entrées et sorties dans les lieux se font toutes seules — vos amis vous voient
+            arriver au bar même quand votre téléphone est dans votre poche. Pour ça, LoocateMe a besoin d'accéder à votre
+            position en arrière-plan (autorisation « Toujours »).
           </Text>
-          <Text style={[styles.instructions, { color: colors.accent }]}>{instructions}</Text>
+          {iosHint ? <Text style={[styles.instructions, { color: colors.accent }]}>{iosHint}</Text> : null}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, styles.secondaryButton, { borderColor: colors.border }]}
-              onPress={onClose}
+              onPress={close}
+              disabled={busy}
             >
               <Text style={[styles.buttonText, { color: colors.textSecondary }]}>Plus tard</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.button, { backgroundColor: colors.accent }]} onPress={handleOpenSettings}>
-              <Text style={[styles.buttonText, { color: '#fff' }]}>Ouvrir les réglages</Text>
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: colors.accent, opacity: busy ? 0.6 : 1 }]}
+              onPress={handleEnable}
+              disabled={busy}
+            >
+              <Text style={[styles.buttonText, { color: '#fff' }]}>Activer</Text>
             </TouchableOpacity>
           </View>
         </View>

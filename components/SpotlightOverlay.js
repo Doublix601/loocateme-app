@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Dimensions, Animated } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: W, height: H } = Dimensions.get('window');
 const PAD = 12;
@@ -28,6 +29,7 @@ export default function SpotlightOverlay({
   onNext,
   onSkip,
 }) {
+  const insets = useSafeAreaInsets();
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const tooltipOpacity = useRef(new Animated.Value(0)).current;
   const tooltipTranslateY = useRef(new Animated.Value(16)).current;
@@ -82,9 +84,18 @@ export default function SpotlightOverlay({
   // Plafonner br à la moitié du côté le plus court pour éviter des caps gigantesques (ex: photo circulaire)
   const br = Math.min((rect.borderRadius ?? 14) + PAD, sw / 2, sh / 2);
 
+  // Zones sûres : jamais sous la status bar / le notch, ni sous la home indicator
+  const TOP_SAFE = insets.top + 12;
+  const BOTTOM_SAFE = insets.bottom + 12;
+  const TOOLTIP_RESERVE = 240;
+
   const showBelow = sy + sh < H * 0.58;
-  const tooltipTop = showBelow ? Math.min(sy + sh + 16, H - 220) : undefined;
-  const tooltipBottom = !showBelow ? Math.max(H - sy + 16, 16) : undefined;
+  const tooltipTop = showBelow
+    ? Math.max(TOP_SAFE, Math.min(sy + sh + 16, H - BOTTOM_SAFE - TOOLTIP_RESERVE))
+    : undefined;
+  const tooltipBottom = !showBelow
+    ? Math.max(BOTTOM_SAFE, Math.min(H - sy + 16, H - TOP_SAFE - TOOLTIP_RESERVE))
+    : undefined;
 
   const isLast = stepIndex === totalSteps - 1;
 
