@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -19,7 +20,6 @@ import { navigateAfterAuth } from '../utils/onboarding';
 import { UserContext } from '../components/contexts/UserContext';
 import { useTheme, useStyles } from '../components/contexts/ThemeContext';
 import ThemedText from '../components/ThemedText';
-import AppLogo from '../components/AppLogo';
 import { publish } from '../components/EventBus';
 import { mapBackendUser } from '../utils/mappers';
 
@@ -107,7 +107,10 @@ const LoginScreen = () => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <AppLogo width={width * 0.4} height={width * 0.4} style={styles.logo} />
+          <Image
+            source={require('../assets/appIcons/PublicWebsiteBanner.png')}
+            style={[styles.logo, { width: width * 0.55, height: width * 0.55 * (329 / 674) }]}
+          />
 
           <View style={styles.card}>
             <ThemedText style={styles.cardTitle}>{t('auth.login.welcomeBack')}</ThemedText>
