@@ -39,6 +39,7 @@ import { markCheckinVerified } from '../components/CheckinVerificationScheduler'
 import { subscribe, publish } from '../components/EventBus';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
+import { getOverpassRadiusM, DISCOVERY_RADIUS_FREE_M } from '../constants/premiumFeatures';
 import { useBoost } from '../hooks/useBoost';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance } from '../components/ServerUtils';
@@ -377,6 +378,10 @@ const LocationListScreen = () => {
   }, [leavingLocation, leaveLocationItem, updateUser, currentUser?._id, showToast]);
 
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
+  // Rayon des POIs OpenStreetMap complémentaires : 2 km en gratuit, étendu en
+  // Premium (aligné avec le plafond de découverte backend). Les lieux
+  // applicatifs eux-mêmes sont déjà plafonnés côté serveur.
+  const overpassRadiusM = getOverpassRadiusM({ isPremium, premiumSystemEnabled });
   const { isBoosted } = useBoost();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
@@ -1074,7 +1079,7 @@ const LocationListScreen = () => {
       if (!active) return;
 
       try {
-        const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: 3000, vibe });
+        const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: overpassRadiusM, vibe });
         if (active) {
           setOsmPois(pois);
           writeVibeCache(vibe, { zoneKey, osmPois: pois });
@@ -1084,7 +1089,7 @@ const LocationListScreen = () => {
     return () => {
       active = false;
     };
-  }, [roundedLat, roundedLon, vibe]);
+  }, [roundedLat, roundedLon, vibe, overpassRadiusM]);
 
   useEffect(() => {
     fetchNearbyLocations();
@@ -1491,7 +1496,7 @@ const LocationListScreen = () => {
         />
         {!isPremium && (
           <Text style={[styles.radiusBadge, { color: colors.textSecondary }]}>
-            Rayon de recherche : 2 km · Premium pour un rayon élargi
+            Rayon de recherche : {Math.round(DISCOVERY_RADIUS_FREE_M / 1000)} km · Premium pour un rayon élargi
           </Text>
         )}
         <TrendingSection
@@ -1613,7 +1618,7 @@ const LocationListScreen = () => {
                 OverpassService.fetchAround({
                   lat: userCoords.latitude,
                   lon: userCoords.longitude,
-                  radius: 3000,
+                  radius: overpassRadiusM,
                   force: true,
                   vibe,
                 })
