@@ -493,7 +493,8 @@
     "restorePurchases": "Restaurer mes achats",
     "legalText": "L'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. Gère tes abonnements dans les réglages de l'App Store / Google Play. ",
     "privacyPolicy": "Politique de confidentialité",
-    "terms": "CGU"
+    "terms": "CGU",
+    "retry": "Réessayer"
   },
   "premiumWelcome": {
     "header": "👑 Bienvenue dans Premium",

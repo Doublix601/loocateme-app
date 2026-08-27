@@ -52,6 +52,8 @@ export default function PremiumPaywallScreen() {
   const { user, updateUser } = useContext(UserContext);
   const [period, setPeriod] = useState('annual');
   const [offerings, setOfferings] = useState(null);
+  const [offersError, setOffersError] = useState(false);
+  const [offersRetry, setOffersRetry] = useState(0);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [slideIdx, setSlideIdx] = useState(0);
@@ -110,10 +112,22 @@ export default function PremiumPaywallScreen() {
   }, [onboardingVisible]);
 
   useEffect(() => {
-    IAPStore.getOfferings()
-      .then(setOfferings)
-      .catch(() => {});
-  }, []);
+    let cancelled = false;
+    setOffersError(false);
+    // Ne jamais rester bloqué sur « Chargement des offres… » : timeout 10 s →
+    // état d'erreur avec bouton « Réessayer » (BUG-05).
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+    Promise.race([IAPStore.getOfferings(), timeout])
+      .then((res) => {
+        if (!cancelled) setOfferings(res);
+      })
+      .catch(() => {
+        if (!cancelled) setOffersError(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [offersRetry]);
 
   useEffect(() => {
     autoRef.current = setInterval(() => {
@@ -329,30 +343,49 @@ export default function PremiumPaywallScreen() {
         </View>
 
         {/* CTA */}
-        <TouchableOpacity
-          onPress={trialEligible && !DEBUG_CONFIG.IAP_DISABLED ? handleTrial : handlePurchase}
-          disabled={purchasing || (!trialEligible && !selectedPkg && !DEBUG_CONFIG.IAP_DISABLED)}
-          activeOpacity={0.85}
-          style={[
-            styles.cta,
-            { opacity: purchasing || (!trialEligible && !selectedPkg && !DEBUG_CONFIG.IAP_DISABLED) ? 0.5 : 1 },
-            DEBUG_CONFIG.IAP_DISABLED && { backgroundColor: '#f39c12' },
-          ]}
-        >
-          {purchasing ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.ctaText}>
-              {DEBUG_CONFIG.IAP_DISABLED
-                ? t('premiumPaywall.ctaSimulate')
-                : trialEligible
-                  ? t('premiumPaywall.ctaTrial')
-                  : !selectedPkg
-                    ? t('premiumPaywall.ctaLoading')
-                    : t('premiumPaywall.ctaSubscribe')}
-            </Text>
-          )}
-        </TouchableOpacity>
+        {(() => {
+          const offersMissing = !trialEligible && !selectedPkg && !DEBUG_CONFIG.IAP_DISABLED;
+          const showRetry = offersMissing && offersError;
+          const onCtaPress = showRetry
+            ? () => setOffersRetry((n) => n + 1)
+            : trialEligible && !DEBUG_CONFIG.IAP_DISABLED
+              ? handleTrial
+              : handlePurchase;
+          return (
+            <TouchableOpacity
+              onPress={onCtaPress}
+              disabled={purchasing || (offersMissing && !offersError)}
+              activeOpacity={0.85}
+              style={[
+                styles.cta,
+                { opacity: purchasing || (offersMissing && !offersError) ? 0.5 : 1 },
+                DEBUG_CONFIG.IAP_DISABLED && { backgroundColor: '#f39c12' },
+              ]}
+            >
+              {purchasing ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.ctaText}>
+                  {DEBUG_CONFIG.IAP_DISABLED
+                    ? t('premiumPaywall.ctaSimulate')
+                    : showRetry
+                      ? t('premiumPaywall.retry')
+                      : trialEligible
+                        ? t('premiumPaywall.ctaTrial')
+                        : !selectedPkg
+                          ? t('premiumPaywall.ctaLoading')
+                          : t('premiumPaywall.ctaSubscribe')}
+                </Text>
+              )}
+            </TouchableOpacity>
+          );
+        })()}
+        {(() => {
+          const offersMissing = !trialEligible && !selectedPkg && !DEBUG_CONFIG.IAP_DISABLED;
+          return offersMissing && offersError ? (
+            <Text style={[styles.trialSub, { color: sub }]}>{t('premiumPaywall.offersUnavailableMessage')}</Text>
+          ) : null;
+        })()}
 
         {!DEBUG_CONFIG.IAP_DISABLED && (
           <Text style={[styles.trialSub, { color: sub }]}>

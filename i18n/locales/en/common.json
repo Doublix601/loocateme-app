@@ -493,7 +493,8 @@
     "restorePurchases": "Restore purchases",
     "legalText": "The subscription renews automatically unless cancelled before the end of the current period. Manage your subscriptions in App Store / Google Play settings. ",
     "privacyPolicy": "Privacy policy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "retry": "Try again"
   },
   "premiumWelcome": {
     "header": "👑 Welcome to Premium",
