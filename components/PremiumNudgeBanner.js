@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { subscribe, publish } from './EventBus';
 import { useTheme } from './contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 
 // Bannière discrète et dismissible proposant Premium de façon contextuelle.
@@ -13,6 +14,7 @@ import PremiumNudgeService from '../services/PremiumNudgeService';
 // passe par l'événement 'ui:open_premium' déjà écouté globalement dans App.js plutôt que
 // par useNavigation() (indisponible hors de l'arbre du NavigationContainer).
 export default function PremiumNudgeBanner() {
+  const { t } = useTranslation();
   const [nudge, setNudge] = useState(null); // { id, title, message, source }
   const { colors } = useTheme();
   // NB: le thème n'expose pas `colors.text` (seulement textPrimary/textSecondary/textMuted) —
@@ -69,7 +71,7 @@ export default function PremiumNudgeBanner() {
             </Text>
           </View>
           <View style={[styles.cta, { backgroundColor: colors.accent }]}>
-            <Text style={styles.ctaText}>Voir</Text>
+            <Text style={styles.ctaText}>{t('premiumNudgeBanner.see')}</Text>
           </View>
           <TouchableOpacity
             onPress={handleDismiss}

@@ -81,3 +81,6 @@ yarn-error.*
 
 # Superpowers scratch workspace (ledgers, briefs, review packages) — never versioned
 .superpowers/
+
+# Native build output (expo prebuild)
+/ios/

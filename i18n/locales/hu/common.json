@@ -383,7 +383,7 @@
       "Láthatósági boostok (1 ingyenes csomag)",
       "Superlikes (3/hét ingyen)",
       "Láthatatlan mód",
-      "Keresési sugár 2 km-ig",
+      "Keresési sugár 30 km-ig",
       "Fejlett statisztikák",
       "Bővített értesítések"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Kibővített sugár",
-        "desc": "Fedezz fel akár 2 km-t magad körül (500 m az ingyenes verzióban)."
+        "desc": "Fedezz fel akár 30 km-t magad körül (2 km az ingyenes verzióban)."
       },
       "stats": {
         "title": "Fejlett statisztikák",

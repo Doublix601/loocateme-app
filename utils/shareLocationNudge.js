@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const KEY = 'loocateme_share_location_nudge_v1';
-const COOLDOWN_MS = 10 * 24 * 60 * 60 * 1000; // 10 jours
-const MAX_SHOWN_COUNT = 4;
+const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 jours entre deux affichages
+const MAX_SHOWN_COUNT = 2; // au plus 2 rappels sur la durée de vie du compte
 
 async function readState() {
   try {

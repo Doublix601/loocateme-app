@@ -44,6 +44,7 @@ import NightSkyBackground from '../components/NightSkyBackground';
 import ProfileCard from '../components/ProfileCard';
 import UltraBoostProgressBar from '../components/UltraBoostProgressBar';
 import CheckinVerifyModal from '../components/CheckinVerifyModal';
+import LocationCorrectionModal from '../components/LocationCorrectionModal';
 import * as Location from 'expo-location';
 import { calculateDistance } from '../components/ServerUtils';
 import { forceCheckIn, forceCheckOut } from '../components/ApiRequest';
@@ -136,7 +137,7 @@ const LocationScreen = () => {
   const { palette, radius, spacing, shadows, typography } = theme;
   const insets = useSafeAreaInsets();
 
-  const { checkAccess, storiesUnlocked, boostUnlocked } = useFeatureGate();
+  const { checkAccess, storiesUnlocked, boostUnlocked, isPremium, premiumSystemEnabled } = useFeatureGate();
   const { activateBoost, isBoosted, loading: boostLoading } = useBoost();
   const { location, users, monthlyUsers, loading, refreshing, refresh } = useLocationData(
     locationId,
@@ -148,7 +149,6 @@ const LocationScreen = () => {
     loadingMore: crossedLoadingMore,
     hasMore: crossedHasMore,
     loadMore: loadMoreCrossed,
-    isPremium: crossedIsPremium,
   } = useCrossedPaths(locationId);
   const [storyViewerIndex, setStoryViewerIndex] = useState(null);
   const [lastStorySeenAt, setLastStorySeenAt] = useState(null);
@@ -156,6 +156,7 @@ const LocationScreen = () => {
   const [pdfLoadFailed, setPdfLoadFailed] = useState(false);
   const [verifyModalVisible, setVerifyModalVisible] = useState(false);
   const [correcting, setCorrecting] = useState(false);
+  const [correctionVisible, setCorrectionVisible] = useState(false);
 
   // Bouton "Je suis là" (cf. plan §2.4) : nécessite de connaître la distance
   // au lieu affiché. Toujours actif sur cet écran (pas seulement en mode de
@@ -611,7 +612,7 @@ const LocationScreen = () => {
       <View style={[styles.metaRow, { marginTop: spacing.sm }]}>
         <View style={styles.metaItem}>
           <Ionicons name="people" size={14} color={palette.textMuted} />
-          <Text style={[typography.body, { marginLeft: 4 }]}>{users.length} sur place</Text>
+          <Text style={[typography.body, { marginLeft: 4 }]}>{t('locationScreen.onSite', { count: users.length })}</Text>
         </View>
         {users.length > 0 && (
           <View style={[styles.presenceStack, { marginLeft: 8 }]}>
@@ -629,11 +630,24 @@ const LocationScreen = () => {
             <View style={[styles.metaDot, { backgroundColor: palette.border }]} />
             <View style={styles.metaItem}>
               <Ionicons name="calendar-outline" size={14} color={palette.textMuted} />
-              <Text style={[typography.body, { marginLeft: 4 }]}>{monthlyUsers} ce mois</Text>
+              <Text style={[typography.body, { marginLeft: 4 }]}>{t('locationScreen.thisMonth', { count: monthlyUsers })}</Text>
             </View>
           </>
         )}
       </View>
+
+      {location?._id && !String(location._id).startsWith('osm:') && (
+        <TouchableOpacity
+          onPress={() => setCorrectionVisible(true)}
+          style={styles.reportInfoLink}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="create-outline" size={13} color={palette.textMuted} />
+          <Text style={[typography.caption, { color: palette.textMuted, marginLeft: 4, textDecorationLine: 'underline' }]}>
+            {t('locationCorrection.trigger')}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {showManualCheckinButton && (
         <TouchableOpacity
@@ -708,7 +722,7 @@ const LocationScreen = () => {
               <Text style={{ fontSize: 22 }}>🔥</Text>
             </View>
             <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <Text style={[styles.boostTitle, { color: palette.text }]}>Tu es sur place !</Text>
+              <Text style={[styles.boostTitle, { color: palette.text }]}>{t('locationScreen.youAreHere')}</Text>
               <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
                 Reste encore un peu pour débloquer ton boost de profil gratuit.
               </Text>
@@ -735,9 +749,9 @@ const LocationScreen = () => {
             <Text style={{ fontSize: 22 }}>🔥</Text>
           </View>
           <View style={{ flex: 1, marginLeft: spacing.md }}>
-            <Text style={[styles.boostTitle, { color: palette.text }]}>Offre spéciale de ce lieu</Text>
+            <Text style={[styles.boostTitle, { color: palette.text }]}>{t('locationScreen.specialOffer')}</Text>
             <Text style={[styles.boostSubtitle, { color: palette.textMuted }]}>
-              Passe 20 minutes sur place pour débloquer un boost de profil gratuit !
+              {t('locationScreen.specialOfferHint')}
             </Text>
           </View>
         </View>
@@ -888,7 +902,7 @@ const LocationScreen = () => {
         >
           <Ionicons name="people-outline" size={36} color={palette.textFaint} />
           <Text style={[typography.body, { marginTop: spacing.sm, textAlign: 'center' }]}>
-            Personne n'est ici pour le moment.{'\n'}Soyez le premier à vous signaler !
+            {t('locationScreen.noProfilesHere')}
           </Text>
         </View>
       ) : (
@@ -964,13 +978,13 @@ const LocationScreen = () => {
         </>
       )}
 
-      {!crossedIsPremium && (
+      {premiumSystemEnabled && !isPremium && (
         <TouchableOpacity
           onPress={() => checkAccess('crossed_paths_history')}
           style={[styles.emptyState, { backgroundColor: palette.surface, borderRadius: radius.lg, marginTop: spacing.sm, paddingVertical: spacing.sm }]}
         >
           <Text style={[typography.body, { color: palette.textMuted, textAlign: 'center' }]}>
-            Passez Premium pour voir les croisements des 7 derniers jours (24h en gratuit)
+            {t('locationScreen.crossedPathsPremiumHint')}
           </Text>
         </TouchableOpacity>
       )}
@@ -1094,6 +1108,14 @@ const LocationScreen = () => {
         onCorrect={handleCorrectCheckin}
         onNotHere={handleNotHereFromVerify}
         onClose={() => setVerifyModalVisible(false)}
+      />
+
+      <LocationCorrectionModal
+        visible={correctionVisible}
+        onClose={() => setCorrectionVisible(false)}
+        locationId={location?._id}
+        currentName={location?.name}
+        currentType={location?.type}
       />
     </View>
   );
@@ -1235,6 +1257,7 @@ const EventCard = ({ event, isFirst, onLayout }) => {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   errorBtn: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
+  reportInfoLink: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginTop: 8 },
 
   storyUnseenBubbleWrap: {
     position: 'absolute',

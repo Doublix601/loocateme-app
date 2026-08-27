@@ -383,7 +383,7 @@
       "Boosts de visibilidade (1 pacote grátis)",
       "Superlikes (3/semana grátis)",
       "Modo invisível",
-      "Raio de pesquisa até 2 km",
+      "Raio de pesquisa até 30 km",
       "Estatísticas avançadas",
       "Notificações melhoradas"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Raio alargado",
-        "desc": "Explora até 2 km à tua volta (500 m na versão gratuita)."
+        "desc": "Explora até 30 km à tua volta (2 km na versão gratuita)."
       },
       "stats": {
         "title": "Estatísticas avançadas",

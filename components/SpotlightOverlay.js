@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Dimensions, Animated } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { computeSpotlightTooltipTop } from '../utils/spotlightPlacement';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -29,6 +30,7 @@ export default function SpotlightOverlay({
   onNext,
   onSkip,
 }) {
+  const { t } = useTranslation();
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const tooltipOpacity = useRef(new Animated.Value(0)).current;
   const tooltipTranslateY = useRef(new Animated.Value(16)).current;
@@ -148,10 +150,10 @@ export default function SpotlightOverlay({
 
           <View style={s.btnRow}>
             <TouchableOpacity onPress={onSkip} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Text style={s.skipTxt}>Passer</Text>
+              <Text style={s.skipTxt}>{t('spotlight.skip')}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={onNext} activeOpacity={0.82} style={s.nextBtn}>
-              <Text style={s.nextTxt}>{isLast ? 'Terminé ✓' : 'Suivant →'}</Text>
+              <Text style={s.nextTxt}>{isLast ? `${t('spotlight.done')} \u2713` : `${t('spotlight.next')} \u2192`}</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>

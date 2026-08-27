@@ -383,7 +383,7 @@
       "Boosts ta' viżibbiltà (1 pakkett b'xejn)",
       "Superlikes (3/ġimgħa b'xejn)",
       "Modalità inviżibbli",
-      "Raġġ ta' tfittxija sa 2 km",
+      "Raġġ ta' tfittxija sa 30 km",
       "Statistika avvanzata",
       "Notifiki mtejba"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Raġġ estiż",
-        "desc": "Esplora sa 2 km madwarek (500 m fil-verżjoni b'xejn)."
+        "desc": "Esplora sa 30 km madwarek (2 km fil-verżjoni b'xejn)."
       },
       "stats": {
         "title": "Statistika avvanzata",

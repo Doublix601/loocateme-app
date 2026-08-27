@@ -383,7 +383,7 @@
       "Impulsos de visibilidad (1 paquete gratis)",
       "Superlikes (3/semana gratis)",
       "Modo invisible",
-      "Radio de búsqueda hasta 2 km",
+      "Radio de búsqueda hasta 30 km",
       "Estadísticas avanzadas",
       "Notificaciones mejoradas"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Radio ampliado",
-        "desc": "Explora hasta 2 km a tu alrededor (500 m en la versión gratuita)."
+        "desc": "Explora hasta 30 km a tu alrededor (2 km en la versión gratuita)."
       },
       "stats": {
         "title": "Estadísticas avanzadas",

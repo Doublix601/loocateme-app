@@ -383,7 +383,7 @@
       "Sichtbarkeits-Boosts (1 kostenloses Paket)",
       "Superlikes (3/Woche gratis)",
       "Unsichtbarer Modus",
-      "Suchradius bis zu 2 km",
+      "Suchradius bis zu 30 km",
       "Erweiterte Statistiken",
       "Erweiterte Benachrichtigungen"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Erweiterter Radius",
-        "desc": "Erkunde bis zu 2 km um dich herum (500 m in der kostenlosen Version)."
+        "desc": "Erkunde bis zu 30 km um dich herum (2 km in der kostenlosen Version)."
       },
       "stats": {
         "title": "Erweiterte Statistiken",

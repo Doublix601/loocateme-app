@@ -383,7 +383,7 @@
       "Boost-e dukshmërie (1 paketë falas)",
       "Superlikes (3/javë falas)",
       "Modaliteti i padukshëm",
-      "Rreze kërkimi deri në 2 km",
+      "Rreze kërkimi deri në 30 km",
       "Statistika të avancuara",
       "Njoftime të pasuruara"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Rreze e zgjeruar",
-        "desc": "Eksploro deri në 2 km rreth teje (500 m në versionin falas)."
+        "desc": "Eksploro deri në 30 km rreth teje (2 km në versionin falas)."
       },
       "stats": {
         "title": "Statistika të avancuara",

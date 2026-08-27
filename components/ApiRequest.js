@@ -485,10 +485,11 @@ export async function signup({
   customName = '',
   birthdate,
   gender,
+  ageAttested = false,
 }) {
   const data = await request('/auth/signup', {
     method: 'POST',
-    body: { email, password, username, firstName, lastName, customName, birthdate, gender },
+    body: { email, password, username, firstName, lastName, customName, birthdate, gender, ageAttested },
   });
   if (data?.accessToken) setAccessToken(data.accessToken);
   if (data?.refreshToken) setRefreshToken(data.refreshToken);
@@ -686,6 +687,15 @@ export async function seedOsmLocation({ osmId, name, type, lat, lon }) {
   });
 }
 
+// Correction proposée par l'utilisateur sur un lieu (nom / type incorrect).
+// Part en file de modération côté backend (source: 'user_report').
+export async function submitLocationCorrection(locationId, { name, type, reason } = {}) {
+  return request(`/locations/${encodeURIComponent(locationId)}/correction`, {
+    method: 'POST',
+    body: { name, type, reason },
+  });
+}
+
 export async function updateUserStatus(status) {
   return request('/profile/status', {
     method: 'PATCH',
@@ -795,7 +805,7 @@ export async function uploadProfilePhoto(file) {
   // Optimize image before upload to reduce payload size
   let optimized = part;
   try {
-    optimized = await optimizeImageForUpload(part, { maxWidth: 720, maxHeight: 720, quality: 0.8 });
+    optimized = await optimizeImageForUpload(part, { maxWidth: 1080, quality: 0.9 });
   } catch (_e) {
     // ignore optimization failures, send original
   }
@@ -1054,9 +1064,12 @@ export async function getAdminFlags() {
 
 // ADMIN: Update a feature flag
 export async function setFeatureFlag(key, enabled) {
+  // Ces flags sont globaux (tous les utilisateurs en prod) : le backend exige
+  // `confirm: true`. Le garde-fou côté UI est le dialogue de confirmation
+  // affiché avant l'appel (cf. DebugScreen.toggleFlag).
   return request(`/admin/flags/${encodeURIComponent(key)}`, {
     method: 'PUT',
-    body: { enabled: !!enabled },
+    body: { enabled: !!enabled, confirm: true },
   });
 }
 

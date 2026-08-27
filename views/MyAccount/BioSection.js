@@ -1,15 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 /**
- * BioSection — lecture seule sur MyAccountScreen. La bio se modifie
- * désormais uniquement depuis les Réglages (plus d'édition inline / appui
- * long ici). Le placeholder italique reste affiché si la bio est vide.
+ * BioSection — affichage sur MyAccountScreen. Un tap ouvre l'éditeur (Réglages
+ * → onglet Profil, champ bio ciblé), cf. UX-01. Le placeholder italique reste
+ * affiché si la bio est vide.
  */
-const BioSection = ({ bioRef, bio, colors, isDark }) => {
+const BioSection = ({ bioRef, bio, colors, isDark, onEditBio }) => {
   const { t } = useTranslation();
   const bioText = String(bio || '').trim();
   const isEmpty = bioText.length === 0;
@@ -17,9 +18,18 @@ const BioSection = ({ bioRef, bio, colors, isDark }) => {
   const bioFont = Math.max(14, Math.min(baseBioFont, 22));
 
   return (
-    <View ref={bioRef} style={[styles.container, { backgroundColor: colors.surfaceAlt }]}>
+    <TouchableOpacity
+      ref={bioRef}
+      activeOpacity={0.75}
+      onPress={onEditBio}
+      disabled={!onEditBio}
+      style={[styles.container, { backgroundColor: colors.surfaceAlt }]}
+      accessibilityRole="button"
+      accessibilityLabel={t('myAccount.bio.editA11y')}
+    >
       <View style={styles.titleRow}>
         <Text style={[styles.label, { color: colors.accent }]}>{t('myAccount.bio.label')}</Text>
+        {onEditBio ? <Ionicons name="pencil" size={14} color={colors.accent} style={{ marginLeft: 6 }} /> : null}
       </View>
       <Text
         style={[
@@ -34,7 +44,7 @@ const BioSection = ({ bioRef, bio, colors, isDark }) => {
       >
         {isEmpty ? t('myAccount.bio.placeholder') : bioText}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 };
 

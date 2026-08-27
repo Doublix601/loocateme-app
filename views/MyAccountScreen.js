@@ -899,15 +899,23 @@ const MyAccountScreen = () => {
               photoRef={photoRef}
               statusRef={statusRef}
               user={user}
+              isPremium={isPremium}
               colors={colors}
               isDark={isDark}
               cityLabel={cityLabel}
               currentPlaceLabel={currentPlaceLabel}
               onOpenStatusPicker={() => setStatusPickerVisible(true)}
+              onEditPhoto={() => navigation.navigate('Settings', { initialTab: 'profile', focus: 'photo' })}
             />
 
-            {/* 2. Bio (lecture seule) */}
-            <BioSection bioRef={bioRef} bio={user?.bio} colors={colors} isDark={isDark} />
+            {/* 2. Bio — tap pour éditer (Réglages → Profil) */}
+            <BioSection
+              bioRef={bioRef}
+              bio={user?.bio}
+              colors={colors}
+              isDark={isDark}
+              onEditBio={() => navigation.navigate('Settings', { initialTab: 'profile', focus: 'bio' })}
+            />
 
             {/* 3. Suggestion partage position (conditionnel) */}
             {shareLocationNudgeVisible && (
@@ -950,7 +958,8 @@ const MyAccountScreen = () => {
               boostPulse={boostPulse}
               onOpenSuperlikeHistory={() => setSuperlikeHistoryVisible(true)}
               onOpenConsumablesShop={() => setConsumablesShopVisible(true)}
-              isPremium={!!user?.isPremium}
+              isPremium={isPremium}
+              premiumSystemEnabled={premiumSystemEnabled}
               onOpenPaywall={() => navigation.navigate('PremiumPaywall', { source: 'rewards_card' })}
             />
 

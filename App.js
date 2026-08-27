@@ -45,6 +45,7 @@ import { FeatureFlagsProvider } from './components/contexts/FeatureFlagsContext'
 import { LocalizationProvider } from './components/contexts/LocalizationContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n, { initI18n } from './i18n';
+import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 import { usePresence } from './hooks/usePresence';
 import {
   initApiFromStorage,
@@ -60,7 +61,12 @@ import { publish, subscribe } from './components/EventBus';
 import PremiumService from './services/PremiumService';
 import PremiumNudgeService from './services/PremiumNudgeService';
 import { mapBackendUser, mapProfileUser } from './utils/mappers';
-import { hasSeenOnboarding, ensureLocationPermissionRequested } from './utils/onboarding';
+import { hasSeenOnboarding, hasSeenLocationPrimer, ensureLocationPermissionRequested } from './utils/onboarding';
+import {
+  shouldPromptBackgroundPermission,
+  markBackgroundPermissionPrompted,
+  resetBackgroundPermissionPrompt,
+} from './utils/backgroundPermissionPrompt';
 import { hydrateLocationHeartbeatSuppression } from './utils/devLocationSuppression';
 import RootNavigator from './navigation/RootNavigator';
 
@@ -106,6 +112,10 @@ function AppShell({ purchasesReady }) {
   const lastKnownLocationStatus = useRef(null);
   const hasShownChurnSurvey = useRef(false);
   const didInitialScanRef = useRef(false);
+  // Toujours à jour pour les closures des effets ci-dessous (deps volontairement
+  // courtes) : la permission "Toujours" ne concerne que le mode de check-in auto.
+  const checkInModeRef = useRef(appUser?.checkInMode || 'auto');
+  checkInModeRef.current = appUser?.checkInMode || 'auto';
   const currentPoiIdRef = useRef(null);
 
   usePresence(isAuthenticated);
@@ -237,6 +247,14 @@ function AppShell({ purchasesReady }) {
       } catch (err) {
         resolvedRoute = 'Login';
       } finally {
+        // Premier lancement, utilisateur non authentifié : on affiche l'écran
+        // d'accroche qui demande l'autorisation de localisation (foreground)
+        // avant même le Login.
+        if (resolvedRoute === 'Login') {
+          try {
+            if (!(await hasSeenLocationPrimer())) resolvedRoute = 'LocationPrimer';
+          } catch (_) {}
+        }
         setInitialRoute(resolvedRoute);
         setAuthReady(true);
       }
@@ -359,6 +377,33 @@ function AppShell({ purchasesReady }) {
   }, []);
 
   useEffect(() => {
+    // Demande explicite déclenchée par l'utilisateur (activation du mode auto
+    // depuis la liste des lieux) : on affiche le primer sans passer par le
+    // plafond de fréquence, puisque c'est lui qui vient de le demander.
+    const off = subscribe('ui:request_background_permission', async () => {
+      try {
+        const { status: bg } = await Location.getBackgroundPermissionsAsync();
+        if (bg === 'granted') {
+          resetBackgroundPermissionPrompt();
+          startBackgroundLocationForSixHours();
+          return;
+        }
+        // Toujours afficher le primer AVANT tout dialogue système : l'utilisateur
+        // voit d'abord le « pourquoi », et c'est le bouton « Activer » du primer
+        // qui déclenche la vraie demande de permission (foreground puis
+        // background, cf. LocationPermissionModal). Un refus au dialogue système
+        // iOS étant définitif, on ne le provoque jamais sans contexte préalable.
+        setLocationModal({ visible: true, type: 'always' });
+      } catch (_) {}
+    });
+    return () => {
+      try {
+        off && off();
+      } catch (_) {}
+    };
+  }, []);
+
+  useEffect(() => {
     const checkLocationPermissions = async () => {
       if (!getAccessToken()) return;
       if (hasShownLocationModal.current) return;
@@ -390,9 +435,19 @@ function AppShell({ purchasesReady }) {
 
         const { status: bgStatus } = await Location.getBackgroundPermissionsAsync();
         if (bgStatus !== 'granted') {
-          setLocationModal({ visible: true, type: 'always' });
-          hasShownLocationModal.current = true;
+          // La permission "Toujours" ne sert qu'au mode de check-in automatique
+          // (entrées/sorties en arrière-plan). Inutile de la réclamer à un
+          // utilisateur en mode manuel — et même en mode auto, le rappel est
+          // plafonné (cf. backgroundPermissionPrompt) pour ne pas s'afficher à
+          // chaque lancement.
+          const isAutoMode = checkInModeRef.current !== 'manual';
+          if (isAutoMode && (await shouldPromptBackgroundPermission())) {
+            setLocationModal({ visible: true, type: 'always' });
+            hasShownLocationModal.current = true;
+            markBackgroundPermissionPrompted();
+          }
         } else {
+          resetBackgroundPermissionPrompt();
           setLocationModal((prev) => (prev.visible ? { ...prev, visible: false } : prev));
           // Sans ça, la permission "Toujours" est accordée mais aucune mise à jour
           // de position n'est jamais émise une fois l'écran verrouillé : le
@@ -695,11 +750,27 @@ function AppShell({ purchasesReady }) {
   );
 }
 
-export default function App() {
+function AppRoot() {
   const [i18nReady, setI18nReady] = useState(false);
 
   useEffect(() => {
     initI18n().finally(() => setI18nReady(true));
+  }, []);
+
+  // Si le lancement précédent s'est terminé par une exception fatale (cf.
+  // errorReporting.js / GlobalErrorBoundary), on l'affiche dans la console
+  // pour pouvoir enfin lire la vraie cause du crash (Xcode Console / logs
+  // TestFlight) au lieu du crash log Apple non symbolisé, sans message.
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AsyncStorage.getItem('@loocateme:last_fatal_error');
+        if (raw) {
+          console.warn('[LoocateMe] Dernière exception fatale enregistrée:', raw);
+          await AsyncStorage.removeItem('@loocateme:last_fatal_error');
+        }
+      } catch (_) {}
+    })();
   }, []);
 
   if (!i18nReady) {
@@ -727,6 +798,14 @@ export default function App() {
         </SafeAreaProvider>
       </I18nextProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function App() {
+  return (
+    <GlobalErrorBoundary>
+      <AppRoot />
+    </GlobalErrorBoundary>
   );
 }
 

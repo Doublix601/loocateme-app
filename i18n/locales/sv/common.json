@@ -383,7 +383,7 @@
       "Synlighetsboosts (1 gratis paket)",
       "Superlikes (3/vecka gratis)",
       "Osynligt läge",
-      "Sökradie upp till 2 km",
+      "Sökradie upp till 30 km",
       "Avancerad statistik",
       "Förbättrade aviseringar"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Utökad radie",
-        "desc": "Utforska upp till 2 km runt dig (500 m i gratisversionen)."
+        "desc": "Utforska upp till 30 km runt dig (2 km i gratisversionen)."
       },
       "stats": {
         "title": "Avancerad statistik",

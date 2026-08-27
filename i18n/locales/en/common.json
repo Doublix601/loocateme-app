@@ -20,7 +20,37 @@
       "requiredFields": "All fields must be filled in.",
       "birthdateRequired": "Date of birth is required.",
       "under18": "You must be at least 18 years old to sign up.",
-      "policyLoadError": "We couldn't load the privacy policy. You can try again."
+      "policyLoadError": "We couldn't load the privacy policy. You can try again.",
+      "ageAttest": "I certify that I am 18 or older.",
+      "ageAttestRequired": "You must certify that you are 18 or older to continue.",
+      "header": "Create an account",
+      "welcome": "Welcome!",
+      "firstNamePlaceholder": "First name",
+      "lastNamePlaceholder": "Last name",
+      "customNamePlaceholder": "Custom name (optional)",
+      "birthdatePlaceholder": "Date of birth *",
+      "emailPlaceholder": "Email",
+      "passwordPlaceholder": "Password",
+      "confirmPasswordPlaceholder": "Confirm password",
+      "submit": "Sign up",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "gdprTitle": "Privacy & GDPR",
+      "analyticsToggle": "Analytics sharing",
+      "decline": "Decline",
+      "accept": "Accept",
+      "creating": "Creating...",
+      "validateCreate": "Confirm and create my account",
+      "errorTitle": "Sign-up error",
+      "errorFallback": "Please try again.",
+      "subtitle": "Join the LoocateMe community",
+      "checkInfoTitle": "Error",
+      "checkInfo": "Check the information you entered.",
+      "checkEmailTitle": "Check your email",
+      "checkEmailMessage": "A verification email was just sent to you. Click the link to confirm your address, then sign in.",
+      "genderMale": "Male",
+      "genderFemale": "Female",
+      "genderPreferNotToSay": "Prefer not to say"
     }
   },
   "consent": {
@@ -171,7 +201,9 @@
       "loadingMore": "Loading more places…",
       "loadMoreError": "Couldn't load more places. Check your connection.",
       "retry": "Retry",
-      "reachedEnd": "You've explored all the active places nearby. Move around or search to see more."
+      "reachedEnd": "You've explored all the active places nearby. Move around or search to see more.",
+      "radiusCapped": "You've reached the 2 km radius. Go Premium to explore up to 30 km.",
+      "radiusCappedCta": "Go Premium"
     },
     "leaveModal": {
       "defaultName": "This place",
@@ -242,7 +274,14 @@
     "boosted": "Boosted",
     "boostProfileHere": "Boost my profile here",
     "boostLockedAfterCheckins": "Boost 🔓 after 2 check-ins",
-    "boostRequiresPresence": "You need to be at this place to boost your profile."
+    "boostRequiresPresence": "You need to be at this place to boost your profile.",
+    "noProfilesHere": "Nobody's here yet.\nBe the first to check in!",
+    "crossedPathsPremiumHint": "Go Premium to see crossings from the last 7 days (24h on the free plan).",
+    "onSite": "{{count}} here",
+    "thisMonth": "{{count}} this month",
+    "specialOffer": "This venue's special offer",
+    "youAreHere": "You're here!",
+    "specialOfferHint": "Spend 20 minutes here to unlock a free profile boost!"
   },
   "myAccount": {
     "actions": {
@@ -308,15 +347,17 @@
     "currentlyAt": "Currently at {{place}}",
     "bio": {
       "label": "Bio",
-      "placeholder": "Add a sentence to introduce yourself."
-    }
+      "placeholder": "Add a sentence to introduce yourself.",
+      "editA11y": "Edit my bio"
+    },
+    "editPhotoA11y": "Edit my profile photo"
   },
   "myAccountScreen": {
     "spot": {
       "photoTitle": "Your profile photo",
-      "photoDesc": "Change your profile photo from Settings (icon top right).",
+      "photoDesc": "Tap your photo to change it.",
       "bioTitle": "Your bio",
-      "bioDesc": "Your bio is edited from Settings. It's the first thing others see.",
+      "bioDesc": "Tap your bio to edit it. It's the first thing other people see.",
       "socialTitle": "Your social networks",
       "socialDesc": "Tap ➕ to add a network. Press and hold an icon to edit or delete it.",
       "statusTitle": "Your status",
@@ -377,13 +418,24 @@
     "start": "Let's go 🚀",
     "skip": "Skip"
   },
+  "locationPrimer": {
+    "title": "Turn on your location",
+    "desc": "LoocateMe uses your location to show you lively places and people around you. Without it, the app can't work.",
+    "note": "On the next screen, choose \"Allow While Using App\".",
+    "allow": "Allow location",
+    "later": "Later",
+    "alwaysTitle": "Stay visible without opening the app",
+    "alwaysDesc": "With automatic mode, your check-ins and check-outs happen on their own — your friends see you arrive even when your phone is in your pocket. For that, LoocateMe needs background access to your location (\"Always\" permission).",
+    "alwaysIosHint": "iOS may ask in two steps: first allow \"While Using the App\", then \"Always\" when the app prompts you.",
+    "enable": "Turn on"
+  },
   "premiumPaywall": {
     "features": [
       "See who views your profile",
       "Visibility boosts (1 free pack)",
       "Superlikes (3/week free)",
       "Invisible mode",
-      "Search radius up to 2 km",
+      "Search radius up to 30 km",
       "Advanced stats",
       "Enhanced notifications"
     ],
@@ -406,7 +458,7 @@
       },
       "radius": {
         "title": "Extended radius",
-        "desc": "Explore up to 2 km around you (500 m on the free plan)."
+        "desc": "Explore up to 30 km around you (2 km on the free plan)."
       },
       "stats": {
         "title": "Advanced stats",
@@ -425,7 +477,7 @@
     "restoreError": "We couldn't restore your purchases.",
     "closeLabel": "Close",
     "title": "👑 Premium",
-    "subtitle": "Unlock all features",
+    "subtitle": "Unlock the full Premium experience",
     "debugBanner": "⚠️ Payments disabled (debug mode)",
     "monthly": "Monthly",
     "perMonth": "/month",
@@ -442,7 +494,8 @@
     "restorePurchases": "Restore purchases",
     "legalText": "The subscription renews automatically unless cancelled before the end of the current period. Manage your subscriptions in App Store / Google Play settings. ",
     "privacyPolicy": "Privacy policy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "retry": "Try again"
   },
   "premiumWelcome": {
     "header": "👑 Welcome to Premium",
@@ -619,7 +672,10 @@
     "currentEmailLabel": "Current email: {{email}}",
     "newEmailPlaceholder": "New email",
     "noBlockedAccounts": "No blocked accounts.",
-    "unblock": "Unblock"
+    "unblock": "Unblock",
+    "invisibleConfirmTitle": "Turn on invisible mode?",
+    "invisibleConfirmMessage": "You'll disappear from places for other users, but you won't be able to see the map or the places list while this mode is on.",
+    "invisibleConfirmActivate": "Turn on"
   },
   "statisticsScreen": {
     "loadError": "We couldn't retrieve statistics",
@@ -721,7 +777,8 @@
   },
   "common": {
     "close": "Close",
-    "errorTitle": "Error"
+    "errorTitle": "Error",
+    "cancelAction": "Cancel"
   },
   "streakCard": {
     "title": "Your streak",
@@ -789,5 +846,52 @@
   },
   "backgroundLocation": {
     "notificationBody": "Location sharing active"
+  },
+  "osmHelp": {
+    "a11y": "Report a missing or incorrect place",
+    "title": "🗺️ A place is missing or has wrong details?",
+    "body": "Our places come from OpenStreetMap. On an existing place, use \"Report incorrect info\" to suggest a fix. To add a missing place, you can create it directly on OpenStreetMap — it helps everyone.",
+    "tutoLink": "📖 Guide: adding a place on OpenStreetMap",
+    "editLink": "✏️ Open the OpenStreetMap editor"
+  },
+  "locationCorrection": {
+    "trigger": "Report incorrect info",
+    "title": "Fix this place",
+    "subtitle": "Suggest a corrected name or type. A moderator will review it before it goes live.",
+    "nameLabel": "Corrected name",
+    "typeLabel": "Corrected type",
+    "reasonLabel": "Details (optional)",
+    "reasonPlaceholder": "e.g. the venue was renamed in 2024",
+    "submit": "Send correction",
+    "nothingToChange": "Change at least the name or the type.",
+    "sentTitle": "Thanks!",
+    "sentMessage": "Your correction was sent to moderation.",
+    "genericError": "Couldn't send the correction. Try again."
+  },
+  "spotlight": {
+    "skip": "Skip",
+    "done": "Done",
+    "next": "Next"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "retry": "Try again"
+  },
+  "featureGate": {
+    "comingSoonShort": "🔓 Soon",
+    "comingSoon": "Coming soon",
+    "premiumOnly": "Premium members only"
+  },
+  "superlikeHistory": {
+    "validate": "Confirm"
+  },
+  "premiumNudgeBanner": {
+    "see": "See"
+  },
+  "profileHero": {
+    "premiumBadge": "👑 Premium"
+  },
+  "vibeTransit": {
+    "skip": "Skip"
   }
 }

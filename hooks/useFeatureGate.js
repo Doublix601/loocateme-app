@@ -51,12 +51,6 @@ export function useFeatureGate() {
         message = 'Passez Premium pour activer le mode invisible et disparaître de la liste des utilisateurs proches.';
         break;
 
-      case 'extended_radius':
-        hasAccess = premiumAccess.isPremium;
-        title = 'Rayon étendu Premium';
-        message = "Passez Premium pour explorer jusqu'à 2 km autour de vous (500 m en version gratuite).";
-        break;
-
       case 'crossed_paths_history':
         hasAccess = premiumAccess.isPremium;
         title = 'Historique Premium';

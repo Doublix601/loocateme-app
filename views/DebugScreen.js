@@ -275,7 +275,7 @@ const DebugScreen = () => {
   };
 
   // Toggle a feature flag
-  const toggleFlag = async (key, currentValue) => {
+  const doToggleFlag = async (key, currentValue) => {
     try {
       setFlagsLoading(true);
       await setFeatureFlag(key, !currentValue);
@@ -289,6 +289,19 @@ const DebugScreen = () => {
     } finally {
       setFlagsLoading(false);
     }
+  };
+
+  // Ces flags affectent TOUS les utilisateurs en production : confirmation
+  // explicite avant d'appeler (LEG-08).
+  const toggleFlag = (key, currentValue) => {
+    Alert.alert(
+      'Flag global',
+      `Basculer « ${key} » sur ${!currentValue ? 'ON' : 'OFF'} affecte tous les utilisateurs en production. Continuer ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Confirmer', style: 'destructive', onPress: () => doToggleFlag(key, currentValue) },
+      ],
+    );
   };
 
   // Change user role (admin/moderator/user)

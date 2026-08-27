@@ -27,6 +27,7 @@ const RewardsCard = ({
   onOpenSuperlikeHistory,
   onOpenConsumablesShop,
   isPremium,
+  premiumSystemEnabled = true,
   onOpenPaywall,
 }) => {
   const { t } = useTranslation();
@@ -83,7 +84,7 @@ const RewardsCard = ({
             </TouchableOpacity>
           </View>
 
-          {!isPremium && (
+          {premiumSystemEnabled && !isPremium && (
             <TouchableOpacity
               style={styles.premiumCta}
               onPress={onOpenPaywall}

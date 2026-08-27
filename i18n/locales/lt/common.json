@@ -383,7 +383,7 @@
       "Matomumo pagreitinimai (1 nemokamas paketas)",
       "Superlikes (3/savaitę nemokamai)",
       "Nematomas režimas",
-      "Paieškos spindulys iki 2 km",
+      "Paieškos spindulys iki 30 km",
       "Išplėstinė statistika",
       "Praplėsti pranešimai"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Išplėstas spindulys",
-        "desc": "Tyrinėk iki 2 km aplink save (500 m nemokamoje versijoje)."
+        "desc": "Tyrinėk iki 30 km aplink save (2 km nemokamoje versijoje)."
       },
       "stats": {
         "title": "Išplėstinė statistika",

@@ -254,6 +254,7 @@ export default function VibeTransitOverlay() {
 }
 
 function SkipButton({ onPress }) {
+  const { t } = useTranslation();
   const opacity = useSharedValue(0);
   useEffect(() => {
     opacity.value = withDelay(400, withTiming(1, { duration: 300 }));
@@ -264,11 +265,11 @@ function SkipButton({ onPress }) {
       <TouchableOpacity
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel="Passer la transition"
+        accessibilityLabel={t('vibeTransit.skip')}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         style={styles.skipButton}
       >
-        <Text style={styles.skipText}>Passer</Text>
+        <Text style={styles.skipText}>{t('vibeTransit.skip')}</Text>
       </TouchableOpacity>
     </Animated.View>
   );

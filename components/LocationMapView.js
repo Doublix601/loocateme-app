@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { TAB_BAR_STACK_HEIGHT, FAB_CLEARANCE } from './MainTabBar';
 import { Asset } from 'expo-asset';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -111,10 +112,12 @@ export default function LocationMapView({
           zoom: DEFAULT_ZOOM,
           locations: markerPayload,
           palette: palettePayload,
+          hasUserLocation: !!currentLocation,
+          bottomInset: TAB_BAR_STACK_HEIGHT + FAB_CLEARANCE,
         },
       })
     );
-  }, [mapStyle, centerCoordinate, markerPayload, palettePayload]);
+  }, [mapStyle, centerCoordinate, markerPayload, palettePayload, currentLocation]);
 
   useEffect(() => {
     sendRender();
@@ -264,7 +267,10 @@ export default function LocationMapView({
         <TouchableOpacity
           onPress={handleRecenter}
           activeOpacity={0.8}
-          style={[styles.recenterBtn, { backgroundColor: palette.surface, shadowColor: '#000' }]}
+          style={[
+            styles.recenterBtn,
+            { backgroundColor: palette.surface, shadowColor: '#000', bottom: TAB_BAR_STACK_HEIGHT + FAB_CLEARANCE + 8 },
+          ]}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name={currentPoiId ? 'navigate' : 'locate'} size={20} color={palette.accent} />

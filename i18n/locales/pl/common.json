@@ -383,7 +383,7 @@
       "Boosty widoczności (1 darmowy pakiet)",
       "Superlikes (3/tydzień gratis)",
       "Tryb niewidzialny",
-      "Promień wyszukiwania do 2 km",
+      "Promień wyszukiwania do 30 km",
       "Zaawansowane statystyki",
       "Rozszerzone powiadomienia"
     ],
@@ -406,7 +406,7 @@
       },
       "radius": {
         "title": "Rozszerzony promień",
-        "desc": "Eksploruj do 2 km wokół siebie (500 m w wersji darmowej)."
+        "desc": "Eksploruj do 30 km wokół siebie (2 km w wersji darmowej)."
       },
       "stats": {
         "title": "Zaawansowane statystyki",

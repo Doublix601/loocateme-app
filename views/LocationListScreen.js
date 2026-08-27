@@ -39,6 +39,8 @@ import { markCheckinVerified } from '../components/CheckinVerificationScheduler'
 import { subscribe, publish } from '../components/EventBus';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
+import { getOverpassRadiusM, DISCOVERY_RADIUS_FREE_M, DISCOVERY_RADIUS_PREMIUM_M } from '../constants/premiumFeatures';
+import { TAB_BAR_STACK_HEIGHT, FAB_CLEARANCE } from '../components/MainTabBar';
 import { useBoost } from '../hooks/useBoost';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance } from '../components/ServerUtils';
@@ -191,6 +193,10 @@ const LocationListScreen = () => {
   // Cela évite l'affichage prématuré du message « Vous avez exploré tous les
   // lieux actifs à proximité » lorsque la DB locale est peu peuplée.
   const [hasMore, setHasMore] = useState(true);
+  // Le backend a renvoyé peu de lieux PARCE QUE le rayon (2 km gratuit) est
+  // atteint, pas parce qu'il n'y a plus rien : on affiche alors un message
+  // "élargir via Premium" plutôt que "tu as tout vu".
+  const [cappedByRadius, setCappedByRadius] = useState(false);
   // Filtre par type de lieu (barre de chips, cf. TypeFilterBar) : "Tous" par
   // défaut, un seul type actif à la fois. Ne s'applique JAMAIS à la section
   // "Mis en avant" (sponsorisés), qui reste toujours affichée intégralement.
@@ -237,6 +243,15 @@ const LocationListScreen = () => {
       LocationService.setCheckInMode(nextMode);
       updateUser?.({ ...currentUser, checkInMode: nextMode });
       showToast(nextMode === 'manual' ? t('locationListScreen.checkinModeManualOn') : t('locationListScreen.checkinModeAutoOn'));
+      // Le mode auto n'a d'intérêt "app fermée" que si la position "Toujours"
+      // est accordée : c'est le moment pertinent pour la demander (primer +
+      // dialogue système), plutôt qu'à chaque lancement de l'app.
+      if (nextMode === 'auto') {
+        try {
+          const bg = await Location.getBackgroundPermissionsAsync();
+          if (bg.status !== 'granted') publish('ui:request_background_permission');
+        } catch (_) {}
+      }
     } catch (e) {
       console.warn('[LocationListScreen] apiUpdateCheckInMode failed', e?.message || e);
       Alert.alert(t('locationListScreen.checkinModeErrorTitle'), t('locationListScreen.checkinModeErrorMessage'));
@@ -368,6 +383,13 @@ const LocationListScreen = () => {
   }, [leavingLocation, leaveLocationItem, updateUser, currentUser?._id, showToast]);
 
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
+  // Rayon des POIs OpenStreetMap complémentaires : 2 km en gratuit, étendu en
+  // Premium (aligné avec le plafond de découverte backend). Les lieux
+  // applicatifs eux-mêmes sont déjà plafonnés côté serveur.
+  const overpassRadiusM = getOverpassRadiusM({ isPremium, premiumSystemEnabled });
+  // Le rayon étendu est débloqué si le système premium est off (tout le monde y
+  // a droit) ou si l'utilisateur est premium.
+  const radiusUnlocked = !premiumSystemEnabled || isPremium;
   const { isBoosted } = useBoost();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
@@ -967,6 +989,7 @@ const LocationListScreen = () => {
         setOsmPois(cached.osmPois);
         setDisplayLimit(cached.displayLimit);
         setHasMore(cached.hasMore);
+        setCappedByRadius(!!cached.cappedByRadius);
         setLoadingMore(false);
         setLoadMoreError(false);
       } else {
@@ -1065,7 +1088,7 @@ const LocationListScreen = () => {
       if (!active) return;
 
       try {
-        const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: 3000, vibe });
+        const pois = await OverpassService.fetchAround({ lat: roundedLat, lon: roundedLon, radius: overpassRadiusM, vibe });
         if (active) {
           setOsmPois(pois);
           writeVibeCache(vibe, { zoneKey, osmPois: pois });
@@ -1075,7 +1098,7 @@ const LocationListScreen = () => {
     return () => {
       active = false;
     };
-  }, [roundedLat, roundedLon, vibe]);
+  }, [roundedLat, roundedLon, vibe, overpassRadiusM]);
 
   useEffect(() => {
     fetchNearbyLocations();
@@ -1228,8 +1251,8 @@ const LocationListScreen = () => {
         (async () => {
           try {
             let radiusNudge = null;
-            const nearby = await getUsersAroundMe({ lat: latitude, lon: longitude, radius: 2000 });
-            if (nearby && typeof nearby.maxRadius === 'number' && nearby.maxRadius < 2000) {
+            const nearby = await getUsersAroundMe({ lat: latitude, lon: longitude, radius: DISCOVERY_RADIUS_PREMIUM_M });
+            if (nearby && typeof nearby.maxRadius === 'number' && nearby.maxRadius < DISCOVERY_RADIUS_PREMIUM_M) {
               radiusNudge = await PremiumNudgeService.evaluate('radius_limited', { isPremium, premiumSystemEnabled });
             }
             if (radiusNudge) {
@@ -1333,6 +1356,7 @@ const LocationListScreen = () => {
         const hasMoreResult = normalized.length >= reqLimit && reqLimit < MAX_LOCATIONS;
         setLocations(normalized);
         setHasMore(hasMoreResult);
+        setCappedByRadius(!!res.cappedByRadius);
 
         const zoneKey = getZoneKey(Math.round(latitude * 1000) / 1000, Math.round(longitude * 1000) / 1000);
         writeVibeCache(currentVibe, {
@@ -1340,6 +1364,7 @@ const LocationListScreen = () => {
           locations: normalized,
           displayLimit: reqLimit,
           hasMore: hasMoreResult,
+          cappedByRadius: !!res.cappedByRadius,
         });
       }
 
@@ -1482,7 +1507,7 @@ const LocationListScreen = () => {
         />
         {!isPremium && (
           <Text style={[styles.radiusBadge, { color: colors.textSecondary }]}>
-            Rayon de recherche : 2 km · Premium pour un rayon élargi
+            Rayon de recherche : {Math.round(DISCOVERY_RADIUS_FREE_M / 1000)} km · Premium pour un rayon élargi
           </Text>
         )}
         <TrendingSection
@@ -1600,11 +1625,17 @@ const LocationListScreen = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             onExpandRadius={() => {
+              // Compte gratuit (système premium actif) : le rayon est plafonné
+              // à 2 km, élargir n'aurait aucun effet — on ouvre la paywall.
+              if (!radiusUnlocked) {
+                publish('ui:open_premium', { source: 'extended_radius' });
+                return;
+              }
               if (userCoords) {
                 OverpassService.fetchAround({
                   lat: userCoords.latitude,
                   lon: userCoords.longitude,
-                  radius: 3000,
+                  radius: overpassRadiusM,
                   force: true,
                   vibe,
                 })
@@ -1639,17 +1670,16 @@ const LocationListScreen = () => {
               />
             }
             // Optimization for performance
-            initialNumToRender={8}
-            maxToRenderPerBatch={10}
-            windowSize={10}
-            // Désactivé : sur Android, cette optimisation détache du natif les
+            initialNumToRender={6}
+            maxToRenderPerBatch={8}
+            windowSize={8}
+            // Désactivé sur Android : cette optimisation détache du natif les
             // cellules hors-écran, et leur zone de tap peut rester désynchronisée
             // au moment où elles sont réutilisées — particulièrement visible ici
             // car les cartes ont une hauteur variable (bannière/logo pro,
-            // nombre d'avatars, bouton "Je suis là" conditionnels). Résultat :
-            // les cartes s'affichent normalement mais deviennent silencieusement
-            // non cliquables après un scroll.
-            removeClippedSubviews={false}
+            // nombre d'avatars, bouton "Je suis là" conditionnels). Sur iOS ce
+            // problème ne se pose pas et le gain de perf au scroll est réel.
+            removeClippedSubviews={Platform.OS === 'ios'}
             onEndReached={handleLoadMore}
             onEndReachedThreshold={0.4}
             ListHeaderComponent={renderListSectionsHeader}
@@ -1660,10 +1690,15 @@ const LocationListScreen = () => {
                 loadMoreError={loadMoreError}
                 onRetry={handleRetryLoadMore}
                 reachedEnd={reachedCap || exhausted}
+                cappedByRadius={cappedByRadius && !isPremium && premiumSystemEnabled}
+                onGoPremium={() => navigation.navigate('PremiumPaywall', { source: 'radius_cap' })}
               />
             }
             // Assure le tirage pour rafraîchir même s'il y a peu d'éléments
-            contentContainerStyle={[styles.listContent, { flexGrow: 1, paddingBottom: insets.bottom + 20 }]}
+            contentContainerStyle={[
+              styles.listContent,
+              { flexGrow: 1, paddingBottom: insets.bottom + TAB_BAR_STACK_HEIGHT + FAB_CLEARANCE },
+            ]}
             // Hérite des props ScrollView pour un meilleur comportement cross‑plateforme
             bounces
             overScrollMode="always"

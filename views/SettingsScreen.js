@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   Pressable,
   Linking,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -74,6 +74,9 @@ const { width, height } = Dimensions.get('window');
 // BullMQ de transcodage vidéo, pas des notifications).
 const SettingsScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const routeInitialTab = route.params?.initialTab;
+  const routeFocus = route.params?.focus;
   const insets = useSafeAreaInsets();
   const { user, updateUser } = useContext(UserContext);
   const { mode: themeMode, colors } = useTheme();
@@ -118,8 +121,11 @@ const SettingsScreen = () => {
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
   const [manageSubLoading, setManageSubLoading] = useState(false);
 
-  // Onglets Profil / Paramètres
-  const [activeTab, setActiveTab] = useState('settings');
+  // Onglets Profil / Paramètres. Ouvert directement sur "profile" quand on
+  // arrive via un tap sur la photo / la bio de l'écran profil (UX-01).
+  const [activeTab, setActiveTab] = useState(routeInitialTab === 'profile' ? 'profile' : 'settings');
+  const profileScrollRef = useRef(null);
+  const bioInputRef = useRef(null);
 
   // Profil tab state
   const [profileFirstName, setProfileFirstName] = useState(user?.firstName || '');
@@ -177,6 +183,24 @@ const SettingsScreen = () => {
   const [emailCurrentPasswordInput, setEmailCurrentPasswordInput] = useState('');
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailError, setEmailError] = useState('');
+
+  // Arrivée via un tap sur la photo / la bio du profil (UX-01) : ouvrir la
+  // bonne cible dès le montage.
+  useEffect(() => {
+    if (routeFocus === 'photo') {
+      const id = setTimeout(() => setPhotoOptionsVisible(true), 350);
+      return () => clearTimeout(id);
+    }
+    if (routeFocus === 'bio') {
+      const id = setTimeout(() => {
+        profileScrollRef.current?.scrollToEnd?.({ animated: true });
+        bioInputRef.current?.focus?.();
+      }, 400);
+      return () => clearTimeout(id);
+    }
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeFocus]);
 
   useEffect(() => {
     // Hydrate GDPR toggles from user when context changes
@@ -398,7 +422,7 @@ const SettingsScreen = () => {
   // Mode invisible : accessible en free tier (pas de gate premium). Masque
   // l'utilisateur des autres utilisateurs des lieux, mais le prive en retour
   // de la carte / liste des lieux tant qu'il est actif.
-  const handleToggleInvisible = async (v) => {
+  const applyInvisibleMode = async (v) => {
     setInvisibleMode(v);
     setInvisibleSaving(true);
     try {
@@ -415,6 +439,23 @@ const SettingsScreen = () => {
     } finally {
       setInvisibleSaving(false);
     }
+  };
+
+  // Confirmation à l'activation : le mode invisible coupe aussi l'accès à la
+  // carte et à la liste des lieux (UX-07).
+  const handleToggleInvisible = (v) => {
+    if (v) {
+      Alert.alert(
+        t('settingsScreen.invisibleConfirmTitle'),
+        t('settingsScreen.invisibleConfirmMessage'),
+        [
+          { text: t('common.cancelAction'), style: 'cancel' },
+          { text: t('settingsScreen.invisibleConfirmActivate'), onPress: () => applyInvisibleMode(true) },
+        ],
+      );
+      return;
+    }
+    applyInvisibleMode(false);
   };
 
   const handleToggleNotifKind = async (kind, v) => {
@@ -840,6 +881,7 @@ const SettingsScreen = () => {
       </View>
 
       <ScrollView
+        ref={profileScrollRef}
         contentContainerStyle={[styles.content, activeTab === 'profile' && { paddingBottom: 100 }]}
         showsVerticalScrollIndicator={false}
       >
@@ -900,6 +942,7 @@ const SettingsScreen = () => {
               />
               <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>{t('settingsScreen.bioLabel')}</Text>
               <TextInput
+                ref={bioInputRef}
                 style={[
                   styles.textField,
                   styles.textFieldMultiline,

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { useProgressiveUnlock } from '../hooks/useProgressiveUnlock';
 import { useTheme } from './contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 /**
  * FeatureGate
@@ -14,6 +15,7 @@ import { useTheme } from './contexts/ThemeContext';
  * @param {boolean} hideImplicitly - Si true, le composant est caché sans message s'il n'y a pas d'accès
  */
 export const FeatureGate = ({ children, feature = 'statistics', fallback, hideImplicitly = false, style }) => {
+  const { t } = useTranslation();
   const { hasStatsAccess, effectiveStatisticsEnabled, canAccessBoost } = usePremiumAccess();
   const { storiesUnlocked, boostUnlocked, superlikeUnlocked } = useProgressiveUnlock();
   const { colors } = useTheme();
@@ -46,7 +48,7 @@ export const FeatureGate = ({ children, feature = 'statistics', fallback, hideIm
     return (
       <View style={[styles.gateContainer, style]}>
         <View style={styles.progressiveBadge}>
-          <Text style={styles.progressiveText}>🔓 Bientôt</Text>
+          <Text style={styles.progressiveText}>{t('featureGate.comingSoonShort')}</Text>
         </View>
         <Text style={[styles.gateText, { color: colors.textPrimary }]}>{progressiveMessage}</Text>
       </View>
@@ -58,7 +60,7 @@ export const FeatureGate = ({ children, feature = 'statistics', fallback, hideIm
     if (hideImplicitly) return null;
     return (
       <View style={[styles.gateContainer, style]}>
-        <Text style={[styles.gateText, { color: colors.textPrimary, opacity: 0.5 }]}>Bientôt disponible</Text>
+        <Text style={[styles.gateText, { color: colors.textPrimary, opacity: 0.5 }]}>{t('featureGate.comingSoon')}</Text>
       </View>
     );
   }
@@ -73,7 +75,7 @@ export const FeatureGate = ({ children, feature = 'statistics', fallback, hideIm
         <View style={styles.premiumBadge}>
           <Text style={styles.premiumText}>PREMIUM</Text>
         </View>
-        <Text style={[styles.gateText, { color: colors.textPrimary }]}>Réservé aux membres Premium</Text>
+        <Text style={[styles.gateText, { color: colors.textPrimary }]}>{t('featureGate.premiumOnly')}</Text>
       </View>
     );
   }
