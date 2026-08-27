@@ -382,7 +382,7 @@
       "Näkyvyystehostukset (1 ilmainen paketti)",
       "Superlikes (3/viikko ilmaiseksi)",
       "Näkymätön tila",
-      "Hakusäde jopa 2 km",
+      "Hakusäde jopa 30 km",
       "Edistyneet tilastot",
       "Laajennetut ilmoitukset"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Laajennettu säde",
-        "desc": "Tutki jopa 2 km ympärilläsi (500 m ilmaisversiossa)."
+        "desc": "Tutki jopa 30 km ympärilläsi (2 km ilmaisversiossa)."
       },
       "stats": {
         "title": "Edistyneet tilastot",

@@ -382,7 +382,7 @@
       "Redzamības paātrinājumi (1 bezmaksas pakete)",
       "Superlikes (3/nedēļā bez maksas)",
       "Neredzamais režīms",
-      "Meklēšanas rādiuss līdz 2 km",
+      "Meklēšanas rādiuss līdz 30 km",
       "Papildu statistika",
       "Uzlaboti paziņojumi"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Paplašināts rādiuss",
-        "desc": "Izpēti līdz 2 km apkārt sev (500 m bezmaksas versijā)."
+        "desc": "Izpēti līdz 30 km apkārt sev (2 km bezmaksas versijā)."
       },
       "stats": {
         "title": "Papildu statistika",

@@ -39,7 +39,7 @@ import { markCheckinVerified } from '../components/CheckinVerificationScheduler'
 import { subscribe, publish } from '../components/EventBus';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
-import { getOverpassRadiusM, DISCOVERY_RADIUS_FREE_M } from '../constants/premiumFeatures';
+import { getOverpassRadiusM, DISCOVERY_RADIUS_FREE_M, DISCOVERY_RADIUS_PREMIUM_M } from '../constants/premiumFeatures';
 import { useBoost } from '../hooks/useBoost';
 import { formatLocationType } from '../components/LocationUtils';
 import { calculateDistance } from '../components/ServerUtils';
@@ -1245,8 +1245,8 @@ const LocationListScreen = () => {
         (async () => {
           try {
             let radiusNudge = null;
-            const nearby = await getUsersAroundMe({ lat: latitude, lon: longitude, radius: 2000 });
-            if (nearby && typeof nearby.maxRadius === 'number' && nearby.maxRadius < 2000) {
+            const nearby = await getUsersAroundMe({ lat: latitude, lon: longitude, radius: DISCOVERY_RADIUS_PREMIUM_M });
+            if (nearby && typeof nearby.maxRadius === 'number' && nearby.maxRadius < DISCOVERY_RADIUS_PREMIUM_M) {
               radiusNudge = await PremiumNudgeService.evaluate('radius_limited', { isPremium, premiumSystemEnabled });
             }
             if (radiusNudge) {

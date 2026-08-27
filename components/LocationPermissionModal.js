@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
 import { useTheme } from './contexts/ThemeContext';
 import { resetBackgroundPermissionPrompt } from '../utils/backgroundPermissionPrompt';
@@ -14,6 +15,7 @@ import CloseButton from './CloseButton';
 // rappel plafonné), jamais à chaque lancement.
 const LocationPermissionModal = ({ visible, onClose }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
   const close = () => {
@@ -65,22 +67,15 @@ const LocationPermissionModal = ({ visible, onClose }) => {
     }
   };
 
-  const iosHint =
-    Platform.OS === 'ios'
-      ? 'iOS peut demander l\'accès en deux temps : autorisez d\'abord "Pendant l\'utilisation", puis "Toujours" lorsque l\'app vous le proposera.'
-      : null;
+  const iosHint = Platform.OS === 'ios' ? t('locationPrimer.alwaysIosHint') : null;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close}>
       <View style={styles.overlay}>
         <View style={[styles.container, { backgroundColor: colors.surface }]}>
           <CloseButton onPress={close} style={styles.closeBtn} />
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Restez visible sans ouvrir l'app</Text>
-          <Text style={[styles.message, { color: colors.textSecondary }]}>
-            Avec le mode automatique, vos entrées et sorties dans les lieux se font toutes seules — vos amis vous voient
-            arriver au bar même quand votre téléphone est dans votre poche. Pour ça, LoocateMe a besoin d'accéder à votre
-            position en arrière-plan (autorisation « Toujours »).
-          </Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{t('locationPrimer.alwaysTitle')}</Text>
+          <Text style={[styles.message, { color: colors.textSecondary }]}>{t('locationPrimer.alwaysDesc')}</Text>
           {iosHint ? <Text style={[styles.instructions, { color: colors.accent }]}>{iosHint}</Text> : null}
 
           <View style={styles.buttonContainer}>
@@ -89,14 +84,14 @@ const LocationPermissionModal = ({ visible, onClose }) => {
               onPress={close}
               disabled={busy}
             >
-              <Text style={[styles.buttonText, { color: colors.textSecondary }]}>Plus tard</Text>
+              <Text style={[styles.buttonText, { color: colors.textSecondary }]}>{t('locationPrimer.later')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, { backgroundColor: colors.accent, opacity: busy ? 0.6 : 1 }]}
               onPress={handleEnable}
               disabled={busy}
             >
-              <Text style={[styles.buttonText, { color: '#fff' }]}>Activer</Text>
+              <Text style={[styles.buttonText, { color: '#fff' }]}>{t('locationPrimer.enable')}</Text>
             </TouchableOpacity>
           </View>
         </View>

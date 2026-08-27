@@ -382,7 +382,7 @@
       "Zichtbaarheidsboosts (1 gratis pakket)",
       "Superlikes (3/week gratis)",
       "Onzichtbare modus",
-      "Zoekradius tot 2 km",
+      "Zoekradius tot 30 km",
       "Geavanceerde statistieken",
       "Uitgebreide meldingen"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Uitgebreide straal",
-        "desc": "Verken tot 2 km om je heen (500 m in de gratis versie)."
+        "desc": "Verken tot 30 km om je heen (2 km in de gratis versie)."
       },
       "stats": {
         "title": "Geavanceerde statistieken",

@@ -382,7 +382,7 @@
       "Zvýraznenie viditeľnosti (1 balíček zdarma)",
       "Superlikes (3/týždeň zdarma)",
       "Neviditeľný režim",
-      "Dosah vyhľadávania až 2 km",
+      "Dosah vyhľadávania až 30 km",
       "Pokročilé štatistiky",
       "Rozšírené upozornenia"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Rozšírený dosah",
-        "desc": "Preskúmaj až 2 km okolo seba (500 m v bezplatnej verzii)."
+        "desc": "Preskúmaj až 30 km okolo seba (2 km v bezplatnej verzii)."
       },
       "stats": {
         "title": "Pokročilé štatistiky",

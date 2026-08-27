@@ -382,7 +382,7 @@
       "Pospeški vidnosti (1 brezplačen paket)",
       "Superlikes (3/teden brezplačno)",
       "Nevidni način",
-      "Polmer iskanja do 2 km",
+      "Polmer iskanja do 30 km",
       "Napredna statistika",
       "Razširena obvestila"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Razširjen polmer",
-        "desc": "Raziskuj do 2 km okoli sebe (500 m v brezplačni različici)."
+        "desc": "Raziskuj do 30 km okoli sebe (2 km v brezplačni različici)."
       },
       "stats": {
         "title": "Napredna statistika",

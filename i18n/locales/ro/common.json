@@ -382,7 +382,7 @@
       "Boost-uri de vizibilitate (1 pachet gratuit)",
       "Superlikes (3/săptămână gratuite)",
       "Mod invizibil",
-      "Rază de căutare de până la 2 km",
+      "Rază de căutare de până la 30 km",
       "Statistici avansate",
       "Notificări îmbunătățite"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Rază extinsă",
-        "desc": "Explorează până la 2 km în jurul tău (500 m în versiunea gratuită)."
+        "desc": "Explorează până la 30 km în jurul tău (2 km în versiunea gratuită)."
       },
       "stats": {
         "title": "Statistici avansate",

@@ -382,7 +382,7 @@
       "Sýnileikaörvanir (1 ókeypis pakki)",
       "Superlikes (3/viku ókeypis)",
       "Ósýnilegur hamur",
-      "Leitarradíus allt að 2 km",
+      "Leitarradíus allt að 30 km",
       "Ítarleg tölfræði",
       "Aukin tilkynningar"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Útvíkkaður radíus",
-        "desc": "Kannaðu allt að 2 km í kringum þig (500 m í ókeypis útgáfunni)."
+        "desc": "Kannaðu allt að 30 km í kringum þig (2 km í ókeypis útgáfunni)."
       },
       "stats": {
         "title": "Ítarleg tölfræði",

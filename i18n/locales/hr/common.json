@@ -382,7 +382,7 @@
       "Boostovi vidljivosti (1 besplatan paket)",
       "Superlikes (3/tjedan besplatno)",
       "Nevidljivi način",
-      "Radijus pretraživanja do 2 km",
+      "Radijus pretraživanja do 30 km",
       "Napredna statistika",
       "Poboljšane obavijesti"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Prošireni radijus",
-        "desc": "Istraži do 2 km oko sebe (500 m u besplatnoj verziji)."
+        "desc": "Istraži do 30 km oko sebe (2 km u besplatnoj verziji)."
       },
       "stats": {
         "title": "Napredna statistika",

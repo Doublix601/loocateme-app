@@ -241,7 +241,9 @@
     "seeMore": "See more",
     "boosted": "Boosted",
     "boostProfileHere": "Boost my profile here",
-    "boostLockedAfterCheckins": "Boost 🔓 after 2 check-ins"
+    "boostLockedAfterCheckins": "Boost 🔓 after 2 check-ins",
+    "noProfilesHere": "Nobody's here yet.\nBe the first to check in!",
+    "crossedPathsPremiumHint": "Go Premium to see crossings from the last 7 days (24h on the free plan)."
   },
   "myAccount": {
     "actions": {
@@ -381,7 +383,11 @@
     "desc": "LoocateMe uses your location to show you lively places and people around you. Without it, the app can't work.",
     "note": "On the next screen, choose \"Allow While Using App\".",
     "allow": "Allow location",
-    "later": "Later"
+    "later": "Later",
+    "alwaysTitle": "Stay visible without opening the app",
+    "alwaysDesc": "With automatic mode, your check-ins and check-outs happen on their own — your friends see you arrive even when your phone is in your pocket. For that, LoocateMe needs background access to your location (\"Always\" permission).",
+    "alwaysIosHint": "iOS may ask in two steps: first allow \"While Using the App\", then \"Always\" when the app prompts you.",
+    "enable": "Turn on"
   },
   "premiumPaywall": {
     "features": [
@@ -389,7 +395,7 @@
       "Visibility boosts (1 free pack)",
       "Superlikes (3/week free)",
       "Invisible mode",
-      "Search radius up to 2 km",
+      "Search radius up to 30 km",
       "Advanced stats",
       "Enhanced notifications"
     ],
@@ -412,7 +418,7 @@
       },
       "radius": {
         "title": "Extended radius",
-        "desc": "Explore up to 2 km around you (500 m on the free plan)."
+        "desc": "Explore up to 30 km around you (2 km on the free plan)."
       },
       "stats": {
         "title": "Advanced stats",

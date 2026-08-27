@@ -136,7 +136,7 @@ const LocationScreen = () => {
   const { palette, radius, spacing, shadows, typography } = theme;
   const insets = useSafeAreaInsets();
 
-  const { checkAccess, storiesUnlocked, boostUnlocked } = useFeatureGate();
+  const { checkAccess, storiesUnlocked, boostUnlocked, isPremium, premiumSystemEnabled } = useFeatureGate();
   const { activateBoost, isBoosted, loading: boostLoading } = useBoost();
   const { location, users, monthlyUsers, loading, refreshing, refresh } = useLocationData(
     locationId,
@@ -148,7 +148,6 @@ const LocationScreen = () => {
     loadingMore: crossedLoadingMore,
     hasMore: crossedHasMore,
     loadMore: loadMoreCrossed,
-    isPremium: crossedIsPremium,
   } = useCrossedPaths(locationId);
   const [storyViewerIndex, setStoryViewerIndex] = useState(null);
   const [lastStorySeenAt, setLastStorySeenAt] = useState(null);
@@ -875,7 +874,7 @@ const LocationScreen = () => {
         >
           <Ionicons name="people-outline" size={36} color={palette.textFaint} />
           <Text style={[typography.body, { marginTop: spacing.sm, textAlign: 'center' }]}>
-            Personne n'est ici pour le moment.{'\n'}Soyez le premier à vous signaler !
+            {t('locationScreen.noProfilesHere')}
           </Text>
         </View>
       ) : (
@@ -951,13 +950,13 @@ const LocationScreen = () => {
         </>
       )}
 
-      {!crossedIsPremium && (
+      {premiumSystemEnabled && !isPremium && (
         <TouchableOpacity
           onPress={() => checkAccess('crossed_paths_history')}
           style={[styles.emptyState, { backgroundColor: palette.surface, borderRadius: radius.lg, marginTop: spacing.sm, paddingVertical: spacing.sm }]}
         >
           <Text style={[typography.body, { color: palette.textMuted, textAlign: 'center' }]}>
-            Passez Premium pour voir les croisements des 7 derniers jours (24h en gratuit)
+            {t('locationScreen.crossedPathsPremiumHint')}
           </Text>
         </TouchableOpacity>
       )}

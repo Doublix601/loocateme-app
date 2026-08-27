@@ -382,7 +382,7 @@
       "Nähtavuse kiirendused (1 tasuta pakett)",
       "Superlikes (3/nädal tasuta)",
       "Nähtamatu režiim",
-      "Otsingu raadius kuni 2 km",
+      "Otsingu raadius kuni 30 km",
       "Täiustatud statistika",
       "Täiendatud teavitused"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Laiendatud raadius",
-        "desc": "Uuri kuni 2 km enda ümber (500 m tasuta versioonis)."
+        "desc": "Uuri kuni 30 km enda ümber (2 km tasuta versioonis)."
       },
       "stats": {
         "title": "Täiustatud statistika",

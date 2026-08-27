@@ -3,7 +3,7 @@
     "login": {
       "title": "Connexion",
       "welcomeBack": "Bon retour parmi nous !",
-      "subtitle": "Connectez-vous pour continuer",
+      "subtitle": "Connecte-toi pour continuer",
       "emailPlaceholder": "Email",
       "passwordPlaceholder": "Mot de passe",
       "submit": "Se connecter",
@@ -11,16 +11,16 @@
       "noAccount": "Pas encore de compte ?",
       "createAccount": "Créer un compte",
       "emailNotVerifiedTitle": "Email non vérifié",
-      "emailNotVerifiedMessage": "Votre adresse email n'a pas encore été vérifiée. Nous venons de vous renvoyer un email de confirmation. Veuillez cliquer sur le lien pour activer votre compte, puis réessayez.",
+      "emailNotVerifiedMessage": "Ton adresse email n'a pas encore été vérifiée. On vient de te renvoyer un email de confirmation. Clique sur le lien pour activer ton compte, puis réessaie.",
       "authFailedTitle": "Authentification échouée",
-      "authFailedMessage": "Impossible de vous connecter. Vérifiez vos identifiants et réessayez."
+      "authFailedMessage": "Impossible de te connecter. Vérifie tes identifiants et réessaie."
     },
     "signup": {
       "passwordMismatch": "Les mots de passe ne correspondent pas.",
       "requiredFields": "Tous les champs doivent être remplis.",
       "birthdateRequired": "La date de naissance est obligatoire.",
-      "under18": "Vous devez avoir au moins 18 ans pour vous inscrire.",
-      "policyLoadError": "Impossible de charger la politique de confidentialité. Vous pourrez réessayer."
+      "under18": "Tu dois avoir au moins 18 ans pour t'inscrire.",
+      "policyLoadError": "Impossible de charger la politique de confidentialité. Tu pourras réessayer."
     }
   },
   "consent": {
@@ -30,9 +30,9 @@
     "accept": "Accepter",
     "accepting": "Enregistrement...",
     "declineInfoTitle": "Information",
-    "declineInfoMessage": "Vous devez accepter la politique de confidentialité pour utiliser l'application.",
+    "declineInfoMessage": "Tu dois accepter la politique de confidentialité pour utiliser l'application.",
     "acceptErrorTitle": "Erreur",
-    "acceptErrorMessage": "Impossible d'enregistrer votre consentement. Réessayez."
+    "acceptErrorMessage": "Impossible d'enregistrer ton consentement. Réessaie."
   },
   "settings": {
     "language": {
@@ -43,39 +43,39 @@
   "forgotPassword": {
     "title": "Mot de passe oublié",
     "resetTitle": "Réinitialisation",
-    "instructions": "Saisissez votre adresse email pour recevoir un lien de réinitialisation.",
+    "instructions": "Saisis ton adresse email pour recevoir un lien de réinitialisation.",
     "emailPlaceholder": "Email",
     "submit": "Envoyer le lien",
     "successTitle": "Email envoyé",
     "successMessage": "Si un compte existe, un email a été envoyé.",
     "errorTitle": "Erreur",
-    "errorFallback": "Veuillez réessayer"
+    "errorFallback": "Réessaie"
   },
   "dataManagement": {
     "title": "Confidentialité",
     "export": {
       "title": "Exporter mes données",
-      "desc": "Téléchargez une copie de vos informations (profil, réseaux sociaux, paramètres).",
+      "desc": "Télécharge une copie de tes informations (profil, réseaux sociaux, paramètres).",
       "button": "Exporter",
-      "buttonWorking": "Veuillez patienter...",
+      "buttonWorking": "Patiente...",
       "successTitle": "Export des données",
-      "successMessage": "Votre export a été généré. Il a été affiché dans la console.",
+      "successMessage": "Ton export a été généré. Il a été affiché dans la console.",
       "errorTitle": "Erreur",
-      "errorMessage": "Impossible d'exporter vos données maintenant. Réessayez."
+      "errorMessage": "Impossible d'exporter tes données maintenant. Réessaie."
     },
     "delete": {
       "title": "Supprimer mon compte",
-      "desc": "Supprime définitivement votre compte et toutes les données associées.",
-      "passwordPlaceholder": "Confirmez avec votre mot de passe",
+      "desc": "Supprime définitivement ton compte et toutes les données associées.",
+      "passwordPlaceholder": "Confirme avec ton mot de passe",
       "button": "Supprimer définitivement",
       "passwordRequiredTitle": "Mot de passe requis",
-      "passwordRequiredMessage": "Merci de saisir votre mot de passe.",
+      "passwordRequiredMessage": "Saisis ton mot de passe.",
       "confirmTitle": "Confirmation",
-      "confirmMessage": "Cette action est irréversible. Voulez-vous vraiment supprimer votre compte ?",
+      "confirmMessage": "Cette action est irréversible. Veux-tu vraiment supprimer ton compte ?",
       "cancel": "Annuler",
       "confirm": "Supprimer",
       "successTitle": "Compte supprimé",
-      "successMessage": "Votre compte et vos données ont été supprimés.",
+      "successMessage": "Ton compte et tes données ont été supprimés.",
       "errorTitle": "Erreur",
       "errorMessage": "Suppression impossible. Mot de passe invalide ou problème serveur."
     }
@@ -103,7 +103,7 @@
       "notSupportedMessage": "La caméra n'est pas disponible sur le web.",
       "cameraPermissionTitle": "Autorisation requise",
       "cameraPermissionMessage": "L'application a besoin de l'accès à la caméra pour prendre une photo.",
-      "galleryPermissionMessage": "L'application a besoin de l'accès à vos photos pour sélectionner une image.",
+      "galleryPermissionMessage": "L'application a besoin d'accéder à tes photos pour sélectionner une image.",
       "errorTitle": "Erreur",
       "uploadErrorMessage": "Impossible de téléverser l'image",
       "cameraOpenError": "Impossible d'ouvrir la caméra.",
@@ -132,7 +132,7 @@
       "invalidDateTitle": "Date invalide",
       "invalidDateMessage": "Merci de sélectionner une date de naissance valide.",
       "minAgeTitle": "Âge minimum requis",
-      "minAgeMessage": "Vous devez avoir au moins 18 ans.",
+      "minAgeMessage": "Tu dois avoir au moins 18 ans.",
       "updateErrorMessage": "Impossible de mettre à jour le profil"
     },
     "modal": {
@@ -142,11 +142,11 @@
       "cancel": "Annuler",
       "save": "Enregistrer",
       "placeholders": {
-        "firstName": "Votre prénom",
-        "lastName": "Votre nom",
-        "customName": "Votre nom personnalisé",
+        "firstName": "Ton prénom",
+        "lastName": "Ton nom",
+        "customName": "Ton nom personnalisé",
         "bio": "Parle un peu de toi...",
-        "default": "Votre texte"
+        "default": "Ton texte"
       }
     }
   },
@@ -171,7 +171,7 @@
       "loadingMore": "Chargement de lieux supplémentaires…",
       "loadMoreError": "Impossible de charger plus de lieux. Vérifie ta connexion.",
       "retry": "Réessayer",
-      "reachedEnd": "Vous avez exploré tous les lieux actifs à proximité. Déplacez-vous ou faites une recherche pour en voir plus."
+      "reachedEnd": "Tu as vu tous les lieux à proximité. Déplace-toi ou lance une recherche pour en voir plus."
     },
     "leaveModal": {
       "defaultName": "Ce lieu",
@@ -241,7 +241,9 @@
     "seeMore": "Voir plus",
     "boosted": "Boosté",
     "boostProfileHere": "Booster mon profil ici",
-    "boostLockedAfterCheckins": "Boost 🔓 après 2 check-ins"
+    "boostLockedAfterCheckins": "Boost 🔓 après 2 check-ins",
+    "noProfilesHere": "Personne n'est ici pour le moment.\nSois le premier à te signaler !",
+    "crossedPathsPremiumHint": "Passe Premium pour voir les croisements des 7 derniers jours (24 h en gratuit)."
   },
   "myAccount": {
     "actions": {
@@ -266,9 +268,9 @@
     },
     "warnings": {
       "title": "Avertissements",
-      "message_one": "Vous avez {{count}} avertissement.",
-      "message_other": "Vous avez {{count}} avertissements.",
-      "tapForDetails": "Appuyez pour voir le détail"
+      "message_one": "Tu as {{count}} avertissement.",
+      "message_other": "Tu as {{count}} avertissements.",
+      "tapForDetails": "Appuie pour voir le détail"
     },
     "referral": {
       "invite": "Invite tes amis",
@@ -283,8 +285,8 @@
     "social": {
       "addTitle": "Ajouter un réseau",
       "usernamePlaceholder": "@username ou ID {{platform}}",
-      "selectPlaceholder": "Sélectionnez un réseau",
-      "snapchatHint": "Note: Snapchat n'autorise pas les liens directs, entrez juste votre nom d'utilisateur.",
+      "selectPlaceholder": "Sélectionne un réseau",
+      "snapchatHint": "Note : Snapchat n'autorise pas les liens directs, entre juste ton nom d'utilisateur.",
       "save": "Enregistrer",
       "saveLabel": "Enregistrer",
       "editTitle": "Modifier {{platform}}",
@@ -330,12 +332,12 @@
     "boostClaimedToast": "Boost récupéré 🚀",
     "superlikeClaimedToast": "Superlike récupéré ⭐️",
     "claimRewardError": "Impossible de réclamer la récompense",
-    "statusVisible": "Vous êtes en mode visible. Tout le monde peut voir vos réseaux sociaux. Vous profitez pleinement de l'app.",
-    "statusRestricted": "Vous êtes en mode visible restreint. On ne peut pas voir vos réseaux sociaux.",
-    "statusInvisible": "Vous êtes en mode invisible. Personne ne vous verra désormais.",
+    "statusVisible": "Tu es en mode visible. Tout le monde peut voir tes réseaux sociaux. Tu profites pleinement de l'app.",
+    "statusRestricted": "Tu es en mode visible restreint. On ne peut pas voir tes réseaux sociaux.",
+    "statusInvisible": "Tu es en mode invisible. Personne ne te verra désormais.",
     "statusUpdateError": "Impossible de mettre à jour le statut",
     "unsupportedPlatform": "Plateforme non supportée",
-    "handleRequired": "Veuillez saisir un identifiant",
+    "handleRequired": "Saisis un identifiant",
     "invalidInstagramHandle": "Nom d'utilisateur Instagram invalide. Exemple: https://www.instagram.com/username/",
     "invalidTiktokHandle": "Nom d'utilisateur TikTok invalide. Exemple: https://www.tiktok.com/@username",
     "addSocialError": "Impossible d'ajouter le réseau social",
@@ -344,7 +346,7 @@
     "invalidTiktokHandleShort": "Nom d'utilisateur TikTok invalide",
     "cannotOpenInstagramTitle": "Impossible d'ouvrir Instagram",
     "cannotOpenTiktokTitle": "Impossible d'ouvrir TikTok",
-    "tryAgainLater": "Veuillez réessayer plus tard.",
+    "tryAgainLater": "Réessaie plus tard.",
     "editSocialError": "Impossible de modifier le réseau social",
     "deleteSocialError": "Impossible de supprimer le réseau social",
     "backLabel": "Retour",
@@ -381,7 +383,11 @@
     "desc": "LoocateMe utilise ta position pour te montrer les lieux animés et les personnes autour de toi. Sans elle, l'app ne peut pas fonctionner.",
     "note": "À l'écran suivant, choisis « Autoriser lorsque l'app est active ».",
     "allow": "Autoriser la localisation",
-    "later": "Plus tard"
+    "later": "Plus tard",
+    "alwaysTitle": "Reste visible sans ouvrir l'app",
+    "alwaysDesc": "Avec le mode automatique, tes entrées et sorties dans les lieux se font toutes seules — tes amis te voient arriver même quand ton téléphone est dans ta poche. Pour ça, LoocateMe a besoin d'accéder à ta position en arrière-plan (autorisation « Toujours »).",
+    "alwaysIosHint": "iOS peut demander l'accès en deux temps : autorise d'abord « Pendant l'utilisation », puis « Toujours » quand l'app te le proposera.",
+    "enable": "Activer"
   },
   "premiumPaywall": {
     "features": [
@@ -389,7 +395,7 @@
       "Boosts de visibilité (1 pack offert)",
       "Superlikes (3/semaine offerts)",
       "Mode invisible",
-      "Rayon de recherche jusqu'à 2 km",
+      "Rayon de recherche jusqu'à 30 km",
       "Statistiques avancées",
       "Notifications enrichies"
     ],
@@ -412,7 +418,7 @@
       },
       "radius": {
         "title": "Rayon étendu",
-        "desc": "Explore jusqu'à 2 km autour de toi (500 m en version gratuite)."
+        "desc": "Explore jusqu'à 30 km autour de toi (2 km en version gratuite)."
       },
       "stats": {
         "title": "Statistiques avancées",
@@ -422,16 +428,16 @@
     "trialError": "Impossible de démarrer l'essai gratuit.",
     "errorTitle": "Erreur",
     "offersUnavailableTitle": "Offres indisponibles",
-    "offersUnavailableMessage": "Les offres d'abonnement ne sont pas encore chargées. Réessayez dans quelques instants.",
+    "offersUnavailableMessage": "Les offres d'abonnement ne sont pas encore chargées. Réessaie dans quelques instants.",
     "purchaseError": "Impossible de finaliser l'achat.",
     "restoredTitle": "✅ Achats restaurés",
-    "restoredMessage": "Votre abonnement Premium est actif.",
+    "restoredMessage": "Ton abonnement Premium est actif.",
     "noRestoreTitle": "Aucun achat trouvé",
     "noRestoreMessage": "Aucun abonnement actif n'a pu être restauré.",
     "restoreError": "Impossible de restaurer les achats.",
     "closeLabel": "Fermer",
     "title": "👑 Premium",
-    "subtitle": "Débloquez toutes les fonctionnalités",
+    "subtitle": "Débloque toutes les fonctionnalités",
     "debugBanner": "⚠️ Paiements désactivés (mode debug)",
     "monthly": "Mensuel",
     "perMonth": "/mois",
@@ -446,7 +452,7 @@
     "thenAnnual": "Puis {{price}}/an · Résiliable à tout moment",
     "thenMonthly": "Puis {{price}}/mois · Résiliable à tout moment",
     "restorePurchases": "Restaurer mes achats",
-    "legalText": "L'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. Gérez vos abonnements dans les réglages de l'App Store / Google Play. ",
+    "legalText": "L'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. Gère tes abonnements dans les réglages de l'App Store / Google Play. ",
     "privacyPolicy": "Politique de confidentialité",
     "terms": "CGU"
   },
@@ -459,7 +465,7 @@
     "skip": "Passer"
   },
   "referralScreen": {
-    "loadError": "Impossible de charger vos informations de parrainage.",
+    "loadError": "Impossible de charger tes informations de parrainage.",
     "errorTitle": "Erreur",
     "shareMessage": "Rejoins-moi sur LoocateMe 👋\n\n{{url}}",
     "shareTitle": "Invite un ami sur LoocateMe",
@@ -467,8 +473,8 @@
     "shareError": "Impossible de partager.",
     "codeSavedTitle": "Parrainage",
     "codeSaved": "Code de parrainage enregistré !",
-    "selfReferralError": "Vous ne pouvez pas utiliser votre propre code.",
-    "alreadyReferredError": "Vous avez déjà utilisé un code de parrainage.",
+    "selfReferralError": "Tu ne peux pas utiliser ton propre code.",
+    "alreadyReferredError": "Tu as déjà utilisé un code de parrainage.",
     "invalidCodeError": "Ce code de parrainage est invalide.",
     "genericCodeError": "Impossible de valider ce code.",
     "title": "Parrainage",
@@ -529,8 +535,8 @@
     "classicMode": "Classique",
     "customMode": "Custom",
     "sectionReferral": "PARRAINAGE",
-    "alreadyReferred": "Vous avez déjà été parrainé.",
-    "referralHint": "Un ami vous a partagé un code ? Entrez-le ici.",
+    "alreadyReferred": "Tu as déjà été parrainé.",
+    "referralHint": "Un ami t'a partagé un code ? Entre-le ici.",
     "referralPlaceholder": "Code de parrainage",
     "validate": "Valider",
     "sectionNotifications": "NOTIFICATIONS",
@@ -541,7 +547,7 @@
       "streakExpiring": "Rappels de série",
       "profileView": "Vues de profil",
       "socialClick": "Consultations de tes réseaux sociaux",
-      "inactiveProfileViews": "Vues reçues pendant votre absence",
+      "inactiveProfileViews": "Vues reçues pendant ton absence",
       "referralValidated": "Parrainage validé",
       "referralRewardGranted": "Récompense de parrainage",
       "nightModeActivated": "Activation du mode nuit",
@@ -558,13 +564,13 @@
     "consent": "Consentement",
     "analyticsLabel": "Analytics",
     "dataSaleTitle": "Vente de données (CCPA)",
-    "dataSaleDesc": "Nous ne vendons ni ne partageons vos données personnelles avec des tiers à des fins publicitaires.",
+    "dataSaleDesc": "Nous ne vendons ni ne partageons tes données personnelles avec des tiers à des fins publicitaires.",
     "invisibleModeTitle": "Mode invisible",
-    "invisibleModeDesc": "Vous serez invisible pour les autres utilisateurs des lieux, mais vous ne pourrez plus consulter la carte ni la liste des lieux tant que ce mode est actif.",
+    "invisibleModeDesc": "Tu seras invisible pour les autres utilisateurs des lieux, mais tu ne pourras plus consulter la carte ni la liste des lieux tant que ce mode est actif.",
     "shareLocationTitle": "Partager mon lieu actuel",
-    "shareLocationDesc": "Affiche aux autres utilisateurs l'endroit précis où vous vous trouvez actuellement, en plus de votre ville. Désactivé par défaut pour protéger votre vie privée et éviter tout risque de traque.",
+    "shareLocationDesc": "Affiche aux autres utilisateurs l'endroit précis où tu te trouves actuellement, en plus de ta ville. Désactivé par défaut pour protéger ta vie privée et éviter tout risque de traque.",
     "policyLoadError": "Impossible de charger la politique de confidentialité.",
-    "savePrivacyPrefsError": "Impossible d'enregistrer vos préférences de confidentialité",
+    "savePrivacyPrefsError": "Impossible d'enregistrer tes préférences de confidentialité",
     "shareLocationUpdateError": "Impossible de mettre à jour le partage du lieu actuel",
     "invisibleModeUpdateError": "Impossible de mettre à jour le mode invisible",
     "notifPrefUpdateError": "Impossible de mettre à jour cette préférence de notification",
@@ -573,27 +579,27 @@
     "consentRevoked": "Consentement révoqué.",
     "consentSaveError": "Impossible d'enregistrer le consentement",
     "revokeConsentTitle": "Révocation du consentement",
-    "revokeConsentMessage": "Révoquer votre consentement entraînera la suppression définitive de votre compte et de toutes vos données. Voulez-vous continuer ?",
+    "revokeConsentMessage": "Révoquer ton consentement entraînera la suppression définitive de ton compte et de toutes tes données. Veux-tu continuer ?",
     "cancel": "Annuler",
     "continueLabel": "Continuer",
-    "currentPasswordRequired": "Merci de saisir votre mot de passe actuel.",
+    "currentPasswordRequired": "Saisis ton mot de passe actuel.",
     "passwordTooShort": "Le nouveau mot de passe doit contenir au moins 6 caractères.",
     "passwordConfirmMismatch": "La confirmation ne correspond pas au nouveau mot de passe.",
     "passwordChangedTitle": "Mot de passe modifié",
-    "passwordChangedMessage": "Votre mot de passe a bien été mis à jour.",
+    "passwordChangedMessage": "Ton mot de passe a bien été mis à jour.",
     "currentPasswordInvalid": "Mot de passe actuel invalide ou erreur serveur.",
     "invalidEmail": "Merci de saisir une adresse email valide.",
-    "passwordRequiredConfirm": "Merci de saisir votre mot de passe pour confirmer.",
+    "passwordRequiredConfirm": "Saisis ton mot de passe pour confirmer.",
     "checkInboxTitle": "Vérifie ta boîte mail",
     "checkInboxMessage": "Un email de confirmation a été envoyé à {{email}}. Clique sur le lien pour valider le changement.",
     "emailChangeError": "Impossible de démarrer le changement. Mot de passe invalide ou erreur serveur.",
     "exportReadyTitle": "Export prêt",
-    "exportReadyMessage": "Vos données ont été exportées ({{size}} caractères).",
-    "exportError": "Impossible d'exporter vos données",
+    "exportReadyMessage": "Tes données ont été exportées ({{size}} caractères).",
+    "exportError": "Impossible d'exporter tes données",
     "deleteAccountConfirmTitle": "Supprimer le compte",
-    "deleteAccountConfirmMessage": "La suppression est définitive. Confirmez-vous la suppression de votre compte ?",
+    "deleteAccountConfirmMessage": "La suppression est définitive. Confirmes-tu la suppression de ton compte ?",
     "profileUpdatedTitle": "Profil",
-    "profileUpdatedMessage": "Votre profil a été mis à jour.",
+    "profileUpdatedMessage": "Ton profil a été mis à jour.",
     "loadBlockedError": "Impossible de charger les comptes bloqués",
     "unblockError": "Impossible de débloquer cet utilisateur",
     "sectionAccount": "COMPTE",
@@ -614,7 +620,7 @@
     "close": "Fermer",
     "privacyModalTitle": "Confidentialité",
     "deleteAccountTitle": "Suppression du compte",
-    "deleteAccountDesc": "Pour confirmer, entrez votre mot de passe. Cette action est irréversible.",
+    "deleteAccountDesc": "Pour confirmer, entre ton mot de passe. Cette action est irréversible.",
     "deleting": "Suppression...",
     "changePasswordTitle": "Changer le mot de passe",
     "currentPasswordPlaceholder": "Mot de passe actuel",
@@ -675,7 +681,7 @@
     "errorTitle": "Erreur",
     "superlikeSendError": "Impossible d'envoyer le superlike.",
     "blockConfirmTitle": "Bloquer cet utilisateur ?",
-    "blockConfirmMessage": "Vous ne verrez plus cet utilisateur et il ne pourra plus vous contacter.",
+    "blockConfirmMessage": "Tu ne verras plus cet utilisateur et il ne pourra plus te contacter.",
     "cancel": "Annuler",
     "block": "Bloquer",
     "userBlockedTitle": "Utilisateur bloqué",
@@ -684,7 +690,7 @@
     "reasonRequiredTitle": "Motif requis",
     "reasonRequiredMessage": "Merci d'indiquer un motif.",
     "reportSentTitle": "Signalement envoyé",
-    "reportSentMessage": "Merci pour votre signalement.",
+    "reportSentMessage": "Merci pour ton signalement.",
     "reportSendError": "Impossible d'envoyer le signalement.",
     "backA11y": "Retour",
     "moreOptionsA11y": "Plus d'options",

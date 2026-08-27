@@ -382,7 +382,7 @@
       "Synlighedsboosts (1 gratis pakke)",
       "Superlikes (3/uge gratis)",
       "Usynlig tilstand",
-      "Søgeradius op til 2 km",
+      "Søgeradius op til 30 km",
       "Avanceret statistik",
       "Forbedrede notifikationer"
     ],
@@ -405,7 +405,7 @@
       },
       "radius": {
         "title": "Udvidet radius",
-        "desc": "Udforsk op til 2 km omkring dig (500 m i gratisversionen)."
+        "desc": "Udforsk op til 30 km omkring dig (2 km i gratisversionen)."
       },
       "stats": {
         "title": "Avanceret statistik",

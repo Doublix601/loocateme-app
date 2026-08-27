@@ -367,29 +367,18 @@ function AppShell({ purchasesReady }) {
     // plafond de fréquence, puisque c'est lui qui vient de le demander.
     const off = subscribe('ui:request_background_permission', async () => {
       try {
-        const { status: fg } = await Location.getForegroundPermissionsAsync();
-        if (fg !== 'granted') {
-          const req = await Location.requestForegroundPermissionsAsync();
-          if (req.status !== 'granted') {
-            setLocationModal({ visible: true, type: 'always' });
-            return;
-          }
-        }
         const { status: bg } = await Location.getBackgroundPermissionsAsync();
         if (bg === 'granted') {
           resetBackgroundPermissionPrompt();
           startBackgroundLocationForSixHours();
           return;
         }
-        const reqBg = await Location.requestBackgroundPermissionsAsync();
-        if (reqBg.status === 'granted') {
-          resetBackgroundPermissionPrompt();
-          startBackgroundLocationForSixHours();
-        } else {
-          // iOS n'accorde "Toujours" qu'en deux temps (et parfois plus tard, de
-          // lui-même) : on explique via le primer plutôt que de forcer.
-          setLocationModal({ visible: true, type: 'always' });
-        }
+        // Toujours afficher le primer AVANT tout dialogue système : l'utilisateur
+        // voit d'abord le « pourquoi », et c'est le bouton « Activer » du primer
+        // qui déclenche la vraie demande de permission (foreground puis
+        // background, cf. LocationPermissionModal). Un refus au dialogue système
+        // iOS étant définitif, on ne le provoque jamais sans contexte préalable.
+        setLocationModal({ visible: true, type: 'always' });
       } catch (_) {}
     });
     return () => {

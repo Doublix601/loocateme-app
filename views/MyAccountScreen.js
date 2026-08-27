@@ -899,6 +899,7 @@ const MyAccountScreen = () => {
               photoRef={photoRef}
               statusRef={statusRef}
               user={user}
+              isPremium={isPremium}
               colors={colors}
               isDark={isDark}
               cityLabel={cityLabel}
@@ -950,7 +951,8 @@ const MyAccountScreen = () => {
               boostPulse={boostPulse}
               onOpenSuperlikeHistory={() => setSuperlikeHistoryVisible(true)}
               onOpenConsumablesShop={() => setConsumablesShopVisible(true)}
-              isPremium={!!user?.isPremium}
+              isPremium={isPremium}
+              premiumSystemEnabled={premiumSystemEnabled}
               onOpenPaywall={() => navigation.navigate('PremiumPaywall', { source: 'rewards_card' })}
             />
 

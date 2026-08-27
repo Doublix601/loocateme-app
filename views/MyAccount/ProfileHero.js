@@ -17,7 +17,7 @@ const { width } = Dimensions.get('window');
  * porte la ref au même endroit visuel (la carte photo) pour ne pas casser
  * l'étape 1 de l'onboarding.
  */
-const ProfileHero = ({ photoRef, statusRef, user, colors, isDark, cityLabel, currentPlaceLabel, onOpenStatusPicker }) => {
+const ProfileHero = ({ photoRef, statusRef, user, isPremium, colors, isDark, cityLabel, currentPlaceLabel, onOpenStatusPicker }) => {
   const { t } = useTranslation();
   const displayName =
     user?.customName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username);
@@ -57,7 +57,7 @@ const ProfileHero = ({ photoRef, statusRef, user, colors, isDark, cityLabel, cur
           <Text style={styles.name} numberOfLines={1}>
             {displayName}
           </Text>
-          {user?.isPremium ? (
+          {(isPremium ?? user?.isPremium) ? (
             <View style={styles.premiumPill}>
               <Text style={styles.premiumPillText}>👑 Premium</Text>
             </View>
