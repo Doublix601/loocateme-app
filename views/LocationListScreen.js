@@ -382,6 +382,9 @@ const LocationListScreen = () => {
   // Premium (aligné avec le plafond de découverte backend). Les lieux
   // applicatifs eux-mêmes sont déjà plafonnés côté serveur.
   const overpassRadiusM = getOverpassRadiusM({ isPremium, premiumSystemEnabled });
+  // Le rayon étendu est débloqué si le système premium est off (tout le monde y
+  // a droit) ou si l'utilisateur est premium.
+  const radiusUnlocked = !premiumSystemEnabled || isPremium;
   const { isBoosted } = useBoost();
   const flatListRef = useRef(null);
   const currentScrollOffset = useRef(0);
@@ -1614,6 +1617,12 @@ const LocationListScreen = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             onExpandRadius={() => {
+              // Compte gratuit (système premium actif) : le rayon est plafonné
+              // à 2 km, élargir n'aurait aucun effet — on ouvre la paywall.
+              if (!radiusUnlocked) {
+                publish('ui:open_premium', { source: 'extended_radius' });
+                return;
+              }
               if (userCoords) {
                 OverpassService.fetchAround({
                   lat: userCoords.latitude,
