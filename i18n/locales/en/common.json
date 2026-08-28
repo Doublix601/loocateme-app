@@ -422,12 +422,11 @@
     "title": "Turn on your location",
     "desc": "LoocateMe uses your location to show you lively places and people around you. Without it, the app can't work.",
     "note": "On the next screen, choose \"Allow While Using App\".",
-    "allow": "Allow location",
-    "later": "Later",
+    "allow": "Continue",
     "alwaysTitle": "Stay visible without opening the app",
     "alwaysDesc": "With automatic mode, your check-ins and check-outs happen on their own — your friends see you arrive even when your phone is in your pocket. For that, LoocateMe needs background access to your location (\"Always\" permission).",
     "alwaysIosHint": "iOS may ask in two steps: first allow \"While Using the App\", then \"Always\" when the app prompts you.",
-    "enable": "Turn on"
+    "enable": "Continue"
   },
   "premiumPaywall": {
     "features": [
@@ -893,5 +892,11 @@
   },
   "vibeTransit": {
     "skip": "Skip"
+  },
+  "premiumExpiredModal": {
+    "title": "Your Premium subscription has expired",
+    "body": "You are back on the free plan. You can reactivate Premium anytime to get back the extended radar, boosts, superlikes and all the other perks.",
+    "cta": "Go Premium again",
+    "dismiss": "Later"
   }
 }

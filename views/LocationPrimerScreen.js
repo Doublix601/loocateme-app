@@ -42,11 +42,6 @@ export default function LocationPrimerScreen() {
     }
   };
 
-  const skip = async () => {
-    await markLocationPrimerSeen();
-    goToLogin();
-  };
-
   return (
     <View style={styles.root}>
       <StatusBar barStyle="light-content" />
@@ -75,9 +70,6 @@ export default function LocationPrimerScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={skip} style={styles.skipBtn} disabled={busy}>
-            <Text style={styles.skipTxt}>{t('locationPrimer.later')}</Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </View>

@@ -422,12 +422,11 @@
     "title": "Active ta position",
     "desc": "LoocateMe utilise ta position pour te montrer les lieux animés et les personnes autour de toi. Sans elle, l'app ne peut pas fonctionner.",
     "note": "À l'écran suivant, choisis « Autoriser lorsque l'app est active ».",
-    "allow": "Autoriser la localisation",
-    "later": "Plus tard",
+    "allow": "Continuer",
     "alwaysTitle": "Reste visible sans ouvrir l'app",
     "alwaysDesc": "Avec le mode automatique, tes entrées et sorties dans les lieux se font toutes seules — tes amis te voient arriver même quand ton téléphone est dans ta poche. Pour ça, LoocateMe a besoin d'accéder à ta position en arrière-plan (autorisation « Toujours »).",
     "alwaysIosHint": "iOS peut demander l'accès en deux temps : autorise d'abord « Pendant l'utilisation », puis « Toujours » quand l'app te le proposera.",
-    "enable": "Activer"
+    "enable": "Continuer"
   },
   "premiumPaywall": {
     "features": [
@@ -893,5 +892,11 @@
   },
   "vibeTransit": {
     "skip": "Passer"
+  },
+  "premiumExpiredModal": {
+    "title": "Ton abonnement Premium a expiré",
+    "body": "Tu es repassé en formule gratuite. Tu peux réactiver Premium quand tu veux pour retrouver le radar élargi, les boosts, les superlikes et tous les autres avantages.",
+    "cta": "Redevenir Premium",
+    "dismiss": "Plus tard"
   }
 }

@@ -22,6 +22,7 @@ import ScreenHeader from '../components/ScreenHeader';
 import PremiumWelcomeOnboarding from '../components/PremiumWelcomeOnboarding';
 import { getPremiumSlides } from '../constants/premiumFeatures';
 import { useTranslation } from 'react-i18next';
+import { PRIVACY_POLICY_URL, TERMS_URL, APPLE_EULA_URL } from '../constants/legal';
 
 const { width } = Dimensions.get('window');
 
@@ -410,7 +411,7 @@ export default function PremiumPaywallScreen() {
           {t('premiumPaywall.legalText')}
           <Text
             style={{ textDecorationLine: 'underline' }}
-            onPress={() => Linking.openURL('https://loocateme.com/privacy')}
+            onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
             {t('premiumPaywall.privacyPolicy')}
@@ -418,10 +419,18 @@ export default function PremiumPaywallScreen() {
           {' · '}
           <Text
             style={{ textDecorationLine: 'underline' }}
-            onPress={() => Linking.openURL('https://loocateme.com/terms')}
+            onPress={() => Linking.openURL(TERMS_URL)}
             hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           >
             {t('premiumPaywall.terms')}
+          </Text>
+          {' · '}
+          <Text
+            style={{ textDecorationLine: 'underline' }}
+            onPress={() => Linking.openURL(APPLE_EULA_URL)}
+            hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          >
+            EULA
           </Text>
         </Text>
       </ScrollView>

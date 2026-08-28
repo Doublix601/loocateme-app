@@ -84,7 +84,7 @@ const LocationPermissionModal = ({ visible, onClose }) => {
               onPress={close}
               disabled={busy}
             >
-              <Text style={[styles.buttonText, { color: colors.textSecondary }]}>{t('locationPrimer.later')}</Text>
+              <Text style={[styles.buttonText, { color: colors.textSecondary }]}>{t('common.close')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, { backgroundColor: colors.accent, opacity: busy ? 0.6 : 1 }]}

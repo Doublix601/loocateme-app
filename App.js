@@ -26,6 +26,7 @@ import { IS_EXPO_GO } from './services/DebugConfig';
 
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
 import LocationPermissionModal from './components/LocationPermissionModal';
+import PremiumExpiredModal from './components/PremiumExpiredModal';
 import ChurnSurveyModal from './components/ChurnSurveyModal';
 import RateLimitModal from './components/RateLimitModal';
 import { reportPermissionStatus } from './services/EngagementTrackingService';
@@ -68,6 +69,7 @@ import {
   resetBackgroundPermissionPrompt,
 } from './utils/backgroundPermissionPrompt';
 import { hydrateLocationHeartbeatSuppression } from './utils/devLocationSuppression';
+import { shouldShowPremiumExpired, acknowledgePremiumExpired } from './utils/premiumExpiry';
 import RootNavigator from './navigation/RootNavigator';
 
 LogBox.ignoreLogs([
@@ -105,6 +107,7 @@ function AppShell({ purchasesReady }) {
   const [shopSheetVisible, setShopSheetVisible] = useState(false);
   const [locationModal, setLocationModal] = useState({ visible: false });
   const [churnSurveyVisible, setChurnSurveyVisible] = useState(false);
+  const [premiumExpiredVisible, setPremiumExpiredVisible] = useState(false);
   const appState = useRef(AppState.currentState);
   const hasShownLocationModal = useRef(false);
   // Dernier statut de permission localisation connu, pour détecter une révocation
@@ -375,6 +378,23 @@ function AppShell({ purchasesReady }) {
     PremiumService.init().catch(() => {});
     PremiumNudgeService.init().catch(() => {});
   }, []);
+
+  // Premium expiré : prévient l utilisateur (une fois par échéance) que son
+  // abonnement est repassé en Free. Non bloquant.
+  useEffect(() => {
+    if (!authReady || !isAuthenticated || !appUser) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (await shouldShowPremiumExpired(appUser)) {
+          if (!cancelled) setPremiumExpiredVisible(true);
+        }
+      } catch (_) {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, isAuthenticated, appUser?.isPremium, appUser?.premiumTrialEnd, appUser?.premiumExpiresAt]);
 
   useEffect(() => {
     // Demande explicite déclenchée par l'utilisateur (activation du mode auto
@@ -727,6 +747,18 @@ function AppShell({ purchasesReady }) {
         visible={churnSurveyVisible}
         context="location_permission_revoked"
         onClose={() => setChurnSurveyVisible(false)}
+      />
+      <PremiumExpiredModal
+        visible={premiumExpiredVisible}
+        onClose={() => {
+          acknowledgePremiumExpired(appUser);
+          setPremiumExpiredVisible(false);
+        }}
+        onSeePremium={() => {
+          acknowledgePremiumExpired(appUser);
+          setPremiumExpiredVisible(false);
+          publish('ui:open_premium', { source: 'expired_modal' });
+        }}
       />
       <RateLimitModal
         visible={!!rateLimitInfo}

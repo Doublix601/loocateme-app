@@ -51,6 +51,7 @@ import IAPStore from '../services/IAPStore';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { useTranslation } from 'react-i18next';
+import { TERMS_URL } from '../constants/legal';
 import { SUPPORTED_LANGUAGES, setAppLanguage } from '../i18n';
 
 // Noms affichés dans leur propre langue (pas besoin de les traduire).
@@ -296,7 +297,7 @@ const SettingsScreen = () => {
   };
 
   const openTerms = () => {
-    Linking.openURL('https://loocateme.com/terms');
+    Linking.openURL(TERMS_URL);
   };
 
   const handleSelectLanguage = async (code) => {
