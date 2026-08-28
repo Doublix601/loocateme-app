@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, AppState, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
@@ -102,13 +102,41 @@ export default function VibeTransitOverlay() {
   // de fonctionner mais plus aucun toucher JS n'est délivré). Ce watchdog ne
   // dépend d'aucun autre mécanisme : il se contente de forcer la résolution
   // de la transition si elle dure sensiblement plus longtemps que prévu.
+  // Horodatage mur (wall-clock) du début de la transition. Sert de source de
+  // vérité indépendante des `setTimeout` : ceux-ci n'avancent pas quand iOS
+  // suspend le process en arrière-plan et peuvent même être purgés au réveil,
+  // ce qui laissait l'overlay monté (donc captant tous les touchers → app
+  // gelée) au retour au premier plan. Un delta de temps réel, lui, reste
+  // fiable quoi qu'il arrive.
+  const startedAtRef = useRef(0);
+  const maxLifeMs = duration + 1500;
+  if (transitioningTo && !startedAtRef.current) {
+    startedAtRef.current = Date.now();
+  } else if (!transitioningTo && startedAtRef.current) {
+    startedAtRef.current = 0;
+  }
+
   useEffect(() => {
     if (!transitioningTo) return undefined;
-    const watchdog = setTimeout(() => {
-      skipVibeTransition();
-    }, duration + 1500);
-    return () => clearTimeout(watchdog);
-  }, [transitioningTo, duration, skipVibeTransition]);
+    // Watchdog basé sur le temps écoulé RÉEL depuis le début (et non sur un
+    // délai fixe re-armé à chaque render) : au retour d'arrière-plan il se
+    // déclenche quasi immédiatement si la fenêtre est déjà dépassée.
+    const fire = () => skipVibeTransition();
+    const remaining = Math.max(0, startedAtRef.current + maxLifeMs - Date.now());
+    const watchdog = setTimeout(fire, remaining);
+    // Filet supplémentaire co-localisé avec le composant qui piège le tactile :
+    // VibeContext a déjà un garde sur AppState, mais le dupliquer ici garantit
+    // que l'overlay se résout même si ce garde externe rate le cycle.
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') fire();
+    });
+    return () => {
+      clearTimeout(watchdog);
+      try {
+        sub && sub.remove && sub.remove();
+      } catch (_) {}
+    };
+  }, [transitioningTo, maxLifeMs, skipVibeTransition]);
 
   // Fade the whole overlay in/out at the very start/end of the transition so it
   // doesn't pop in/out abruptly. `prog` spans the full transition duration and
@@ -194,7 +222,16 @@ export default function VibeTransitOverlay() {
       ];
 
   return (
-    <Animated.View pointerEvents="auto" style={[styles.overlay, overlayFade]} onStartShouldSetResponder={() => true}>
+    <Animated.View
+      pointerEvents="auto"
+      style={[styles.overlay, overlayFade]}
+      // Ne piège le tactile que pendant la fenêtre de vie réelle de la
+      // transition. Passé ce délai (mesuré en temps mur, immunisé contre le
+      // gel des timers en arrière-plan), on laisse les touchers traverser même
+      // si `transitioningTo` est resté bloqué à vrai pour une raison
+      // quelconque — dernier rempart contre l'app gelée.
+      onStartShouldSetResponder={() => Date.now() - startedAtRef.current < maxLifeMs}
+    >
       {/* Base gradients crossfading */}
       <Animated.View style={[styles.absoluteFill, dayFade]}>
         <LinearGradient
