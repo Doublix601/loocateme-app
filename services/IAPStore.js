@@ -61,13 +61,14 @@ const IAPStore = {
   // Retourne null si IAP_DISABLED ou en cas d'erreur.
   async getOfferings() {
     if (DEBUG_CONFIG.IAP_DISABLED) return null;
-    try {
-      const offerings = await Purchases.getOfferings();
-      return offerings.current ?? null;
-    } catch (e) {
-      console.warn('[IAPStore] getOfferings failed:', e.message);
-      return null;
+    // On laisse remonter l'erreur (clé RevenueCat absente/invalide, réseau,
+    // offering non configuré) pour que l'appelant bascule sur l'état
+    // « Réessayer » au lieu de rester bloqué sur « Chargement des offres… ».
+    const offerings = await Purchases.getOfferings();
+    if (!offerings?.current) {
+      throw new Error('Aucun offering RevenueCat disponible');
     }
+    return offerings.current;
   },
 
   // Démarre l'essai gratuit 7 jours via le backend (sans paiement).

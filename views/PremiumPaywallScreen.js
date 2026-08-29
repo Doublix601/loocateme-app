@@ -120,7 +120,16 @@ export default function PremiumPaywallScreen() {
     const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
     Promise.race([IAPStore.getOfferings(), timeout])
       .then((res) => {
-        if (!cancelled) setOfferings(res);
+        if (cancelled) return;
+        const pkgs = res?.availablePackages ?? [];
+        const hasSub = pkgs.some((p) => p.packageType === 'MONTHLY' || p.packageType === 'ANNUAL');
+        // Offering présent mais sans abonnement mensuel/annuel exploitable →
+        // même issue « Réessayer » plutôt qu'un CTA figé sur « Chargement… ».
+        if (!res || (!hasSub && !DEBUG_CONFIG.IAP_DISABLED)) {
+          setOffersError(true);
+        } else {
+          setOfferings(res);
+        }
       })
       .catch(() => {
         if (!cancelled) setOffersError(true);
