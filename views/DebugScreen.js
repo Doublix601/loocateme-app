@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
-  searchUsers,
+  adminSearchUsers,
   invalidateApiCacheByPrefix,
   getAdminFlags,
   setFeatureFlag,
@@ -437,7 +437,7 @@ const DebugScreen = () => {
   useEffect(() => {
     const q = String(query || '').trim();
     if (debRef.current) clearTimeout(debRef.current);
-    if (!q) {
+    if (q.length < 2) {
       setResults([]);
       setSearching(false);
       return;
@@ -445,7 +445,7 @@ const DebugScreen = () => {
     debRef.current = setTimeout(async () => {
       try {
         setSearching(true);
-        const res = await searchUsers({ q });
+        const res = await adminSearchUsers({ q });
         setResults(Array.isArray(res?.users) ? res.users : []);
       } catch (_e) {
         setResults([]);
@@ -713,14 +713,14 @@ const DebugScreen = () => {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Nom, prénom, username, email..."
+            placeholder="Nom, username, email, ou ID..."
             placeholderTextColor={isDark ? '#999' : subTextColor}
             autoCapitalize="none"
             style={[styles.input, textStyle]}
           />
         </View>
         <Text style={[{ fontSize: 11, marginTop: 6 }, subTextStyle]}>
-          Note : les comptes en mode invisible n'apparaissent pas dans la recherche.
+          Recherche modération : inclut les comptes en mode invisible et bannis (min. 2 caractères).
         </Text>
 
         {searching ? (

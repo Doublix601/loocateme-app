@@ -1039,6 +1039,13 @@ export async function setUserPremium(userId, isPremium) {
   });
 }
 
+// ADMIN (DebugScreen): recherche de modération — inclut les comptes en mode
+// invisible et bannis (contrairement à searchUsers). Accepte aussi un ObjectId.
+export async function adminSearchUsers({ q, limit = 20 }) {
+  const qs = new URLSearchParams({ q: String(q || ''), limit: String(limit) }).toString();
+  return request(`/admin/users/search?${qs}`, { method: 'GET', cache: 'reload' });
+}
+
 // ADMIN (DebugScreen): édition fine du premium d'un compte.
 // patch: { isPremium?, premiumSource?, premiumExpiresAt?, premiumTrialStart?, premiumTrialEnd? }
 // Les dates sont des ISO strings, ou null pour effacer le champ.
