@@ -114,30 +114,38 @@ function buildKey(lat, lon, radius, vibe) {
   return `${roundCoord(lat)}:${roundCoord(lon)}:${radius}:${vibe}`;
 }
 
-function buildQuery({ lat, lon, radius = 1200, vibe = 'sun' }) {
+export function buildQuery({ lat, lon, radius = 1200, vibe = 'sun' }) {
   // Catégories choisies selon le vibe (jour/nuit), réparties par clé OSM.
   // On fusionne les types via une regex `~"a|b|c"` pour réduire le nombre de
   // sous-requêtes Overpass (1 par clé OSM au lieu d'une par type), ce qui
   // accélère significativement le temps de réponse.
+  //
+  // `nwr` (node + way + relation) et non `node` seul : beaucoup d'établissements
+  // (boîtes de nuit, salles de sport, cinémas...) sont cartographiés dans OSM
+  // comme un polygone de bâtiment (way) ou un multipolygone (relation) sans
+  // aucun node ponctuel. Les ignorer les rendait invisibles dans la liste temps
+  // réel (ex: "Loft Métropolis" à Rungis, way amenity=nightclub). `out center;`
+  // fournit un point représentatif pour les way/relation. Aligné avec
+  // LocationSyncService.
   const cats = CATEGORIES_BY_VIBE[normalizeVibe(vibe)];
   const parts = [];
   if (cats.amenity && cats.amenity.length > 0) {
-    parts.push(`node["amenity"~"^(${cats.amenity.join('|')})$"](around:${radius},${lat},${lon});`);
+    parts.push(`nwr["amenity"~"^(${cats.amenity.join('|')})$"](around:${radius},${lat},${lon});`);
   }
   if (cats.leisure && cats.leisure.length > 0) {
-    parts.push(`node["leisure"~"^(${cats.leisure.join('|')})$"](around:${radius},${lat},${lon});`);
+    parts.push(`nwr["leisure"~"^(${cats.leisure.join('|')})$"](around:${radius},${lat},${lon});`);
   }
   if (cats.shop && cats.shop.length > 0) {
-    parts.push(`node["shop"~"^(${cats.shop.join('|')})$"](around:${radius},${lat},${lon});`);
+    parts.push(`nwr["shop"~"^(${cats.shop.join('|')})$"](around:${radius},${lat},${lon});`);
   }
   if (cats.tourism && cats.tourism.length > 0) {
-    parts.push(`node["tourism"~"^(${cats.tourism.join('|')})$"](around:${radius},${lat},${lon});`);
+    parts.push(`nwr["tourism"~"^(${cats.tourism.join('|')})$"](around:${radius},${lat},${lon});`);
   }
   if (cats.sport && cats.sport.length > 0) {
-    parts.push(`node["sport"~"^(${cats.sport.join('|')})$"](around:${radius},${lat},${lon});`);
+    parts.push(`nwr["sport"~"^(${cats.sport.join('|')})$"](around:${radius},${lat},${lon});`);
   }
   const filters = parts.join('\n');
-  return `[out:json][timeout:${OVERPASS_SERVER_TIMEOUT_S}];(\n${filters}\n);out body;`;
+  return `[out:json][timeout:${OVERPASS_SERVER_TIMEOUT_S}];(\n${filters}\n);out center;`;
 }
 
 async function fetchOverpass(query) {
@@ -157,10 +165,14 @@ async function fetchOverpass(query) {
   }
 }
 
-function normalize(elements = []) {
+export function normalize(elements = []) {
   return (elements || [])
-    .filter((e) => e && e.type === 'node' && e.tags?.name)
+    .filter((e) => e && e.tags?.name && (e.type === 'node' || e.type === 'way' || e.type === 'relation'))
     .map((e) => {
+      // node : lat/lon direct ; way/relation : point représentatif via `out center;`.
+      const elLat = typeof e.lat === 'number' ? e.lat : e.center?.lat;
+      const elLon = typeof e.lon === 'number' ? e.lon : e.center?.lon;
+      if (typeof elLat !== 'number' || typeof elLon !== 'number') return null;
       const name = e.tags.name;
       const type = e.tags?.amenity || e.tags?.leisure || e.tags?.shop || e.tags?.tourism || e.tags?.sport || 'poi';
       return {
@@ -168,14 +180,15 @@ function normalize(elements = []) {
         osmId: e.id,
         name,
         type,
-        location: { type: 'Point', coordinates: [e.lon, e.lat] },
+        location: { type: 'Point', coordinates: [elLon, elLat] },
         userCount: 0,
         activeUsers: [],
         stars: 0,
         isPromoted: false,
         source: 'osm',
       };
-    });
+    })
+    .filter(Boolean);
 }
 
 export const OverpassService = {
