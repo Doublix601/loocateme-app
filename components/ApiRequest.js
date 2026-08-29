@@ -1030,12 +1030,6 @@ export async function deleteMyAccount({ password }) {
 // (apiUpdateInvisibleMode et apiUpdateNotificationPreferences sont déjà définis plus haut)
 
 // ADMIN / DEBUG
-export async function getAllUsers({ page = 1, limit = 100 } = {}) {
-  const p = new URLSearchParams({ page: String(page), limit: String(limit) }).toString();
-  // Bypass cache to always fetch fresh data for admin listings used by DebugScreen
-  return request(`/admin/users?${p}`, { method: 'GET', cache: 'reload' });
-}
-
 export async function setUserPremium(userId, isPremium) {
   const id = String(userId || '');
   if (!id) throw new Error('userId requis');
@@ -1045,10 +1039,50 @@ export async function setUserPremium(userId, isPremium) {
   });
 }
 
-// ADMIN: push de test/unifié
-export async function sendAdminPush(options = {}) {
-  // options: { userIds, tokens, title, body, data, imageUrl, sound, badge, androidChannelId, priority, collapseKey, mutableContent, contentAvailable }
-  return request('/admin/push/send', { method: 'POST', body: options, cache: 'reload' });
+// ADMIN (DebugScreen): édition fine du premium d'un compte.
+// patch: { isPremium?, premiumSource?, premiumExpiresAt?, premiumTrialStart?, premiumTrialEnd? }
+// Les dates sont des ISO strings, ou null pour effacer le champ.
+export async function adminSetPremium(userId, patch = {}) {
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/admin/users/${encodeURIComponent(id)}/premium`, { method: 'PATCH', body: patch });
+}
+
+// ADMIN (DebugScreen): solde de consommables app (boosts / superlikes).
+// body: { mode: 'add' | 'set', boost?, superlike?, boostUntil? }
+export async function adminSetConsumables(userId, body = {}) {
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/admin/users/${encodeURIComponent(id)}/consumables`, { method: 'POST', body });
+}
+
+// ADMIN (DebugScreen): flags de compte. body: { invisibleMode?, checkInMode? }
+export async function adminSetAccountFlags(userId, body = {}) {
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/admin/users/${encodeURIComponent(id)}/account-flags`, { method: 'PATCH', body });
+}
+
+// ADMIN (DebugScreen): lieu pro géré par ce compte (ownerId), ou { location: null }.
+export async function adminGetUserBusiness(userId) {
+  const id = String(userId || '');
+  if (!id) throw new Error('userId requis');
+  return request(`/admin/users/${encodeURIComponent(id)}/business`, { method: 'GET', cache: 'reload' });
+}
+
+// ADMIN (DebugScreen): override DB du palier pro (ne touche pas Stripe).
+// body: { businessTier, periodDays?, grantProOffers?, force? }
+export async function adminSetBusinessTier(locationId, body = {}) {
+  const id = String(locationId || '');
+  if (!id) throw new Error('locationId requis');
+  return request(`/admin/business/${encodeURIComponent(id)}/tier`, { method: 'PATCH', body });
+}
+
+// ADMIN (DebugScreen): soldes de boosts pro. body: { mode: 'add'|'set', ultra?, pro?, event? }
+export async function adminSetBusinessBoosts(locationId, body = {}) {
+  const id = String(locationId || '');
+  if (!id) throw new Error('locationId requis');
+  return request(`/admin/business/${encodeURIComponent(id)}/boosts`, { method: 'POST', body });
 }
 
 // FEATURE FLAGS

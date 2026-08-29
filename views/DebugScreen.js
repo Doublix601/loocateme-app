@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useContext } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,25 +14,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import Constants from 'expo-constants';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
-  getAllUsers,
-  setUserPremium,
   searchUsers,
   invalidateApiCacheByPrefix,
-  sendAdminPush,
-  registerPushToken,
   getAdminFlags,
   setFeatureFlag,
   setUserRole,
   unbanUser,
+  setUserPremium,
+  adminSetPremium,
+  adminSetConsumables,
+  adminSetAccountFlags,
+  adminGetUserBusiness,
+  adminSetBusinessTier,
+  adminSetBusinessBoosts,
   triggerLocationSync,
 } from '../components/ApiRequest';
-import { resetOnboarding, resetProfileOnboarding } from '../utils/onboarding';
+import { resetOnboarding, resetProfileOnboarding, resetLocationPrimer } from '../utils/onboarding';
 import { subscribe, publish } from '../components/EventBus';
-import { sendLocalNotification } from '../components/notifications';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
-import { UserContext } from '../components/contexts/UserContext';
 import { useLocale } from '../components/contexts/LocalizationContext';
 
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -43,6 +44,16 @@ import { usePremiumAccess } from '../hooks/usePremiumAccess';
 
 const NUDGE_SIGNALS = ['radius_limited', 'profile_views', 'consumables_depleted', 'periodic_home'];
 
+// Paliers d'abonnement pro (cf. Location.businessTier côté backend) et libellés
+// des boosts pro rechargeables (cf. src/constants/boosts.js : caps ultra 1 / pro 3 / event 1).
+const BUSINESS_TIERS = ['none', 'pro1', 'pro2', 'pro3'];
+const PRO_BOOST_TYPES = [
+  { key: 'ultra', label: 'Ultra', field: 'ultraBoostBalance', cap: 1 },
+  { key: 'pro', label: 'Pro', field: 'proBoostBalance', cap: 3 },
+  { key: 'event', label: 'Event', field: 'eventBoostBalance', cap: 1 },
+];
+const PREMIUM_SOURCES = ['paid', 'trial', 'referral_reward', 'promo', 'null'];
+
 export { DEBUG_CONFIG } from '../services/DebugConfig';
 
 const DebugScreen = () => {
@@ -50,34 +61,12 @@ const DebugScreen = () => {
   const { colors, isDark } = useTheme();
   const { refresh: refreshFlags } = useFeatureFlags();
   const { locale } = useLocale();
-  const { user: currentUser } = useContext(UserContext);
   const { isPremium: nudgeIsPremium, premiumSystemEnabled: nudgePremiumSystemEnabled } = usePremiumAccess();
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [users, setUsers] = useState([]);
   // Feature flags state
   const [flags, setFlags] = useState([]);
   const [flagsLoading, setFlagsLoading] = useState(false);
   const [flagsError, setFlagsError] = useState(null);
-  // Formulaire push
-  const [pushTitle, setPushTitle] = useState('Test push');
-  const [pushBody, setPushBody] = useState('Ceci est un test');
-  const [pushDeepLink, setPushDeepLink] = useState('');
-  const [pushTokens, setPushTokens] = useState(''); // CSV
-  const [pushUserIds, setPushUserIds] = useState(''); // CSV
-  const [pushData, setPushData] = useState(''); // JSON facultatif
-  const [pushImageUrl, setPushImageUrl] = useState('');
-  const [pushSound, setPushSound] = useState('default');
-  const [pushBadge, setPushBadge] = useState('');
-  const [pushChannelId, setPushChannelId] = useState('default');
-  const [pushPriority, setPushPriority] = useState('high'); // 'high' | 'normal'
-  const [pushCollapseKey, setPushCollapseKey] = useState('');
-  const [pushMutable, setPushMutable] = useState(false);
-  const [pushContentAvail, setPushContentAvail] = useState(false);
-  const [sendingPush, setSendingPush] = useState(false);
-  const [pushResponse, setPushResponse] = useState(null);
-  const [currentPushToken, setCurrentPushToken] = useState('Chargement...');
-  const [registering, setRegistering] = useState(false);
   // IAP debug state
   const [iapDisabled, setIapDisabled] = useState(DEBUG_CONFIG.IAP_DISABLED);
   const [forcePremium, setForcePremium] = useState(DEBUG_CONFIG.FORCE_PREMIUM);
@@ -87,51 +76,20 @@ const DebugScreen = () => {
   // Premium nudges debug state
   const [nudgeState, setNudgeState] = useState(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const mod = await import('expo-notifications');
-        const Notifications = mod?.default ?? mod;
-        const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
-        const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-        setCurrentPushToken(res?.data || res?.token || String(res));
-      } catch (e) {
-        setCurrentPushToken('Erreur: ' + e.message);
-      }
-    })();
-  }, []);
-
-  const onForceRegister = async () => {
-    try {
-      setRegistering(true);
-      const mod = await import('expo-notifications');
-      const Notifications = mod?.default ?? mod;
-      const projectId = Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
-      const res = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
-      const token = res?.data || res?.token || String(res);
-      setCurrentPushToken(token);
-      await registerPushToken({ token, platform: Platform.OS });
-      Alert.alert('Succès', 'Token envoyé au serveur');
-    } catch (e) {
-      Alert.alert('Erreur', e.message);
-    } finally {
-      setRegistering(false);
-    }
-  };
-  // Local notifications (expo-notifications)
-  const [locTitle, setLocTitle] = useState('Notif locale');
-  const [locBody, setLocBody] = useState('Ceci est une notification locale');
-  const [locDeepLink, setLocDeepLink] = useState('');
-  const [locDelaySec, setLocDelaySec] = useState('0');
-  const [sendingLocal, setSendingLocal] = useState(false);
-  const notificationsRef = useRef(null);
-  const localNotifSetupRef = useRef(false);
   // Recherche utilisateur
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const debRef = useRef(null);
+  // Édition premium du compte sélectionné
+  const [expiresPickerOpen, setExpiresPickerOpen] = useState(false);
+  // Consommables app (ajout de quantité)
+  const [boostDelta, setBoostDelta] = useState('1');
+  const [superlikeDelta, setSuperlikeDelta] = useState('1');
+  // Compte pro du compte sélectionné
+  const [business, setBusiness] = useState(null); // { location } | { location: null } | null
+  const [businessLoading, setBusinessLoading] = useState(false);
 
   const loadPremiumStatus = () => {
     try {
@@ -190,73 +148,22 @@ const DebugScreen = () => {
     }
   };
 
-  const runAllApiUsers = async () => {
-    try {
-      setLoading(true);
-      setResult(null);
-      const res = await getAllUsers({ page: 1, limit: 100 });
-      setResult(res);
-      setUsers(Array.isArray(res?.items) ? res.items : []);
-    } catch (e) {
-      console.error('[DebugScreen] All API users error', e);
-      Alert.alert('Erreur', e?.message || 'Impossible de récupérer les utilisateurs.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Charger systématiquement des données fraîches à l'ouverture de l'écran
+  useEffect(() => {
+    loadFlags();
+    loadPremiumStatus();
+    loadNudgeState();
+  }, []);
 
-  const togglePremium = async (userId, isPremium) => {
-    try {
-      setLoading(true);
-      await setUserPremium(userId, isPremium);
-      // Optimistic update
-      setUsers((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, isPremium } : u)));
-      setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, isPremium } : u)));
-      setSelectedUser((prev) =>
-        prev && String(prev._id || prev.id) === String(userId) ? { ...prev, isPremium } : prev,
-      );
-      // Invalidate admin cache to avoid stale data and refetch
-      try {
-        invalidateApiCacheByPrefix('/api/admin');
-      } catch (_) {}
-      try {
-        await runAllApiUsers();
-      } catch (_) {}
-    } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de changer le rôle.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Réagir au signal global de reload UI pour rafraîchir les listes (utile si on modifie son propre plan)
   useEffect(() => {
     const off = subscribe('ui:reload', () => {
-      try {
-        runAllApiUsers();
-      } catch (_) {}
+      loadPremiumStatus();
     });
     return () => {
       try {
         off && off();
       } catch (_) {}
     };
-  }, []);
-
-  // Charger systématiquement des données fraîches à l'ouverture de l'écran
-  useEffect(() => {
-    try {
-      runAllApiUsers();
-    } catch (_) {}
-    try {
-      loadFlags();
-    } catch (_) {}
-    try {
-      loadPremiumStatus();
-    } catch (_) {}
-    try {
-      loadNudgeState();
-    } catch (_) {}
   }, []);
 
   // Load feature flags from admin endpoint
@@ -279,9 +186,7 @@ const DebugScreen = () => {
     try {
       setFlagsLoading(true);
       await setFeatureFlag(key, !currentValue);
-      // Refresh flags list
       await loadFlags();
-      // Refresh global context so all screens get updated
       refreshFlags({ force: true });
       Alert.alert('Succès', `Flag "${key}" mis à jour`);
     } catch (e) {
@@ -304,96 +209,202 @@ const DebugScreen = () => {
     );
   };
 
-  // Change user role (admin/moderator/user)
-  const changeUserRole = async (userId, role) => {
+  // --- Compte sélectionné : helpers de mise à jour locale --------------------
+
+  const patchSelectedUser = (patch) => {
+    setSelectedUser((prev) => (prev ? { ...prev, ...patch } : prev));
+    setResults((prev) =>
+      prev.map((u) =>
+        String(u._id || u.id) === String(selectedUser?._id || selectedUser?.id) ? { ...u, ...patch } : u,
+      ),
+    );
+  };
+
+  const withUserAction = async (fn, successMsg) => {
+    const id = selectedUser?._id || selectedUser?.id;
+    if (!id) return;
     try {
       setLoading(true);
-      await setUserRole(userId, role);
-      // Optimistic update
-      setUsers((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, role } : u)));
-      setResults((prev) => prev.map((u) => (String(u._id) === String(userId) ? { ...u, role } : u)));
-      setSelectedUser((prev) => (prev && String(prev._id || prev.id) === String(userId) ? { ...prev, role } : prev));
-      // Invalidate admin cache and refetch
+      await fn(id);
       try {
         invalidateApiCacheByPrefix('/api/admin');
       } catch (_) {}
-      try {
-        await runAllApiUsers();
-      } catch (_) {}
-      Alert.alert('Succès', `Rôle mis à jour: ${role}`);
+      if (successMsg) Alert.alert('Succès', successMsg);
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de changer le rôle.');
+      Alert.alert('Erreur', e?.message || 'Action impossible.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUnban = async (userId) => {
+  const togglePremium = (isPremium) =>
+    withUserAction(async (id) => {
+      await setUserPremium(id, isPremium);
+      patchSelectedUser({ isPremium });
+    }, `Premium ${isPremium ? 'activé' : 'retiré'}`);
+
+  const changeUserRole = (role) =>
+    withUserAction(async (id) => {
+      await setUserRole(id, role);
+      patchSelectedUser({ role });
+    }, `Rôle : ${role}`);
+
+  const handleUnban = () =>
+    withUserAction(async (id) => {
+      await unbanUser(id);
+      patchSelectedUser({
+        moderation: {
+          ...(selectedUser.moderation || {}),
+          bannedUntil: null,
+          bannedPermanent: false,
+          bannedAt: null,
+          bannedBy: null,
+          banReason: '',
+        },
+      });
+    }, 'Utilisateur débanni.');
+
+  const setPremiumSource = (source) =>
+    withUserAction(async (id) => {
+      const value = source === 'null' ? null : source;
+      const res = await adminSetPremium(id, { premiumSource: value });
+      patchSelectedUser({ premiumSource: res?.user?.premiumSource ?? value });
+    }, 'Source premium mise à jour');
+
+  const setPremiumExpiry = (date) =>
+    withUserAction(async (id) => {
+      const iso = date ? new Date(date).toISOString() : null;
+      const res = await adminSetPremium(id, { premiumExpiresAt: iso });
+      patchSelectedUser({ premiumExpiresAt: res?.user?.premiumExpiresAt ?? iso });
+    }, date ? 'Expiration premium mise à jour' : 'Expiration premium effacée');
+
+  const quickPremium = (days) => {
+    const d = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    return withUserAction(async (id) => {
+      const res = await adminSetPremium(id, {
+        isPremium: true,
+        premiumSource: 'promo',
+        premiumExpiresAt: d.toISOString(),
+      });
+      patchSelectedUser({
+        isPremium: true,
+        premiumSource: res?.user?.premiumSource ?? 'promo',
+        premiumExpiresAt: res?.user?.premiumExpiresAt ?? d.toISOString(),
+      });
+    }, `Premium accordé ${days} jours`);
+  };
+
+  const expireNow = () =>
+    withUserAction(async (id) => {
+      const past = new Date(Date.now() - 60 * 1000).toISOString();
+      const res = await adminSetPremium(id, { isPremium: false, premiumExpiresAt: past });
+      patchSelectedUser({ isPremium: false, premiumExpiresAt: res?.user?.premiumExpiresAt ?? past });
+    }, 'Premium expiré');
+
+  const startTrialForUser = () =>
+    withUserAction(async (id) => {
+      const now = new Date();
+      const end = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const res = await adminSetPremium(id, {
+        premiumTrialStart: now.toISOString(),
+        premiumTrialEnd: end.toISOString(),
+      });
+      patchSelectedUser({
+        premiumTrialStart: res?.user?.premiumTrialStart ?? now.toISOString(),
+        premiumTrialEnd: res?.user?.premiumTrialEnd ?? end.toISOString(),
+      });
+    }, 'Essai gratuit démarré (7 j)');
+
+  const resetTrialForUser = () =>
+    withUserAction(async (id) => {
+      const res = await adminSetPremium(id, { premiumTrialStart: null, premiumTrialEnd: null });
+      patchSelectedUser({
+        premiumTrialStart: res?.user?.premiumTrialStart ?? null,
+        premiumTrialEnd: res?.user?.premiumTrialEnd ?? null,
+      });
+    }, "Éligibilité à l'essai réinitialisée");
+
+  const addConsumables = (mode) =>
+    withUserAction(async (id) => {
+      const body = {
+        mode,
+        boost: boostDelta === '' ? undefined : Number(boostDelta),
+        superlike: superlikeDelta === '' ? undefined : Number(superlikeDelta),
+      };
+      const res = await adminSetConsumables(id, body);
+      patchSelectedUser({ boostBalance: res?.boostBalance, superlikeBalance: res?.superlikeBalance });
+    }, mode === 'set' ? 'Soldes définis' : 'Soldes ajustés');
+
+  const toggleAccountFlag = (field, value) =>
+    withUserAction(async (id) => {
+      const res = await adminSetAccountFlags(id, { [field]: value });
+      patchSelectedUser({ [field]: res?.user?.[field] ?? value });
+    }, 'Flag de compte mis à jour');
+
+  // --- Compte pro ----------------------------------------------------------
+
+  const loadBusiness = async (userId) => {
+    if (!userId) return;
     try {
-      setLoading(true);
-      await unbanUser(userId);
-      setUsers((prev) =>
-        prev.map((u) =>
-          String(u._id) === String(userId)
-            ? {
-                ...u,
-                moderation: {
-                  ...(u.moderation || {}),
-                  bannedUntil: null,
-                  bannedPermanent: false,
-                  bannedAt: null,
-                  bannedBy: null,
-                  banReason: '',
-                },
-              }
-            : u,
-        ),
-      );
-      setResults((prev) =>
-        prev.map((u) =>
-          String(u._id) === String(userId)
-            ? {
-                ...u,
-                moderation: {
-                  ...(u.moderation || {}),
-                  bannedUntil: null,
-                  bannedPermanent: false,
-                  bannedAt: null,
-                  bannedBy: null,
-                  banReason: '',
-                },
-              }
-            : u,
-        ),
-      );
-      setSelectedUser((prev) =>
-        prev && String(prev._id || prev.id) === String(userId)
-          ? {
-              ...prev,
-              moderation: {
-                ...(prev.moderation || {}),
-                bannedUntil: null,
-                bannedPermanent: false,
-                bannedAt: null,
-                bannedBy: null,
-                banReason: '',
-              },
-            }
-          : prev,
-      );
-      try {
-        invalidateApiCacheByPrefix('/api/admin');
-      } catch (_) {}
-      try {
-        await runAllApiUsers();
-      } catch (_) {}
-      Alert.alert('Succès', 'Utilisateur débanni.');
+      setBusinessLoading(true);
+      const res = await adminGetUserBusiness(userId);
+      setBusiness(res || { location: null });
     } catch (e) {
-      Alert.alert('Erreur', e?.message || 'Impossible de lever le ban.');
+      setBusiness({ location: null, error: e?.message || 'Erreur' });
     } finally {
-      setLoading(false);
+      setBusinessLoading(false);
     }
   };
+
+  useEffect(() => {
+    setBusiness(null);
+    setExpiresPickerOpen(false);
+    const id = selectedUser?._id || selectedUser?.id;
+    if (id) loadBusiness(id);
+  }, [selectedUser?._id, selectedUser?.id]);
+
+  const stripeActive =
+    business?.location?.subscription?.stripeSubscriptionId &&
+    ['active', 'trialing', 'past_due'].includes(business?.location?.subscription?.status);
+
+  const doSetBusinessTier = (tier, force = false) => {
+    const locId = business?.location?._id;
+    if (!locId) return;
+    return withUserAction(async () => {
+      try {
+        const res = await adminSetBusinessTier(locId, { businessTier: tier, grantProOffers: tier !== 'none', force });
+        setBusiness((prev) => ({ ...prev, location: { ...prev.location, ...res.location } }));
+      } catch (e) {
+        if (e?.code === 'STRIPE_SUBSCRIPTION_ACTIVE' || /STRIPE_SUBSCRIPTION_ACTIVE/.test(e?.message || '')) {
+          Alert.alert(
+            'Abonnement Stripe actif',
+            "L'override sera écrasé au prochain webhook Stripe. Forcer quand même ?",
+            [
+              { text: 'Annuler', style: 'cancel' },
+              { text: 'Forcer', style: 'destructive', onPress: () => doSetBusinessTier(tier, true) },
+            ],
+          );
+          return;
+        }
+        throw e;
+      }
+    }, `Palier pro : ${tier}`);
+  };
+
+  const setProBoost = (type, mode) => {
+    const locId = business?.location?._id;
+    if (!locId) return;
+    const cap = PRO_BOOST_TYPES.find((b) => b.key === type)?.cap ?? 1;
+    return withUserAction(async () => {
+      const res = await adminSetBusinessBoosts(locId, { mode, [type]: mode === 'set' ? cap : 1 });
+      setBusiness((prev) => ({
+        ...prev,
+        location: { ...prev.location, proOffers: { ...(prev.location.proOffers || {}), ...res.proOffers } },
+      }));
+    }, 'Boosts pro mis à jour');
+  };
+
+  // --- Maintenance / appareil --------------------------------------------
 
   const handleResetOnboarding = async () => {
     await resetOnboarding();
@@ -405,12 +416,16 @@ const DebugScreen = () => {
     Alert.alert('Onboarding profil réinitialisé', "Au prochain affichage du profil, les coach marks s'afficheront.");
   };
 
+  const handleResetLocationPrimer = async () => {
+    await resetLocationPrimer();
+    Alert.alert('Écran localisation réinitialisé', "L'écran d'accroche localisation s'affichera à nouveau.");
+  };
+
   const handleSyncLocations = async () => {
     try {
       setLoading(true);
       const res = await triggerLocationSync();
       Alert.alert('Sync terminée', res?.message || 'Stats lieux recalculées.');
-      setResult(res);
     } catch (e) {
       Alert.alert('Erreur', e?.message || 'Impossible de déclencher la sync.');
     } finally {
@@ -431,8 +446,7 @@ const DebugScreen = () => {
       try {
         setSearching(true);
         const res = await searchUsers({ q });
-        const list = Array.isArray(res?.users) ? res.users : [];
-        setResults(list);
+        setResults(Array.isArray(res?.users) ? res.users : []);
       } catch (_e) {
         setResults([]);
       } finally {
@@ -444,145 +458,6 @@ const DebugScreen = () => {
     };
   }, [query]);
 
-  async function ensureLocalNotifSetup() {
-    if (localNotifSetupRef.current && notificationsRef.current) return true;
-    try {
-      const mod = await import('expo-notifications');
-      // Support both ESM and CommonJS interop just in case
-      const Notifications = mod?.default ?? mod;
-      // Always show alert in foreground (for testing)
-      try {
-        Notifications.setNotificationHandler?.({
-          handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: false,
-          }),
-        });
-      } catch (_) {}
-      // Android channel
-      if (Platform.OS === 'android') {
-        try {
-          await Notifications.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notifications.AndroidImportance?.HIGH || 4,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#FF231F7C',
-            sound: 'default',
-          });
-        } catch (_) {}
-      }
-      notificationsRef.current = Notifications;
-      localNotifSetupRef.current = true;
-      return true;
-    } catch (e) {
-      Alert.alert(
-        'Module manquant',
-        "Le module 'expo-notifications' n'est pas installé. Exécute: npx expo install expo-notifications",
-      );
-      return false;
-    }
-  }
-
-  const onSendLocalNotification = async () => {
-    try {
-      setSendingLocal(true);
-
-      // 1. Vérification initiale
-      const ok = await ensureLocalNotifSetup();
-      if (!ok) return;
-
-      // 2. Préparation du contenu
-      const content = {
-        title: locTitle?.trim() || 'LoocateMe',
-        body: locBody?.trim() || 'Ceci est un test de notification',
-        data: locDeepLink?.trim() ? { deepLink: locDeepLink.trim() } : {},
-      };
-
-      const delay = Math.max(0, parseInt(String(locDelaySec || '0'), 10));
-
-      // 3. Logique par plateforme
-      if (Platform.OS === 'ios' || Platform.OS === 'android') {
-        try {
-          await sendLocalNotification(content, { delaySeconds: delay });
-
-          const msg = delay > 0 ? `Notification programmée dans ${delay}s` : 'Notification affichée immédiatement';
-          Alert.alert('Succès', msg);
-        } catch (err) {
-          console.error('Détails erreur native:', err);
-          Alert.alert('Erreur Native', err.message);
-        }
-      } else if (Platform.OS === 'web') {
-        // Fallback Web
-        if (typeof window !== 'undefined' && 'Notification' in window) {
-          if (window.Notification.permission !== 'granted') {
-            await window.Notification.requestPermission();
-          }
-
-          const deliverWeb = () => {
-            if (window.Notification.permission === 'granted') {
-              new window.Notification(content.title, { body: content.body });
-            }
-          };
-
-          if (delay > 0) {
-            setTimeout(deliverWeb, delay * 1000);
-            Alert.alert('Web', `Programmé dans ${delay}s`);
-          } else {
-            deliverWeb();
-          }
-        } else {
-          Alert.alert('Non supporté', 'Notifications non disponibles sur ce navigateur.');
-        }
-      }
-    } catch (e) {
-      console.error(e);
-      Alert.alert('Erreur', e?.message || 'Une erreur inconnue est survenue');
-    } finally {
-      setSendingLocal(false);
-    }
-  };
-
-  const onSendPush = async () => {
-    try {
-      setSendingPush(true);
-      setPushResponse(null);
-      let extra = {};
-      if (pushData && pushData.trim()) {
-        try {
-          extra = JSON.parse(pushData);
-        } catch (_) {
-          extra = {};
-        }
-      }
-      if (pushDeepLink && pushDeepLink.trim()) {
-        extra = { ...extra, deepLink: pushDeepLink.trim() };
-      }
-      const body = {
-        title: pushTitle || undefined,
-        body: pushBody || undefined,
-        userIds: pushUserIds,
-        tokens: pushTokens,
-        data: extra,
-        imageUrl: pushImageUrl || undefined,
-        sound: pushSound || undefined,
-        badge: pushBadge ? Number(pushBadge) : undefined,
-        androidChannelId: pushChannelId || undefined,
-        priority: pushPriority === 'normal' ? 'normal' : 'high',
-        collapseKey: pushCollapseKey || undefined,
-        mutableContent: !!pushMutable,
-        contentAvailable: !!pushContentAvail,
-      };
-      const res = await sendAdminPush(body);
-      setPushResponse(res);
-      Alert.alert('Push envoyé', 'La requête a été envoyée au backend.');
-    } catch (e) {
-      Alert.alert('Erreur push', e?.message || 'Envoi impossible');
-    } finally {
-      setSendingPush(false);
-    }
-  };
-
   const borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)';
   const subTextColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
   const cardBg = isDark ? 'rgba(255,255,255,0.05)' : colors.surface;
@@ -591,6 +466,17 @@ const DebugScreen = () => {
   const sectionTitleStyle = [styles.sectionTitle, { color: isDark ? '#fff' : colors.textPrimary, opacity: 1 }];
   const textStyle = { color: isDark ? '#fff' : colors.textPrimary };
   const subTextStyle = { color: isDark ? '#eee' : subTextColor };
+
+  const fmtDate = (d) => {
+    if (!d) return '—';
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? '—' : dt.toLocaleString(locale);
+  };
+  const userLabel = (u) =>
+    u?.username || u?.customName || u?.firstName || u?.email || 'Utilisateur';
+
+  const selName = selectedUser ? userLabel(selectedUser) : '';
+  const proOffers = business?.location?.proOffers || {};
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
@@ -613,13 +499,7 @@ const DebugScreen = () => {
           />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: isDark ? '#fff' : colors.textPrimary }]}>Debug</Text>
-        <TouchableOpacity
-          onPress={() => {
-            runAllApiUsers();
-            loadFlags();
-          }}
-          style={{ padding: 8 }}
-        >
+        <TouchableOpacity onPress={loadFlags} style={{ padding: 8 }}>
           <Text style={{ color: '#00c2cb', fontWeight: 'bold' }}>Sync</Text>
         </TouchableOpacity>
       </View>
@@ -817,270 +697,7 @@ const DebugScreen = () => {
           </>
         )}
 
-        {/* Test notifications locales */}
-        <Text style={sectionTitleStyle}>Test notifications locales</Text>
-        <View style={cardStyle}>
-          <LabeledInput
-            label="Titre"
-            value={locTitle}
-            onChangeText={setLocTitle}
-            placeholder="Titre"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledInput
-            label="Message"
-            value={locBody}
-            onChangeText={setLocBody}
-            placeholder="Texte de la notification"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledInput
-            label="Deep link"
-            value={locDeepLink}
-            onChangeText={setLocDeepLink}
-            placeholder="ex: loocate://home"
-            colors={colors}
-            isDark={isDark}
-          />
-          <View style={{ flexDirection: 'row' }}>
-            <View style={{ width: 140 }}>
-              <LabeledInput
-                label="Délai (s)"
-                value={String(locDelaySec)}
-                onChangeText={setLocDelaySec}
-                placeholder="0"
-                keyboardType="numeric"
-                colors={colors}
-                isDark={isDark}
-              />
-            </View>
-          </View>
-          <TouchableOpacity
-            style={[
-              styles.cmdBtn,
-              sendingLocal ? styles.btnDisabled : null,
-              { backgroundColor: '#00c2cb', borderColor: 'transparent' },
-            ]}
-            onPress={onSendLocalNotification}
-            disabled={sendingLocal}
-          >
-            <Text style={styles.cmdTxt}>
-              {sendingLocal
-                ? 'Envoi…'
-                : parseInt(String(locDelaySec || '0'), 10) > 0
-                  ? `Programmer dans ${parseInt(String(locDelaySec || '0'), 10)}s`
-                  : 'Afficher maintenant'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={sectionTitleStyle}>Expo Push Token</Text>
-        <View style={cardStyle}>
-          <Text style={[{ fontSize: 12, marginBottom: 4 }, subTextStyle]}>Token actuel :</Text>
-          <TextInput
-            style={[
-              styles.input,
-              {
-                height: 'auto',
-                minHeight: 40,
-                fontSize: 11,
-                color: isDark ? '#fff' : colors.textPrimary,
-                backgroundColor: colors.background,
-                padding: 8,
-                borderRadius: 8,
-                borderColor: borderColor,
-                borderWidth: 1,
-              },
-            ]}
-            value={currentPushToken}
-            multiline
-            editable={false}
-          />
-          <TouchableOpacity
-            style={[
-              styles.cmdBtn,
-              registering ? styles.btnDisabled : null,
-              { marginTop: 10, backgroundColor: '#4a90e2', borderColor: 'transparent' },
-            ]}
-            onPress={onForceRegister}
-            disabled={registering}
-          >
-            {registering && <ActivityIndicator size="small" color="#fff" style={{ marginRight: 10 }} />}
-            <Text style={styles.cmdTxt}>Forcer l'envoi au serveur</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={sectionTitleStyle}>Test notifications (push)</Text>
-        <View style={cardStyle}>
-          <LabeledInput
-            label="Titre"
-            value={pushTitle}
-            onChangeText={setPushTitle}
-            placeholder="Titre"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledInput
-            label="Message"
-            value={pushBody}
-            onChangeText={setPushBody}
-            placeholder="Texte du push"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledInput
-            label="Deep link"
-            value={pushDeepLink}
-            onChangeText={setPushDeepLink}
-            placeholder="ex: loocate://home"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledInput
-            label="Tokens (CSV)"
-            value={pushTokens}
-            onChangeText={setPushTokens}
-            placeholder="token1,token2"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledInput
-            label="User IDs (CSV)"
-            value={pushUserIds}
-            onChangeText={setPushUserIds}
-            placeholder="id1,id2"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledInput
-            label="Image URL"
-            value={pushImageUrl}
-            onChangeText={setPushImageUrl}
-            placeholder="https://..."
-            colors={colors}
-            isDark={isDark}
-          />
-
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              <LabeledInput
-                label="Son"
-                value={pushSound}
-                onChangeText={setPushSound}
-                placeholder="default"
-                colors={colors}
-                isDark={isDark}
-              />
-            </View>
-            <View style={{ width: 120 }}>
-              <LabeledInput
-                label="Badge"
-                value={String(pushBadge)}
-                onChangeText={setPushBadge}
-                placeholder="ex: 1"
-                keyboardType="numeric"
-                colors={colors}
-                isDark={isDark}
-              />
-            </View>
-          </View>
-
-          <View style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              <LabeledInput
-                label="Channel"
-                value={pushChannelId}
-                onChangeText={setPushChannelId}
-                placeholder="default"
-                colors={colors}
-                isDark={isDark}
-              />
-            </View>
-            <View style={{ flex: 1 }}>
-              <LabeledInput
-                label="Priorité"
-                value={pushPriority}
-                onChangeText={setPushPriority}
-                placeholder="high|normal"
-                colors={colors}
-                isDark={isDark}
-              />
-            </View>
-          </View>
-
-          <LabeledInput
-            label="Collapse key"
-            value={pushCollapseKey}
-            onChangeText={setPushCollapseKey}
-            placeholder="clé de regroupement"
-            colors={colors}
-            isDark={isDark}
-          />
-          <LabeledTextArea
-            label="Data JSON (optionnel)"
-            value={pushData}
-            onChangeText={setPushData}
-            placeholder='{"kind":"demo"}'
-            colors={colors}
-            isDark={isDark}
-          />
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 10 }}>
-            <TouchableOpacity
-              onPress={() => setPushMutable((v) => !v)}
-              style={[styles.smallBtn, { flex: 1, backgroundColor: pushMutable ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}
-            >
-              <Text style={styles.smallBtnTxt}>Mutable: {pushMutable ? 'ON' : 'OFF'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setPushContentAvail((v) => !v)}
-              style={[styles.smallBtn, { flex: 1, backgroundColor: pushContentAvail ? '#2ecc71' : 'rgba(0,0,0,0.1)' }]}
-            >
-              <Text style={styles.smallBtnTxt}>Avail: {pushContentAvail ? 'ON' : 'OFF'}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.cmdBtn,
-              sendingPush ? styles.btnDisabled : null,
-              { backgroundColor: '#00c2cb', borderColor: 'transparent', marginTop: 15 },
-            ]}
-            onPress={onSendPush}
-            disabled={sendingPush}
-          >
-            <Text style={styles.cmdTxt}>{sendingPush ? 'Envoi…' : 'Envoyer la notification'}</Text>
-          </TouchableOpacity>
-
-          {/* Result blocks */}
-          {pushResponse && (
-            <View
-              style={[
-                styles.resultBox,
-                { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor: borderColor },
-              ]}
-            >
-              <Text style={[styles.resultTitle, textStyle]}>Réponse envoi</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{
-                  backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)',
-                  borderRadius: 10,
-                  padding: 10,
-                  marginTop: 5,
-                }}
-              >
-                <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                  {JSON.stringify(pushResponse, null, 2)}
-                </Text>
-              </ScrollView>
-            </View>
-          )}
-        </View>
-
+        {/* ============ Recherche utilisateur (debug) ============ */}
         <Text style={sectionTitleStyle}>Recherche utilisateur (debug)</Text>
         <View
           style={[
@@ -1096,11 +713,15 @@ const DebugScreen = () => {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Nom, prénom, username..."
+            placeholder="Nom, prénom, username, email..."
             placeholderTextColor={isDark ? '#999' : subTextColor}
+            autoCapitalize="none"
             style={[styles.input, textStyle]}
           />
         </View>
+        <Text style={[{ fontSize: 11, marginTop: 6 }, subTextStyle]}>
+          Note : les comptes en mode invisible n'apparaissent pas dans la recherche.
+        </Text>
 
         {searching ? (
           <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 15 }} />
@@ -1114,7 +735,7 @@ const DebugScreen = () => {
                   onPress={() => setSelectedUser(u)}
                 >
                   <Text style={[styles.resultName, { color: colors.textPrimary }]} numberOfLines={1}>
-                    {u.username || u.customName || u.firstName || u.email || 'Utilisateur'}
+                    {userLabel(u)}
                   </Text>
                   <View style={[styles.badge, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]}>
                     <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
@@ -1129,15 +750,23 @@ const DebugScreen = () => {
 
         {selectedUser && (
           <View style={[styles.selectedBox, { backgroundColor: colors.surface, borderColor: '#00c2cb' }]}>
-            <Text style={[styles.selectedTitle, subTextStyle]}>Utilisateur sélectionné</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={[styles.selectedTitle, subTextStyle]}>Compte sélectionné</Text>
+              <TouchableOpacity onPress={() => setSelectedUser(null)}>
+                <Text style={{ color: '#00c2cb', fontWeight: '800', fontSize: 12 }}>Fermer ✕</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={[styles.selectedName, textStyle]} numberOfLines={1}>
-              {selectedUser.username ||
-                selectedUser.customName ||
-                selectedUser.firstName ||
-                selectedUser.email ||
-                'Utilisateur'}
+              {selName}
+            </Text>
+            <Text style={[{ fontSize: 11 }, subTextStyle]} selectable>
+              {selectedUser.email || '—'} · id {String(selectedUser._id || selectedUser.id)}
             </Text>
 
+            {loading && <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 10 }} />}
+
+            {/* ---- Compte ---- */}
+            <Text style={[styles.subCardTitle, subTextStyle]}>Compte</Text>
             {(() => {
               const mod = selectedUser.moderation || {};
               const bannedPermanent = !!mod.bannedPermanent;
@@ -1151,13 +780,13 @@ const DebugScreen = () => {
                   ? `Ban jusqu'au ${bannedUntil.toLocaleString(locale)}`
                   : 'Non banni';
               return (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>
+                <View style={styles.rowWrap}>
                   <View style={[styles.badge, { backgroundColor: isBanned ? '#ff4d4d' : 'rgba(0,0,0,0.1)' }]}>
                     <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{banLabel}</Text>
                   </View>
                   <TouchableOpacity
                     style={[styles.smallBtn, { backgroundColor: '#16a085' }, !isBanned && { opacity: 0.3 }]}
-                    onPress={() => handleUnban(selectedUser._id || selectedUser.id)}
+                    onPress={handleUnban}
                     disabled={!isBanned}
                   >
                     <Text style={styles.smallBtnTxt}>Unban</Text>
@@ -1166,67 +795,254 @@ const DebugScreen = () => {
               );
             })()}
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>
-              <View style={[styles.badge, { backgroundColor: selectedUser.isPremium ? '#2ecc71' : '#3498db' }]}>
-                <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
-                  {selectedUser.isPremium ? 'Premium' : 'Free'}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={[styles.smallBtn, { backgroundColor: '#2ecc71' }]}
-                onPress={() => togglePremium(selectedUser._id || selectedUser.id, true)}
-              >
-                <Text style={styles.smallBtnTxt}>Set Premium</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.smallBtn, { backgroundColor: '#3498db' }]}
-                onPress={() => togglePremium(selectedUser._id || selectedUser.id, false)}
-              >
-                <Text style={styles.smallBtnTxt}>Set Free</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 10 }}>
+            <View style={styles.rowWrap}>
               <View style={[styles.badge, { backgroundColor: '#e67e22' }]}>
                 <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{selectedUser.role || 'user'}</Text>
               </View>
+              {['admin', 'moderator', 'user'].map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={[
+                    styles.smallBtn,
+                    { backgroundColor: r === 'admin' ? '#c0392b' : r === 'moderator' ? '#8e44ad' : '#7f8c8d' },
+                    (selectedUser.role || 'user') === r && { opacity: 0.35 },
+                  ]}
+                  onPress={() => changeUserRole(r)}
+                  disabled={(selectedUser.role || 'user') === r}
+                >
+                  <Text style={styles.smallBtnTxt}>{r === 'moderator' ? 'Mod' : r === 'admin' ? 'Admin' : 'User'}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.rowWrap}>
+              <Text style={[styles.inlineLabel, textStyle]}>Invisible</Text>
+              <Switch
+                value={!!selectedUser.invisibleMode}
+                onValueChange={(v) => toggleAccountFlag('invisibleMode', v)}
+                trackColor={{ false: '#3e3e3e', true: '#9b59b6' }}
+                thumbColor="#fff"
+              />
+              <Text style={[styles.inlineLabel, textStyle, { marginLeft: 16 }]}>Check-in</Text>
               <TouchableOpacity
-                style={[styles.smallBtn, { backgroundColor: '#c0392b' }]}
-                onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'admin')}
+                style={[styles.smallBtn, { backgroundColor: '#34495e' }]}
+                onPress={() =>
+                  toggleAccountFlag('checkInMode', selectedUser.checkInMode === 'manual' ? 'auto' : 'manual')
+                }
               >
-                <Text style={styles.smallBtnTxt}>Admin</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.smallBtn, { backgroundColor: '#8e44ad' }]}
-                onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'moderator')}
-              >
-                <Text style={styles.smallBtnTxt}>Mod</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.smallBtn, { backgroundColor: '#7f8c8d' }]}
-                onPress={() => changeUserRole(selectedUser._id || selectedUser.id, 'user')}
-              >
-                <Text style={styles.smallBtnTxt}>User</Text>
+                <Text style={styles.smallBtnTxt}>{selectedUser.checkInMode === 'manual' ? 'manual' : 'auto'}</Text>
               </TouchableOpacity>
             </View>
+
+            {/* ---- Premium ---- */}
+            <Text style={[styles.subCardTitle, subTextStyle]}>Premium</Text>
+            <Text style={[{ fontSize: 12 }, subTextStyle]}>
+              {selectedUser.isPremium ? 'Premium actif' : 'Free'} · source {String(selectedUser.premiumSource ?? '—')}
+              {'\n'}expire : {fmtDate(selectedUser.premiumExpiresAt)}
+              {'\n'}essai : {fmtDate(selectedUser.premiumTrialStart)} → {fmtDate(selectedUser.premiumTrialEnd)}
+            </Text>
+
+            <View style={styles.rowWrap}>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#2ecc71' }]} onPress={() => togglePremium(true)}>
+                <Text style={styles.smallBtnTxt}>Set Premium</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#3498db' }]} onPress={() => togglePremium(false)}>
+                <Text style={styles.smallBtnTxt}>Set Free</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#16a085' }]} onPress={() => quickPremium(30)}>
+                <Text style={styles.smallBtnTxt}>+1 mois</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#16a085' }]} onPress={() => quickPremium(365)}>
+                <Text style={styles.smallBtnTxt}>+1 an</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#e74c3c' }]} onPress={expireNow}>
+                <Text style={styles.smallBtnTxt}>Expirer</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.rowWrap}>
+              <Text style={[styles.inlineLabel, textStyle]}>Source</Text>
+              {PREMIUM_SOURCES.map((s) => (
+                <TouchableOpacity
+                  key={s}
+                  style={[
+                    styles.smallBtn,
+                    { backgroundColor: '#8e44ad' },
+                    String(selectedUser.premiumSource ?? 'null') === s && { opacity: 0.35 },
+                  ]}
+                  onPress={() => setPremiumSource(s)}
+                >
+                  <Text style={styles.smallBtnTxt}>{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.rowWrap}>
+              <TouchableOpacity
+                style={[styles.smallBtn, { backgroundColor: '#34495e' }]}
+                onPress={() => setExpiresPickerOpen(true)}
+              >
+                <Text style={styles.smallBtnTxt}>Choisir date d'expiration</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#7f8c8d' }]} onPress={() => setPremiumExpiry(null)}>
+                <Text style={styles.smallBtnTxt}>Effacer expiration</Text>
+              </TouchableOpacity>
+            </View>
+            {expiresPickerOpen && (
+              <DateTimePicker
+                value={
+                  selectedUser.premiumExpiresAt && !isNaN(new Date(selectedUser.premiumExpiresAt).getTime())
+                    ? new Date(selectedUser.premiumExpiresAt)
+                    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                }
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={(event, date) => {
+                  setExpiresPickerOpen(Platform.OS === 'ios');
+                  if (event.type !== 'dismissed' && date) setPremiumExpiry(date);
+                }}
+              />
+            )}
+
+            <View style={styles.rowWrap}>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#f39c12' }]} onPress={startTrialForUser}>
+                <Text style={styles.smallBtnTxt}>Démarrer essai (7 j)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#7f8c8d' }]} onPress={resetTrialForUser}>
+                <Text style={styles.smallBtnTxt}>Réinitialiser essai</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* ---- Consommables (app) ---- */}
+            <Text style={[styles.subCardTitle, subTextStyle]}>Consommables (app)</Text>
+            <Text style={[{ fontSize: 12 }, subTextStyle]}>
+              boosts : {selectedUser.boostBalance ?? 0} · superlikes : {selectedUser.superlikeBalance ?? 0}
+            </Text>
+            <View style={[styles.rowWrap, { alignItems: 'center' }]}>
+              <Text style={[styles.inlineLabel, textStyle]}>Boosts</Text>
+              <TextInput
+                value={boostDelta}
+                onChangeText={setBoostDelta}
+                keyboardType="numbers-and-punctuation"
+                style={[styles.miniInput, textStyle, { borderColor }]}
+              />
+              <Text style={[styles.inlineLabel, textStyle]}>Superlikes</Text>
+              <TextInput
+                value={superlikeDelta}
+                onChangeText={setSuperlikeDelta}
+                keyboardType="numbers-and-punctuation"
+                style={[styles.miniInput, textStyle, { borderColor }]}
+              />
+            </View>
+            <View style={styles.rowWrap}>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#2ecc71' }]} onPress={() => addConsumables('add')}>
+                <Text style={styles.smallBtnTxt}>Ajouter</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.smallBtn, { backgroundColor: '#34495e' }]} onPress={() => addConsumables('set')}>
+                <Text style={styles.smallBtnTxt}>Définir</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* ---- Compte Pro ---- */}
+            <Text style={[styles.subCardTitle, subTextStyle]}>Compte Pro</Text>
+            {businessLoading ? (
+              <ActivityIndicator size="small" color="#00c2cb" style={{ marginTop: 6 }} />
+            ) : !business ? null : !business.location ? (
+              <Text style={[{ fontSize: 12 }, subTextStyle]}>
+                {business.error ? `Erreur : ${business.error}` : 'Ce compte ne gère aucun lieu.'}
+              </Text>
+            ) : (
+              <>
+                <Text style={[{ fontSize: 12 }, subTextStyle]}>
+                  {business.location.name || 'Lieu'} · palier {business.location.businessTier || 'none'}
+                  {'\n'}Stripe : {business.location.subscription?.status || '—'}
+                  {business.location.subscription?.stripeSubscriptionId
+                    ? ` (${business.location.subscription.stripeSubscriptionId})`
+                    : ''}
+                  {'\n'}fin de période : {fmtDate(business.location.subscription?.currentPeriodEnd)}
+                  {'\n'}boosts pro — ultra {proOffers.ultraBoostBalance ?? 0} / pro {proOffers.proBoostBalance ?? 0} / event{' '}
+                  {proOffers.eventBoostBalance ?? 0}
+                </Text>
+
+                {stripeActive && (
+                  <View style={styles.warnBox}>
+                    <Text style={styles.warnTxt}>
+                      ⚠️ Abonnement Stripe actif : l'override sera écrasé au prochain webhook. Utilise le dashboard Stripe
+                      pour un vrai changement.
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.rowWrap}>
+                  <Text style={[styles.inlineLabel, textStyle]}>Palier</Text>
+                  {BUSINESS_TIERS.map((tier) => (
+                    <TouchableOpacity
+                      key={tier}
+                      style={[
+                        styles.smallBtn,
+                        { backgroundColor: tier === 'none' ? '#7f8c8d' : '#2980b9' },
+                        business.location.businessTier === tier && { opacity: 0.35 },
+                      ]}
+                      onPress={() => doSetBusinessTier(tier)}
+                      disabled={business.location.businessTier === tier}
+                    >
+                      <Text style={styles.smallBtnTxt}>{tier}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {PRO_BOOST_TYPES.map((b) => (
+                  <View key={b.key} style={styles.rowWrap}>
+                    <Text style={[styles.inlineLabel, textStyle]}>
+                      {b.label} ({proOffers[b.field] ?? 0}/{b.cap})
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.smallBtn, { backgroundColor: '#2ecc71' }]}
+                      onPress={() => setProBoost(b.key, 'add')}
+                    >
+                      <Text style={styles.smallBtnTxt}>+1</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.smallBtn, { backgroundColor: '#34495e' }]}
+                      onPress={() => setProBoost(b.key, 'set')}
+                    >
+                      <Text style={styles.smallBtnTxt}>max</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </>
+            )}
           </View>
         )}
 
-        <Text style={[sectionTitleStyle, { marginTop: 25 }]}>Actions Globales</Text>
-        <TouchableOpacity
-          style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]}
-          onPress={handleResetOnboarding}
-        >
-          <Text style={styles.cmdTxt}>Réinitialiser l'onboarding (slides)</Text>
-        </TouchableOpacity>
+        {/* ============ Cet appareil ============ */}
+        <Text style={sectionTitleStyle}>Cet appareil</Text>
+        <View style={cardStyle}>
+          <Text style={[{ fontSize: 12, marginBottom: 12 }, subTextStyle]}>
+            Ces réinitialisations sont locales à cette installation (AsyncStorage), pas liées à un compte.
+          </Text>
+          <TouchableOpacity
+            style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]}
+            onPress={handleResetOnboarding}
+          >
+            <Text style={styles.cmdTxt}>Réinitialiser l'onboarding (slides)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]}
+            onPress={handleResetProfileOnboarding}
+          >
+            <Text style={styles.cmdTxt}>Réinitialiser l'onboarding profil (coach marks)</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent', marginBottom: 0 }]}
+            onPress={handleResetLocationPrimer}
+          >
+            <Text style={styles.cmdTxt}>Réinitialiser l'écran d'accroche localisation</Text>
+          </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          style={[styles.cmdBtn, { backgroundColor: '#2c3e50', borderColor: 'transparent' }]}
-          onPress={handleResetProfileOnboarding}
-        >
-          <Text style={styles.cmdTxt}>Réinitialiser l'onboarding profil (coach marks)</Text>
-        </TouchableOpacity>
-
+        {/* ============ Maintenance ============ */}
+        <Text style={sectionTitleStyle}>Maintenance</Text>
         <TouchableOpacity
           style={[styles.cmdBtn, { backgroundColor: '#8e44ad', borderColor: 'transparent' }]}
           onPress={handleSyncLocations}
@@ -1234,72 +1050,7 @@ const DebugScreen = () => {
         >
           <Text style={styles.cmdTxt}>Recalculer les étoiles des lieux (30j)</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.cmdBtn, { backgroundColor: '#00c2cb', borderColor: 'transparent' }]}
-          onPress={runAllApiUsers}
-          disabled={loading}
-        >
-          <Text style={styles.cmdTxt}>Lister tous les utilisateurs (API)</Text>
-        </TouchableOpacity>
-
         {loading && <ActivityIndicator size="small" color="#00c2cb" style={{ marginVertical: 15 }} />}
-
-        {users.length > 0 && (
-          <View
-            style={[styles.usersBox, { backgroundColor: colors.surface, borderColor: borderColor, borderWidth: 1 }]}
-          >
-            {users.slice(0, 20).map((u, idx) => (
-              <View
-                key={String(u._id || u.id)}
-                style={[
-                  styles.userRow,
-                  idx !== Math.min(users.length, 20) - 1 && { borderBottomColor: borderColor, borderBottomWidth: 1 },
-                ]}
-              >
-                <Text style={[styles.userName, textStyle]} numberOfLines={1}>
-                  {u.username || u.customName || u.firstName || u.email || 'Utilisateur'}
-                </Text>
-                <TouchableOpacity
-                  style={[styles.smallBtn, { backgroundColor: u.isPremium ? '#2ecc71' : '#3498db' }]}
-                  onPress={() => togglePremium(u._id || u.id, !u.isPremium)}
-                >
-                  <Text style={styles.smallBtnTxt}>{u.isPremium ? 'Premium' : 'Free'}</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-            {users.length > 20 && (
-              <Text style={[{ textAlign: 'center', padding: 10 }, subTextStyle]}>Affichage limité aux 20 premiers</Text>
-            )}
-          </View>
-        )}
-
-        {result && (
-          <View
-            style={[
-              styles.resultBox,
-              { backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background, borderColor: borderColor },
-            ]}
-          >
-            <Text style={[styles.resultTitle, textStyle]}>Dernier résultat JSON</Text>
-            {typeof result.total !== 'undefined' && (
-              <Text style={[{ marginBottom: 5 }, subTextStyle]}>Total items: {result.total}</Text>
-            )}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={{
-                backgroundColor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.05)',
-                borderRadius: 10,
-                padding: 10,
-              }}
-            >
-              <Text selectable style={[styles.resultText, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                {JSON.stringify(result, null, 2)}
-              </Text>
-            </ScrollView>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -1323,12 +1074,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     zIndex: 10,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
+  headerTitle: { fontSize: 20, fontWeight: 'bold', flex: 1, textAlign: 'center' },
   backButtonCircular: {
     width: 40,
     height: 40,
@@ -1389,7 +1135,33 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   selectedTitle: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', marginBottom: 5 },
-  selectedName: { fontSize: 18, fontWeight: '800', marginBottom: 10 },
+  selectedName: { fontSize: 18, fontWeight: '800', marginBottom: 2 },
+  subCardTitle: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  rowWrap: { flexDirection: 'row', alignItems: 'center', marginTop: 10, flexWrap: 'wrap', gap: 8 },
+  inlineLabel: { fontSize: 12, fontWeight: '700' },
+  miniInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    minWidth: 54,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  warnBox: {
+    backgroundColor: 'rgba(231,76,60,0.15)',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 10,
+  },
+  warnTxt: { color: '#e74c3c', fontSize: 12, fontWeight: '700' },
   cmdBtn: {
     padding: 16,
     borderRadius: 15,
@@ -1406,13 +1178,9 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   cmdTxt: { fontWeight: '700', fontSize: 15, color: '#fff' },
-  btnDisabled: { opacity: 0.5 },
   resultBox: { borderRadius: 15, padding: 15, borderWidth: 1, marginTop: 15 },
   resultTitle: { fontWeight: '800', marginBottom: 8 },
   resultText: { fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 11 },
-  usersBox: { borderRadius: 15, padding: 10, borderWidth: 1, marginTop: 10 },
-  userRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 5 },
-  userName: { flex: 1, fontSize: 14, fontWeight: '600' },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   smallBtn: {
     paddingHorizontal: 12,
@@ -1423,76 +1191,5 @@ const styles = StyleSheet.create({
   },
   smallBtnTxt: { color: '#fff', fontSize: 12, fontWeight: '800' },
 });
-
-// Helper Components
-const LabeledInput = ({ label, colors, isDark, ...props }) => (
-  <View style={{ marginBottom: 15 }}>
-    <Text
-      style={{
-        color: isDark ? '#fff' : colors.textPrimary,
-        opacity: isDark ? 0.9 : 0.5,
-        fontSize: 12,
-        fontWeight: '700',
-        marginBottom: 5,
-        textTransform: 'uppercase',
-      }}
-    >
-      {label}
-    </Text>
-    <TextInput
-      {...props}
-      style={[
-        {
-          borderWidth: 1,
-          borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)',
-          backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
-          borderRadius: 12,
-          paddingHorizontal: 15,
-          paddingVertical: 12,
-          color: isDark ? '#fff' : colors.textPrimary,
-          fontSize: 15,
-        },
-      ]}
-      placeholderTextColor={isDark ? '#999' : '#ccc'}
-    />
-  </View>
-);
-
-const LabeledTextArea = ({ label, colors, isDark, ...props }) => (
-  <View style={{ marginBottom: 15 }}>
-    <Text
-      style={{
-        color: isDark ? '#fff' : colors.textPrimary,
-        opacity: isDark ? 0.9 : 0.5,
-        fontSize: 12,
-        fontWeight: '700',
-        marginBottom: 5,
-        textTransform: 'uppercase',
-      }}
-    >
-      {label}
-    </Text>
-    <TextInput
-      {...props}
-      multiline
-      numberOfLines={4}
-      style={[
-        {
-          minHeight: 80,
-          textAlignVertical: 'top',
-          borderWidth: 1,
-          borderColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)',
-          backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : colors.background,
-          borderRadius: 12,
-          paddingHorizontal: 15,
-          paddingVertical: 12,
-          color: isDark ? '#fff' : colors.textPrimary,
-          fontSize: 15,
-        },
-      ]}
-      placeholderTextColor={isDark ? '#999' : '#ccc'}
-    />
-  </View>
-);
 
 export default DebugScreen;
