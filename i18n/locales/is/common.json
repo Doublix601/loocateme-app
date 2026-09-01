@@ -440,9 +440,13 @@
     "thenAnnual": "Svo {{price}}/ár · Hægt að segja upp hvenær sem er",
     "thenMonthly": "Svo {{price}}/mán · Hægt að segja upp hvenær sem er",
     "restorePurchases": "Endurheimta kaupin mín",
-    "legalText": "Áskriftin endurnýjast sjálfkrafa nema henni sé sagt upp fyrir lok núverandi tímabils. Stjórnaðu áskriftum þínum í stillingum App Store / Google Play. ",
+    "legalText": "Áskriftin endurnýjast sjálfkrafa nema henni sé sagt upp fyrir lok núverandi tímabils. Stjórnaðu áskriftum þínum í stillingum {{store}}. ",
     "privacyPolicy": "Persónuverndarstefna",
-    "terms": "Skilmálar"
+    "terms": "Skilmálar",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Velkomin(n) í Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Mánaðarlega",
     "premiumAnnual": "· Árlega",
     "statusLoading": "Hleð stöðu…",
-    "grantedOutsideStore": "Veitt utan App Store/Play Store áskriftar (ókeypis prufa eða sértilboð)",
+    "grantedOutsideStore": "Veitt utan {{store}} áskriftar (ókeypis prufa eða sértilboð)",
     "renewsOn": "Endurnýjast {{date}}",
     "expiresOn": "Rennur út {{date}}",
     "opening": "Opna…",

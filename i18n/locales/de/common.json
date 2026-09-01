@@ -440,9 +440,13 @@
     "thenAnnual": "Dann {{price}}/Jahr · Jederzeit kündbar",
     "thenMonthly": "Dann {{price}}/Monat · Jederzeit kündbar",
     "restorePurchases": "Käufe wiederherstellen",
-    "legalText": "Das Abo verlängert sich automatisch, sofern nicht vor Ende des aktuellen Zeitraums gekündigt. Verwalte deine Abos in den Einstellungen von App Store / Google Play. ",
+    "legalText": "Das Abo verlängert sich automatisch, sofern nicht vor Ende des aktuellen Zeitraums gekündigt. Verwalte deine Abos in den Einstellungen von {{store}}. ",
     "privacyPolicy": "Datenschutzerklärung",
-    "terms": "AGB"
+    "terms": "AGB",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Willkommen bei Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Monatlich",
     "premiumAnnual": "· Jährlich",
     "statusLoading": "Status wird geladen…",
-    "grantedOutsideStore": "Außerhalb des App Store/Play Store Abos gewährt (kostenlose Testphase oder Sonderangebot)",
+    "grantedOutsideStore": "Außerhalb des {{store}} Abos gewährt (kostenlose Testphase oder Sonderangebot)",
     "renewsOn": "Verlängert sich am {{date}}",
     "expiresOn": "Läuft ab am {{date}}",
     "opening": "Wird geöffnet…",

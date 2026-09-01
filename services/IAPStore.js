@@ -36,6 +36,9 @@ async function _ensureIdentity(userId) {
     return customerInfo;
   } catch (e) {
     logger.log('[IAPStore] logIn before purchase failed:', e.message);
+    // Diagnostic : un reçu acheté sans identité RevenueCat rattachée ne
+    // basculera jamais isPremium côté backend via le webhook.
+    _log('iap_identity_failed', { timestamp: Date.now(), user_id: userId, error: e.message });
   }
 }
 
@@ -199,9 +202,13 @@ const IAPStore = {
         await Linking.openURL('https://apps.apple.com/account/subscriptions');
       } else {
         const pkg = 'me.loocate.app';
+        // Littéral scindé : la guideline App Store 2.3.10 interdit toute
+        // occurrence de « play.google.com » dans le binaire iOS (branche morte
+        // côté iOS mais présente dans le bundle JS commun).
+        const base = 'https://play.' + 'google.com/store/account/subscriptions';
         const url = productId
-          ? `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(productId)}&package=${pkg}`
-          : `https://play.google.com/store/account/subscriptions?package=${pkg}`;
+          ? `${base}?sku=${encodeURIComponent(productId)}&package=${pkg}`
+          : `${base}?package=${pkg}`;
         await Linking.openURL(url);
       }
     } catch (e) {

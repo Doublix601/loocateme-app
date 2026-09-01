@@ -51,7 +51,7 @@ import IAPStore from '../services/IAPStore';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { useVibe } from '../components/contexts/VibeContext';
 import { useTranslation } from 'react-i18next';
-import { TERMS_URL } from '../constants/legal';
+import { TERMS_URL, STORE_NAME } from '../constants/legal';
 import { SUPPORTED_LANGUAGES, setAppLanguage } from '../i18n';
 
 // Noms affichés dans leur propre langue (pas besoin de les traduire).
@@ -976,7 +976,7 @@ const SettingsScreen = () => {
                         {subscriptionInfo === 'idle'
                           ? t('settingsScreen.statusLoading')
                           : subscriptionInfo === 'none'
-                            ? t('settingsScreen.grantedOutsideStore')
+                            ? t('settingsScreen.grantedOutsideStore', { store: STORE_NAME })
                             : subscriptionInfo?.expirationDate
                               ? (subscriptionInfo.willRenew ? t('settingsScreen.renewsOn', { date: new Date(subscriptionInfo.expirationDate).toLocaleDateString(i18n.language) }) : t('settingsScreen.expiresOn', { date: new Date(subscriptionInfo.expirationDate).toLocaleDateString(i18n.language) }))
                               : ''}

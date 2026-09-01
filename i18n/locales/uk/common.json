@@ -440,9 +440,13 @@
     "thenAnnual": "Потім {{price}}/рік · Скасовується в будь-який час",
     "thenMonthly": "Потім {{price}}/міс · Скасовується в будь-який час",
     "restorePurchases": "Відновити мої покупки",
-    "legalText": "Підписка автоматично поновлюється, якщо не скасована до кінця поточного періоду. Керуй своїми підписками в налаштуваннях App Store / Google Play. ",
+    "legalText": "Підписка автоматично поновлюється, якщо не скасована до кінця поточного періоду. Керуй своїми підписками в налаштуваннях {{store}}. ",
     "privacyPolicy": "Політика конфіденційності",
-    "terms": "Умови"
+    "terms": "Умови",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Ласкаво просимо до Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Щомісячна",
     "premiumAnnual": "· Щорічна",
     "statusLoading": "Завантаження статусу…",
-    "grantedOutsideStore": "Надано поза підпискою App Store/Play Store (безкоштовна пробна версія або спеціальна пропозиція)",
+    "grantedOutsideStore": "Надано поза підпискою {{store}} (безкоштовна пробна версія або спеціальна пропозиція)",
     "renewsOn": "Поновиться {{date}}",
     "expiresOn": "Закінчується {{date}}",
     "opening": "Відкриття…",

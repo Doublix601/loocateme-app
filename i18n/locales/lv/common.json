@@ -440,9 +440,13 @@
     "thenAnnual": "Tad {{price}}/gads · Atceļams jebkurā laikā",
     "thenMonthly": "Tad {{price}}/mēn · Atceļams jebkurā laikā",
     "restorePurchases": "Atjaunot manus pirkumus",
-    "legalText": "Abonements tiek automātiski atjaunots, ja vien tas netiek atcelts pirms pašreizējā perioda beigām. Pārvaldi savus abonementus App Store / Google Play iestatījumos. ",
+    "legalText": "Abonements tiek automātiski atjaunots, ja vien tas netiek atcelts pirms pašreizējā perioda beigām. Pārvaldi savus abonementus {{store}} iestatījumos. ",
     "privacyPolicy": "Privātuma politika",
-    "terms": "Noteikumi"
+    "terms": "Noteikumi",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Laipni lūdzam Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Ikmēneša",
     "premiumAnnual": "· Ikgadējs",
     "statusLoading": "Statusa ielāde…",
-    "grantedOutsideStore": "Piešķirts ārpus App Store/Play Store abonementa (bezmaksas izmēģinājums vai īpašs piedāvājums)",
+    "grantedOutsideStore": "Piešķirts ārpus {{store}} abonementa (bezmaksas izmēģinājums vai īpašs piedāvājums)",
     "renewsOn": "Atjaunosies {{date}}",
     "expiresOn": "Beidzas {{date}}",
     "opening": "Atveras…",

@@ -491,10 +491,14 @@
     "thenAnnual": "Puis {{price}}/an · Résiliable à tout moment",
     "thenMonthly": "Puis {{price}}/mois · Résiliable à tout moment",
     "restorePurchases": "Restaurer mes achats",
-    "legalText": "L'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. Gère tes abonnements dans les réglages de l'App Store / Google Play. ",
+    "legalText": "L'abonnement se renouvelle automatiquement sauf résiliation avant la fin de la période en cours. Gère tes abonnements dans les réglages de l'{{store}}. ",
     "privacyPolicy": "Politique de confidentialité",
     "terms": "CGU",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "initializing": "Le service d'achat est en cours d'initialisation. Réessaie dans un instant.",
+    "purchaseNotAllowed": "Les achats ne sont pas autorisés sur cet appareil. Vérifie les restrictions de ton appareil et réessaie.",
+    "storeProblem": "L'App Store n'a pas pu finaliser l'achat. Réessaie plus tard.",
+    "productUnavailable": "Cet abonnement n'est pas disponible pour le moment. Réessaie plus tard."
   },
   "premiumWelcome": {
     "header": "👑 Bienvenue dans Premium",
@@ -562,7 +566,7 @@
     "premiumMonthly": "· Mensuel",
     "premiumAnnual": "· Annuel",
     "statusLoading": "Statut en cours de chargement…",
-    "grantedOutsideStore": "Accordé hors abonnement App Store/Play Store (essai gratuit ou offre spéciale)",
+    "grantedOutsideStore": "Accordé hors abonnement {{store}} (essai gratuit ou offre spéciale)",
     "renewsOn": "Renouvellement le {{date}}",
     "expiresOn": "Expire le {{date}}",
     "opening": "Ouverture…",

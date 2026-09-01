@@ -440,9 +440,13 @@
     "thenAnnual": "Imbagħad {{price}}/sena · Tista' tikkanċella f'kull ħin",
     "thenMonthly": "Imbagħad {{price}}/xahar · Tista' tikkanċella f'kull ħin",
     "restorePurchases": "Irrestawra x-xirjiet tiegħi",
-    "legalText": "L-abbonament jiġġedded awtomatikament sakemm ma jiġix ikkanċellat qabel tmiem il-perjodu attwali. Immaniġġja l-abbonamenti tiegħek fis-settings tal-App Store / Google Play. ",
+    "legalText": "L-abbonament jiġġedded awtomatikament sakemm ma jiġix ikkanċellat qabel tmiem il-perjodu attwali. Immaniġġja l-abbonamenti tiegħek fis-settings tal-{{store}}. ",
     "privacyPolicy": "Politika tal-privatezza",
-    "terms": "Termini"
+    "terms": "Termini",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Merħba fil-Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Kull xahar",
     "premiumAnnual": "· Kull sena",
     "statusLoading": "Qed jitgħabba l-istat…",
-    "grantedOutsideStore": "Mogħti barra mill-abbonament App Store/Play Store (prova b'xejn jew offerta speċjali)",
+    "grantedOutsideStore": "Mogħti barra mill-abbonament {{store}} (prova b'xejn jew offerta speċjali)",
     "renewsOn": "Jiġġedded fi {{date}}",
     "expiresOn": "Jiskadi fi {{date}}",
     "opening": "Qed jinfetaħ…",

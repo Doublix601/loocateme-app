@@ -440,9 +440,13 @@
     "thenAnnual": "Tada {{price}}/metai · Galima atšaukti bet kada",
     "thenMonthly": "Tada {{price}}/mėn · Galima atšaukti bet kada",
     "restorePurchases": "Atkurti mano pirkinius",
-    "legalText": "Prenumerata automatiškai atnaujinama, nebent atšaukiama iki dabartinio laikotarpio pabaigos. Tvarkyk savo prenumeratas App Store / Google Play nustatymuose. ",
+    "legalText": "Prenumerata automatiškai atnaujinama, nebent atšaukiama iki dabartinio laikotarpio pabaigos. Tvarkyk savo prenumeratas {{store}} nustatymuose. ",
     "privacyPolicy": "Privatumo politika",
-    "terms": "Sąlygos"
+    "terms": "Sąlygos",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Sveiki atvykę į Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Mėnesinė",
     "premiumAnnual": "· Metinė",
     "statusLoading": "Kraunama būsena…",
-    "grantedOutsideStore": "Suteikta ne per App Store/Play Store prenumeratą (nemokamas bandomasis laikotarpis arba specialus pasiūlymas)",
+    "grantedOutsideStore": "Suteikta ne per {{store}} prenumeratą (nemokamas bandomasis laikotarpis arba specialus pasiūlymas)",
     "renewsOn": "Atsinaujins {{date}}",
     "expiresOn": "Baigiasi {{date}}",
     "opening": "Atidaroma…",

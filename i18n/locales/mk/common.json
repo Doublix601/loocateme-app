@@ -440,9 +440,13 @@
     "thenAnnual": "Потоа {{price}}/година · Може да се откаже во секое време",
     "thenMonthly": "Потоа {{price}}/месец · Може да се откаже во секое време",
     "restorePurchases": "Врати ги моите купувања",
-    "legalText": "Претплатата автоматски се обновува освен ако не се откаже пред крајот на тековниот период. Управувај со твоите претплати во поставките на App Store / Google Play. ",
+    "legalText": "Претплатата автоматски се обновува освен ако не се откаже пред крајот на тековниот период. Управувај со твоите претплати во поставките на {{store}}. ",
     "privacyPolicy": "Политика за приватност",
-    "terms": "Услови"
+    "terms": "Услови",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Добредојде во Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Месечна",
     "premiumAnnual": "· Годишна",
     "statusLoading": "Вчитување на статус…",
-    "grantedOutsideStore": "Доделено надвор од претплатата на App Store/Play Store (бесплатен пробен период или специјална понуда)",
+    "grantedOutsideStore": "Доделено надвор од претплатата на {{store}} (бесплатен пробен период или специјална понуда)",
     "renewsOn": "Се обновува на {{date}}",
     "expiresOn": "Истекува на {{date}}",
     "opening": "Отворање…",

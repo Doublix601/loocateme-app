@@ -440,9 +440,13 @@
     "thenAnnual": "Majd {{price}}/év · Bármikor lemondható",
     "thenMonthly": "Majd {{price}}/hó · Bármikor lemondható",
     "restorePurchases": "Vásárlásaim visszaállítása",
-    "legalText": "Az előfizetés automatikusan megújul, hacsak nem mondod le a jelenlegi időszak vége előtt. Kezeld előfizetéseidet az App Store / Google Play beállításaiban. ",
+    "legalText": "Az előfizetés automatikusan megújul, hacsak nem mondod le a jelenlegi időszak vége előtt. Kezeld előfizetéseidet az {{store}} beállításaiban. ",
     "privacyPolicy": "Adatvédelmi szabályzat",
-    "terms": "Feltételek"
+    "terms": "Feltételek",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Üdvözlünk a Premiumban",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Havi",
     "premiumAnnual": "· Éves",
     "statusLoading": "Állapot betöltése…",
-    "grantedOutsideStore": "App Store/Play Store előfizetésen kívül biztosítva (ingyenes próba vagy speciális ajánlat)",
+    "grantedOutsideStore": "{{store}} előfizetésen kívül biztosítva (ingyenes próba vagy speciális ajánlat)",
     "renewsOn": "Megújul: {{date}}",
     "expiresOn": "Lejár: {{date}}",
     "opening": "Megnyitás…",

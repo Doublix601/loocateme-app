@@ -440,9 +440,13 @@
     "thenAnnual": "Nato {{price}}/leto · Kadar koli prekličete",
     "thenMonthly": "Nato {{price}}/mesec · Kadar koli prekličete",
     "restorePurchases": "Obnovi moje nakupe",
-    "legalText": "Naročnina se samodejno podaljša, razen če je preklicana pred koncem trenutnega obdobja. Upravljajte svoje naročnine v nastavitvah App Store / Google Play. ",
+    "legalText": "Naročnina se samodejno podaljša, razen če je preklicana pred koncem trenutnega obdobja. Upravljajte svoje naročnine v nastavitvah {{store}}. ",
     "privacyPolicy": "Politika zasebnosti",
-    "terms": "Pogoji"
+    "terms": "Pogoji",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Dobrodošel v Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Mesečno",
     "premiumAnnual": "· Letno",
     "statusLoading": "Nalaganje stanja…",
-    "grantedOutsideStore": "Dodeljeno zunaj naročnine App Store/Play Store (brezplačno preizkusno obdobje ali posebna ponudba)",
+    "grantedOutsideStore": "Dodeljeno zunaj naročnine {{store}} (brezplačno preizkusno obdobje ali posebna ponudba)",
     "renewsOn": "Podaljša se {{date}}",
     "expiresOn": "Poteče {{date}}",
     "opening": "Odpiranje…",

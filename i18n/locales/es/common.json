@@ -440,9 +440,13 @@
     "thenAnnual": "Luego {{price}}/año · Cancelable en cualquier momento",
     "thenMonthly": "Luego {{price}}/mes · Cancelable en cualquier momento",
     "restorePurchases": "Restaurar mis compras",
-    "legalText": "La suscripción se renueva automáticamente salvo cancelación antes del final del período actual. Gestiona tus suscripciones en los ajustes de App Store / Google Play. ",
+    "legalText": "La suscripción se renueva automáticamente salvo cancelación antes del final del período actual. Gestiona tus suscripciones en los ajustes de {{store}}. ",
     "privacyPolicy": "Política de privacidad",
-    "terms": "Términos"
+    "terms": "Términos",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Bienvenido a Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Mensual",
     "premiumAnnual": "· Anual",
     "statusLoading": "Cargando estado…",
-    "grantedOutsideStore": "Concedido fuera de la suscripción de App Store/Play Store (prueba gratuita u oferta especial)",
+    "grantedOutsideStore": "Concedido fuera de la suscripción de {{store}} (prueba gratuita u oferta especial)",
     "renewsOn": "Se renueva el {{date}}",
     "expiresOn": "Expira el {{date}}",
     "opening": "Abriendo…",

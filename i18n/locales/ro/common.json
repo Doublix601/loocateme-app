@@ -440,9 +440,13 @@
     "thenAnnual": "Apoi {{price}}/an · Poți anula oricând",
     "thenMonthly": "Apoi {{price}}/lună · Poți anula oricând",
     "restorePurchases": "Restaurează achizițiile mele",
-    "legalText": "Abonamentul se reînnoiește automat, cu excepția cazului în care este anulat înainte de sfârșitul perioadei curente. Gestionează-ți abonamentele din setările App Store / Google Play. ",
+    "legalText": "Abonamentul se reînnoiește automat, cu excepția cazului în care este anulat înainte de sfârșitul perioadei curente. Gestionează-ți abonamentele din setările {{store}}. ",
     "privacyPolicy": "Politica de confidențialitate",
-    "terms": "Termeni"
+    "terms": "Termeni",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Bun venit în Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Lunar",
     "premiumAnnual": "· Anual",
     "statusLoading": "Se încarcă starea…",
-    "grantedOutsideStore": "Acordat în afara abonamentului App Store/Play Store (probă gratuită sau ofertă specială)",
+    "grantedOutsideStore": "Acordat în afara abonamentului {{store}} (probă gratuită sau ofertă specială)",
     "renewsOn": "Se reînnoiește pe {{date}}",
     "expiresOn": "Expiră pe {{date}}",
     "opening": "Se deschide…",

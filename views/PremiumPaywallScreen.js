@@ -11,8 +11,10 @@ import {
   Linking,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import Purchases from 'react-native-purchases';
 import { useTheme } from '../components/contexts/ThemeContext';
 import { UserContext } from '../components/contexts/UserContext';
+import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
 import { getMyUser } from '../components/ApiRequest';
 import { subscribe } from '../components/EventBus';
 import IAPStore from '../services/IAPStore';
@@ -22,11 +24,29 @@ import ScreenHeader from '../components/ScreenHeader';
 import PremiumWelcomeOnboarding from '../components/PremiumWelcomeOnboarding';
 import { getPremiumSlides } from '../constants/premiumFeatures';
 import { useTranslation } from 'react-i18next';
-import { PRIVACY_POLICY_URL, TERMS_URL, APPLE_EULA_URL } from '../constants/legal';
+import { PRIVACY_POLICY_URL, TERMS_URL, APPLE_EULA_URL, STORE_NAME } from '../constants/legal';
 
 const { width } = Dimensions.get('window');
 
 const FALLBACK = { monthly: '4,99 €', annual: '39,99 €', savings: 33 };
+
+// Traduit les erreurs RevenueCat/StoreKit connues en message lisible plutôt que
+// d'afficher le `e.message` brut (technique, en anglais) au reviewer Apple.
+function purchaseErrorMessage(e, t) {
+  const CODES = Purchases?.PURCHASES_ERROR_CODE ?? {};
+  const code = e?.code;
+  if (code != null) {
+    if (code === CODES.PURCHASE_NOT_ALLOWED_ERROR) return t('premiumPaywall.purchaseNotAllowed');
+    if (code === CODES.PAYMENT_PENDING_ERROR) return t('premiumPaywall.storeProblem');
+    if (
+      code === CODES.PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR ||
+      code === CODES.PRODUCT_ALREADY_PURCHASED_ERROR
+    )
+      return t('premiumPaywall.productUnavailable');
+    if (code === CODES.STORE_PROBLEM_ERROR) return t('premiumPaywall.storeProblem');
+  }
+  return e?.message || t('premiumPaywall.purchaseError');
+}
 
 export default function PremiumPaywallScreen() {
   const { t } = useTranslation();
@@ -50,6 +70,7 @@ export default function PremiumPaywallScreen() {
     }
   };
   const { colors, isDark } = useTheme();
+  const { purchasesReady } = useFeatureFlags();
   const { user, updateUser } = useContext(UserContext);
   const [period, setPeriod] = useState('annual');
   const [offerings, setOfferings] = useState(null);
@@ -188,6 +209,10 @@ export default function PremiumPaywallScreen() {
       );
       return;
     }
+    if (!purchasesReady && !DEBUG_CONFIG.IAP_DISABLED) {
+      Alert.alert(t('premiumPaywall.errorTitle'), t('premiumPaywall.initializing'));
+      return;
+    }
     setPurchasing(true);
     try {
       const result = await IAPStore.purchaseSubscription(selectedPkg, userId);
@@ -205,7 +230,7 @@ export default function PremiumPaywallScreen() {
         setOnboardingVisible(true);
       }
     } catch (e) {
-      if (!e.userCancelled) Alert.alert(t('premiumPaywall.errorTitle'), e.message || t('premiumPaywall.purchaseError'));
+      if (!e.userCancelled) Alert.alert(t('premiumPaywall.errorTitle'), purchaseErrorMessage(e, t));
     } finally {
       setPurchasing(false);
     }
@@ -417,7 +442,7 @@ export default function PremiumPaywallScreen() {
 
         {/* Legal */}
         <Text style={[styles.legal, { color: sub }]}>
-          {t('premiumPaywall.legalText')}
+          {t('premiumPaywall.legalText', { store: STORE_NAME })}
           <Text
             style={{ textDecorationLine: 'underline' }}
             onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}

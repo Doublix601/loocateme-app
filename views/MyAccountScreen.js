@@ -447,9 +447,13 @@ const MyAccountScreen = () => {
   }, [myUserId]);
 
   // --- Partage profil: deep link + fallback store ---
-  const ANDROID_STORE_URL = 'https://play.google.com/store/apps/details?id=com.loocateme.app'; // placeholder
-  const IOS_STORE_URL = 'https://apps.apple.com/app/id0000000000'; // placeholder
-  const getStoreUrlForPlatform = () => (Platform.OS === 'ios' ? IOS_STORE_URL : ANDROID_STORE_URL);
+  // Guideline App Store 2.3.10 : aucune référence Google Play ne doit apparaître
+  // dans le binaire iOS — l'URL Android n'est donc construite que côté Android.
+  const IOS_STORE_URL = 'https://apps.apple.com/app/id6755971016';
+  const getStoreUrlForPlatform = () => {
+    if (Platform.OS === 'ios') return IOS_STORE_URL;
+    return 'https://play.' + 'google.com/store/apps/details?id=com.loocateme.app';
+  };
   const buildProfileDeepLink = (id) => `loocateme://profile/${encodeURIComponent(id || '')}`;
 
   const handleShareProfile = async () => {

@@ -491,10 +491,14 @@
     "thenAnnual": "Then {{price}}/year · Cancel anytime",
     "thenMonthly": "Then {{price}}/month · Cancel anytime",
     "restorePurchases": "Restore purchases",
-    "legalText": "The subscription renews automatically unless cancelled before the end of the current period. Manage your subscriptions in App Store / Google Play settings. ",
+    "legalText": "The subscription renews automatically unless cancelled before the end of the current period. Manage your subscriptions in {{store}} settings. ",
     "privacyPolicy": "Privacy policy",
     "terms": "Terms",
-    "retry": "Try again"
+    "retry": "Try again",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Welcome to Premium",
@@ -562,7 +566,7 @@
     "premiumMonthly": "· Monthly",
     "premiumAnnual": "· Annual",
     "statusLoading": "Loading status…",
-    "grantedOutsideStore": "Granted outside App Store/Play Store subscription (free trial or special offer)",
+    "grantedOutsideStore": "Granted outside {{store}} subscription (free trial or special offer)",
     "renewsOn": "Renews on {{date}}",
     "expiresOn": "Expires on {{date}}",
     "opening": "Opening…",

@@ -440,9 +440,13 @@
     "thenAnnual": "Sedan {{price}}/år · Kan avslutas när som helst",
     "thenMonthly": "Sedan {{price}}/månad · Kan avslutas när som helst",
     "restorePurchases": "Återställ mina köp",
-    "legalText": "Prenumerationen förnyas automatiskt om den inte avslutas före slutet av den aktuella perioden. Hantera dina prenumerationer i inställningarna för App Store / Google Play. ",
+    "legalText": "Prenumerationen förnyas automatiskt om den inte avslutas före slutet av den aktuella perioden. Hantera dina prenumerationer i inställningarna för {{store}}. ",
     "privacyPolicy": "Integritetspolicy",
-    "terms": "Villkor"
+    "terms": "Villkor",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Välkommen till Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Månadsvis",
     "premiumAnnual": "· Årsvis",
     "statusLoading": "Laddar status…",
-    "grantedOutsideStore": "Beviljad utanför App Store/Play Store-prenumeration (gratis provperiod eller specialerbjudande)",
+    "grantedOutsideStore": "Beviljad utanför {{store}}-prenumeration (gratis provperiod eller specialerbjudande)",
     "renewsOn": "Förnyas {{date}}",
     "expiresOn": "Upphör {{date}}",
     "opening": "Öppnar…",

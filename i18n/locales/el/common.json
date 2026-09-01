@@ -440,9 +440,13 @@
     "thenAnnual": "Στη συνέχεια {{price}}/έτος · Ακύρωση οποιαδήποτε στιγμή",
     "thenMonthly": "Στη συνέχεια {{price}}/μήνα · Ακύρωση οποιαδήποτε στιγμή",
     "restorePurchases": "Αποκατάσταση αγορών",
-    "legalText": "Η συνδρομή ανανεώνεται αυτόματα εκτός εάν ακυρωθεί πριν από το τέλος της τρέχουσας περιόδου. Διαχειρίσου τις συνδρομές σου στις ρυθμίσεις του App Store / Google Play. ",
+    "legalText": "Η συνδρομή ανανεώνεται αυτόματα εκτός εάν ακυρωθεί πριν από το τέλος της τρέχουσας περιόδου. Διαχειρίσου τις συνδρομές σου στις ρυθμίσεις του {{store}}. ",
     "privacyPolicy": "Πολιτική απορρήτου",
-    "terms": "Όροι"
+    "terms": "Όροι",
+    "initializing": "The purchase service is starting up. Please try again in a moment.",
+    "purchaseNotAllowed": "Purchases are not allowed on this device. Check your device restrictions and try again.",
+    "storeProblem": "The App Store could not complete the purchase. Please try again later.",
+    "productUnavailable": "This subscription is not available right now. Please try again later."
   },
   "premiumWelcome": {
     "header": "👑 Καλώς ήρθες στο Premium",
@@ -510,7 +514,7 @@
     "premiumMonthly": "· Μηνιαία",
     "premiumAnnual": "· Ετήσια",
     "statusLoading": "Φόρτωση κατάστασης…",
-    "grantedOutsideStore": "Χορηγήθηκε εκτός συνδρομής App Store/Play Store (δωρεάν δοκιμή ή ειδική προσφορά)",
+    "grantedOutsideStore": "Χορηγήθηκε εκτός συνδρομής {{store}} (δωρεάν δοκιμή ή ειδική προσφορά)",
     "renewsOn": "Ανανεώνεται στις {{date}}",
     "expiresOn": "Λήγει στις {{date}}",
     "opening": "Άνοιγμα…",
