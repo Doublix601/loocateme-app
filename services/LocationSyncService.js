@@ -170,7 +170,16 @@ out center;
           return {
             osmId: el.id,
             name: el.tags.name,
-            city: el.tags['addr:city'] || '',
+            // La plupart des POI OSM n'ont pas de tag addr:city ; on tente les
+            // variantes qui désignent aussi la commune avant de laisser vide.
+            // Le backend complète ensuite les lieux encore sans ville par
+            // reverse-geocoding (cf. geocoding.service.js).
+            city:
+              el.tags['addr:city'] ||
+              el.tags['addr:town'] ||
+              el.tags['addr:village'] ||
+              el.tags['addr:municipality'] ||
+              '',
             type: type,
             coordinates: [elLon, elLat], // [lon, lat] pour MongoDB
           };
