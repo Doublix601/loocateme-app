@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Vaata, kes su profiili vaatab",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Nähtamatu režiim",
       "Otsingu raadius kuni 30 km",
       "Täiustatud statistika",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Pole saadaval",
     "notAvailableMessage": "See pakett pole veel poes saadaval.",
     "purchaseErrorMessage": "Ostu ei õnnestunud lõpetada.",
-    "simulate": "Simuleeri"
+    "simulate": "Simuleeri",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Otsi neist kohtadest",

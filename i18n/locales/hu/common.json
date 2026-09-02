@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Lásd, ki nézi meg a profilodat",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Láthatatlan mód",
       "Keresési sugár 30 km-ig",
       "Fejlett statisztikák",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Nem elérhető",
     "notAvailableMessage": "Ez a csomag még nem érhető el az áruházban.",
     "purchaseErrorMessage": "A vásárlást nem sikerült befejezni.",
-    "simulate": "Szimulálás"
+    "simulate": "Szimulálás",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Keress ezeken a helyeken",

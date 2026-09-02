@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Vezi cine îți vizitează profilul",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Mod invizibil",
       "Rază de căutare de până la 30 km",
       "Statistici avansate",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Indisponibil",
     "notAvailableMessage": "Acest pachet nu este încă disponibil în magazin.",
     "purchaseErrorMessage": "Achiziția nu a putut fi finalizată.",
-    "simulate": "Simulează"
+    "simulate": "Simulează",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Caută în aceste locuri",

@@ -102,9 +102,11 @@ const SuperlikeHistoryModal = ({ visible, onClose, initialTab = 'received' }) =>
             </View>
 
             <Text style={[styles.balanceText, { color: colors.textSecondary }]}>
-              {remainingCount > 0
-                ? `Il te reste ${remainingCount} superlike${remainingCount !== 1 ? 's' : ''}`
-                : "Tu n'as plus de superlike disponible"}
+              {!Number.isFinite(remainingCount)
+                ? 'Superlikes illimités avec Premium ✨'
+                : remainingCount > 0
+                  ? `Il te reste ${remainingCount} superlike${remainingCount !== 1 ? 's' : ''}`
+                  : "Tu n'as plus de superlike disponible"}
             </Text>
 
             <View style={styles.tabRow}>

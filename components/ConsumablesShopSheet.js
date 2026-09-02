@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from './contexts/ThemeContext';
 import PremiumService from '../services/PremiumService';
 import PremiumNudgeService from '../services/PremiumNudgeService';
+import { formatCount } from '../utils/formatCount';
 import IAPStore from '../services/IAPStore';
 import { DEBUG_CONFIG, IS_EXPO_GO } from '../services/DebugConfig';
 import { publish } from './EventBus';
@@ -89,12 +90,15 @@ async function addToHistory(entry) {
 const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
-  const PACKS = PACKS_BASE.map((p) => ({
-    ...p,
-    description: t(p.descKey),
-    badge: p.badgeKey ? t(p.badgeKey) : undefined,
-  }));
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
+  const PACKS = PACKS_BASE
+    // Superlikes illimités en Premium → inutile de proposer les packs superlikes.
+    .filter((p) => !(isPremium && p.type === 'superlike'))
+    .map((p) => ({
+      ...p,
+      description: t(p.descKey),
+      badge: p.badgeKey ? t(p.badgeKey) : undefined,
+    }));
   const slideAnim = useRef(new Animated.Value(400)).current;
   const [boosts, setBoosts] = useState(0);
   const [superlikes, setSuperlikes] = useState(0);
@@ -256,8 +260,10 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
           />
           <View style={styles.counter}>
             <Text style={styles.counterEmoji}>⭐</Text>
-            <Text style={[styles.counterNum, { color: text }]}>{superlikes}</Text>
-            <Text style={[styles.counterLabel, { color: sub }]}>superlike{superlikes !== 1 ? 's' : ''}</Text>
+            <Text style={[styles.counterNum, { color: text }]}>{formatCount(superlikes)}</Text>
+            <Text style={[styles.counterLabel, { color: sub }]}>
+              {Number.isFinite(superlikes) ? `superlike${superlikes !== 1 ? 's' : ''}` : t('consumablesShop.unlimited')}
+            </Text>
           </View>
           <TouchableOpacity onPress={handleRefresh} style={styles.refreshBtn} disabled={refreshing}>
             {refreshing ? <ActivityIndicator size="small" color="#00c2cb" /> : <Text style={{ fontSize: 18 }}>🔄</Text>}
@@ -265,6 +271,14 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+          {/* Mécanique du plancher de boosts Premium — inciter à les dépenser */}
+          {isPremium && (
+            <View style={[styles.premiumBoostNote, { backgroundColor: isDark ? 'rgba(0,194,203,0.12)' : 'rgba(0,194,203,0.10)' }]}>
+              <Text style={styles.premiumBoostNoteEmoji}>🔥</Text>
+              <Text style={[styles.premiumBoostNoteText, { color: text }]}>{t('consumablesShop.premiumBoostFloor')}</Text>
+            </View>
+          )}
+
           {/* Packs */}
           <Text style={[styles.sectionTitle, { color: sub }]}>RECHARGER</Text>
           {PACKS.map((pack) => {
@@ -400,6 +414,16 @@ const styles = StyleSheet.create({
   counterDivider: { width: 1, height: 50, marginHorizontal: 10 },
   refreshBtn: { padding: 10 },
   sectionTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, marginBottom: 12 },
+  premiumBoostNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 18,
+  },
+  premiumBoostNoteEmoji: { fontSize: 18 },
+  premiumBoostNoteText: { flex: 1, fontSize: 12.5, lineHeight: 17, fontWeight: '600' },
   packCard: {
     borderRadius: 16,
     padding: 16,

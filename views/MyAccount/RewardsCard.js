@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import StreakCard from '../../components/StreakCard';
+import { formatCount } from '../../utils/formatCount';
 
 /**
  * RewardsCard — carte "Récompenses" fusionnant visuellement StreakCard
@@ -65,14 +66,16 @@ const RewardsCard = ({
             <TouchableOpacity
               style={styles.stat}
               onPress={onOpenSuperlikeHistory}
-              accessibilityLabel={t('myAccount.rewards.superlikeHistoryLabel', { count: superlikeBalance })}
+              accessibilityLabel={t('myAccount.rewards.superlikeHistoryLabel', {
+                count: Number.isFinite(superlikeBalance) ? superlikeBalance : 0,
+              })}
             >
               <Animated.View style={{ transform: [{ scale: superlikePulse }] }}>
                 <Ionicons name="star" size={18} color="#FFB800" />
               </Animated.View>
               <Text style={[styles.statLabel, { color: isDark ? '#fff' : colors.textPrimary }]}>{t('myAccount.rewards.superlikes')}</Text>
               <Text style={[styles.statValue, { color: isDark ? '#fff' : colors.textPrimary }]}>
-                {superlikeBalance}
+                {formatCount(superlikeBalance)}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity

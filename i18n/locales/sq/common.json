@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Shiko kush e shikon profilin tënd",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Modaliteti i padukshëm",
       "Rreze kërkimi deri në 30 km",
       "Statistika të avancuara",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Jo i disponueshëm",
     "notAvailableMessage": "Ky pako nuk është ende i disponueshëm në dyqan.",
     "purchaseErrorMessage": "Blerja nuk mund të përfundohej.",
-    "simulate": "Simulo"
+    "simulate": "Simulo",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Kërko në këto vende",

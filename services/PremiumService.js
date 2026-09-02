@@ -4,13 +4,13 @@ import { getMyUser, get } from '../components/ApiRequest';
 
 const STORAGE_KEY = '@loocateme:premium_v2';
 
-// Allocations hebdo/mensuelles offertes avec un abonnement actif.
-const SUPERLIKE_WEEKLY_ALLOWANCE = 3;
-
 let _state = {
   subscriptionStatus: 'free', // 'free' | 'premium_monthly' | 'premium_yearly'
   boostsRemaining: 0,
   superlikesRemaining: 0,
+  // Premium = superlikes illimités (aucun décompte). Les comptes gratuits
+  // utilisent superlikesRemaining (packs achetés).
+  superlikesUnlimited: false,
   lastSyncAt: 0,
 };
 let _initialized = false;
@@ -57,8 +57,16 @@ const PremiumService = {
     return _state.boostsRemaining;
   },
 
+  // Renvoie Infinity quand les superlikes sont illimités (Premium). Les sites
+  // d'affichage formatent via utils/formatCount ("∞"), et les gardes de type
+  // `x <= 0` / `x > 0` restent correctes avec Infinity.
   getSuperlikesRemaining() {
+    if (_state.superlikesUnlimited || (DEBUG_CONFIG.FORCE_PREMIUM && this.isPremium())) return Infinity;
     return _state.superlikesRemaining;
+  },
+
+  isSuperlikesUnlimited() {
+    return _state.superlikesUnlimited || (DEBUG_CONFIG.FORCE_PREMIUM && this.isPremium());
   },
 
   // Décrémente et persiste. Retourne false si stock vide.
@@ -70,6 +78,7 @@ const PremiumService = {
   },
 
   async consumeSuperlike() {
+    if (this.isSuperlikesUnlimited()) return true; // Premium : pas de décompte
     if (_state.superlikesRemaining <= 0) return false;
     _state.superlikesRemaining = Math.max(0, _state.superlikesRemaining - 1);
     await _save();
@@ -101,8 +110,8 @@ const PremiumService = {
       const user = res?.user;
       if (!user) return;
 
-      const wasFree = _state.subscriptionStatus === 'free';
       _state.subscriptionStatus = user.isPremium ? 'premium_monthly' : 'free';
+      _state.superlikesUnlimited = !!user.isPremium;
 
       // En Expo Go, les packs consommables (boost/superlike) sont simulés
       // localement (cf. ConsumablesShopSheet.js) car le Test Store RevenueCat
@@ -113,19 +122,20 @@ const PremiumService = {
       // normalement : le Test Store déclenche un vrai webhook RevenueCat.
       if (!IS_EXPO_GO) {
         _state.boostsRemaining = typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
-
         if (typeof user.superlikeBalance === 'number') {
           _state.superlikesRemaining = user.superlikeBalance;
-        } else if (wasFree && _state.subscriptionStatus !== 'free') {
-          _state.superlikesRemaining = SUPERLIKE_WEEKLY_ALLOWANCE;
         }
 
-        // Déclenche le reset hebdomadaire des superlikes si le user est premium
+        // Premium : recharge mensuelle du plancher de boosts + confirme le
+        // statut « superlikes illimités » (source serveur).
         if (_state.subscriptionStatus !== 'free') {
           try {
             const allowance = await get('/premium/allowance');
-            if (typeof allowance?.superlikeBalance === 'number') {
-              _state.superlikesRemaining = allowance.superlikeBalance;
+            if (typeof allowance?.superlikesUnlimited === 'boolean') {
+              _state.superlikesUnlimited = allowance.superlikesUnlimited;
+            }
+            if (typeof allowance?.boostBalance === 'number') {
+              _state.boostsRemaining = allowance.boostBalance;
             }
           } catch (_) {}
         }
@@ -145,6 +155,7 @@ const PremiumService = {
   updateFromUser(user) {
     if (!user) return;
     _state.subscriptionStatus = user.isPremium ? 'premium_monthly' : 'free';
+    _state.superlikesUnlimited = !!user.isPremium;
     _state.boostsRemaining = typeof user.boostBalance === 'number' ? user.boostBalance : _state.boostsRemaining;
     if (typeof user.superlikeBalance === 'number') {
       _state.superlikesRemaining = user.superlikeBalance;

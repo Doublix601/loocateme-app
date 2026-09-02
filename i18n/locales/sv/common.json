@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Se vem som visar din profil",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Osynligt läge",
       "Sökradie upp till 30 km",
       "Avancerad statistik",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Inte tillgängligt",
     "notAvailableMessage": "Det här paketet är inte tillgängligt i butiken ännu.",
     "purchaseErrorMessage": "Kunde inte slutföra köpet.",
-    "simulate": "Simulera"
+    "simulate": "Simulera",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Sök på dessa platser",

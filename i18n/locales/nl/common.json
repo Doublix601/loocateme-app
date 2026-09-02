@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Zie wie je profiel bekijkt",
-      "3 zichtbaarheids-boosts gratis",
-      "3 superlikes gratis, daarna 3/week",
+      "Onbeperkte superlikes",
+      "3 boosts per maand inbegrepen",
       "Onzichtbare modus",
       "Zoekradius tot 30 km",
       "Geavanceerde statistieken",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Niet beschikbaar",
     "notAvailableMessage": "Dit pakket is nog niet beschikbaar in de store.",
     "purchaseErrorMessage": "De aankoop kon niet worden voltooid.",
-    "simulate": "Simuleren"
+    "simulate": "Simuleren",
+    "unlimited": "onbeperkt",
+    "premiumBoostFloor": "Premium: 3 boosts per maand inbegrepen. Ze stapelen niet op boven 3 — gebruik ze voor de volgende aanvulling!"
   },
   "vibeTransitOverlay": {
     "sub": "Zoek op deze plekken",

@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Виж кой преглежда профила ти",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Невидим режим",
       "Радиус на търсене до 30 км",
       "Разширена статистика",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Не е налично",
     "notAvailableMessage": "Този пакет все още не е наличен в магазина.",
     "purchaseErrorMessage": "Покупката не можа да бъде завършена.",
-    "simulate": "Симулирай"
+    "simulate": "Симулирай",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Търси на тези места",

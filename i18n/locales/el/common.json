@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Δες ποιος βλέπει το προφίλ σου",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Λειτουργία αόρατου",
       "Ακτίνα αναζήτησης έως 30 χλμ",
       "Προηγμένα στατιστικά",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Μη διαθέσιμο",
     "notAvailableMessage": "Αυτό το πακέτο δεν είναι ακόμα διαθέσιμο στο κατάστημα.",
     "purchaseErrorMessage": "Δεν ήταν δυνατή η ολοκλήρωση της αγοράς.",
-    "simulate": "Προσομοίωση"
+    "simulate": "Προσομοίωση",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Αναζήτησε σε αυτά τα μέρη",

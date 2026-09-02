@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Zjisti, kdo si prohlíží tvůj profil",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Neviditelný režim",
       "Dosah hledání až 30 km",
       "Pokročilé statistiky",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Nedostupné",
     "notAvailableMessage": "Tento balíček zatím není v obchodě dostupný.",
     "purchaseErrorMessage": "Nákup se nepodařilo dokončit.",
-    "simulate": "Simulovat"
+    "simulate": "Simulovat",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Hledej na těchto místech",

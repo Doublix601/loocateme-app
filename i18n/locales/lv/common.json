@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Skaties, kas apskata tavu profilu",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Neredzamais režīms",
       "Meklēšanas rādiuss līdz 30 km",
       "Papildu statistika",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Nav pieejams",
     "notAvailableMessage": "Šī pakete veikalā vēl nav pieejama.",
     "purchaseErrorMessage": "Pirkumu neizdevās pabeigt.",
-    "simulate": "Simulēt"
+    "simulate": "Simulēt",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Meklē šajās vietās",

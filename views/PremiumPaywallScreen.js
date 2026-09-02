@@ -176,8 +176,14 @@ export default function PremiumPaywallScreen() {
     return () => clearInterval(autoRef.current);
   }, []);
 
-  const monthlyPkg = offerings?.availablePackages?.find((p) => p.packageType === 'MONTHLY') ?? null;
-  const annualPkg = offerings?.availablePackages?.find((p) => p.packageType === 'ANNUAL') ?? null;
+  // On cible explicitement les packages standard `$rc_monthly` / `$rc_annual`
+  // (fallback packageType) pour ne jamais confondre avec un autre abonnement
+  // mensuel qui traînerait dans l'offering.
+  const pkgs = offerings?.availablePackages ?? [];
+  const monthlyPkg =
+    pkgs.find((p) => p.identifier === '$rc_monthly') ?? pkgs.find((p) => p.packageType === 'MONTHLY') ?? null;
+  const annualPkg =
+    pkgs.find((p) => p.identifier === '$rc_annual') ?? pkgs.find((p) => p.packageType === 'ANNUAL') ?? null;
   const selectedPkg = period === 'monthly' ? monthlyPkg : annualPkg;
 
   // Chaînes localisées telles que renvoyées par le store (source de vérité).

@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Ve quién visita tu perfil",
-      "3 boosts de visibilidad gratis",
-      "3 superlikes gratis, luego 3/semana",
+      "Superlikes ilimitados",
+      "3 boosts incluidos cada mes",
       "Modo invisible",
       "Radio de búsqueda hasta 30 km",
       "Estadísticas avanzadas",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "No disponible",
     "notAvailableMessage": "Este pack aún no está disponible en la tienda.",
     "purchaseErrorMessage": "No se pudo completar la compra.",
-    "simulate": "Simular"
+    "simulate": "Simular",
+    "unlimited": "ilimitados",
+    "premiumBoostFloor": "Premium: 3 boosts incluidos cada mes. No se acumulan más allá de 3, ¡úsalos antes de la próxima recarga!"
   },
   "vibeTransitOverlay": {
     "sub": "Busca en estos lugares",

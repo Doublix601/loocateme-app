@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Poglej, kdo si ogleduje tvoj profil",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Nevidni način",
       "Polmer iskanja do 30 km",
       "Napredna statistika",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Ni na voljo",
     "notAvailableMessage": "Ta paket še ni na voljo v trgovini.",
     "purchaseErrorMessage": "Nakupa ni bilo mogoče dokončati.",
-    "simulate": "Simuliraj"
+    "simulate": "Simuliraj",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Išči na teh mestih",

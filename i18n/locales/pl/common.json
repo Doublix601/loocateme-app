@@ -380,8 +380,8 @@
   "premiumPaywall": {
     "features": [
       "Zobacz, kto ogląda Twój profil",
-      "3 free visibility boosts",
-      "3 free superlikes, then 3/week",
+      "Unlimited superlikes",
+      "3 boosts included every month",
       "Tryb niewidzialny",
       "Promień wyszukiwania do 30 km",
       "Zaawansowane statystyki",
@@ -748,7 +748,9 @@
     "notAvailableTitle": "Niedostępne",
     "notAvailableMessage": "Ten pakiet nie jest jeszcze dostępny w sklepie.",
     "purchaseErrorMessage": "Nie udało się dokończyć zakupu.",
-    "simulate": "Symuluj"
+    "simulate": "Symuluj",
+    "unlimited": "unlimited",
+    "premiumBoostFloor": "Premium: 3 boosts included every month. They don't stack past 3 — use them before the next top-up!"
   },
   "vibeTransitOverlay": {
     "sub": "Szukaj w tych miejscach",

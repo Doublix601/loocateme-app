@@ -38,6 +38,7 @@ import {
 import { publish } from '../components/EventBus';
 import SuperlikeService from '../services/SuperlikeService';
 import PremiumService from '../services/PremiumService';
+import { formatCount } from '../utils/formatCount';
 import PremiumNudgeService from '../services/PremiumNudgeService';
 import { usePremiumAccess } from '../hooks/usePremiumAccess';
 import { incrementSuperlikeSentCount, useProgressiveUnlock } from '../hooks/useProgressiveUnlock';
@@ -591,7 +592,7 @@ const UserProfileScreen = () => {
             )}
             {superlikeBalance > 0 && !superlikeSent && (
               <View style={styles.superlikeBadge}>
-                <Text style={styles.superlikeBadgeText}>{superlikeBalance}</Text>
+                <Text style={styles.superlikeBadgeText}>{formatCount(superlikeBalance)}</Text>
               </View>
             )}
           </TouchableOpacity>
