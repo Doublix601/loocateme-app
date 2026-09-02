@@ -25,10 +25,15 @@ import PremiumWelcomeOnboarding from '../components/PremiumWelcomeOnboarding';
 import { getPremiumSlides } from '../constants/premiumFeatures';
 import { useTranslation } from 'react-i18next';
 import { PRIVACY_POLICY_URL, TERMS_URL, APPLE_EULA_URL, STORE_NAME } from '../constants/legal';
+import { logger } from '../utils/logger';
 
 const { width } = Dimensions.get('window');
 
-const FALLBACK = { monthly: '4,99 €', annual: '39,99 €', savings: 33 };
+// Aucun prix en dur : le prix affiché doit toujours être celui de StoreKit /
+// Google Play (via RevenueCat `product.priceString`), sinon il risque de ne pas
+// correspondre à la feuille d'achat réelle. Tant que l'offering n'est pas
+// chargé, on affiche un placeholder neutre plutôt qu'un montant inventé.
+const PRICE_PLACEHOLDER = '—';
 
 // Traduit les erreurs RevenueCat/StoreKit connues en message lisible plutôt que
 // d'afficher le `e.message` brut (technique, en anglais) au reviewer Apple.
@@ -175,8 +180,40 @@ export default function PremiumPaywallScreen() {
   const annualPkg = offerings?.availablePackages?.find((p) => p.packageType === 'ANNUAL') ?? null;
   const selectedPkg = period === 'monthly' ? monthlyPkg : annualPkg;
 
-  const monthlyPrice = monthlyPkg?.product?.priceString ?? FALLBACK.monthly;
-  const annualPrice = annualPkg?.product?.priceString ?? FALLBACK.annual;
+  // Chaînes localisées telles que renvoyées par le store (source de vérité).
+  const monthlyPrice = monthlyPkg?.product?.priceString ?? null;
+  const annualPrice = annualPkg?.product?.priceString ?? null;
+
+  // % d'économie calculé sur les montants numériques réels (product.price) —
+  // plus de badge « -33% » figé qui ment quand les prix changent.
+  const monthlyNum =
+    typeof monthlyPkg?.product?.price === 'number' ? monthlyPkg.product.price : null;
+  const annualNum = typeof annualPkg?.product?.price === 'number' ? annualPkg.product.price : null;
+  const savingsPct =
+    monthlyNum && annualNum && monthlyNum > 0
+      ? Math.round((1 - annualNum / (monthlyNum * 12)) * 100)
+      : null;
+
+  // Diagnostic : ce que le store renvoie réellement pour chaque package (retiré
+  // des bundles prod par le logger). Permet de comparer prix affiché vs feuille
+  // d'achat si un écart est signalé.
+  useEffect(() => {
+    if (!offerings) return;
+    const dump = (label, pkg) =>
+      logger.log(
+        `[Paywall] ${label}:`,
+        JSON.stringify({
+          id: pkg?.product?.identifier,
+          priceString: pkg?.product?.priceString,
+          price: pkg?.product?.price,
+          currency: pkg?.product?.currencyCode,
+          packageType: pkg?.packageType,
+        }),
+      );
+    dump('monthly', monthlyPkg);
+    dump('annual', annualPkg);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offerings]);
 
   // Essai gratuit maison (7 jours, sans paiement, via /premium/trial/start) —
   // distinct de l'essai éventuellement proposé par Apple/Google sur l'abonnement
@@ -330,7 +367,7 @@ export default function PremiumPaywallScreen() {
           >
             <Text style={[styles.toggleLabel, { color: period === 'monthly' ? '#fff' : sub }]}>{t('premiumPaywall.monthly')}</Text>
             <Text style={[styles.togglePrice, { color: period === 'monthly' ? '#fff' : text }]}>
-              {monthlyPrice}
+              {monthlyPrice ?? PRICE_PLACEHOLDER}
               <Text style={{ fontSize: 12, fontWeight: '600' }}>{t('premiumPaywall.perMonth')}</Text>
             </Text>
           </TouchableOpacity>
@@ -348,17 +385,19 @@ export default function PremiumPaywallScreen() {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
               <Text style={[styles.toggleLabel, { color: period === 'annual' ? '#fff' : sub }]}>{t('premiumPaywall.annual')}</Text>
-              <View
-                style={[
-                  styles.savingsBadge,
-                  { backgroundColor: period === 'annual' ? 'rgba(255,255,255,0.28)' : '#00c2cb' },
-                ]}
-              >
-                <Text style={styles.savingsTxt}>-{FALLBACK.savings}%</Text>
-              </View>
+              {savingsPct != null && savingsPct > 0 && (
+                <View
+                  style={[
+                    styles.savingsBadge,
+                    { backgroundColor: period === 'annual' ? 'rgba(255,255,255,0.28)' : '#00c2cb' },
+                  ]}
+                >
+                  <Text style={styles.savingsTxt}>-{savingsPct}%</Text>
+                </View>
+              )}
             </View>
             <Text style={[styles.togglePrice, { color: period === 'annual' ? '#fff' : text }]}>
-              {annualPrice}
+              {annualPrice ?? PRICE_PLACEHOLDER}
               <Text style={{ fontSize: 12, fontWeight: '600' }}>{t('premiumPaywall.perYear')}</Text>
             </Text>
           </TouchableOpacity>
@@ -422,7 +461,7 @@ export default function PremiumPaywallScreen() {
           ) : null;
         })()}
 
-        {!DEBUG_CONFIG.IAP_DISABLED && (
+        {!DEBUG_CONFIG.IAP_DISABLED && (period === 'annual' ? annualPrice : monthlyPrice) && (
           <Text style={[styles.trialSub, { color: sub }]}>
             🔒{' '}
             {period === 'annual'
