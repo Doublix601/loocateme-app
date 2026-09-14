@@ -6,6 +6,7 @@ import { registerCurrentDevicePushToken } from '../PushService';
 import { subscribe } from '../EventBus';
 import { mapBackendUser } from '../../utils/mappers';
 import { incrementCheckinCount } from '../../utils/checkinCounter';
+import PremiumService from '../../services/PremiumService';
 
 export const UserContext = createContext();
 
@@ -94,6 +95,12 @@ export const UserProvider = ({ children }) => {
         const me = res?.user;
         if (!cancelled && me) {
           setUser(mapBackendUser(me));
+          // Sans ça, un premier lancement (cache PremiumService encore à ses
+          // valeurs par défaut 0/0) affiche 0 boost/superlike sur
+          // MyAccountScreen jusqu'à ce que l'utilisateur ouvre le sheet de
+          // consommables et tape « actualiser » : on synchronise ici depuis
+          // le `me` déjà récupéré, sans aller-retour réseau supplémentaire.
+          PremiumService.updateFromUser(me);
           await _syncRevenueCatIdentity(me._id || me.id);
           try {
             await registerCurrentDevicePushToken();
@@ -154,6 +161,7 @@ export const UserProvider = ({ children }) => {
         const me = res?.user;
         if (me) {
           setUser(mapBackendUser(me));
+          PremiumService.updateFromUser(me);
           await _syncRevenueCatIdentity(me._id || me.id);
         }
         try {
