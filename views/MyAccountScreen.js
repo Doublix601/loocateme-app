@@ -305,6 +305,15 @@ const MyAccountScreen = () => {
     return unsub;
   }, [navigation]);
 
+  // Rafraîchit aussi dès que PremiumService change de solde (achat/consommation
+  // depuis le sheet de consommables ou ailleurs) : ce sheet est une Modal
+  // affichée par-dessus cet écran déjà focus, donc l'événement 'focus' de la
+  // navigation ne se redéclenche pas à sa fermeture.
+  useEffect(() => {
+    const unsub = subscribe('premium:consumables_changed', refreshConsumableCounts);
+    return unsub;
+  }, []);
+
   // Ouvre l'historique des superlikes reçus quand on tape sur la notification push (App.js).
   useEffect(() => {
     const unsub = subscribe('ui:open_superlike_history', (payload) => {

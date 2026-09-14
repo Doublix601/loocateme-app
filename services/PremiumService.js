@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEBUG_CONFIG, IS_EXPO_GO } from './DebugConfig';
 import { getMyUser, get } from '../components/ApiRequest';
+import { publish } from '../components/EventBus';
 
 const STORAGE_KEY = '@loocateme:premium_v2';
 
@@ -33,6 +34,15 @@ async function _save() {
   } catch (e) {
     console.warn('[PremiumService] save error:', e.message);
   }
+  // Notifie les écrans déjà montés (ex: MyAccountScreen derrière le sheet de
+  // consommables) dès que le solde change, sans attendre un événement de
+  // focus navigation qui ne se déclenche pas quand la source du changement
+  // est une Modal affichée par-dessus l'écran déjà actif.
+  publish('premium:consumables_changed', {
+    boostsRemaining: _state.boostsRemaining,
+    superlikesRemaining: _state.superlikesRemaining,
+    superlikesUnlimited: _state.superlikesUnlimited,
+  });
 }
 
 const PremiumService = {
