@@ -91,19 +91,27 @@ const ConsumablesShopSheet = ({ visible, onClose, userId }) => {
   const { t } = useTranslation();
   const { colors, isDark } = useTheme();
   const { isPremium, premiumSystemEnabled } = usePremiumAccess();
+  const [offerings, setOfferings] = useState(null);
+  // Prix réel du store (RevenueCat `product.priceString`, déjà localisé selon
+  // la storefront du compte App Store/Play de l'utilisateur) si l'offering a
+  // pu être chargé, sinon repli sur le prix en dur (PACKS_BASE) pour ne
+  // jamais laisser le bouton sans prix.
   const PACKS = PACKS_BASE
     // Superlikes illimités en Premium → inutile de proposer les packs superlikes.
     .filter((p) => !(isPremium && p.type === 'superlike'))
-    .map((p) => ({
-      ...p,
-      description: t(p.descKey),
-      badge: p.badgeKey ? t(p.badgeKey) : undefined,
-    }));
+    .map((p) => {
+      const rcPkg = offerings?.availablePackages?.find((pkg) => pkg.product?.identifier === p.id) ?? null;
+      return {
+        ...p,
+        price: rcPkg?.product?.priceString ?? p.price,
+        description: t(p.descKey),
+        badge: p.badgeKey ? t(p.badgeKey) : undefined,
+      };
+    });
   const slideAnim = useRef(new Animated.Value(400)).current;
   const [boosts, setBoosts] = useState(0);
   const [superlikes, setSuperlikes] = useState(0);
   const [history, setHistory] = useState([]);
-  const [offerings, setOfferings] = useState(null);
   const [purchasing, setPurchasing] = useState(null); // pack id en cours
   const [refreshing, setRefreshing] = useState(false);
   const [nudge, setNudge] = useState(null); // note inline "Premium inclut..."
