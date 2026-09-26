@@ -720,7 +720,8 @@ const SettingsScreen = () => {
   const handleGallery = async () => {
     if (photoActionLoading) return;
     try {
-      if (Platform.OS !== 'web') {
+      // Android : le sélecteur de photos système n'exige aucune autorisation (READ_MEDIA_IMAGES retirée).
+      if (Platform.OS === 'ios') {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
           Alert.alert(
