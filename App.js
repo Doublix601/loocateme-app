@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 
 import * as Location from 'expo-location';
-import { getCurrentPositionSmart } from './utils/locationHelper';
+import { getCurrentPositionSmart, getPositionWithTimeout } from './utils/locationHelper';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
@@ -588,7 +588,7 @@ function AppShell({ purchasesReady }) {
           // pas besoin d'attendre une confirmation GPS dans le rayon du lieu.
           let lat = 0, lon = 0;
           try {
-            const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 8000 });
+            const pos = await getPositionWithTimeout(Location.Accuracy.Balanced, 8000);
             lat = pos?.coords?.latitude ?? 0;
             lon = pos?.coords?.longitude ?? 0;
           } catch (_) {

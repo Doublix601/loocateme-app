@@ -7,6 +7,7 @@ import { isLocationHeartbeatSuppressed } from '../utils/devLocationSuppression';
 import { shouldSend, markSent, roundCoord } from '../utils/locationSendGuard';
 import { getCachedNearbyVenues } from './NearbyVenueCache';
 import { haversineMeters } from '../utils/geo';
+import { getPositionWithTimeout } from '../utils/locationHelper';
 
 // Injecté depuis App.js (LocationService est hors arbre React) : permet de
 // répercuter un check-in automatique (dwell GPS) sur UserContext,
@@ -144,10 +145,10 @@ async function getBalancedPosition() {
     if (last?.coords) return last;
   } catch (_) {}
   try {
-    return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 10000 });
+    return await getPositionWithTimeout(Location.Accuracy.Balanced, 10000);
   } catch (e) {
     try {
-      return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest, timeout: 8000 });
+      return await getPositionWithTimeout(Location.Accuracy.Lowest, 8000);
     } catch (_) {
       return null;
     }
