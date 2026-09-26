@@ -202,7 +202,7 @@ const LocationScreen = () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted' || cancelled) return;
       const sub = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.Balanced, distanceInterval: 10 },
+        { accuracy: Location.Accuracy.Balanced, distanceInterval: 10, mayShowUserSettingsDialog: false },
         (pos) => {
           if (!cancelled) {
             setManualCheckinCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });

@@ -727,6 +727,7 @@ const LocationListScreen = () => {
       subscription = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.Balanced,
+          mayShowUserSettingsDialog: false,
           distanceInterval: 10, // Update every 10 meters
         },
         (location) => {

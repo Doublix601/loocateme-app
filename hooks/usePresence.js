@@ -107,6 +107,7 @@ export function usePresence(isEnabled) {
         watcherRef.current = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.Balanced,
+            mayShowUserSettingsDialog: false,
             // Heartbeat dès qu'on bouge de ~30 m (entrée/sortie de POI réactives).
             distanceInterval: 30,
             // Et au pire toutes les 45 s (sécurité).

@@ -10,6 +10,11 @@ import { loadDevLocationOverride, getDevLocationOverride } from './devLocationOv
 // temps côté JS, et on accepte aussi le premier signal du suivi de position, que
 // les émulateurs et certains appareils délivrent alors que la demande ponctuelle
 // reste sans réponse.
+//
+// `mayShowUserSettingsDialog: false` : sans ça, expo-location sur Android ne
+// demande PAS la position GPS quand le fournisseur « réseau » (Wi-Fi/antennes)
+// est désactivé — cas de tous les émulateurs — et tente d'afficher un dialogue
+// de réglages qui laisse la requête bloquée ou en échec.
 export function getPositionWithTimeout(accuracy, timeoutMs) {
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -25,10 +30,10 @@ export function getPositionWithTimeout(accuracy, timeoutMs) {
       fn(value);
     };
     timer = setTimeout(() => finish(reject, new Error('LOCATION_TIMEOUT')), timeoutMs);
-    Location.getCurrentPositionAsync({ accuracy })
+    Location.getCurrentPositionAsync({ accuracy, mayShowUserSettingsDialog: false })
       .then((pos) => finish(resolve, pos))
       .catch(() => {});
-    Location.watchPositionAsync({ accuracy, timeInterval: 1000, distanceInterval: 0 }, (pos) => finish(resolve, pos))
+    Location.watchPositionAsync({ accuracy, timeInterval: 1000, distanceInterval: 0, mayShowUserSettingsDialog: false }, (pos) => finish(resolve, pos))
       .then((sub) => {
         if (settled) {
           try {

@@ -405,7 +405,7 @@ const UserProfileScreen = () => {
         if (!Array.isArray(coords) || coords.length < 2) return;
         const perm = await Location.requestForegroundPermissionsAsync();
         if (perm.status !== 'granted') return;
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, mayShowUserSettingsDialog: false });
         const lat1 = loc.coords.latitude;
         const lon1 = loc.coords.longitude;
         const [lon2, lat2] = coords;
