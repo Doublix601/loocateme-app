@@ -21,6 +21,15 @@ export async function getCurrentPositionSmart({ skipLastKnown = false } = {}) {
   try {
     return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced, timeout: 10000 });
   } catch (balancedErr) {
-    return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low, timeout: 8000 });
+    try {
+      return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low, timeout: 12000 });
+    } catch (lowErr) {
+      // Premier lancement après installation : le premier signal (cold start) peut
+      // prendre plus longtemps que nos délais. Dernier recours : toute position
+      // connue de l'OS, même ancienne, plutôt qu'une liste en erreur.
+      const anyLast = await Location.getLastKnownPositionAsync({});
+      if (anyLast) return anyLast;
+      throw lowErr;
+    }
   }
 }

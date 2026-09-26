@@ -1100,6 +1100,31 @@ const LocationListScreen = () => {
     };
   }, [roundedLat, roundedLon, vibe, overpassRadiusM]);
 
+  // Relance automatique tant que la position est indisponible (typiquement au tout
+  // premier lancement après installation, où le premier signal de position arrive
+  // après le délai d'attente) : sans elle, la liste restait en erreur jusqu'à ce que
+  // l'utilisateur ferme et rouvre l'app.
+  const [locationRetryTick, setLocationRetryTick] = useState(0);
+  const locationRetryCountRef = useRef(0);
+  useEffect(() => {
+    if (!locationError) {
+      locationRetryCountRef.current = 0;
+      return undefined;
+    }
+    if (locationRetryCountRef.current >= 6) return undefined;
+    const timer = setTimeout(async () => {
+      locationRetryCountRef.current += 1;
+      try {
+        await fetchNearbyLocations({ vibe, silent: true });
+      } finally {
+        // Fait ré-exécuter l'effet tant que l'erreur persiste (essai suivant).
+        setLocationRetryTick((n) => n + 1);
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationError, locationRetryTick]);
+
   useEffect(() => {
     fetchNearbyLocations();
 
