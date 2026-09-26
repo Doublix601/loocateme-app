@@ -1,5 +1,5 @@
 jest.mock('expo-location', () => ({
-  Accuracy: { Balanced: 3, Low: 2, Lowest: 1 },
+  Accuracy: { Balanced: 3, Low: 2, Lowest: 1, High: 4 },
   getCurrentPositionAsync: jest.fn(),
   watchPositionAsync: jest.fn(),
   getLastKnownPositionAsync: jest.fn(),
@@ -49,10 +49,10 @@ describe('getCurrentPositionSmart', () => {
     Location.getLastKnownPositionAsync.mockResolvedValueOnce(null).mockResolvedValueOnce(POS);
     Location.getCurrentPositionAsync.mockReturnValue(new Promise(() => {}));
     const p = getCurrentPositionSmart();
-    // Balanced (10 s) puis Low (12 s) expirent, puis repli sur la dernière position connue.
+    // Balanced (10 s) puis High (15 s) expirent, puis repli sur la dernière position connue.
     for (let i = 0; i < 5; i += 1) {
       await Promise.resolve();
-      jest.advanceTimersByTime(12001);
+      jest.advanceTimersByTime(15001);
     }
     await expect(p).resolves.toBe(POS);
   });

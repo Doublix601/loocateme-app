@@ -148,7 +148,7 @@ async function getBalancedPosition() {
     return await getPositionWithTimeout(Location.Accuracy.Balanced, 10000);
   } catch (e) {
     try {
-      return await getPositionWithTimeout(Location.Accuracy.Lowest, 8000);
+      return await getPositionWithTimeout(Location.Accuracy.High, 15000);
     } catch (_) {
       return null;
     }

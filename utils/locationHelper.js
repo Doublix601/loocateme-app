@@ -68,7 +68,11 @@ export async function getCurrentPositionSmart({ skipLastKnown = false } = {}) {
     return await getPositionWithTimeout(Location.Accuracy.Balanced, 10000);
   } catch (_balancedErr) {
     try {
-      return await getPositionWithTimeout(Location.Accuracy.Low, 12000);
+      // Repli en haute précision : sur Android, Balanced/Low s'appuient sur le Wi-Fi
+      // et les antennes (fournisseur réseau) et n'activent pas le GPS. Sans ce repli,
+      // un appareil sans position réseau (émulateur, zone sans Wi-Fi) n'obtient
+      // jamais de position.
+      return await getPositionWithTimeout(Location.Accuracy.High, 15000);
     } catch (lowErr) {
       const anyLast = await Location.getLastKnownPositionAsync({});
       if (anyLast) return anyLast;
