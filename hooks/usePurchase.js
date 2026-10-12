@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import Purchases from 'react-native-purchases';
 import { useFeatureFlags } from '../components/contexts/FeatureFlagsContext';
+import { isPurchasesConfigured } from '../services/PurchasesConfig';
 
 export const usePurchase = () => {
   const { purchasesReady } = useFeatureFlags();
@@ -16,7 +17,7 @@ export const usePurchase = () => {
   }, [purchasesReady]);
 
   const fetchOfferings = async () => {
-    if (!purchasesReady) return;
+    if (!purchasesReady || !isPurchasesConfigured()) return;
     try {
       const fetchedOfferings = await Purchases.getOfferings();
       if (fetchedOfferings.current !== null) {
@@ -29,6 +30,10 @@ export const usePurchase = () => {
   };
 
   const purchasePackage = async (pkg) => {
+    if (purchasesReady && !isPurchasesConfigured()) {
+      Alert.alert('Indisponible', "Les achats intégrés ne sont pas disponibles sur cet appareil.");
+      return { success: false };
+    }
     if (!purchasesReady) {
       Alert.alert('Patientez...', "Le service d'achat est en cours d'initialisation.");
       return { success: false };

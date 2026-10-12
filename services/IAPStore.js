@@ -5,6 +5,7 @@ import { DEBUG_CONFIG, IS_EXPO_GO } from './DebugConfig';
 import PremiumService from './PremiumService';
 import { post } from '../components/ApiRequest';
 import { logAnalyticsEvent } from './AnalyticsService';
+import { isPurchasesConfigured } from './PurchasesConfig';
 
 // Quantités accordées par pack consommable
 const CONSUMABLE_GRANTS = {
@@ -30,7 +31,7 @@ function _log(eventName, event) {
 // rattacher à un compte (User.findById échoue) — le passage premium
 // n'arrive alors jamais côté serveur, même si l'achat a réussi.
 async function _ensureIdentity(userId) {
-  if (!userId) return;
+  if (!userId || !isPurchasesConfigured()) return;
   try {
     const { customerInfo } = await Purchases.logIn(String(userId));
     return customerInfo;
@@ -40,6 +41,13 @@ async function _ensureIdentity(userId) {
     // basculera jamais isPremium côté backend via le webhook.
     _log('iap_identity_failed', { timestamp: Date.now(), user_id: userId, error: e.message });
   }
+}
+
+// RevenueCat n'est configuré que si une clé API valide a été fournie au build
+// (cf. PurchasesConfig.js). Sinon, tout appel Purchases.* doit échouer
+// proprement côté JS plutôt que de toucher le natif non initialisé.
+function _assertConfigured() {
+  if (!isPurchasesConfigured()) throw new Error('Achats intégrés indisponibles');
 }
 
 const _wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -67,6 +75,7 @@ const IAPStore = {
     // On laisse remonter l'erreur (clé RevenueCat absente/invalide, réseau,
     // offering non configuré) pour que l'appelant bascule sur l'état
     // « Réessayer » au lieu de rester bloqué sur « Chargement des offres… ».
+    _assertConfigured();
     const offerings = await Purchases.getOfferings();
     if (!offerings?.current) {
       throw new Error('Aucun offering RevenueCat disponible');
@@ -105,6 +114,7 @@ const IAPStore = {
       return { success: true, isMock: true };
     }
     try {
+      _assertConfigured();
       await _ensureIdentity(userId);
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       await _refreshPremiumUntilActive();
@@ -138,6 +148,7 @@ const IAPStore = {
       return { success: true, isMock: true, grant };
     }
     try {
+      _assertConfigured();
       await _ensureIdentity(userId);
       const { customerInfo } = await Purchases.purchasePackage(pkg);
       if (grant) {
@@ -161,6 +172,7 @@ const IAPStore = {
       return { success: true, isMock: true };
     }
     try {
+      _assertConfigured();
       await _ensureIdentity(userId);
       const { customerInfo } = await Purchases.restorePurchases();
       await _refreshPremiumUntilActive();
@@ -177,6 +189,7 @@ const IAPStore = {
   async getCustomerInfo() {
     if (DEBUG_CONFIG.IAP_DISABLED) return null;
     try {
+      _assertConfigured();
       const info = await Purchases.getCustomerInfo();
       console.log('[IAPStore][DEBUG] customerInfo.entitlements.active:', JSON.stringify(info?.entitlements?.active));
       return info;
@@ -196,7 +209,7 @@ const IAPStore = {
   // générique, qui fonctionne sans module natif.
   async openManageSubscriptions(productId) {
     try {
-      if (Platform.OS === 'ios' && !IS_EXPO_GO) {
+      if (Platform.OS === 'ios' && !IS_EXPO_GO && isPurchasesConfigured()) {
         await Purchases.showManageSubscriptions();
       } else if (Platform.OS === 'ios') {
         await Linking.openURL('https://apps.apple.com/account/subscriptions');

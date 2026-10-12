@@ -7,6 +7,7 @@ import { subscribe } from '../EventBus';
 import { mapBackendUser } from '../../utils/mappers';
 import { incrementCheckinCount } from '../../utils/checkinCounter';
 import PremiumService from '../../services/PremiumService';
+import { isPurchasesConfigured } from '../../services/PurchasesConfig';
 
 export const UserContext = createContext();
 
@@ -16,7 +17,7 @@ export const UserContext = createContext();
 // retrouver l'utilisateur, donc isPremium/boostBalance/superlikeBalance ne
 // sont jamais mis à jour côté serveur malgré un achat réel.
 async function _syncRevenueCatIdentity(userId) {
-  if (!userId) return;
+  if (!userId || !isPurchasesConfigured()) return;
   try {
     await Purchases.logIn(String(userId));
   } catch (_) {
@@ -121,7 +122,7 @@ export const UserProvider = ({ children }) => {
   // Reset user state on global auth logout and re-hydrate on login
   useEffect(() => {
     const offLogout = subscribe('auth:logout', () => {
-      Purchases.logOut().catch(() => {});
+      if (isPurchasesConfigured()) Purchases.logOut().catch(() => {});
       setUser({
         username: '',
         firstName: '',

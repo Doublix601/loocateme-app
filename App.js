@@ -22,6 +22,7 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { Asset } from 'expo-asset';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import Purchases from 'react-native-purchases';
+import { isValidRevenueCatKey, setPurchasesConfigured } from './services/PurchasesConfig';
 import { IS_EXPO_GO } from './services/DebugConfig';
 
 import ConsumablesShopSheet from './components/ConsumablesShopSheet';
@@ -857,7 +858,15 @@ function AppWithReadyStatus() {
         // même en __DEV__ — sinon les achats en dev-client pointent vers un
         // projet RevenueCat de test sans rapport avec le vrai catalogue.
         const finalApiKey = IS_EXPO_GO ? 'test_AWcyeDQohMZcHtZhsByPolhUmrg' : apiKey;
-        await Purchases.configure({ apiKey: finalApiKey });
+        if (!isValidRevenueCatKey(finalApiKey)) {
+          // Clé absente (ex. EXPO_PUBLIC_REVENUECAT_ANDROID_KEY non fournie au
+          // build) : configure() planterait nativement sur Android. On démarre
+          // l'app sans achats intégrés plutôt que de crasher.
+          console.warn('[App] RevenueCat désactivé : clé API absente pour', Platform.OS);
+        } else {
+          await Purchases.configure({ apiKey: finalApiKey });
+          setPurchasesConfigured(true);
+        }
         setPurchasesReady(true);
       } catch (e) {
         console.error('[App] RevenueCat initialization failed', e);
