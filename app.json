@@ -122,7 +122,9 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez."
+          "locationAlwaysAndWhenInUsePermission": "Votre position en arrière-plan peut être partagée pendant 6 heures lorsque vous l’activez.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       "@react-native-community/datetimepicker",
