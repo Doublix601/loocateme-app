@@ -426,7 +426,10 @@
     "alwaysTitle": "Stay visible without opening the app",
     "alwaysDesc": "With automatic mode, your check-ins and check-outs happen on their own — your friends see you arrive even when your phone is in your pocket. For that, LoocateMe needs background access to your location (\"Always\" permission).",
     "alwaysIosHint": "iOS may ask in two steps: first allow \"While Using the App\", then \"Always\" when the app prompts you.",
-    "enable": "Continue"
+    "enable": "Continue",
+    "settingsTitle": "Location access is turned off",
+    "settingsDesc": "Android will not ask again. To stay visible automatically, open Settings > Permissions > Location and choose \"Allow all the time\". LoocateMe only uses your location to show your presence in places; you can switch back to manual check-in at any time.",
+    "openSettings": "Open settings"
   },
   "premiumPaywall": {
     "features": [
@@ -850,7 +853,7 @@
     "toNight": "Switch to night mode"
   },
   "backgroundLocation": {
-    "notificationBody": "Location sharing active"
+    "notificationBody": "Location sharing active: your friends can see when you arrive at a place"
   },
   "osmHelp": {
     "a11y": "Report a missing or incorrect place",

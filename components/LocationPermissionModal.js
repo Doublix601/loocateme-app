@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Platform, Alert } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as Location from 'expo-location';
 import { useTheme } from './contexts/ThemeContext';
@@ -22,6 +22,15 @@ const LocationPermissionModal = ({ visible, onClose }) => {
     if (onClose) onClose();
   };
 
+  // Après un refus définitif, Android ne ré-affiche plus la boîte système : on
+  // explique d'abord pourquoi, puis on propose d'ouvrir les réglages.
+  const openSettingsWithExplanation = () => {
+    Alert.alert(t('locationPrimer.settingsTitle'), t('locationPrimer.settingsDesc'), [
+      { text: t('common.close'), style: 'cancel' },
+      { text: t('locationPrimer.openSettings'), onPress: () => Linking.openSettings() },
+    ]);
+  };
+
   const handleEnable = async () => {
     if (busy) return;
     setBusy(true);
@@ -30,7 +39,7 @@ const LocationPermissionModal = ({ visible, onClose }) => {
       if (fg.status !== 'granted') {
         const reqFg = await Location.requestForegroundPermissionsAsync();
         if (reqFg.status !== 'granted') {
-          Linking.openSettings();
+          openSettingsWithExplanation();
           close();
           return;
         }
@@ -47,7 +56,7 @@ const LocationPermissionModal = ({ visible, onClose }) => {
       // iOS/Android : si on peut encore demander, la boîte de dialogue système
       // s'affiche. Sinon (déjà refusé une fois), il faut passer par les réglages.
       if (bg.canAskAgain === false) {
-        Linking.openSettings();
+        openSettingsWithExplanation();
         close();
         return;
       }
@@ -57,10 +66,10 @@ const LocationPermissionModal = ({ visible, onClose }) => {
         resetBackgroundPermissionPrompt();
         startBackgroundLocationForSixHours();
       } else if (reqBg.canAskAgain === false) {
-        Linking.openSettings();
+        openSettingsWithExplanation();
       }
     } catch (_) {
-      Linking.openSettings();
+      openSettingsWithExplanation();
     } finally {
       setBusy(false);
       close();

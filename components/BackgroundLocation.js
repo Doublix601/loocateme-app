@@ -2,6 +2,7 @@
 // Requires expo-location and expo-task-manager
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
+import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '../i18n';
 import { updateMyLocation, forceCheckOut } from './ApiRequest';
@@ -14,7 +15,11 @@ const STORAGE_START_KEY = 'bg_loc_start_ts';
 const STORAGE_AUTO_INVISIBLE_KEY = 'bg_loc_auto_invisible';
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+const START_FAILURE_COOLDOWN_MS = 30 * 1000;
 let taskDefined = false;
+let startInFlight = null;
+let lastStartFailureTs = 0;
+let pendingForegroundStart = null;
 
 async function autoStopAndMakeInvisible() {
   try {
@@ -111,7 +116,38 @@ function defineTaskOnce() {
   taskDefined = true;
 }
 
-export async function startBackgroundLocationForSixHours() {
+// Android 12+ refuse de démarrer un service de premier plan depuis l'arrière-
+// plan (ForegroundServiceStartNotAllowedException) : au démarrage à froid,
+// plusieurs appels simultanés partaient avant que l'app soit visible et
+// échouaient en rafale. On ne démarre donc qu'app active, un seul démarrage à
+// la fois, avec un délai après un échec ; si l'app n'est pas encore active, on
+// retente une seule fois dès qu'elle le devient.
+export function startBackgroundLocationForSixHours() {
+  if (AppState.currentState !== 'active') {
+    if (!pendingForegroundStart) {
+      pendingForegroundStart = AppState.addEventListener('change', (next) => {
+        if (next !== 'active') return;
+        pendingForegroundStart?.remove();
+        pendingForegroundStart = null;
+        startBackgroundLocationForSixHours();
+      });
+    }
+    return Promise.resolve(false);
+  }
+  if (startInFlight) return startInFlight;
+  if (Date.now() - lastStartFailureTs < START_FAILURE_COOLDOWN_MS) return Promise.resolve(false);
+  startInFlight = doStartBackgroundLocation()
+    .then((ok) => {
+      if (!ok) lastStartFailureTs = Date.now();
+      return ok;
+    })
+    .finally(() => {
+      startInFlight = null;
+    });
+  return startInFlight;
+}
+
+async function doStartBackgroundLocation() {
   try {
     defineTaskOnce();
     // Do not start twice
