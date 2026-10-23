@@ -128,7 +128,7 @@ function waitForForegroundThenStart() {
   let tries = 0;
   const timer = setInterval(() => {
     tries += 1;
-    if (AppState.currentState === 'active') {
+    if (AppState.currentState !== 'background') {
       clearInterval(timer);
       pendingForegroundStart = null;
       startBackgroundLocationForSixHours();
@@ -141,10 +141,12 @@ function waitForForegroundThenStart() {
 }
 
 export function startBackgroundLocationForSixHours() {
-  if (AppState.currentState !== 'active') {
+  if (AppState.currentState === 'background') {
+    console.warn('[BG_LOCATION] start deferred, appState=', AppState.currentState);
     waitForForegroundThenStart();
     return Promise.resolve(false);
   }
+  console.warn('[BG_LOCATION] starting, appState=', AppState.currentState);
   if (startInFlight) return startInFlight;
   if (Date.now() - lastStartFailureTs < START_FAILURE_COOLDOWN_MS) return Promise.resolve(false);
   startInFlight = doStartBackgroundLocation()
