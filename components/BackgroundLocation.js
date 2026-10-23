@@ -120,18 +120,29 @@ function defineTaskOnce() {
 // plan (ForegroundServiceStartNotAllowedException) : au démarrage à froid,
 // plusieurs appels simultanés partaient avant que l'app soit visible et
 // échouaient en rafale. On ne démarre donc qu'app active, un seul démarrage à
-// la fois, avec un délai après un échec ; si l'app n'est pas encore active, on
-// retente une seule fois dès qu'elle le devient.
+// la fois, avec un délai après un échec. Si l'app n'est pas encore active, on
+// revérifie toutes les 1,5 s (jusqu'à 30 s) : au démarrage à froid, AppState
+// n'émet pas toujours d'événement « change » vers 'active'.
+function waitForForegroundThenStart() {
+  if (pendingForegroundStart) return;
+  let tries = 0;
+  const timer = setInterval(() => {
+    tries += 1;
+    if (AppState.currentState === 'active') {
+      clearInterval(timer);
+      pendingForegroundStart = null;
+      startBackgroundLocationForSixHours();
+    } else if (tries >= 20) {
+      clearInterval(timer);
+      pendingForegroundStart = null;
+    }
+  }, 1500);
+  pendingForegroundStart = timer;
+}
+
 export function startBackgroundLocationForSixHours() {
   if (AppState.currentState !== 'active') {
-    if (!pendingForegroundStart) {
-      pendingForegroundStart = AppState.addEventListener('change', (next) => {
-        if (next !== 'active') return;
-        pendingForegroundStart?.remove();
-        pendingForegroundStart = null;
-        startBackgroundLocationForSixHours();
-      });
-    }
+    waitForForegroundThenStart();
     return Promise.resolve(false);
   }
   if (startInFlight) return startInFlight;
@@ -200,5 +211,8 @@ export async function stopBackgroundLocation() {
     await AsyncStorage.removeItem(STORAGE_START_KEY);
   } catch {}
 }
+
+// À appeler au chargement du module (exigence d'expo-task-manager).
+defineTaskOnce();
 
 export const BGLocKeys = { STORAGE_AUTO_INVISIBLE_KEY };
