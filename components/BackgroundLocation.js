@@ -20,6 +20,7 @@ let taskDefined = false;
 let startInFlight = null;
 let lastStartFailureTs = 0;
 let pendingForegroundStart = null;
+let serviceVerifiedThisProcess = false;
 
 async function autoStopAndMakeInvisible() {
   try {
@@ -142,11 +143,9 @@ function waitForForegroundThenStart() {
 
 export function startBackgroundLocationForSixHours() {
   if (AppState.currentState === 'background') {
-    console.warn('[BG_LOCATION] start deferred, appState=', AppState.currentState);
     waitForForegroundThenStart();
     return Promise.resolve(false);
   }
-  console.warn('[BG_LOCATION] starting, appState=', AppState.currentState);
   if (startInFlight) return startInFlight;
   if (Date.now() - lastStartFailureTs < START_FAILURE_COOLDOWN_MS) return Promise.resolve(false);
   startInFlight = doStartBackgroundLocation()
@@ -164,7 +163,15 @@ async function doStartBackgroundLocation() {
   try {
     defineTaskOnce();
     // Do not start twice
-    const started = await Location.hasStartedLocationUpdatesAsync(TASK_NAME);
+    let started = await Location.hasStartedLocationUpdatesAsync(TASK_NAME);
+    if (started && !serviceVerifiedThisProcess) {
+      // L'enregistrement de la tâche survit à la mort du processus, mais pas le
+      // service de premier plan : on repart d'un état propre une fois par processus.
+      try {
+        await Location.stopLocationUpdatesAsync(TASK_NAME);
+      } catch (_) {}
+      started = false;
+    }
     if (!started) {
       // Permissions
       const fg = await Location.requestForegroundPermissionsAsync();
@@ -197,6 +204,7 @@ async function doStartBackgroundLocation() {
       // refresh the 6 hours window if currently running
       await AsyncStorage.setItem(STORAGE_START_KEY, String(Date.now()));
     }
+    serviceVerifiedThisProcess = true;
     return true;
   } catch (e) {
     console.warn('[BG_LOCATION] Failed to start', e?.message || e);
